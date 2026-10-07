@@ -6,6 +6,9 @@ a shared learner identity, PostgreSQL with pgvector readiness, and a minimal mob
 
 The four research algorithms are intentionally not implemented.
 
+Contributors should complete the one-time hook setup and follow the rebase-only workflow in
+[docs/contributing.md](docs/contributing.md).
+
 ## Architecture
 
 - **Frontend:** React, TypeScript, Vite, and Capacitor
@@ -40,6 +43,12 @@ docker-compose.yml            # Local PostgreSQL only
 ## Local setup
 
 Prerequisites: Python 3.11+, Node.js 20+, npm, and Docker.
+
+Install the repository hooks once after cloning:
+
+```bash
+npm install
+```
 
 ### 1. Start PostgreSQL
 
