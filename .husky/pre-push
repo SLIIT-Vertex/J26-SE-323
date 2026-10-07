@@ -1,4 +1,21 @@
 #!/bin/sh
 
-./scripts/branch-policy.sh
+remote=${1:-origin}
+if git remote get-url "$remote" >/dev/null 2>&1; then
+  main_ref="refs/remotes/$remote/main"
+  develop_ref="refs/remotes/$remote/develop"
+else
+  main_ref="refs/mindbridge-hooks/main"
+  develop_ref="refs/mindbridge-hooks/develop"
+fi
+
+echo "Refreshing $remote/main and $remote/develop before push checks..."
+if ! git fetch --quiet --no-tags "$remote" \
+  "+refs/heads/main:$main_ref" \
+  "+refs/heads/develop:$develop_ref"; then
+  echo "Push rejected: could not refresh $remote/main and $remote/develop." >&2
+  exit 1
+fi
+
+MINDBRIDGE_DEVELOP_REF="$develop_ref" ./scripts/branch-policy.sh
 npm run check:push

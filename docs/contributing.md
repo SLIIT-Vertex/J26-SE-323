@@ -43,8 +43,10 @@ git rebase --force-rebase origin/develop
 git push --force-with-lease
 ```
 
-The policy uses the local `origin/develop` reference. Run `git fetch origin develop` before work
-when that reference may be stale.
+Pre-commit uses the local `origin/develop` reference so commits still work offline. Pre-push first
+fetches `main` and `develop` from the exact remote being pushed, updates its remote-tracking refs,
+and only then applies branch policy. A failed fetch rejects the push rather than checking stale
+history. CI validates pull requests against GitHub's current base commit.
 
 ## Automated checks
 
@@ -57,6 +59,7 @@ Pre-commit runs:
 
 Pre-push additionally runs:
 
+- a read-only refresh of the remote `main` and `develop` branches
 - backend pytest tests
 - the production web build
 - branch-policy self-tests

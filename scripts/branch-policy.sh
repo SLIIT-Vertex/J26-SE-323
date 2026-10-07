@@ -31,13 +31,13 @@ if [ "${1:-}" = "--current" ]; then
 
   cherry=$(git cherry "$develop_ref" "$head")
   if printf '%s\n' "$cherry" | grep -q '^-'; then
-    echo "Commit rejected: branch $branch contains changes already applied to origin/develop. Rebase it first." >&2
+    echo "Commit rejected: branch $branch contains changes already applied to $develop_ref. Rebase it first." >&2
     exit 1
   fi
 
   if git rev-parse --verify --quiet '@{upstream}' >/dev/null \
     && git merge-base --is-ancestor "$head" "$develop_ref"; then
-    echo "Commit rejected: tracked branch $branch is already contained in origin/develop. Start a new branch." >&2
+    echo "Commit rejected: tracked branch $branch is already contained in $develop_ref. Start a new branch." >&2
     exit 1
   fi
   exit 0
@@ -78,13 +78,13 @@ while read -r local_ref local_oid remote_ref remote_oid; do
 
   if [ "$has_develop" = true ]; then
     if git merge-base --is-ancestor "$local_oid" "$develop_ref"; then
-      echo "Push rejected: this branch is already contained in origin/develop." >&2
+      echo "Push rejected: this branch is already contained in $develop_ref." >&2
       exit 1
     fi
 
     cherry=$(git cherry "$develop_ref" "$local_oid")
     if printf '%s\n' "$cherry" | grep -q '^-'; then
-      echo "Push rejected: this branch contains changes already applied to origin/develop. Rebase it first." >&2
+      echo "Push rejected: this branch contains changes already applied to $develop_ref. Rebase it first." >&2
       exit 1
     fi
 
