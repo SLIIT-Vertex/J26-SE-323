@@ -28,7 +28,7 @@ backend/
   app/shared/                 # Database, auth boundary, shared learner
   app/knowledge_tracing/      # Empty Clean Architecture boundary
   app/learner_state/          # Empty Clean Architecture boundary
-  app/adaptive_tutor/         # Empty Clean Architecture boundary
+  app/adaptive_tutor/         # Scaffolding policy contracts; controller deferred
   app/gamification/           # Empty Clean Architecture boundary
   alembic/                    # Database migrations
   tests/                      # API tests
