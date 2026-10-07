@@ -2,8 +2,8 @@
 
 ## Research status
 
-This is a conceptual specification for the future Scaffolding Controller. It defines the evidence
-the controller may consume and the constraints that should guide fading or escalation. It is not a
+This conceptual specification governs Scaffolding Controller V1. It defines the evidence the
+controller may consume and the constraints that guide fading or escalation. It is not a
 scoring algorithm, trained model, causal theory, or experimentally validated decision rule.
 
 ## Controller input contract
@@ -17,14 +17,17 @@ The executable contract is `TutoringContext` in
 | `skill_id` | string | Non-empty | Relevant Universal Skill Node identifier from the shared taxonomy; supplied or mocked rather than inferred by Adaptive Tutor. |
 | `mastery` | float | Inclusive `0.0–1.0` | Knowledge Tracing output for this learner and `skill_id`. Mocked during independent Adaptive Tutor development. |
 | `support_need` | float | Inclusive `0.0–1.0` | Learner-State output representing its current support-need estimate. Mocked during independent Adaptive Tutor development. |
-| `attempt_count` | integer | `>= 0` | Number of attempts recorded for the current item. Zero is reserved for initialization before a completed attempt. |
-| `is_correct` | boolean | Required | Whether the most recently evaluated response is correct. |
-| `error_severity` | float | Inclusive `0.0–1.0` | Normalized evidence about the educational significance of the current error. Its future derivation and calibration remain undefined. |
+| `attempt_count` | integer | `>= 0` | Number of attempts recorded for the current item. Zero means pre-interaction with no completed attempt; one means the first completed attempt. |
+| `is_correct` | boolean or null | Null only at zero attempts; otherwise required | Whether the most recently evaluated response is correct. |
+| `error_severity` | float or null | Null only at zero attempts; otherwise inclusive `0.0–1.0` | Normalized evidence about the educational significance of the current error. Its future derivation and calibration remain undefined. |
 | `previous_assistance_level` | `L0–L6` or null | Valid enum value | Most recent assistance level for this learning sequence; null when no assistance has been delivered. |
 | `previous_hint_effective` | boolean or null | Required but nullable | Whether the previous assistance produced observable progress; null when there was no previous assistance or effectiveness has not been assessed. |
 
 Unknown fields are rejected. The contract is immutable after validation so that one controller
 decision refers to one evidence snapshot.
+
+At `attempt_count = 0`, no attempt has been completed, so both `is_correct` and `error_severity`
+must be null. At one or more attempts, both outcome fields are required.
 
 The contract deliberately does not define numeric selection thresholds. Values in the reference
 scenarios are examples of evidence combinations, not cutoff points.
@@ -56,8 +59,7 @@ skill identification remains future work outside this phase.
 
 ## Decision principles
 
-The future controller should evaluate the evidence as a whole rather than mapping one field to one
-level.
+Controller V1 evaluates the evidence as a whole rather than mapping one field to one level.
 
 1. **Start from independence.** Consider L0 first, then add only the information needed to make
    progress plausible.
@@ -82,6 +84,11 @@ Fading means selecting less assistance after evidence of progress.
   level may fall directly to L0 rather than decreasing exactly one level.
 - An effective hint followed by partial but incomplete progress can justify a smaller fade, such as
   moving from targeted help to a conceptual reminder.
+- `FADING_JUSTIFIED` is recorded only when the selected level is lower than the previous level. L0
+  cannot fade further, so remaining at L0 records maintained support instead.
+- An effective hint does not force fading. When the learner remains incorrect and low mastery,
+  high support need, severe error, and sufficient repeated attempts jointly indicate substantial
+  difficulty, the controller maintains the previous level.
 - Assistance may remain at the same level when progress is real but fragile and removing support
   would likely interrupt the learner's next meaningful action.
 - The controller should not repeat worked examples or full explanations merely because they were
@@ -97,6 +104,8 @@ Escalation means increasing assistance after evidence that the current support i
 - A first, low-severity error can remain at L0 or L1 when self-correction is plausible.
 - An ineffective previous hint, repeated attempts, and a persistent or severe error jointly provide
   stronger evidence for escalation than any one factor alone.
+- High mastery and a minor error protect independence only while attempt evidence remains limited;
+  they do not permanently veto escalation after repeated ineffective assistance.
 - Escalation should target the identified barrier: reflection, concept recall, a specific next step,
   guided organization, or transfer from an analogous example.
 - The controller may skip a level when the intervening level cannot reasonably address the observed
@@ -117,8 +126,16 @@ escalating, the controller should consider whether the hint was relevant, unders
 policy-conformant. An ineffective hint is evidence about the interaction, not simply a deficit in
 the learner.
 
-A null value means effectiveness is unknown or not applicable. It must not be silently treated as
-false.
+The nullable fields have these Controller V1 semantics:
+
+- Both fields null means there is no relevant previous assistance history.
+- A previous level with effectiveness true or false means its result is known.
+- A previous level with null effectiveness means its result is unknown. This is neutral evidence,
+  so an incorrect response maintains the known previous level rather than resetting to initial
+  selection.
+- Non-null effectiveness without a previous level is invalid and rejected by `TutoringContext`.
+
+An unknown value is not silently treated as false and does not erase known assistance history.
 
 ## Provisional transition examples
 

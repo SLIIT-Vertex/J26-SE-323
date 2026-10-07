@@ -54,11 +54,10 @@ inside the module that owns them. It does not create embeddings or research-spec
 
 ## Intentional omissions
 
-- Knowledge Tracing, Learner State, Adaptive Tutor, and Gamification algorithms
+- Knowledge Tracing, Learner State, and Gamification algorithms
 - research-specific persistence models
 - authentication implementation (only its shared boundary exists)
 - background workers, queues, caches, microservices, and orchestration infrastructure
 - generated Android and iOS projects
 
 These should be added only when a concrete research use case requires them.
-
