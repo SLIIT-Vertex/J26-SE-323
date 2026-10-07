@@ -1,0 +1,43 @@
+:root {
+  color: #173f35;
+  background: #f3f7f1;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  display: grid;
+  place-items: center;
+}
+
+main {
+  width: min(36rem, calc(100% - 3rem));
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(3rem, 12vw, 6rem);
+  letter-spacing: -0.06em;
+}
+
+.eyebrow {
+  color: #56786f;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.status {
+  width: fit-content;
+  margin-top: 2rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+}
+
+.status--online { color: #087443; }
+.status--offline { color: #a33a2b; }
+.status--checking { color: #6d6250; }
