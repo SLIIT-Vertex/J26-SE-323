@@ -54,6 +54,56 @@ def test_attempt_count_cannot_be_negative() -> None:
         TutoringContext.model_validate(data)
 
 
+@pytest.mark.parametrize(
+    ("is_correct", "error_severity"),
+    [(True, None), (False, None), (None, 0.5)],
+)
+def test_pre_interaction_rejects_completed_attempt_evidence(
+    is_correct: bool | None, error_severity: float | None
+) -> None:
+    data = context_data()
+    data.update(
+        attempt_count=0,
+        is_correct=is_correct,
+        error_severity=error_severity,
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match="is_correct and error_severity must be null when attempt_count is 0",
+    ):
+        TutoringContext.model_validate(data)
+
+
+def test_pre_interaction_accepts_null_attempt_evidence() -> None:
+    data = context_data()
+    data.update(attempt_count=0, is_correct=None, error_severity=None)
+
+    context = TutoringContext.model_validate(data)
+
+    assert context.is_correct is None
+    assert context.error_severity is None
+
+
+@pytest.mark.parametrize("field", ["is_correct", "error_severity"])
+def test_completed_attempt_requires_outcome_evidence(field: str) -> None:
+    data = context_data()
+    data[field] = None
+
+    with pytest.raises(
+        ValidationError,
+        match="is_correct and error_severity are required when attempt_count is at least 1",
+    ):
+        TutoringContext.model_validate(data)
+
+
+def test_completed_attempt_accepts_normal_outcome_evidence() -> None:
+    context = TutoringContext.model_validate(context_data())
+
+    assert context.is_correct is False
+    assert context.error_severity == 0.5
+
+
 def test_assistance_level_must_be_valid() -> None:
     data = context_data()
     data["previous_assistance_level"] = "L7"
@@ -85,9 +135,24 @@ def test_previous_state_fields_may_be_null() -> None:
     assert context.previous_hint_effective is None
 
 
+@pytest.mark.parametrize("previous_hint_effective", [True, False])
+def test_hint_effectiveness_requires_previous_assistance(
+    previous_hint_effective: bool,
+) -> None:
+    data = context_data()
+    data["previous_assistance_level"] = None
+    data["previous_hint_effective"] = previous_hint_effective
+
+    with pytest.raises(
+        ValidationError,
+        match="previous_hint_effective requires a previous_assistance_level",
+    ):
+        TutoringContext.model_validate(data)
+
+
 def test_boundary_values_are_valid() -> None:
     data = context_data()
-    data.update(mastery=0.0, support_need=1.0, error_severity=0.0, attempt_count=0)
+    data.update(mastery=0.0, support_need=1.0, error_severity=0.0)
 
     context = TutoringContext.model_validate(data)
 
