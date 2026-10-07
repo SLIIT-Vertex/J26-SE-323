@@ -1,0 +1,14 @@
+{
+  "name": "mindbridge",
+  "private": true,
+  "scripts": {
+    "prepare": "husky",
+    "check": "npm run check:push",
+    "check:commit": "./scripts/check.sh commit",
+    "check:push": "./scripts/check.sh push",
+    "check:branch": "./scripts/branch-policy.sh"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

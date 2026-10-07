@@ -1,0 +1,4 @@
+#!/bin/sh
+
+./scripts/branch-policy.sh
+npm run check:push

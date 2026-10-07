@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if git rev-parse --verify --quiet MERGE_HEAD >/dev/null; then
+  echo "Commit rejected: merge commits are not allowed. Abort the merge and rebase instead." >&2
+  exit 1
+fi
+
+./scripts/branch-policy.sh --current
+npm run check:commit
