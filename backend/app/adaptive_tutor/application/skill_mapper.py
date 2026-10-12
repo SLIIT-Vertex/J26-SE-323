@@ -3,7 +3,7 @@ import re
 import unicodedata
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from app.adaptive_tutor.application.skill_mapper_contracts import (
     MAX_CANDIDATE_SKILLS,
@@ -37,6 +37,14 @@ class RankedSkill:
 
 
 @dataclass(frozen=True, slots=True)
+class RelevanceAssessment:
+    status: SkillMappingStatus | None
+    category: str | None
+    negative_score: float
+    supported_score: float
+
+
+@dataclass(frozen=True, slots=True)
 class SkillMappingPolicy:
     """Provisional prototype parameters; none are validated educational findings."""
 
@@ -60,13 +68,36 @@ class SkillMappingPolicy:
 
 
 class SemanticSkillRetriever:
-    def __init__(self, nodes: Sequence[SkillNode], embeddings: EmbeddingModel) -> None:
+    def __init__(
+        self,
+        nodes: Sequence[SkillNode],
+        embeddings: EmbeddingModel,
+        retrieval_enrichments: Mapping[str, Sequence[str]] | None = None,
+    ) -> None:
         self.nodes = tuple(sorted(nodes, key=lambda node: node.skill_id))
         if not self.nodes:
             raise ValueError("at least one skill node is required")
         if len({node.skill_id for node in self.nodes}) != len(self.nodes):
             raise ValueError("skill node IDs must be unique")
         self._embeddings = embeddings
+        enrichments = retrieval_enrichments or {}
+        unknown_ids = sorted(set(enrichments) - {node.skill_id for node in self.nodes})
+        if unknown_ids:
+            raise ValueError(f"unknown enrichment skill IDs: {', '.join(unknown_ids)}")
+        self._passages = tuple(
+            (node, passage)
+            for node in self.nodes
+            for passage in (
+                node.retrieval_text,
+                *sorted(
+                    {
+                        prepare_text(text)
+                        for text in enrichments.get(node.skill_id, ())
+                        if prepare_text(text)
+                    }
+                ),
+            )
+        )
         self._passage_vectors: tuple[tuple[float, ...], ...] | None = None
 
     def rank(
@@ -81,22 +112,94 @@ class SemanticSkillRetriever:
         query_vector = _validated_vector(query_vectors[0])
         adjustments = score_adjustments or {}
 
+        scores = {node.skill_id: -1.0 for node in self.nodes}
+        for (node, _), vector in zip(self._passages, passage_vectors, strict=True):
+            scores[node.skill_id] = max(
+                scores[node.skill_id],
+                _cosine_similarity(query_vector, vector),
+            )
         ranked = [
             RankedSkill(
                 node=node,
-                score=min(1.0, _cosine_similarity(query_vector, vector) + adjustments.get(node.skill_id, 0.0)),
+                score=min(1.0, scores[node.skill_id] + adjustments.get(node.skill_id, 0.0)),
             )
-            for node, vector in zip(self.nodes, passage_vectors, strict=True)
+            for node in self.nodes
         ]
         return tuple(sorted(ranked, key=lambda candidate: (-candidate.score, candidate.node.skill_id)))
 
     def _get_passage_vectors(self) -> tuple[tuple[float, ...], ...]:
         if self._passage_vectors is None:
             vectors = self._embeddings.embed_passages(
-                [node.retrieval_text for node in self.nodes]
+                [passage for _, passage in self._passages]
             )
-            if len(vectors) != len(self.nodes):
+            if len(vectors) != len(self._passages):
                 raise ValueError("embedding model must return one vector per taxonomy passage")
+            self._passage_vectors = tuple(_validated_vector(vector) for vector in vectors)
+        return self._passage_vectors
+
+
+class SemanticRelevanceGate:
+    """Compare the best supported skill with small unsupported/off-topic counter-examples."""
+
+    _STATUSES: ClassVar[dict[str, SkillMappingStatus]] = {
+        "unsupported_learning": SkillMappingStatus.NO_MATCH,
+        "off_topic": SkillMappingStatus.NOT_SKILL_RELATED,
+    }
+
+    def __init__(
+        self,
+        embeddings: EmbeddingModel,
+        examples: Mapping[str, Sequence[str]],
+        minimum_advantage: float = 0.0,
+    ) -> None:
+        if set(examples) != set(self._STATUSES):
+            raise ValueError("relevance examples must define unsupported_learning and off_topic")
+        if not 0.0 <= minimum_advantage <= 1.0:
+            raise ValueError("minimum_advantage must be between 0 and 1")
+        self._embeddings = embeddings
+        self._examples = tuple(
+            (category, prepare_text(text))
+            for category in sorted(examples)
+            for text in examples[category]
+            if prepare_text(text)
+        )
+        if not self._examples:
+            raise ValueError("relevance examples must not be empty")
+        self.minimum_advantage = minimum_advantage
+        self._passage_vectors: tuple[tuple[float, ...], ...] | None = None
+
+    def assess(self, query: str, supported_score: float) -> RelevanceAssessment:
+        query_vectors = self._embeddings.embed_queries([prepare_text(query)])
+        if len(query_vectors) != 1:
+            raise ValueError("embedding model must return one vector per query")
+        query_vector = _validated_vector(query_vectors[0])
+        scores = {category: -1.0 for category in self._STATUSES}
+        for (category, _), vector in zip(
+            self._examples,
+            self._get_passage_vectors(),
+            strict=True,
+        ):
+            scores[category] = max(scores[category], _cosine_similarity(query_vector, vector))
+        category, negative_score = min(scores.items(), key=lambda item: (-item[1], item[0]))
+        status = (
+            self._STATUSES[category]
+            if negative_score >= supported_score + self.minimum_advantage
+            else None
+        )
+        return RelevanceAssessment(
+            status=status,
+            category=category if status else None,
+            negative_score=negative_score,
+            supported_score=supported_score,
+        )
+
+    def _get_passage_vectors(self) -> tuple[tuple[float, ...], ...]:
+        if self._passage_vectors is None:
+            vectors = self._embeddings.embed_passages(
+                [text for _, text in self._examples]
+            )
+            if len(vectors) != len(self._examples):
+                raise ValueError("embedding model must return one vector per relevance example")
             self._passage_vectors = tuple(_validated_vector(vector) for vector in vectors)
         return self._passage_vectors
 
@@ -106,9 +209,11 @@ class ConversationalSkillMapper:
         self,
         retriever: SemanticSkillRetriever,
         policy: SkillMappingPolicy | None = None,
+        relevance_gate: SemanticRelevanceGate | None = None,
     ) -> None:
         self._retriever = retriever
         self._policy = policy or SkillMappingPolicy()
+        self._relevance_gate = relevance_gate
         self._nodes_by_id = {node.skill_id: node for node in retriever.nodes}
 
     def map(self, request: SkillMappingRequest) -> SkillMappingResult:
@@ -129,6 +234,22 @@ class ConversationalSkillMapper:
         top_score = _contract_score(top.score)
         margin = top.score - second_score
         uses_context = _uses_conversation_context(request, intent)
+
+        if self._relevance_gate is not None:
+            relevance = self._relevance_gate.assess(request.learner_message, top.score)
+            if relevance.status is not None:
+                is_off_topic = relevance.status is SkillMappingStatus.NOT_SKILL_RELATED
+                return SkillMappingResult(
+                    status=relevance.status,
+                    intent=LearningIntent.OFF_TOPIC if is_off_topic else intent,
+                    clarification_needed=False,
+                    reason_codes=(
+                        SkillMappingReasonCode.NOT_SKILL_RELATED
+                        if is_off_topic
+                        else SkillMappingReasonCode.OUTSIDE_SUPPORTED_TAXONOMY,
+                        SkillMappingReasonCode.INSUFFICIENT_EVIDENCE,
+                    ),
+                )
 
         if top_score >= self._policy.match_threshold and margin >= self._policy.minimum_margin:
             reasons = [

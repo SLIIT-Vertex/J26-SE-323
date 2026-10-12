@@ -1,4 +1,5 @@
 import builtins
+import json
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -6,6 +7,7 @@ import pytest
 
 from app.adaptive_tutor.application import (
     ConversationalSkillMapper,
+    SemanticRelevanceGate,
     SemanticSkillRetriever,
     SkillMappingPolicy,
     SkillMappingRequest,
@@ -19,6 +21,8 @@ from app.adaptive_tutor.domain import (
     SkillNode,
 )
 from app.adaptive_tutor.infrastructure import (
+    JsonSkillRelevanceCatalog,
+    JsonSkillTaxonomyEnrichmentCatalog,
     SentenceTransformerE5EmbeddingModel,
     XlsxSkillTaxonomyCatalog,
 )
@@ -105,6 +109,94 @@ def test_semantic_candidates_are_ranked_by_similarity(
     ]
 
 
+def test_optional_enrichment_adds_passages_without_changing_skill_identity(
+    skill_nodes: tuple[SkillNode, ...],
+) -> None:
+    retriever = SemanticSkillRetriever(
+        skill_nodes,
+        FakeEmbeddingModel(),
+        {"MAT-FRC": ("MAT-FRC provisional Tamil fraction alias",)},
+    )
+
+    ranked = retriever.rank("Please explain fractions")
+
+    assert ranked[0].node.skill_id == "MAT-FRC"
+    assert {candidate.node.skill_id for candidate in ranked} == {
+        "MAT-FRC",
+        "MAT-OPS",
+        "MAT-TIM",
+    }
+
+
+def test_enrichment_catalog_validates_membership_and_provenance() -> None:
+    nodes = XlsxSkillTaxonomyCatalog(REPOSITORY_ROOT / "docs/skill_nodes.xlsx").load()
+    enrichments = JsonSkillTaxonomyEnrichmentCatalog(
+        REPOSITORY_ROOT / "research/adaptive-tutor/skill-mapper-enrichment-v1.json"
+    ).load({node.skill_id for node in nodes})
+
+    assert {item.skill_id for item in enrichments} == {
+        "ENV-BIO",
+        "ENV-HLT",
+        "MAT-FRC",
+        "MAT-OPS",
+        "MAT-TIM",
+    }
+    assert all(item.provenance and item.review_status for item in enrichments)
+    assert all(
+        item.review_status == "qualified_review_pending"
+        for item in enrichments
+        if item.language in {"sinhala", "tamil", "singlish", "tanglish"}
+    )
+
+
+@pytest.mark.parametrize(
+    "records, message",
+    [
+        (
+            [{"skill_id": "NOT-REAL", "entries": []}],
+            "unknown enrichment skill ID",
+        ),
+        (
+            [
+                {
+                    "skill_id": "MAT-FRC",
+                    "entries": [
+                        {
+                            "language": "english",
+                            "text": "fractions",
+                            "provenance": "test",
+                            "review_status": "test",
+                        }
+                    ],
+                },
+                {
+                    "skill_id": "MAT-FRC",
+                    "entries": [
+                        {
+                            "language": "sinhala",
+                            "text": "භාග",
+                            "provenance": "test",
+                            "review_status": "test",
+                        }
+                    ],
+                },
+            ],
+            "duplicate enrichment record",
+        ),
+    ],
+)
+def test_enrichment_catalog_rejects_unknown_and_duplicate_records(
+    tmp_path: Path,
+    records: list[dict[str, object]],
+    message: str,
+) -> None:
+    path = tmp_path / "enrichment.json"
+    path.write_text(json.dumps({"records": records}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        JsonSkillTaxonomyEnrichmentCatalog(path).load({"MAT-FRC"})
+
+
 def test_clear_semantic_match_returns_taxonomy_skill(
     mapper: tuple[ConversationalSkillMapper, FakeEmbeddingModel],
     skill_nodes: tuple[SkillNode, ...],
@@ -145,6 +237,78 @@ def test_low_evidence_learning_request_abstains_with_no_match(
     assert result.status is SkillMappingStatus.NO_MATCH
     assert result.skill_id is None
     assert not result.candidate_skills
+
+
+def test_semantic_relevance_gate_rejects_unsupported_and_off_topic_messages(
+    skill_nodes: tuple[SkillNode, ...],
+) -> None:
+    class RelevanceEmbeddingModel:
+        def embed_queries(self, texts: Sequence[str]) -> tuple[tuple[float, ...], ...]:
+            return tuple(
+                (1.0, 0.0) if "algebra" in text.casefold() else (0.0, 1.0)
+                for text in texts
+            )
+
+        def embed_passages(self, texts: Sequence[str]) -> tuple[tuple[float, ...], ...]:
+            return tuple(
+                (1.0, 0.0) if "algebra" in text.casefold() else (0.0, 1.0)
+                for text in texts
+            )
+
+    relevance = SemanticRelevanceGate(
+        RelevanceEmbeddingModel(),
+        {"unsupported_learning": ("Algebra example",), "off_topic": ("Sports example",)},
+    )
+    service = ConversationalSkillMapper(
+        SemanticSkillRetriever(skill_nodes, FakeEmbeddingModel()),
+        relevance_gate=relevance,
+    )
+
+    unsupported = service.map(SkillMappingRequest(learner_message="Teach me algebra"))
+    off_topic = service.map(SkillMappingRequest(learner_message="Sports score please"))
+
+    assert unsupported.status is SkillMappingStatus.NO_MATCH
+    assert unsupported.intent is LearningIntent.EXPLANATION_REQUEST
+    assert off_topic.status is SkillMappingStatus.NOT_SKILL_RELATED
+    assert off_topic.intent is LearningIntent.OFF_TOPIC
+
+
+def test_relevance_resource_is_small_and_valid() -> None:
+    examples = JsonSkillRelevanceCatalog(
+        REPOSITORY_ROOT / "research/adaptive-tutor/skill-mapper-relevance-v1.json"
+    ).load()
+
+    assert set(examples) == {"unsupported_learning", "off_topic"}
+    assert sum(map(len, examples.values())) == 7
+
+
+def test_development_and_held_out_evaluation_splits_are_disjoint() -> None:
+    development = json.loads(
+        (REPOSITORY_ROOT / "research/adaptive-tutor/skill-mapper-development-v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    held_out = json.loads(
+        (REPOSITORY_ROOT / "research/adaptive-tutor/skill-mapper-held-out-v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    valid_ids = {
+        node.skill_id
+        for node in XlsxSkillTaxonomyCatalog(REPOSITORY_ROOT / "docs/skill_nodes.xlsx").load()
+    }
+
+    assert development["tuning_allowed"] is True
+    assert held_out["tuning_allowed"] is False
+    assert {case["case_id"] for case in development["cases"]}.isdisjoint(
+        {case["case_id"] for case in held_out["cases"]}
+    )
+    assert {
+        case["expected_skill_id"]
+        for document in (development, held_out)
+        for case in document["cases"]
+        if case["expected_skill_id"] is not None
+    } <= valid_ids
 
 
 def test_greeting_does_not_run_semantic_retrieval(

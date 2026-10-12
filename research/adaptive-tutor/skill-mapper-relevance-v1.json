@@ -1,0 +1,17 @@
+{
+  "resource_version": "skill-mapper-relevance-v1",
+  "status": "small design-authored semantic relevance examples; not independently validated ground truth",
+  "categories": {
+    "unsupported_learning": [
+      "Algebra with variables, quadratic equations, and solving equations containing x and y.",
+      "Trigonometry using sine, cosine, tangent, and angle calculations.",
+      "Calculus with derivatives, integrals, and limits.",
+      "Advanced chemistry involving atoms, electrons, chemical bonds, and reaction equations."
+    ],
+    "off_topic": [
+      "Sports news, cricket scores, football match results, teams, and players.",
+      "Movies, actors, celebrities, songs, and entertainment news.",
+      "Video games, television shows, and unrelated hobbies."
+    ]
+  }
+}
