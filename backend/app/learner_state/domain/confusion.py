@@ -1,5 +1,5 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from app.learner_state.domain.fusion import (
     reliability_aware_fusion,
