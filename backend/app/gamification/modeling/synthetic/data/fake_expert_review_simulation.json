@@ -1,0 +1,477 @@
+{
+  "_comment": "REALISTIC SYNTHETIC FALLBACK ONLY. Curriculum item identifiers and prompts come from grade5-curriculum-game-dataset v1, but learner observations, reviewers, labels, support judgments, outcomes, and rewards are fictional. This file is not authorized research evidence and must not be used to claim expert agreement, calibration, feasibility, or educational effectiveness.",
+  "schema_version": "fake-expert-review-simulation-v2",
+  "dataset_id": "fake-expert-review-simulation-v2",
+  "synthetic": true,
+  "expert_review_simulation": true,
+  "authorized_research_evidence": false,
+  "intended_uses": [
+    "local development of misconception-label workflows",
+    "offline pipeline and manifest smoke tests",
+    "support-policy integration tests",
+    "demonstration of disagreement, abstention, and adjudication"
+  ],
+  "prohibited_uses": [
+    "research claims",
+    "expert-agreement reporting",
+    "empirical calibration",
+    "child-facing learned-policy activation",
+    "replacement for ethics-approved learner evidence"
+  ],
+  "source_content": {
+    "package": "grade5-curriculum-game-dataset",
+    "version": "1.0.0",
+    "path": "data/gamification/grade5-curriculum-game-dataset/v1/game_items.jsonl",
+    "content_status": "needs_review",
+    "note": "Only identifiers and item wording are reused. All response and review evidence is synthetic."
+  },
+  "review_protocol": {
+    "independent_reviewers_per_case": 2,
+    "reviewers_could_not_see_each_others_labels": true,
+    "adjudication_is_synthetic": true,
+    "agreement_metrics_are_not_research_results": true,
+    "conservative_unknown_label": "unknown/other"
+  },
+  "cases": [
+    {
+      "case_id": "fake-case-mat-place-value-01",
+      "item_id": "G5-MAT-G01-I001",
+      "game_id": "G5-MAT-G01",
+      "subject": "MAT",
+      "language": "bilingual",
+      "provisional_skill_id": "G5-MAT-C01-L01-O01",
+      "question_item": {
+        "prompt": "What is the place value of digit 1 in 2215?",
+        "stimulus": "2215",
+        "options": ["2215", "10", "1", "1"],
+        "correct_answer": "10"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "1",
+        "response_time_ms": 18400,
+        "hint_requests": 0,
+        "answer_changes": 0,
+        "attempt_count": 2,
+        "recent_correctness": [false, false, true],
+        "structured_error_code": "place-value-digit-value-confusion"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-mat-reviewer-a",
+          "expert_misconception_label": "place-value-position-ignored",
+          "alternative_plausible_label": "unknown/other",
+          "reason_for_label": "The response repeats the visible digit instead of applying its tens position.",
+          "expert_confidence": "high",
+          "appropriate_support_actions": ["conceptual_hint", "guided_steps"],
+          "inappropriate_support_actions": ["full_explanation"]
+        },
+        {
+          "reviewer_id": "fake-mat-reviewer-b",
+          "expert_misconception_label": "place-value-position-ignored",
+          "alternative_plausible_label": "place-value-counting-direction-error",
+          "reason_for_label": "Selecting 1 rather than 10 is consistent with treating a digit as its face value.",
+          "expert_confidence": "high",
+          "appropriate_support_actions": ["targeted_hint", "guided_steps"],
+          "inappropriate_support_actions": ["independent_retry"]
+        }
+      ],
+      "adjudicated_label": "place-value-position-ignored",
+      "adjudication_reason": "Both synthetic reviewers identify the same position-value error.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e01",
+        "learner_id": "synthetic-expert-sim-l01",
+        "features": {"skill_id": "G5-MAT-C01-L01-O01", "item_id": "G5-MAT-G01-I001", "game_id": "G5-MAT-G01", "language": "bilingual", "current_score": 0.0, "response_time_ms": 18400, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "place-value-digit-value-confusion"},
+        "action_id": "synthetic-guided-steps",
+        "reward": 0.5,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "place-value-position-ignored"
+      }
+    },
+    {
+      "case_id": "fake-case-mat-addition-01",
+      "item_id": "G5-MAT-G03-I001",
+      "game_id": "G5-MAT-G03",
+      "subject": "MAT",
+      "language": "bilingual",
+      "provisional_skill_id": "G5-MAT-C06-L01-O01",
+      "question_item": {
+        "prompt": "Calculate 143 + 389.",
+        "stimulus": "143 + 389",
+        "options": ["532", "533", "542", "246"],
+        "correct_answer": "532"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "542",
+        "response_time_ms": 29700,
+        "hint_requests": 1,
+        "answer_changes": 1,
+        "attempt_count": 3,
+        "recent_correctness": [true, false, false],
+        "structured_error_code": "addition-regrouping-error"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-mat-reviewer-a",
+          "expert_misconception_label": "addition-carry-not-composed",
+          "alternative_plausible_label": "addition-column-alignment-error",
+          "reason_for_label": "The distractor is consistent with mishandling a regrouped ten during column addition.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["guided_steps", "similar_worked_example"],
+          "inappropriate_support_actions": ["full_explanation"]
+        },
+        {
+          "reviewer_id": "fake-mat-reviewer-b",
+          "expert_misconception_label": "addition-carry-not-composed",
+          "alternative_plausible_label": "unknown/other",
+          "reason_for_label": "The response is plausible when the learner carries but combines the tens incorrectly.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["targeted_hint", "similar_worked_example"],
+          "inappropriate_support_actions": ["independent_retry"]
+        }
+      ],
+      "adjudicated_label": "addition-carry-not-composed",
+      "adjudication_reason": "The shared label is retained with medium confidence because one response cannot exclude misalignment.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e02",
+        "learner_id": "synthetic-expert-sim-l02",
+        "features": {"skill_id": "G5-MAT-C06-L01-O01", "item_id": "G5-MAT-G03-I001", "game_id": "G5-MAT-G03", "language": "bilingual", "current_score": 0.0, "response_time_ms": 29700, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "addition-regrouping-error"},
+        "action_id": "synthetic-similar-worked-example",
+        "reward": 0.75,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "addition-carry-not-composed"
+      }
+    },
+    {
+      "case_id": "fake-case-mat-multiplication-01",
+      "item_id": "G5-MAT-G05-I001",
+      "game_id": "G5-MAT-G05",
+      "subject": "MAT",
+      "language": "bilingual",
+      "provisional_skill_id": "G5-MAT-C08-L01-O01",
+      "question_item": {
+        "prompt": "Calculate 7 × 6.",
+        "stimulus": "7 × 6",
+        "options": ["35", "48", "42", "49"],
+        "correct_answer": "42"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "48",
+        "response_time_ms": 9100,
+        "hint_requests": 0,
+        "answer_changes": 0,
+        "attempt_count": 2,
+        "recent_correctness": [false, true, false],
+        "structured_error_code": "multiplication-fact-near-neighbor"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-mat-reviewer-a",
+          "expert_misconception_label": "multiplication-fact-family-confusion",
+          "alternative_plausible_label": "calculation-slip",
+          "reason_for_label": "The answer 48 is a nearby multiplication fact and may indicate fact-family interference.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["targeted_hint", "independent_retry"],
+          "inappropriate_support_actions": ["full_explanation"]
+        },
+        {
+          "reviewer_id": "fake-mat-reviewer-b",
+          "expert_misconception_label": "multiplication-fact-family-confusion",
+          "alternative_plausible_label": "unknown/other",
+          "reason_for_label": "The fast response and nearby fact are consistent with recall interference, though a slip remains possible.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["conceptual_hint", "independent_retry"],
+          "inappropriate_support_actions": ["full_explanation"]
+        }
+      ],
+      "adjudicated_label": "multiplication-fact-family-confusion",
+      "adjudication_reason": "Agreement is retained, with the alternative slip explanation documented.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e03",
+        "learner_id": "synthetic-expert-sim-l03",
+        "features": {"skill_id": "G5-MAT-C08-L01-O01", "item_id": "G5-MAT-G05-I001", "game_id": "G5-MAT-G05", "language": "bilingual", "current_score": 0.0, "response_time_ms": 9100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "multiplication-fact-near-neighbor"},
+        "action_id": "synthetic-targeted-hint",
+        "reward": 0.25,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "multiplication-fact-family-confusion"
+      }
+    },
+    {
+      "case_id": "fake-case-mat-fraction-01",
+      "item_id": "G5-MAT-G07-I001",
+      "game_id": "G5-MAT-G07",
+      "subject": "MAT",
+      "language": "bilingual",
+      "provisional_skill_id": "G5-MAT-C03-L01-O01",
+      "question_item": {
+        "prompt": "What is 9/10 of 10?",
+        "stimulus": "9/10 of 10",
+        "options": ["1", "10", "9", "1"],
+        "correct_answer": "9"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "1",
+        "response_time_ms": 23600,
+        "hint_requests": 1,
+        "answer_changes": 0,
+        "attempt_count": 3,
+        "recent_correctness": [false, false, false],
+        "structured_error_code": "fraction-denominator-only-operation"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-mat-reviewer-a",
+          "expert_misconception_label": "fraction-numerator-ignored",
+          "alternative_plausible_label": "fraction-operation-unknown",
+          "reason_for_label": "The response appears to divide the whole by the denominator without taking nine groups.",
+          "expert_confidence": "high",
+          "appropriate_support_actions": ["conceptual_hint", "guided_steps"],
+          "inappropriate_support_actions": ["independent_retry"]
+        },
+        {
+          "reviewer_id": "fake-mat-reviewer-b",
+          "expert_misconception_label": "fraction-numerator-ignored",
+          "alternative_plausible_label": "unknown/other",
+          "reason_for_label": "Selecting one matches completing only the divide-by-ten step.",
+          "expert_confidence": "high",
+          "appropriate_support_actions": ["guided_steps", "similar_worked_example"],
+          "inappropriate_support_actions": ["full_explanation"]
+        }
+      ],
+      "adjudicated_label": "fraction-numerator-ignored",
+      "adjudication_reason": "Both synthetic reviewers identify omission of the numerator step.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e04",
+        "learner_id": "synthetic-expert-sim-l04",
+        "features": {"skill_id": "G5-MAT-C03-L01-O01", "item_id": "G5-MAT-G07-I001", "game_id": "G5-MAT-G07", "language": "bilingual", "current_score": 0.0, "response_time_ms": 23600, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "fraction-denominator-only-operation"},
+        "action_id": "synthetic-guided-steps",
+        "reward": 0.5,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "fraction-numerator-ignored"
+      }
+    },
+    {
+      "case_id": "fake-case-eng-phonics-01",
+      "item_id": "G5-ENG-G01-I001",
+      "game_id": "G5-ENG-G01",
+      "subject": "ENG",
+      "language": "en",
+      "provisional_skill_id": "G5-ENG-C01-L01-O01",
+      "question_item": {
+        "prompt": "Which word begins with the sound /i/?",
+        "stimulus": "i",
+        "options": ["healthy", "shelter", "island", "recycle"],
+        "correct_answer": "island"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "healthy",
+        "response_time_ms": 12800,
+        "hint_requests": 0,
+        "answer_changes": 0,
+        "attempt_count": 2,
+        "recent_correctness": [true, false, false],
+        "structured_error_code": "initial-sound-not-isolated"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-language-reviewer-a",
+          "expert_misconception_label": "initial-phoneme-not-segmented",
+          "alternative_plausible_label": "vocabulary-unknown",
+          "reason_for_label": "The learner does not select the only option beginning with the target initial sound.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["targeted_hint", "similar_worked_example"],
+          "inappropriate_support_actions": ["full_explanation"]
+        },
+        {
+          "reviewer_id": "fake-language-reviewer-b",
+          "expert_misconception_label": "initial-phoneme-not-segmented",
+          "alternative_plausible_label": "attention-slip",
+          "reason_for_label": "Recent errors and the selected distractor suggest difficulty isolating the first sound.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["conceptual_hint", "targeted_hint"],
+          "inappropriate_support_actions": ["independent_retry"]
+        }
+      ],
+      "adjudicated_label": "initial-phoneme-not-segmented",
+      "adjudication_reason": "The shared phoneme-segmentation label is retained provisionally.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e05",
+        "learner_id": "synthetic-expert-sim-l05",
+        "features": {"skill_id": "G5-ENG-C01-L01-O01", "item_id": "G5-ENG-G01-I001", "game_id": "G5-ENG-G01", "language": "en", "current_score": 0.0, "response_time_ms": 12800, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "initial-sound-not-isolated"},
+        "action_id": "synthetic-targeted-hint",
+        "reward": 0.5,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "initial-phoneme-not-segmented"
+      }
+    },
+    {
+      "case_id": "fake-case-eng-vocabulary-01",
+      "item_id": "G5-ENG-G03-I001",
+      "game_id": "G5-ENG-G03",
+      "subject": "ENG",
+      "language": "en",
+      "provisional_skill_id": "G5-ENG-C03",
+      "question_item": {
+        "prompt": "Which word means “land surrounded by water”?",
+        "stimulus": "land surrounded by water",
+        "options": ["island", "traffic", "celebrate", "energy"],
+        "correct_answer": "island"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "traffic",
+        "response_time_ms": 7400,
+        "hint_requests": 0,
+        "answer_changes": 0,
+        "attempt_count": 1,
+        "recent_correctness": [],
+        "structured_error_code": "vocabulary-meaning-unknown"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-language-reviewer-a",
+          "expert_misconception_label": "unknown/other",
+          "alternative_plausible_label": "target-word-meaning-not-known",
+          "reason_for_label": "A single first-attempt response cannot distinguish missing vocabulary from guessing.",
+          "expert_confidence": "low",
+          "appropriate_support_actions": ["metacognitive_prompt", "conceptual_hint"],
+          "inappropriate_support_actions": ["full_explanation"]
+        },
+        {
+          "reviewer_id": "fake-language-reviewer-b",
+          "expert_misconception_label": "target-word-meaning-not-known",
+          "alternative_plausible_label": "unknown/other",
+          "reason_for_label": "The selected word is unrelated to the definition, which may indicate the target meaning is unknown.",
+          "expert_confidence": "low",
+          "appropriate_support_actions": ["conceptual_hint", "similar_worked_example"],
+          "inappropriate_support_actions": ["full_explanation"]
+        }
+      ],
+      "adjudicated_label": "unknown/other",
+      "adjudication_reason": "The disagreement and sparse evidence are resolved conservatively to abstention.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e06",
+        "learner_id": "synthetic-expert-sim-l06",
+        "features": {"skill_id": "G5-ENG-C03", "item_id": "G5-ENG-G03-I001", "game_id": "G5-ENG-G03", "language": "en", "current_score": 0.0, "response_time_ms": 7400, "hint_requests": 0, "attempt_count": 1, "structured_error_code": "vocabulary-meaning-unknown"},
+        "action_id": "synthetic-metacognitive-prompt",
+        "reward": 0.0,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "unknown/other"
+      }
+    },
+    {
+      "case_id": "fake-case-eng-grammar-01",
+      "item_id": "G5-ENG-G05-I001",
+      "game_id": "G5-ENG-G05",
+      "subject": "ENG",
+      "language": "en",
+      "provisional_skill_id": "G5-ENG-C01-L03",
+      "question_item": {
+        "prompt": "What kind of word is “island”?",
+        "stimulus": "island",
+        "options": ["noun", "verb", "adjective"],
+        "correct_answer": "noun"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "adjective",
+        "response_time_ms": 16300,
+        "hint_requests": 1,
+        "answer_changes": 1,
+        "attempt_count": 3,
+        "recent_correctness": [false, true, false],
+        "structured_error_code": "word-class-noun-adjective-confusion"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-language-reviewer-a",
+          "expert_misconception_label": "noun-adjective-category-confusion",
+          "alternative_plausible_label": "grammar-terms-not-known",
+          "reason_for_label": "The learner classifies a naming word as a describing word after requesting a hint.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["conceptual_hint", "guided_steps"],
+          "inappropriate_support_actions": ["independent_retry"]
+        },
+        {
+          "reviewer_id": "fake-language-reviewer-b",
+          "expert_misconception_label": "noun-adjective-category-confusion",
+          "alternative_plausible_label": "unknown/other",
+          "reason_for_label": "The response is consistent with confusion between the functions of nouns and adjectives.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["similar_worked_example", "targeted_hint"],
+          "inappropriate_support_actions": ["full_explanation"]
+        }
+      ],
+      "adjudicated_label": "noun-adjective-category-confusion",
+      "adjudication_reason": "Both reviewers agree, while retaining uncertainty about terminology knowledge.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e07",
+        "learner_id": "synthetic-expert-sim-l07",
+        "features": {"skill_id": "G5-ENG-C01-L03", "item_id": "G5-ENG-G05-I001", "game_id": "G5-ENG-G05", "language": "en", "current_score": 0.0, "response_time_ms": 16300, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "word-class-noun-adjective-confusion"},
+        "action_id": "synthetic-similar-worked-example",
+        "reward": 0.5,
+        "propensity": 1.0,
+        "valid_outcome": true,
+        "label": "noun-adjective-category-confusion"
+      }
+    },
+    {
+      "case_id": "fake-case-eng-spelling-01",
+      "item_id": "G5-ENG-G08-I001",
+      "game_id": "G5-ENG-G08",
+      "subject": "ENG",
+      "language": "en",
+      "provisional_skill_id": "G5-ENG-C04",
+      "question_item": {
+        "prompt": "Choose the correctly spelled word.",
+        "stimulus": "land surrounded by water",
+        "options": ["siland", "islan", "island", "islandd"],
+        "correct_answer": "island"
+      },
+      "synthetic_learner_observation": {
+        "selected_answer": "islan",
+        "response_time_ms": 11100,
+        "hint_requests": 0,
+        "answer_changes": 0,
+        "attempt_count": 2,
+        "recent_correctness": [true, false, false],
+        "structured_error_code": "final-consonant-omission"
+      },
+      "independent_reviews": [
+        {
+          "reviewer_id": "fake-language-reviewer-a",
+          "expert_misconception_label": "final-consonant-not-represented",
+          "alternative_plausible_label": "visual-attention-slip",
+          "reason_for_label": "The selected spelling omits the final consonant while preserving the rest of the word.",
+          "expert_confidence": "medium",
+          "appropriate_support_actions": ["targeted_hint", "independent_retry"],
+          "inappropriate_support_actions": ["full_explanation"]
+        },
+        {
+          "reviewer_id": "fake-language-reviewer-b",
+          "expert_misconception_label": "unknown/other",
+          "alternative_plausible_label": "final-consonant-not-represented",
+          "reason_for_label": "One multiple-choice response is insufficient to distinguish a spelling pattern from an attention slip.",
+          "expert_confidence": "low",
+          "appropriate_support_actions": ["metacognitive_prompt", "independent_retry"],
+          "inappropriate_support_actions": ["full_explanation"]
+        }
+      ],
+      "adjudicated_label": "unknown/other",
+      "adjudication_reason": "Conflicting interpretations and limited evidence require conservative abstention.",
+      "model_record": {
+        "episode_id": "synthetic-expert-sim-e08",
+        "learner_id": "synthetic-expert-sim-l08",
+        "features": {"skill_id": "G5-ENG-C04", "item_id": "G5-ENG-G08-I001", "game_id": "G5-ENG-G08", "language": "en", "current_score": 0.0, "response_time_ms": 11100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "final-consonant-omission"},
+        "action_id": "synthetic-metacognitive-prompt",
+        "reward": null,
+        "propensity": 1.0,
+        "valid_outcome": false,
+        "label": "unknown/other"
+      }
+    }
+  ]
+}

@@ -35,6 +35,8 @@ frontend/
   src/features/               # Feature-owned UI
 docs/                         # Architecture documentation
 research/                     # Research notes and non-runtime artifacts
+tools/gamification/           # Component-owned dataset tooling
+data/gamification/            # Versioned application/import datasets
 docker-compose.yml            # Local PostgreSQL only
 ```
 

@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "entities": {
+    "curriculum_node": {
+      "primary_key": "curriculum_node_id",
+      "description": "Normalized source curriculum, lesson and activity nodes."
+    },
+    "game": {
+      "primary_key": "game_id",
+      "description": "Reusable gameplay configuration tied to curriculum targets."
+    },
+    "game_item": {
+      "primary_key": "item_id",
+      "description": "One playable round with prompt, response and QA metadata."
+    }
+  },
+  "status_rules": {
+    "prototype": "Generated and structurally valid but not approved for learners.",
+    "needs_review": "Requires educator, native-language or mapping review.",
+    "published": "May be served to learners after all release gates pass."
+  }
+}

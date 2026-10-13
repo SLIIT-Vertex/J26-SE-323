@@ -1,15 +1,18 @@
 import json
 from pathlib import Path
 
+from app.gamification.domain.types import SupportActionType
 from app.gamification.modeling.offline.dataset_manifest import DatasetRow
 
 _DATA_DIRECTORY = Path(__file__).with_name("data")
 DEFAULT_PROTOTYPE_DATASET = _DATA_DIRECTORY / "default_prototype_dataset.json"
 DEFAULT_PROTOTYPE_STATUS = "TODO_EXPERT_AUTHORIZATION_AND_REVIEW"
-FAKE_EXPERT_REVIEW_DATASET = _DATA_DIRECTORY / "fake_expert_reviewed_prototype_dataset.json"
+FAKE_EXPERT_REVIEW_SIMULATION = _DATA_DIRECTORY / "fake_expert_review_simulation.json"
 
 
 def load_dataset_rows(path: Path) -> list[DatasetRow]:
+    if path.resolve() == FAKE_EXPERT_REVIEW_SIMULATION.resolve():
+        return load_fake_expert_review_rows()
     payload = json.loads(path.read_text())
     records = payload.get("records") if isinstance(payload, dict) else payload
     if not isinstance(records, list):
@@ -23,17 +26,19 @@ def load_default_prototype_rows() -> list[DatasetRow]:
     return load_dataset_rows(DEFAULT_PROTOTYPE_DATASET)
 
 
-def load_fake_expert_reviews() -> dict[str, object]:
-    """Load and validate the synthetic expert-review workflow fixture."""
+def load_fake_expert_review_simulation() -> dict[str, object]:
+    """Load and validate the realistic synthetic expert-review fallback."""
 
-    payload = json.loads(FAKE_EXPERT_REVIEW_DATASET.read_text())
+    payload = json.loads(FAKE_EXPERT_REVIEW_SIMULATION.read_text())
     if not isinstance(payload, dict):
-        raise ValueError("fake expert-review dataset must be an object")
+        raise ValueError("fake expert-review simulation must be an object")
     if payload.get("synthetic") is not True or payload.get("authorized_research_evidence") is not False:
-        raise ValueError("fake expert-review dataset must remain synthetic and unauthorized")
+        raise ValueError("fake expert-review simulation must remain synthetic and unauthorized")
+    if payload.get("schema_version") != "fake-expert-review-simulation-v2":
+        raise ValueError("unsupported fake expert-review simulation schema")
     cases = payload.get("cases")
     if not isinstance(cases, list) or not cases:
-        raise ValueError("fake expert-review dataset requires cases")
+        raise ValueError("fake expert-review simulation requires cases")
     required = {
         "reviewer_id",
         "expert_misconception_label",
@@ -43,9 +48,30 @@ def load_fake_expert_reviews() -> dict[str, object]:
         "appropriate_support_actions",
         "inappropriate_support_actions",
     }
+    required_case_fields = {
+        "case_id",
+        "item_id",
+        "game_id",
+        "subject",
+        "language",
+        "provisional_skill_id",
+        "question_item",
+        "synthetic_learner_observation",
+        "model_record",
+        "adjudicated_label",
+        "adjudication_reason",
+    }
+    allowed_support_actions = {action.value for action in SupportActionType}
+    case_ids: set[str] = set()
+    episode_ids: set[str] = set()
+    learner_ids: set[str] = set()
     for case in cases:
-        if not isinstance(case, dict):
-            raise ValueError("expert-review cases must be objects")
+        if not isinstance(case, dict) or not required_case_fields <= set(case):
+            raise ValueError("expert-review case is missing required fields")
+        case_id = case["case_id"]
+        if not isinstance(case_id, str) or case_id in case_ids:
+            raise ValueError("expert-review cases require unique string IDs")
+        case_ids.add(case_id)
         reviews = case.get("independent_reviews")
         if not isinstance(reviews, list) or len(reviews) < 2:
             raise ValueError("each case requires at least two independent reviews")
@@ -56,8 +82,34 @@ def load_fake_expert_reviews() -> dict[str, object]:
             reviewers.add(review["reviewer_id"])
             if review["expert_confidence"] not in {"low", "medium", "high"}:
                 raise ValueError("expert confidence must be low, medium, or high")
+            support_actions = set(review["appropriate_support_actions"]) | set(
+                review["inappropriate_support_actions"]
+            )
+            if not support_actions <= allowed_support_actions:
+                raise ValueError("expert review contains an unsupported action type")
         if len(reviewers) != len(reviews):
             raise ValueError("independent reviews require distinct reviewer IDs")
         if not case.get("adjudicated_label"):
             raise ValueError("each fake case requires an adjudicated label")
+        model_record = case["model_record"]
+        if not isinstance(model_record, dict):
+            raise ValueError("each fake case requires a model-ready record")
+        row = DatasetRow(**model_record)
+        if row.label != case["adjudicated_label"]:
+            raise ValueError("model record label must match the adjudicated label")
+        if not row.learner_id.startswith("synthetic-expert-sim-"):
+            raise ValueError("fake expert-review learners must be explicitly synthetic")
+        if row.features.get("item_id") != case["item_id"]:
+            raise ValueError("model record item must match the reviewed case")
+        if row.episode_id in episode_ids or row.learner_id in learner_ids:
+            raise ValueError("model-ready episode and learner IDs must be unique")
+        episode_ids.add(row.episode_id)
+        learner_ids.add(row.learner_id)
     return payload
+
+
+def load_fake_expert_review_rows() -> list[DatasetRow]:
+    """Return model-ready rows from the validated synthetic review simulation."""
+
+    payload = load_fake_expert_review_simulation()
+    return [DatasetRow(**case["model_record"]) for case in payload["cases"]]  # type: ignore[index]

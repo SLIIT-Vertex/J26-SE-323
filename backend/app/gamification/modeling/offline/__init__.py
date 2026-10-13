@@ -27,12 +27,20 @@ def load_default_prototype_rows() -> list[DatasetRow]:
     return load_default_prototype_rows()
 
 
-def load_fake_expert_reviews() -> dict[str, object]:
+def load_fake_expert_review_simulation() -> dict[str, object]:
     """Compatibility export; new code should import from `synthetic.datasets`."""
 
-    from app.gamification.modeling.synthetic.datasets import load_fake_expert_reviews
+    from app.gamification.modeling.synthetic.datasets import load_fake_expert_review_simulation
 
-    return load_fake_expert_reviews()
+    return load_fake_expert_review_simulation()
+
+
+def load_fake_expert_review_rows() -> list[DatasetRow]:
+    """Compatibility export; new code should import from `synthetic.datasets`."""
+
+    from app.gamification.modeling.synthetic.datasets import load_fake_expert_review_rows
+
+    return load_fake_expert_review_rows()
 
 __all__ = [
     "DEFAULT_PROTOTYPE_STATUS",
@@ -45,6 +53,7 @@ __all__ = [
     "evaluate_classification",
     "evaluate_logged_policy",
     "load_default_prototype_rows",
-    "load_fake_expert_reviews",
+    "load_fake_expert_review_rows",
+    "load_fake_expert_review_simulation",
     "train_frequency_candidate",
 ]

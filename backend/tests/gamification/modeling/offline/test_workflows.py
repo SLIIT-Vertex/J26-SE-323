@@ -1,4 +1,6 @@
+import json
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -15,8 +17,11 @@ from app.gamification.modeling.shared.artifact_registry import (
 )
 from app.gamification.modeling.support_selection.evaluation import evaluate_logged_policy
 from app.gamification.modeling.synthetic.datasets import (
+    FAKE_EXPERT_REVIEW_SIMULATION,
+    load_dataset_rows,
     load_default_prototype_rows,
-    load_fake_expert_reviews,
+    load_fake_expert_review_rows,
+    load_fake_expert_review_simulation,
 )
 from tests.gamification.modeling.fixtures import NOW, dataset_rows
 
@@ -165,15 +170,66 @@ def test_default_prototype_dataset_is_explicitly_synthetic_and_usable() -> None:
     manifest.assert_no_learner_leakage()
 
 
-def test_fake_expert_review_dataset_exercises_independent_review_workflow() -> None:
-    payload = load_fake_expert_reviews()
+def test_fake_expert_review_simulation_exercises_independent_review_workflow() -> None:
+    payload = load_fake_expert_review_simulation()
     assert payload["synthetic"] is True
     assert payload["authorized_research_evidence"] is False
     cases = payload["cases"]
-    assert len(cases) == 4
+    assert len(cases) == 8
     assert all(len(case["independent_reviews"]) == 2 for case in cases)
     assert any(
         len({review["expert_misconception_label"] for review in case["independent_reviews"]})
         > 1
         for case in cases
     )
+
+
+def test_fake_expert_review_rows_are_model_ready_and_reference_catalogue_items() -> None:
+    payload = load_fake_expert_review_simulation()
+    rows = load_fake_expert_review_rows()
+    assert load_dataset_rows(FAKE_EXPERT_REVIEW_SIMULATION) == rows
+    assert len(rows) == len(payload["cases"])
+    assert all(row.learner_id.startswith("synthetic-expert-sim-") for row in rows)
+    assert all(row.label for row in rows)
+
+    item_path = (
+        Path(__file__).resolve().parents[5]
+        / "data"
+        / "gamification"
+        / "grade5-curriculum-game-dataset"
+        / "v1"
+        / "game_items.jsonl"
+    )
+    catalogue_items = {
+        item["item_id"]: item
+        for item in (json.loads(line) for line in item_path.read_text().splitlines())
+    }
+    assert {case["item_id"] for case in payload["cases"]} <= set(catalogue_items)
+    for case in payload["cases"]:
+        source = catalogue_items[case["item_id"]]
+        question = case["question_item"]
+        assert case["game_id"] == source["game_id"]
+        assert case["subject"] == source["subject"]
+        assert case["language"] == source["language"]
+        assert question["prompt"] == (source["prompt_en"] or source["prompt_primary"])
+        assert question["stimulus"] == (source["stimulus_en"] or source["stimulus_primary"])
+        assert question["options"] == json.loads(source["options_json"])
+        assert question["correct_answer"] == json.loads(source["correct_answer_json"])[0]
+
+    manifest = DatasetManifest.build(
+        rows,
+        dataset_id=str(payload["dataset_id"]),
+        split_seed=42,
+        synthetic=True,
+    )
+    candidate = train_frequency_candidate(
+        rows,
+        manifest=manifest,
+        model_name="misconception-baseline",
+        model_version="synthetic-fallback-v1",
+        source_commit="test-fixture-commit",
+        feature_definition_version="gamification-features-v1",
+        seed=42,
+    )
+    candidate.verify()
+    assert candidate.parameters["class_priors"]
