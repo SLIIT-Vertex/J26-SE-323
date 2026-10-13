@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "skills": [
+    "APT-PAT",
+    "APT-SPA",
+    "APT-DIR",
+    "APT-LOG",
+    "APT-REL",
+    "APT-VIS",
+    "APT-WRD",
+    "MAT-NUM",
+    "MAT-OPS",
+    "MAT-FRC",
+    "MAT-LEN",
+    "MAT-MAS",
+    "MAT-TIM",
+    "MAT-MON",
+    "MAT-GEO",
+    "MAT-DAT",
+    "LAN-CMP",
+    "LAN-AGR",
+    "LAN-TNS",
+    "LAN-ORT",
+    "LAN-VOC",
+    "LAN-IDM",
+    "LAN-WRT",
+    "LAN-BIL",
+    "ENV-BIO",
+    "ENV-PHY",
+    "ENV-HLT",
+    "ENV-AGR",
+    "ENV-GEO",
+    "ENV-CIV"
+  ],
+  "source_coding": {
+    "digital": 1,
+    "paper": 0
+  },
+  "difficulty_to_model_value": {
+    "easy": 0.0,
+    "medium": 0.5,
+    "hard": 1.0
+  },
+  "penalty": {
+    "digital_formula": "0.6*min(hints/3,1) + 0.4*min(time_ms/180000,1)",
+    "paper_default": 0.08,
+    "paper_default_note": "DECISION: paper answers have no per-question time or hints. 0.08 is the training-data mean for paper (0.4*35000/180000 = 0.078). Check sensitivity before trusting it."
+  },
+  "history_cap_steps": 140,
+  "min_attempts_for_known_skill": 3,
+  "mastery_definition": "probability of a correct answer on a MEDIUM-difficulty PAPER question for that skill",
+  "model": {
+    "class": "MindBridgeDKT",
+    "use_source": true,
+    "emb": 32,
+    "hidden": 96,
+    "gru_layers": 2,
+    "gru_dropout": 0.3,
+    "head": [
+      "Linear(hidden+emb+2, 64)",
+      "ReLU",
+      "Dropout(0.2)",
+      "Linear(64,1)"
+    ]
+  },
+  "weights_file": "mindbridge_dkt_v2_best.pt"
+}
