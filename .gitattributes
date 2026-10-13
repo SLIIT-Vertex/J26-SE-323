@@ -1,0 +1,26 @@
+# Normalize text files to LF in the repository and in every working tree.
+* text=auto eol=lf
+
+# Shell scripts must use LF to run correctly on macOS and Linux.
+*.sh text eol=lf
+
+# Windows command scripts require CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files must never be modified by line-ending normalization.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.jar binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.xls binary
+*.xlsx binary
