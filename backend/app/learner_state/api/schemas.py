@@ -76,9 +76,23 @@ class LearnerStateRequest(BaseModel):
         le=1.0,
     )
 
-
 class ConfusionResult(BaseModel):
-    probability: float = Field(
+    visual_probability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    behavior_probability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    visual_reliability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    behavior_reliability: float = Field(
         ge=0.0,
         le=1.0,
     )
@@ -109,9 +123,23 @@ class ConfusionResult(BaseModel):
         "collect_more_evidence",
     ]
 
-
 class DisengagementResult(BaseModel):
-    probability: float = Field(
+    visual_probability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    behavior_probability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    visual_reliability: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    behavior_reliability: float = Field(
         ge=0.0,
         le=1.0,
     )
@@ -140,7 +168,6 @@ class DisengagementResult(BaseModel):
         "request_reengagement_support",
         "collect_more_evidence",
     ]
-
 
 class LearnerStateResponse(BaseModel):
     session_id: str
