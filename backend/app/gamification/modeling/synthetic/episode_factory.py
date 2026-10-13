@@ -1,5 +1,3 @@
-"""Synthetic engineering fixtures. Outputs are never research effectiveness evidence."""
-
 from dataclasses import dataclass
 from random import Random
 
@@ -19,6 +17,8 @@ class SyntheticEpisode:
 
 
 def generate_synthetic_episodes(*, seed: int) -> tuple[SyntheticEpisode, ...]:
+    """Generate deterministic engineering cases explicitly marked as synthetic."""
+
     rng = Random(seed)
     cases = (
         ("success", 0.0, 1.0, "error-a", True, True, True, 30),

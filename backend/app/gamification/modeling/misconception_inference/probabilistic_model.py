@@ -1,50 +1,12 @@
 import math
-from dataclasses import dataclass
-from types import MappingProxyType
 from typing import Mapping
 
 from app.gamification.application.records import FeatureSnapshotRecord
-
-MISCONCEPTION_MODEL_VERSION = "probabilistic-authored-v1"
-DETERMINISTIC_BASELINE_VERSION = "deterministic-error-map-v1"
-UNKNOWN_CODE = "unknown/other"
-
-
-@dataclass(frozen=True, slots=True)
-class MisconceptionDistribution:
-    probabilities: Mapping[str, float]
-    entropy: float
-    confidence: float
-    abstained: bool
-    model_version: str
-    catalogue_version: str
-    reason_codes: tuple[str, ...]
-
-    def __post_init__(self) -> None:
-        probabilities = dict(self.probabilities)
-        if not probabilities or abs(sum(probabilities.values()) - 1.0) > 1e-9:
-            raise ValueError("misconception probabilities must sum to one")
-        if any(value < 0 or value > 1 for value in probabilities.values()):
-            raise ValueError("misconception probabilities must be in [0, 1]")
-        object.__setattr__(self, "probabilities", MappingProxyType(probabilities))
-
-
-class DeterministicMisconceptionBaseline:
-    def __init__(self, error_map: Mapping[str, str]) -> None:
-        self._error_map = dict(error_map)
-
-    def predict(
-        self, snapshot: FeatureSnapshotRecord, *, catalogue_version: str
-    ) -> MisconceptionDistribution:
-        error_code = snapshot.values.get("structured_error_code")
-        prediction = self._error_map.get(str(error_code), UNKNOWN_CODE)
-        return _distribution(
-            {prediction: 1.0},
-            model_version=DETERMINISTIC_BASELINE_VERSION,
-            catalogue_version=catalogue_version,
-            abstain_threshold=0.0,
-            reasons=("AUTHORED_ERROR_MAPPING",) if prediction != UNKNOWN_CODE else ("NO_MAPPING",),
-        )
+from app.gamification.modeling.misconception_inference.contracts import (
+    MISCONCEPTION_MODEL_VERSION,
+    UNKNOWN_CODE,
+)
+from app.gamification.modeling.shared.contracts import MisconceptionDistribution
 
 
 class ProbabilisticMisconceptionModel:
@@ -84,7 +46,7 @@ class ProbabilisticMisconceptionModel:
         total = sum(exponentials.values())
         probabilities = {code: value / total for code, value in exponentials.items()}
         reasons = ("ERROR_PATTERN_MATCHED",) if likelihoods else ("SPARSE_OR_UNSEEN_SKILL",)
-        return _distribution(
+        return build_distribution(
             probabilities,
             model_version=MISCONCEPTION_MODEL_VERSION,
             catalogue_version=self.catalogue_version,
@@ -93,7 +55,7 @@ class ProbabilisticMisconceptionModel:
         )
 
 
-def _distribution(
+def build_distribution(
     probabilities: Mapping[str, float],
     *,
     model_version: str,
@@ -101,6 +63,8 @@ def _distribution(
     abstain_threshold: float,
     reasons: tuple[str, ...],
 ) -> MisconceptionDistribution:
+    """Normalize shared output metadata without binding consumers to an implementation."""
+
     normalized = dict(probabilities)
     confidence = max(normalized.values())
     abstained = confidence < abstain_threshold or max(

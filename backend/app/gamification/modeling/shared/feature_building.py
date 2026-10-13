@@ -78,6 +78,8 @@ class DecisionFeatureInput:
 def reject_future_evidence(
     *, captured_at: datetime, source_as_of: Mapping[str, datetime]
 ) -> None:
+    """Reject future or post-decision evidence at the shared feature boundary."""
+
     for source, observed_at in source_as_of.items():
         normalized = source.lower().replace("-", "_")
         if any(token in normalized for token in _FORBIDDEN_TOKENS):
@@ -89,7 +91,7 @@ def reject_future_evidence(
 
 
 class FeatureBuilder:
-    """Creates immutable pre-decision snapshots with explicit optional missingness."""
+    """Create immutable pre-decision snapshots with explicit optional missingness."""
 
     version = FEATURE_DEFINITION_VERSION
 

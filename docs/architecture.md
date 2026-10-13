@@ -61,7 +61,9 @@ contracts, durable model-first evidence persistence, deterministic in-memory tes
 provisional three-model engineering pipelines. Expert validation, RAG, and HTTP routes remain
 deferred. See the
 [versioned component architecture](adaptive-gamified-learning/architecture-v1.md) and
-[three-model pipeline specification](adaptive-gamified-learning/model-pipelines-v1.md).
+[three-model pipeline specification](adaptive-gamified-learning/model-pipelines-v1.md). The model
+implementation follows the independently packaged
+[three-model code architecture](adaptive-gamified-learning/model-code-architecture-v2.md).
 
 Dependency direction is API and infrastructure toward application/domain; domain code never
 depends on frameworks or another research module. Cross-module evidence is consumed through

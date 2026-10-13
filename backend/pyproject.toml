@@ -50,7 +50,7 @@ testpaths = ["tests"]
 include = ["app*"]
 
 [tool.setuptools.package-data]
-"app.gamification.modeling" = ["data/*.json"]
+"app.gamification.modeling.synthetic" = ["data/*.json"]
 
 [tool.ruff]
 line-length = 100
