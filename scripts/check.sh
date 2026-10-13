@@ -6,6 +6,8 @@ cd "$root"
 
 if [ -x backend/.venv/bin/python ]; then
   python="$root/backend/.venv/bin/python"
+elif [ -x backend/.venv/Scripts/python.exe ]; then
+  python="$root/backend/.venv/Scripts/python.exe"
 elif command -v python3 >/dev/null 2>&1; then
   python=$(command -v python3)
 else
