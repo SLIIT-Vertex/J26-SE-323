@@ -4,7 +4,8 @@ MindBridge is a university research project supporting Sri Lankan Grade 4–5 sc
 learners. This repository contains only the shared technical foundation: a modular-monolith API,
 a shared learner identity, PostgreSQL with pgvector readiness, and a minimal mobile-ready web app.
 
-The four research algorithms are intentionally not implemented.
+Research modules are at different prototype stages; the adaptive gamified learning episode and
+its three research-model pipelines are not implemented.
 
 Contributors should complete the one-time hook setup and follow the rebase-only workflow in
 [docs/contributing.md](docs/contributing.md).
@@ -26,10 +27,10 @@ each other's infrastructure. See [docs/architecture.md](docs/architecture.md).
 ```text
 backend/
   app/shared/                 # Database, auth boundary, shared learner
-  app/knowledge_tracing/      # Empty Clean Architecture boundary
-  app/learner_state/          # Empty Clean Architecture boundary
-  app/adaptive_tutor/         # Scaffolding policy contracts; controller deferred
-  app/gamification/           # Empty Clean Architecture boundary
+  app/knowledge_tracing/      # Question/attempt persistence and model-supporting infrastructure
+  app/learner_state/          # Learner-state inference service and API
+  app/adaptive_tutor/         # Deterministic scaffolding controller and contracts
+  app/gamification/           # Adaptive episode domain and public contract foundation
   alembic/                    # Database migrations
   tests/                      # API tests
 frontend/
@@ -140,4 +141,6 @@ npm run open:android   # Open the Android Studio project
 - `GET /api/v1/learners/{learner_id}`
 
 The learner stores only `id`, `grade`, `preferred_language`, `created_at`, and `updated_at`.
-Authentication and all research algorithms remain intentionally deferred.
+Authentication and the adaptive gamified learning episode/models remain intentionally deferred.
+Existing research modules contain independently owned prototype implementations; their presence
+does not establish validation or educational effectiveness.
