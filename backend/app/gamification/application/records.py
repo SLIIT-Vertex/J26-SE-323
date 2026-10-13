@@ -132,6 +132,8 @@ class PolicyCandidateRecord:
     propensity: float
     eligible: bool
     reason_codes: tuple[str, ...]
+    predicted_reward: float | None = None
+    uncertainty: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,6 +148,7 @@ class PolicyDecisionRecord:
     candidates: tuple[PolicyCandidateRecord, ...]
     reason_codes: tuple[str, ...]
     decided_at: datetime
+    random_seed: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

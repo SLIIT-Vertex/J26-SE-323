@@ -57,9 +57,11 @@ inside the module that owns them. It does not create embeddings or research-spec
 
 The gamification module defines the framework-independent `adaptive-episode-v1` state machine,
 application-owned integration ports, strictly validated `gamification-boundary-v1` transport
-contracts, durable model-first evidence persistence, and deterministic in-memory test adapters.
-Learned models, RAG, and HTTP routes remain deferred. See the
-[versioned component architecture](adaptive-gamified-learning/architecture-v1.md).
+contracts, durable model-first evidence persistence, deterministic in-memory test adapters, and
+provisional three-model engineering pipelines. Expert validation, RAG, and HTTP routes remain
+deferred. See the
+[versioned component architecture](adaptive-gamified-learning/architecture-v1.md) and
+[three-model pipeline specification](adaptive-gamified-learning/model-pipelines-v1.md).
 
 Dependency direction is API and infrastructure toward application/domain; domain code never
 depends on frameworks or another research module. Cross-module evidence is consumed through
@@ -67,7 +69,7 @@ versioned ports, not ORM imports or private-table access.
 
 ## Intentional omissions
 
-- the three adaptive gamified learning research-model pipelines
+- expert-labelled calibration and release approval for adaptive gamified learning models
 - final curriculum/RAG, game-content, experiment, reward, and governance persistence
 - authentication implementation (only its shared boundary exists)
 - background workers, queues, caches, microservices, and orchestration infrastructure

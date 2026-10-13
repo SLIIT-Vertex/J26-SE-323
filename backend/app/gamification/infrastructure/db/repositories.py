@@ -135,7 +135,7 @@ class SqlAlchemyPolicyDecisionStore:
                 policy_version=decision.policy_version,
                 support_catalogue_version=decision.support_catalogue_version,
                 reason_codes_json=list(decision.reason_codes),
-                random_seed=None,
+                random_seed=decision.random_seed,
                 decided_at=decision.decided_at,
             )
         )
@@ -149,8 +149,8 @@ class SqlAlchemyPolicyDecisionStore:
                     ineligibility_reasons_json=(
                         [] if candidate.eligible else list(candidate.reason_codes)
                     ),
-                    predicted_reward=None,
-                    uncertainty=None,
+                    predicted_reward=candidate.predicted_reward,
+                    uncertainty=candidate.uncertainty,
                     propensity=candidate.propensity,
                     rank=rank,
                 )
@@ -181,11 +181,14 @@ class SqlAlchemyPolicyDecisionStore:
                     propensity=candidate.propensity,
                     eligible=candidate.eligible,
                     reason_codes=tuple(candidate.ineligibility_reasons_json),
+                    predicted_reward=candidate.predicted_reward,
+                    uncertainty=candidate.uncertainty,
                 )
                 for candidate in candidates
             ),
             reason_codes=tuple(row.reason_codes_json),
             decided_at=_aware(row.decided_at),
+            random_seed=row.random_seed,
         )
 
 
