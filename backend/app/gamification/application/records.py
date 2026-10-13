@@ -1,14 +1,16 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from types import MappingProxyType
 from typing import Mapping
 from uuid import UUID
 
+from app.gamification.domain.episode import AdaptiveEpisode
 from app.gamification.domain.types import (
     ActionId,
     CatalogueVersion,
     ContractVersion,
     DecisionMode,
+    EpisodeId,
     FeatureSnapshotId,
     ItemId,
     ModelId,
@@ -113,9 +115,14 @@ class FeatureSnapshotRecord:
     taxonomy_version: TaxonomyVersion
     feature_definition_version: str
     values: Mapping[str, float | int | bool | str | None]
+    missingness: Mapping[str, bool] = field(default_factory=dict)
+    source_as_of: Mapping[str, str] = field(default_factory=dict)
+    purpose: str = "policy_decision"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "values", MappingProxyType(dict(self.values)))
+        object.__setattr__(self, "missingness", MappingProxyType(dict(self.missingness)))
+        object.__setattr__(self, "source_as_of", MappingProxyType(dict(self.source_as_of)))
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +137,7 @@ class PolicyCandidateRecord:
 @dataclass(frozen=True, slots=True)
 class PolicyDecisionRecord:
     decision_id: PolicyDecisionId
+    episode_id: EpisodeId
     feature_snapshot_id: FeatureSnapshotId
     selected_action_id: ActionId
     mode: DecisionMode
@@ -160,4 +168,74 @@ class AuditEvent:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
+
+
+@dataclass(frozen=True, slots=True)
+class MisconceptionBeliefEvidence:
+    misconception_code: str
+    probability: float
+    rank: int
+
+
+@dataclass(frozen=True, slots=True)
+class SupportExposureEvidence:
+    exposure_id: UUID
+    action_id: ActionId
+    delivery_status: str
+    presented_at: datetime | None
+    completed_at: datetime | None
+    duration_ms: int | None
+    render_version: str
+
+
+@dataclass(frozen=True, slots=True)
+class VerificationPairEvidence:
+    pair_id: UUID
+    baseline_item_id: ItemId
+    baseline_item_version: str
+    verification_item_id: ItemId
+    verification_item_version: str
+    equivalence_version: str
+    review_status: str
+
+
+@dataclass(frozen=True, slots=True)
+class IndependenceOutcomeEvidence:
+    outcome_id: UUID
+    validity: str
+    baseline_score: float
+    verification_score: float
+    raw_independence_gain: float | None
+    invalid_reason: str | None
+    formula_version: str
+    calculated_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ItemResponseEvidence:
+    response_id: UUID
+    item_id: ItemId
+    item_version: str
+    phase: str
+    support_state: str
+    answer: Mapping[str, object]
+    is_correct: bool
+    score: float
+    submitted_at: datetime
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "answer", MappingProxyType(dict(self.answer)))
+
+
+@dataclass(frozen=True, slots=True)
+class EpisodeEvidenceBundle:
+    episode: AdaptiveEpisode
+    baseline_response: ItemResponseEvidence | None
+    verification_response: ItemResponseEvidence | None
+    feature_snapshot: FeatureSnapshotRecord | None
+    misconception_beliefs: tuple[MisconceptionBeliefEvidence, ...]
+    policy_decision: PolicyDecisionRecord | None
+    support_exposures: tuple[SupportExposureEvidence, ...]
+    verification_pair: VerificationPairEvidence | None
+    outcome: IndependenceOutcomeEvidence | None
 
