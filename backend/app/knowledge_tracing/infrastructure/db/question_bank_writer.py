@@ -49,7 +49,7 @@ def write_plan(session: Session, plan: ImportPlan) -> dict[str, int]:
         if row is None:
             row = QuestionModel(id=question.id, skill_code=question.skill_code, difficulty="easy")
             session.add(row)
-        # Fields owned by the files are refreshed; verification and notes are left alone.
+        # Fields owned by the files are refreshed; notes and the active flag are left alone.
         row.skill_code = question.skill_code
         row.secondary_skill_codes = list(question.secondary_skill_codes)
         row.difficulty = question.difficulty

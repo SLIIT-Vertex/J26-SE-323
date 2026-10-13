@@ -213,3 +213,29 @@ def test_storage_image_source_reads_size_and_hash(tmp_path: Path) -> None:
     assert source.describe("si", "9.9") is None
     with pytest.raises(Exception, match="PNG or JPEG|cannot identify"):
         source.describe("si", "3.42")
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"skills": "1.1 - APT-AAA\n"},
+        {"difficulty": "1.1 - APT-AAA: Easy | 1.0 min"},
+        {"skills": "1.1 - APT-AAA\n1.2 - MAT-MAA, MAT-MAB\n1.3 - MAT-MAA\n"},
+        {"skills": "1.1 - NOP-NOP\n1.2 - MAT-MAA, MAT-MAB\n"},
+        {"answers_ta": "1.1 - 3\n"},
+        {"answers": "1.1 - 3\n1.2 - 2, \n"},
+        {"answers_ta": "1.1 - 3\n1.2 - 2\n"},
+    ],
+)
+def test_every_question_level_error_points_to_a_file_and_line(override: dict[str, str]) -> None:
+    plan = build_plan(bank(**override), FakeImages())
+
+    assert plan.errors
+    assert all(issue.line is not None for issue in plan.errors), errors(plan)
+
+
+def test_a_missing_image_points_to_the_answer_line() -> None:
+    plan = build_plan(bank(), FakeImages(missing={("si", "1.2")}))
+
+    [issue] = plan.errors
+    assert (issue.source, issue.line, issue.question_id) == ("answers-1.md", 2, "1.2")

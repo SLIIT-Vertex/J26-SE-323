@@ -70,8 +70,6 @@ class QuestionModel(Base):
     difficulty_source: Mapped[str] = mapped_column(String(15), server_default="manual")
     est_seconds: Mapped[int] = mapped_column(Integer, server_default=text("60"))
     active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
-    key_verified_by: Mapped[str | None] = mapped_column(String(100))
-    key_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

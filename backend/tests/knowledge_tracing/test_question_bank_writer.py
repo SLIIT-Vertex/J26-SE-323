@@ -89,7 +89,7 @@ def test_importing_twice_updates_in_place(session: Session) -> None:
     session.commit()
     question = session.get(QuestionModel, "1.2")
     assert question is not None
-    question.key_verified_by = "Teacher"
+    question.notes = "checked by hand"
     session.commit()
 
     write_plan(session, plan_with(key_si="3, ගස්"))
@@ -103,7 +103,7 @@ def test_importing_twice_updates_in_place(session: Session) -> None:
     assert si is not None
     assert si.answer_key_raw == "3, ගස්"
     session.refresh(question)
-    assert question.key_verified_by == "Teacher"
+    assert question.notes == "checked by hand"
 
 
 def test_a_changed_skill_index_is_refused(session: Session) -> None:

@@ -267,9 +267,13 @@ def _plan_set(number, files, images, skill_codes, plan, error, warn) -> None:
     si_ids = set(answers_by_language["si"])
     ta_ids = set(answers_by_language["ta"])
     for qid in sorted(si_ids - ta_ids, key=_id_key):
-        error(names["ta"], f"{qid} has a Sinhala answer but no Tamil answer", qid=qid)
+        si_entry = answers_by_language["si"][qid]
+        error(names["si"], f"{qid} has a Sinhala answer but no Tamil answer in {names['ta']}",
+              si_entry.line, qid)
     for qid in sorted(ta_ids - si_ids, key=_id_key):
-        error(names["si"], f"{qid} has a Tamil answer but no Sinhala answer", qid=qid)
+        ta_entry = answers_by_language["ta"][qid]
+        error(names["ta"], f"{qid} has a Tamil answer but no Sinhala answer in {names['si']}",
+              ta_entry.line, qid)
 
     answered = si_ids & ta_ids
     for qid in sorted(set(skill_map.entries) - answered, key=_id_key):
@@ -301,9 +305,11 @@ def _plan_question(
 ) -> None:
     before = len(plan.errors)
     if skill is None:
-        error(skill_map_name, f"{qid} has an answer but no skill", qid=qid)
+        error(names["si"], f"{qid} has an answer but no skill in {skill_map_name}",
+              answers["si"][qid].line, qid)
     if level is None:
-        error(difficulty_name, f"{qid} has an answer but no difficulty/time", qid=qid)
+        error(names["si"], f"{qid} has an answer but no difficulty/time in {difficulty_name}",
+              answers["si"][qid].line, qid)
     if skill is None or level is None:
         return
     for code in skill.skills:
@@ -325,10 +331,10 @@ def _plan_question(
         try:
             image = images.describe(language, qid)
         except ImageUnreadable as problem:
-            error("images", f"{language} image is unusable: {problem}", qid=qid)
+            error(names[language], f"{language} image is unusable: {problem}", entry.line, qid)
             continue
         if image is None:
-            error("images", f"no {language} image found", qid=qid)
+            error(names[language], f"no {language} image found", entry.line, qid)
             continue
         variants[language] = VariantPlan(language, image, entry.raw_key, parts)
         if len(parts) == 1 and image.width and image.height / image.width > TALL_IMAGE_RATIO:

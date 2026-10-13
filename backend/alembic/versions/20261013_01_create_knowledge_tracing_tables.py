@@ -40,8 +40,6 @@ def upgrade() -> None:
         sa.Column("difficulty_source", sa.String(length=15), server_default="manual", nullable=False),
         sa.Column("est_seconds", sa.Integer(), server_default=sa.text("60"), nullable=False),
         sa.Column("active", sa.Boolean(), server_default=sa.text("true"), nullable=False),
-        sa.Column("key_verified_by", sa.String(length=100), nullable=True),
-        sa.Column("key_verified_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.CheckConstraint(
