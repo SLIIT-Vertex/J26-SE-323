@@ -30,9 +30,10 @@ The Swagger UI "Try it out" button can be used with the example request below.
 | Field | Type | Required | Validation | Meaning |
 | --- | --- | --- | --- | --- |
 | `session_id` | string | yes | length 1–100 | Identifies the learning session. History is kept per (`session_id`, `learner_id`). |
-| `learner_id` | UUID | yes | valid UUID | Shared MindBridge learner identifier. Not checked against the learners table. |
+| `learner_id` | UUID | yes | valid UUID; must exist | Shared MindBridge learner identifier. Must already exist in the shared learners table (create it with `POST /api/v1/learners`); otherwise HTTP 404. |
 | `window_id` | integer | yes | ≥ 1 | Sequence number of the window; must increase within a session (§5). |
-| `timestamp` | datetime (ISO 8601) | yes | valid datetime | Time of the window. Accepted but not used in calculations. |
+| `skill_id` | string | yes | 1–16 characters after trimming spaces | The skill the learner is working on in this window (for example `MAT-FRC`), taken from the question being answered. Used only to store the result per skill for the AI Tutor ([`09`](09_TUTOR_HANDOFF.md)); it is **not** a model input. Membership in the skill taxonomy is not checked here. |
+| `timestamp` | datetime (ISO 8601) | yes | valid datetime | Time of the window. Stored as `observed_at` with the skill state; not used in calculations. |
 | `visual` | object | yes | see §2.2 | Derived webcam features. |
 | `behaviour` | object | yes | see §2.3 | Interaction features. Note the British spelling of this request field. |
 | `task_progress` | number or null | no (default `null`) | 0.0–1.0 | Learner's progress on the current task. Used only to separate productive from intervention-worthy confusion. |
@@ -79,6 +80,7 @@ Feature meanings and how they feed the models are described in
 | `session_id` | string | Echo of the request |
 | `learner_id` | UUID | Echo of the request |
 | `window_id` | integer | Echo of the request |
+| `skill_id` | string | Echo of the request (after trimming spaces) |
 | `confusion` | `ConfusionResult` | Confusion result for this window |
 | `disengagement` | `DisengagementResult` | Disengagement result for this window |
 | `recommended_action` | enum | One combined action (§3.3) |
@@ -129,13 +131,15 @@ Response field names use the code spelling `behavior_*`, while the request objec
 
 ### 4.1 Request
 
-This is the payload used in `backend/tests/test_learner_state.py`, with a fixed example UUID.
+This is the payload used in `backend/tests/test_learner_state.py`, with a fixed example UUID. The
+learner must already exist (`POST /api/v1/learners` returns a new `id` to use here).
 
 ```json
 {
   "session_id": "learner-state-test-session",
   "learner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "window_id": 1,
+  "skill_id": "MAT-FRC",
   "timestamp": "2026-10-13T09:45:00+05:30",
   "visual": {
     "mean_eye_openness": 0.27,
@@ -175,6 +179,7 @@ session. Values are rounded to 4 decimal places here; the API returns full float
   "session_id": "learner-state-test-session",
   "learner_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "window_id": 1,
+  "skill_id": "MAT-FRC",
   "confusion": {
     "visual_probability": 0.5224,
     "behavior_probability": 0.1904,
@@ -238,7 +243,8 @@ operation the ordering check is the only source of this error.
 
 Returned by FastAPI/Pydantic before the service runs, for example when:
 
-- a required field is missing (including the whole `visual` or `behaviour` object),
+- a required field is missing (including `skill_id` or the whole `visual` or `behaviour` object),
+- `skill_id` is blank or longer than 16 characters,
 - `learner_id` is not a valid UUID or `timestamp` is not a valid datetime,
 - `window_id < 1`,
 - `session_id` is empty or longer than 100 characters,
@@ -262,13 +268,27 @@ The body uses FastAPI's standard format, for example:
 }
 ```
 
-### 6.3 Other errors
+### 6.3 HTTP 404 Not Found — unknown learner
 
-HTTP 409 and HTTP 422 are the only error responses this endpoint documents. The router does not
+Returned when `learner_id` does not exist in the shared learners table:
+
+```json
+{
+  "detail": "Learner not found"
+}
+```
+
+The check runs before evaluation, so a rejected request does not change session history.
+
+### 6.4 Other errors
+
+HTTP 404, HTTP 409 and HTTP 422 are the only error responses this endpoint documents. The router does not
 define any other error response. As with any FastAPI endpoint, an unexpected unhandled server error
 may result in HTTP 500; this is not part of the learner-state API contract.
 
 ## 7. Endpoints that do not exist
 
 There is currently no endpoint to read history, reset a session, or list past learner states.
+The stored support need is read by other backend modules **in process** through the
+`SupportNeedProvider` contract, not over HTTP (see [`09_TUTOR_HANDOFF.md`](09_TUTOR_HANDOFF.md)).
 `LearnerStateService.clear_session()` exists in code but is not exposed through the API.

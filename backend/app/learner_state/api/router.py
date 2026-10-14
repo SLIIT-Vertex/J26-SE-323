@@ -2,6 +2,7 @@ from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
 from app.learner_state.api.schemas import (
     ConfusionResult,
@@ -14,9 +15,19 @@ from app.learner_state.application.service import (
     LearnerStateWindow,
     VisualObservation,
 )
+from app.learner_state.application.support_need import (
+    LearnerSkillStateRepository,
+    skill_state_from_evaluation,
+)
+from app.learner_state.infrastructure.db.repository import (
+    SqlAlchemyLearnerSkillStateRepository,
+)
 from app.learner_state.infrastructure.feature_builder import (
     BehaviorObservation,
 )
+from app.shared.database.session import get_db
+from app.shared.learner.repository import SqlAlchemyLearnerRepository
+from app.shared.learner.service import LearnerNotFoundError, LearnerService
 
 router = APIRouter(
     prefix="/learner-state",
@@ -33,6 +44,18 @@ def get_service() -> LearnerStateService:
     return LearnerStateService()
 
 
+def get_learner_service(
+    session: Annotated[Session, Depends(get_db)],
+) -> LearnerService:
+    return LearnerService(SqlAlchemyLearnerRepository(session))
+
+
+def get_skill_state_repository(
+    session: Annotated[Session, Depends(get_db)],
+) -> LearnerSkillStateRepository:
+    return SqlAlchemyLearnerSkillStateRepository(session)
+
+
 @router.post(
     "",
     response_model=LearnerStateResponse,
@@ -44,7 +67,25 @@ def evaluate_learner_state(
         LearnerStateService,
         Depends(get_service),
     ],
+    learners: Annotated[
+        LearnerService,
+        Depends(get_learner_service),
+    ],
+    skill_states: Annotated[
+        LearnerSkillStateRepository,
+        Depends(get_skill_state_repository),
+    ],
 ) -> LearnerStateResponse:
+    # Check the learner before evaluation so that an unknown learner
+    # never changes the in-memory session history.
+    try:
+        learners.get(request.learner_id)
+    except LearnerNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Learner not found",
+        ) from error
+
     window = LearnerStateWindow(
         session_id=request.session_id,
         learner_id=request.learner_id,
@@ -89,10 +130,19 @@ def evaluate_learner_state(
             detail=str(error),
         ) from error
 
+    skill_states.save(
+        skill_state_from_evaluation(
+            result,
+            skill_id=request.skill_id,
+            observed_at=request.timestamp,
+        )
+    )
+
     return LearnerStateResponse(
         session_id=result.session_id,
         learner_id=result.learner_id,
         window_id=result.window_id,
+        skill_id=request.skill_id,
         confusion=ConfusionResult(
             visual_probability=(
                 result.confusion.visual_probability

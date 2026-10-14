@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.learner_state.application.support_need import SkillId
+
 
 class VisualFeatures(BaseModel):
     """Derived webcam features for one learner-state window."""
@@ -63,6 +65,8 @@ class LearnerStateRequest(BaseModel):
     window_id: int = Field(
         ge=1,
     )
+
+    skill_id: SkillId
 
     timestamp: datetime
 
@@ -201,6 +205,7 @@ class LearnerStateResponse(BaseModel):
     session_id: str
     learner_id: UUID
     window_id: int
+    skill_id: str
 
     confusion: ConfusionResult
     disengagement: DisengagementResult

@@ -92,8 +92,13 @@ Final validation of the research contribution needs a **synchronized MindBridge 
   client without a webcam cannot currently call it; it would need to send `face_visibility_ratio
   = 0` with placeholder visual values, which makes visual reliability 0 so that fusion relies on
   behaviour only. A proper optional-modality contract is future work.
-- **No authentication or learner check.** The endpoint is open and does not check that
-  `learner_id` exists in the shared learners table.
+- **No authentication.** The endpoint is open. It does check that `learner_id` exists in the
+  shared learners table (HTTP 404 otherwise).
+- **Tutor support need is provisional.** The 0–1 `support_need` handed to the AI Tutor is the
+  confusion `temporal_score`; this mapping and its scale are not validated (see
+  [`09`](09_TUTOR_HANDOFF.md#6-limitations)).
+- **Temporal history is per session, not per skill.** After a skill switch, the first windows of
+  the new skill still include windows from the previous skill.
 
 ## 5. Privacy and ethics
 
@@ -103,8 +108,11 @@ The component is designed to minimise sensitive data:
   aggregate numbers such as eye openness, gaze ratio, head angles and face-visibility ratio.
 - **No raw video.** The API schema has no field for images or video. Raw webcam frames must not be
   sent to or stored by this component; only derived visual features are consumed.
-- **No storage of learner-state results.** The component currently writes nothing to the database
-  or disk; short session history exists only in memory.
+- **Minimal storage of learner-state results.** The database keeps only the **latest** derived
+  result per learner and skill (states, support needs, recommended action, one 0–1 score and the
+  window time) in `learner_skill_states`. No visual or behavioural features, images or window
+  history are stored. Short session history exists only in memory. Any longer-term storage for a
+  pilot study should be decided as part of its ethics approval.
 - **No diagnosis.** "Confused" and "disengaged" are short-term learning-support signals. They are
   not mental-health, emotional or clinical assessments, and must not be presented to learners,
   parents or teachers as such.

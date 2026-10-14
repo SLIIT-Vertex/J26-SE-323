@@ -15,6 +15,7 @@ one depended on it. The order follows the repository history.
 | 6 | `feat: add unified learner state service` | Unified service with in-memory session history and action priority | `application/service.py` |
 | 7 | `feat: expose learner state API` | Router, final schemas, registration in `main.py`, API test | `api/router.py`, `api/schemas.py`, `backend/app/main.py`, `backend/tests/test_learner_state.py` |
 | 8 | `feat: refine productive confusion and expose temporal decision values` | Progress-gain rule for productive confusion; `temporal_score`, `average_confidence` and `persistent_count` in the response; unit and service tests | `domain/temporal.py`, `domain/confusion.py`, `domain/disengagement.py`, `application/service.py`, `api/`, `backend/tests/learner_state/` |
+| 9 | `feat: store skill-specific learner state for the AI Tutor` | `skill_id` in the request; learner existence check; `learner_skill_states` table and migration; support-need contract and provider | `application/support_need.py`, `infrastructure/db/`, `api/`, `backend/alembic/versions/20261014_01_create_learner_state_tables.py` |
 
 ## 2. How the modules interact
 
@@ -70,14 +71,20 @@ Learner-state tests live in two places:
 | `tests/learner_state/test_feature_builder.py` | Unit | Feature order matches each model; `bottom_hint_missing`; no baseline below 5 windows; deviation values; only the last 20 windows used; negative response time |
 | `tests/learner_state/test_temporal.py` | Unit | Every confusion and disengagement state; low-confidence windows not counted as persistent; progress-gain rule (rising, stuck, falling, unknown, configurable); confidence-weighted summary; history validation |
 | `tests/learner_state/test_learner_state_service.py` | Service | Action priority (every combination order); persistent disengagement; re-engagement before tutor support; productive vs intervention-worthy confusion; duplicate/older windows; rejected windows not changing history; session isolation; `clear_session` |
-| `tests/test_learner_state.py` | API | 200 response with all fields including the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field |
+| `tests/learner_state/test_support_need.py` | Unit + repository | Support need = confusion `temporal_score`, none when `uncertain`; provider statuses `AVAILABLE` / `UNCERTAIN` / `NOT_FOUND`; request and result validation; repository keeps the latest row per learner and skill |
+| `tests/learner_state/test_migration.py` | Migration | Migration `20261014_01` creates exactly the `learner_skill_states` table the model describes, and its downgrade removes it |
+| `tests/test_learner_state.py` | API | 200 response with all fields including `skill_id` and the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field or missing `skill_id`; 404 for an unknown learner; latest state stored and readable per skill |
 
 The service tests use a small fake model object that returns fixed probabilities. This checks the
 decision logic independently of what the trained models output. The API tests use the real model
 files, so they also cover model loading and the feature-order checks.
 
-The API tests use a random `learner_id` (`uuid4()`), so they do not clash with history left in the
-cached service by other tests.
+The API tests create a new learner through `POST /api/v1/learners` for each test, so they do not
+clash with history left in the cached service by other tests.
+
+The Knowledge Tracing migration test (`tests/knowledge_tracing/test_schema.py`) was adjusted to
+compare only the tables its own migration creates, because it previously failed whenever another
+module added a table.
 
 ### 3.2 Current coverage gaps
 
@@ -87,7 +94,7 @@ cached service by other tests.
 
 ### 3.3 Full repository suite
 
-As of 2026-10-14, the repository test suite reports 146 passed.
+As of 2026-10-14, the repository test suite reports 269 passed.
 
 Rerun `pytest` (see §4.3) to get the current result, because the count can change as the
 repository evolves.
@@ -107,10 +114,11 @@ source .venv/bin/activate
 
 pip install -e ".[dev]"
 cp .env.example .env      # then set DATABASE_URL
+alembic upgrade head      # creates learners, knowledge tracing and learner-state tables
 ```
 
-`DATABASE_URL` is required by the shared settings even though the learner-state component does not
-use the database. The test suite sets it to `sqlite://` automatically (`tests/conftest.py`).
+`DATABASE_URL` must point to the PostgreSQL database: the endpoint checks that the learner exists
+and stores the latest state per skill. The test suite uses SQLite instead (`tests/conftest.py`).
 
 ### 4.2 Lint with Ruff
 
@@ -143,21 +151,26 @@ change restarts the process and clears all session history.
 
 1. Start the server with `uvicorn app.main:app --reload`.
 2. Open `http://localhost:8000/docs` and expand **learner-state → POST /api/v1/learner-state**.
-3. Paste the example request from [`06_API_SPEC.md`](06_API_SPEC.md#41-request) and execute it.
+3. Create a learner with **learners → POST /api/v1/learners** (for example
+   `{"grade": 5, "preferred_language": "si"}`) and copy the returned `id`.
+4. Paste the example request from [`06_API_SPEC.md`](06_API_SPEC.md#41-request), replace
+   `learner_id` with that `id`, and execute it.
    Expect HTTP 200; the first request may be slower because the four models are loaded then.
-4. Execute the same body again without changes. Expect HTTP 409 (duplicate `window_id`).
-5. Increase `window_id` to 2, 3, 4 and execute each. Watch `disengagement.state` move from
+5. Execute the same body again without changes. Expect HTTP 409 (duplicate `window_id`).
+6. Increase `window_id` to 2, 3, 4 and execute each. Watch `disengagement.state` move from
    `engaged` to `transient_disengagement` to `persistent_disengagement` and
    `recommended_action` change to `request_reengagement_support`. This sequence is what the
    current committed model artifacts produce for this input; it is a functional check, not an
    evaluation result.
-6. Start a fresh session by changing `session_id` (or `learner_id`) and try:
+7. Start a fresh session by changing `session_id` and try:
    - `face_visibility_ratio: 0.0` → both `visual_reliability` values become 0 and fusion follows
      behaviour only;
    - large `mean_abs_yaw` (e.g. 25) → lower visual reliability;
-   - `task_progress: 0.8` vs `0.2` when confusion is persistent → `productive_confusion` vs
+   - when confusion is persistent, rising `task_progress` across windows (e.g. 0.20, 0.30, 0.40)
+     vs unchanged `task_progress` (e.g. 0.60, 0.60, 0.60) → `productive_confusion` vs
      `intervention_worthy_confusion`.
-7. Try invalid input (e.g. `face_visibility_ratio: 1.4`) and confirm HTTP 422.
+8. Try invalid input (e.g. `face_visibility_ratio: 1.4` or no `skill_id`) and confirm HTTP 422,
+   and a random `learner_id` to confirm HTTP 404.
 
 The same requests can be sent from the command line:
 

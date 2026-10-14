@@ -74,7 +74,7 @@ The fusion weights, reliability rules and temporal thresholds are design decisio
 | File | Contents |
 | --- | --- |
 | `00_README.md` | This file: purpose, pipeline overview, status |
-| [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md) | Clean Architecture layers, module responsibilities, request flow, in-memory session state |
+| [`01_ARCHITECTURE.md`](01_ARCHITECTURE.md) | Clean Architecture layers, module responsibilities, request flow, in-memory session state, stored skill state |
 | [`02_DATA_AND_FEATURES.md`](02_DATA_AND_FEATURES.md) | Visual features, behavioural features, learner-history features, dataset notes |
 | [`03_MODEL_INFERENCE.md`](03_MODEL_INFERENCE.md) | The four XGBoost models, loading, feature-order checks, thresholds, threshold-centred evidence |
 | [`04_RELIABILITY_AND_FUSION.md`](04_RELIABILITY_AND_FUSION.md) | Visual and behavioural reliability, weighted fusion, disagreement and fusion confidence |
@@ -82,6 +82,7 @@ The fusion weights, reliability rules and temporal thresholds are design decisio
 | [`06_API_SPEC.md`](06_API_SPEC.md) | `POST /api/v1/learner-state` request, response, errors and examples |
 | [`07_EVALUATION_AND_LIMITATIONS.md`](07_EVALUATION_AND_LIMITATIONS.md) | What has and has not been evaluated, limitations, privacy and ethics |
 | [`08_IMPLEMENTATION_AND_TESTING.md`](08_IMPLEMENTATION_AND_TESTING.md) | Build order, module interaction, tests, developer commands |
+| [`09_TUTOR_HANDOFF.md`](09_TUTOR_HANDOFF.md) | Skill-specific `support_need` contract for the AI Tutor, stored skill state, open questions |
 
 ## 6. Code map
 
@@ -91,7 +92,8 @@ backend/app/learner_state/
 │   ├── router.py                 # POST /learner-state, request -> service -> response
 │   └── schemas.py                # Pydantic request/response models
 ├── application/
-│   └── service.py                # LearnerStateService: orchestration + in-memory session history
+│   ├── service.py                # LearnerStateService: orchestration + in-memory session history
+│   └── support_need.py           # skill-specific support-need contract for the AI Tutor
 ├── domain/
 │   ├── confusion.py              # confusion pipeline for one window
 │   ├── disengagement.py          # disengagement pipeline for one window
@@ -101,6 +103,7 @@ backend/app/learner_state/
     ├── feature_builder.py        # behavioural + learner-history features
     ├── model_loader.py           # XGBoost loading, feature-order validation, prediction
     ├── reliability.py            # visual and behavioural reliability
+    ├── db/                       # learner_skill_states table + SQLAlchemy repository
     └── models/                   # four trained XGBoost JSON model files
 ```
 
