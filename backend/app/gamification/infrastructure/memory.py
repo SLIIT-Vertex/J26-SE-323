@@ -5,12 +5,11 @@ from uuid import UUID
 from app.gamification.application.records import (
     AuditEvent,
     ConsentDecision,
-    CurriculumEvidence,
     FeatureSnapshotRecord,
-    LearnerStateEvidence,
-    SkillMasteryEvidence,
-    ModelArtifact,
     GamificationAttempt,
+    LearnerSkillSummary,
+    LearnerStateEvidence,
+    ModelArtifact,
     PolicyDecisionRecord,
     SupportAssetRequest,
     SupportAssetResult,
@@ -87,16 +86,22 @@ class InMemoryModelRegistry:
 
 
 class InMemoryLearningRecordStore:
-    def __init__(self, mastery: Iterable[SkillMasteryEvidence] = ()) -> None:
-        self._mastery = {
-            (evidence.learner_id, evidence.skill_id): evidence for evidence in mastery
+    def __init__(self, summaries: Iterable[LearnerSkillSummary] = ()) -> None:
+        self._summaries = {
+            (summary.learner_id, summary.skill_id): summary for summary in summaries
         }
         self.recorded_attempts: list[GamificationAttempt] = []
 
-    def get_mastery(
+    def get_skill_summary(
         self, *, learner_id: UUID, skill_id: SkillId
-    ) -> SkillMasteryEvidence | None:
-        return self._mastery.get((learner_id, skill_id))
+    ) -> LearnerSkillSummary | None:
+        return self._summaries.get((learner_id, str(skill_id)))
+
+    def get(self, *, learner_id: UUID, skill_id: str) -> LearnerSkillSummary | None:
+        return self._summaries.get((learner_id, skill_id))
+
+    def save(self, summary: LearnerSkillSummary) -> None:
+        self._summaries[(summary.learner_id, summary.skill_id)] = summary
 
     def record_attempt(self, attempt: GamificationAttempt) -> None:
         self.recorded_attempts.append(attempt)
@@ -111,12 +116,16 @@ class InMemoryLearningRecordStore:
 
 class StubLearnerStateGateway:
     def __init__(self, evidence: Iterable[LearnerStateEvidence] = ()) -> None:
-        self._evidence = {record.learner_id: record for record in evidence}
+        self._evidence = {(record.learner_id, record.skill_id): record for record in evidence}
 
     def get_support_evidence(
-        self, *, learner_id: UUID, observed_no_earlier_than: datetime
+        self,
+        *,
+        learner_id: UUID,
+        skill_id: SkillId,
+        observed_no_earlier_than: datetime,
     ) -> LearnerStateEvidence | None:
-        record = self._evidence.get(learner_id)
+        record = self._evidence.get((learner_id, skill_id))
         if record is None or record.observed_at < observed_no_earlier_than:
             return None
         return record
@@ -145,23 +154,3 @@ class InMemoryConsentStore:
             return self._decisions[(learner_id, purpose)]
         except KeyError as error:
             raise LookupError("no consent decision exists for learner and purpose") from error
-
-
-class InMemoryCurriculumRetriever:
-    """Returns pre-approved references only; it performs no retrieval or ranking logic."""
-
-    def __init__(self, evidence: Iterable[CurriculumEvidence] = ()) -> None:
-        self._evidence = tuple(evidence)
-
-    def find_approved(
-        self, *, skill_id: SkillId, language: str, limit: int
-    ) -> tuple[CurriculumEvidence, ...]:
-        if not 1 <= limit <= 100:
-            raise ValueError("limit must be between 1 and 100")
-        matches = (
-            item
-            for item in self._evidence
-            if item.approved and item.skill_id == skill_id and item.language == language
-        )
-        return tuple(list(matches)[:limit])
-

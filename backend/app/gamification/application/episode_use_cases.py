@@ -2,21 +2,33 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import TypeVar
 from uuid import UUID, uuid5
 
 from app.gamification.application.episode_state import EpisodeState, SupportExposureRecord
 from app.gamification.application.errors import EpisodeFlowError
-from app.gamification.application.ports import AuditOutput, LearningRecordStore, UnitOfWork
+from app.gamification.application.consent_gate import research_consent_granted
+from app.gamification.application.ports import (
+    AuditOutput,
+    ConsentStore,
+    LearnerEvidencePublisher,
+    LearnerStateGateway,
+    LearningRecordStore,
+    MasteryEvidenceGateway,
+    SkillSummaryStore,
+    UnitOfWork,
+)
 from app.gamification.application.records import (
     AuditEvent,
     GamificationAttempt,
     IndependenceOutcomeEvidence,
     ItemResponseEvidence,
+    LearnerEvidenceEvent,
     SupportExposureEvidence,
     VerificationPairEvidence,
 )
+from app.gamification.application.skill_summary import UpdateLearnerSkillSummary
 from app.gamification.application.scaffold_controller import (
     ScaffoldController,
     answer_overlap,
@@ -38,6 +50,7 @@ from app.gamification.domain.types import (
     EpisodePhase,
     EvidenceSupportState,
     ItemId,
+    OutcomeValidity,
     ProtocolVersion,
     SkillId,
     TaxonomyVersion,
@@ -51,6 +64,7 @@ from app.gamification.modeling.misconception_inference.contracts import Misconce
 from app.gamification.modeling.shared.feature_building import DecisionFeatureInput, FeatureBuilder
 from app.gamification.modeling.support_selection.context import (
     BanditContextBuilder,
+    FixedMasteryGateway,
     QuestionContext,
     SupportHistory,
     policy_context_snapshot,
@@ -209,6 +223,11 @@ class _EpisodeCommand:
         self._episodes = episodes
         self._catalog = catalog
         self._controller = controller
+        self._publisher: LearnerEvidencePublisher | None = None
+        self._consent: ConsentStore | None = None
+        self._summaries: SkillSummaryStore | None = None
+        self._mastery: MasteryEvidenceGateway | None = None
+        self._learner_state: LearnerStateGateway | None = None
 
     def _run(self, work: Callable[[], EpisodeState]) -> EpisodeState:
         return run_unit(self._uow, work)
@@ -268,6 +287,73 @@ class _EpisodeCommand:
                 contract_version=_ATTEMPT_CONTRACT,
             )
         )
+        if self._summaries is not None:
+            UpdateLearnerSkillSummary(self._summaries).record_attempt(
+                learner_id=state.episode.learner_id,
+                skill_id=str(state.episode.skill_id),
+                correct=response.is_correct,
+                supported=response.support_state == "supported",
+                at=response.submitted_at,
+            )
+
+    def _publish(
+        self,
+        state: EpisodeState,
+        *,
+        event_type: str,
+        at: datetime,
+        model_version: str,
+        confidence: float | None,
+        reference: Mapping[str, str],
+        payload: Mapping[str, float | int | bool | str | None],
+    ) -> None:
+        if self._publisher is None:
+            return
+        learner_id = state.episode.learner_id
+        if self._consent is None or not research_consent_granted(self._consent, learner_id, at):
+            _audit(
+                self._uow.audit,
+                event_type="learner_evidence_withheld",
+                subject_id=str(state.episode.episode_id),
+                at=at,
+                reason_codes=("CONSENT_SCOPE_MISSING",),
+                metadata={"event_type": event_type},
+            )
+            return
+        universal = self._catalog.universal_skill_id(str(state.episode.skill_id))
+        if universal is None:
+            _audit(
+                self._uow.audit,
+                event_type="learner_evidence_withheld",
+                subject_id=str(state.episode.episode_id),
+                at=at,
+                reason_codes=("CROSSWALK_MISSING",),
+                metadata={"event_type": event_type},
+            )
+            return
+        try:
+            self._publisher.publish(
+                LearnerEvidenceEvent(
+                    event_type=event_type,
+                    learner_id=learner_id,
+                    skill_id=str(state.episode.skill_id),
+                    universal_skill_id=universal,
+                    timestamp=at,
+                    model_version=model_version,
+                    confidence=confidence,
+                    evidence_reference=reference,
+                    payload=payload,
+                )
+            )
+        except Exception:
+            _audit(
+                self._uow.audit,
+                event_type="learner_evidence_withheld",
+                subject_id=str(state.episode.episode_id),
+                at=at,
+                reason_codes=("EVIDENCE_PUBLISH_FAILED",),
+                metadata={"event_type": event_type},
+            )
 
 
 class OpenAdaptiveEpisode(_EpisodeCommand):
@@ -342,6 +428,19 @@ class OpenAdaptiveEpisode(_EpisodeCommand):
             },
         )
         self._episodes.insert(state)
+        self._publish(
+            state,
+            event_type="attempt_summary",
+            at=command.submitted_at,
+            model_version="gamification-attempt-v1",
+            confidence=None,
+            reference={"episode_id": str(command.episode_id)},
+            payload={
+                "unsupported_score": response.score,
+                "response_time_ms": command.response_time_ms,
+                "supported": False,
+            },
+        )
         return state
 
 
@@ -367,7 +466,8 @@ class AssessStruggle(_EpisodeCommand):
             raise EpisodeFlowError("BASELINE_NOT_RECORDED")
         if state.baseline_response.support_state != "unsupported":
             raise EpisodeFlowError("BASELINE_NOT_UNSUPPORTED")
-        decision = self._trigger.evaluate(command.evidence)
+        evidence = self._support_evidence(state, command)
+        decision = self._trigger.evaluate(evidence)
         if decision.fired:
             episode = state.episode.transition_to(EpisodePhase.STRUGGLE_ASSESSED, at=command.at)
             event_type = "struggle_detected"
@@ -397,7 +497,52 @@ class AssessStruggle(_EpisodeCommand):
                 "missing_inputs": ",".join(decision.missing_inputs),
             },
         )
+        if decision.fired:
+            self._publish(
+                updated,
+                event_type="detected_difficulty",
+                at=command.at,
+                model_version=decision.config_version,
+                confidence=None,
+                reference={"episode_id": str(command.episode_id)},
+                payload={"trigger_type": decision.trigger_type},
+            )
         return self._save(updated)
+
+    def _support_evidence(self, state: EpisodeState, command: AssessStruggleCommand):
+        evidence = command.evidence
+        if self._learner_state is None:
+            return evidence
+        cutoff = command.at - timedelta(milliseconds=self._trigger.config.support_need_max_age_ms)
+        try:
+            looked_up = self._learner_state.get_support_evidence(
+                learner_id=state.episode.learner_id,
+                skill_id=state.episode.skill_id,
+                observed_no_earlier_than=cutoff,
+            )
+        except Exception:
+            looked_up = None
+            _audit(
+                self._uow.audit,
+                event_type="support_need_missing",
+                subject_id=str(command.episode_id),
+                at=command.at,
+                reason_codes=("LEARNER_STATE_UNAVAILABLE",),
+                metadata={},
+            )
+        if looked_up is None:
+            return replace(
+                evidence,
+                learner_support_need=None,
+                learner_state_observed_at=None,
+                learner_state_uncertain=False,
+            )
+        return replace(
+            evidence,
+            learner_support_need=looked_up.support_need,
+            learner_state_observed_at=looked_up.observed_at,
+            learner_state_uncertain=looked_up.uncertain,
+        )
 
 
 class InferMisconceptionBeliefs(_EpisodeCommand):
@@ -428,6 +573,7 @@ class InferMisconceptionBeliefs(_EpisodeCommand):
         option = item.option(option_id)
         sources = dict(command.source_as_of)
         sources.setdefault("baseline_response", response.submitted_at)
+        mastery_probability, mastery_uncertainty = self._mastery_features(state, command)
         snapshot = self._features.build(
             DecisionFeatureInput(
                 learner_id=state.episode.learner_id,
@@ -443,8 +589,8 @@ class InferMisconceptionBeliefs(_EpisodeCommand):
                 response_time_ms=state.baseline_response_time_ms,
                 hint_requests=1 if state.learner_requested_help else 0,
                 structured_error_code=None if response.is_correct else option.misconception_code,
-                mastery_probability=command.mastery_probability,
-                mastery_uncertainty=command.mastery_uncertainty,
+                mastery_probability=mastery_probability,
+                mastery_uncertainty=mastery_uncertainty,
                 learner_support_need=command.learner_support_need,
                 learner_state_reliability=command.learner_state_reliability,
                 source_as_of=sources,
@@ -464,7 +610,46 @@ class InferMisconceptionBeliefs(_EpisodeCommand):
             reason_codes=belief.reason_codes,
             metadata={"model_version": belief.model_version, "abstained": belief.abstained},
         )
+        self._publish(
+            replace(state, episode=episode),
+            event_type="misconception_probabilities",
+            at=command.at,
+            model_version=belief.model_version,
+            confidence=belief.confidence,
+            reference={"episode_id": str(command.episode_id)},
+            payload={
+                **{
+                    f"belief_{code}": probability
+                    for code, probability in belief.probabilities.items()
+                },
+                "catalogue_version": belief.catalogue_version,
+                "abstained": belief.abstained,
+            },
+        )
         return self._save(replace(state, episode=episode, feature_snapshot=snapshot, belief=belief))
+
+    def _mastery_features(
+        self, state: EpisodeState, command: InferMisconceptionBeliefsCommand
+    ) -> tuple[float | None, float | None]:
+        if self._mastery is None:
+            return command.mastery_probability, command.mastery_uncertainty
+        try:
+            found = self._mastery.get_mastery(
+                learner_id=state.episode.learner_id, skill_id=state.episode.skill_id
+            )
+        except Exception:
+            found = None
+            _audit(
+                self._uow.audit,
+                event_type="mastery_missing",
+                subject_id=str(command.episode_id),
+                at=command.at,
+                reason_codes=("MASTERY_UNAVAILABLE",),
+                metadata={},
+            )
+        if found is None:
+            return None, None
+        return found.mastery_probability, found.uncertainty
 
 
 class SelectSupportAction(_EpisodeCommand):
@@ -528,11 +713,30 @@ class SelectSupportAction(_EpisodeCommand):
             reason_codes=decision.reason_codes,
             metadata={"action_id": str(decision.selected_action_id), "mode": str(mode)},
         )
+        selected = next(
+            candidate
+            for candidate in decision.candidates
+            if candidate.action_id == decision.selected_action_id
+        )
+        decided = replace(state, episode=episode, decision=decision)
+        self._publish(
+            decided,
+            event_type="selected_scaffold",
+            at=command.at,
+            model_version=decision.policy_version,
+            confidence=None,
+            reference={
+                "episode_id": str(command.episode_id),
+                "decision_id": str(decision.decision_id),
+            },
+            payload={
+                "action_id": str(decision.selected_action_id),
+                "action_type": selected.action_type.value,
+            },
+        )
         return self._save(
             replace(
-                state,
-                episode=episode,
-                decision=decision,
+                decided,
                 decision_mode=mode,
                 policy_context_snapshot=context_snapshot,
             )
@@ -543,9 +747,16 @@ class SelectSupportAction(_EpisodeCommand):
         assert state.belief is not None
         assert state.baseline_response is not None
         item = self._catalog.item(str(state.baseline_response.item_id))
+        raw_mastery = state.feature_snapshot.values.get("mastery_probability")
+        mastery = (
+            float(raw_mastery)
+            if isinstance(raw_mastery, (int, float)) and not isinstance(raw_mastery, bool)
+            else None
+        )
         builder = BanditContextBuilder(
             catalogue_codes=self._catalog.misconception_codes(),
             skill_ids=self._catalog.skill_ids(),
+            mastery_gateway=FixedMasteryGateway(mastery),
         )
         return builder.build(
             snapshot=state.feature_snapshot,
@@ -929,7 +1140,46 @@ class CalculateIndependenceOutcome(_EpisodeCommand):
             reason_codes=result.invalid_reasons or ("INDEPENDENCE_GAIN_VALID",),
             metadata={"formula_version": result.formula_version, "validity": result.validity.value},
         )
-        return self._save(replace(state, episode=episode, outcome=outcome, closed_at=command.at))
+        if (
+            self._summaries is not None
+            and result.validity is OutcomeValidity.VALID
+            and result.raw_gain is not None
+        ):
+            UpdateLearnerSkillSummary(self._summaries).record_valid_gain(
+                learner_id=state.episode.learner_id,
+                skill_id=str(state.episode.skill_id),
+                raw_gain=result.raw_gain,
+                at=command.at,
+            )
+        dependency = None
+        if self._summaries is not None:
+            summary = self._summaries.get(
+                learner_id=state.episode.learner_id, skill_id=str(state.episode.skill_id)
+            )
+            if summary is not None:
+                dependency = summary.support_dependency_index
+        completed = replace(state, episode=episode, outcome=outcome)
+        gain_payload: dict[str, float | int | bool | str | None] = {
+            "unsupported_before_score": state.baseline_response.score,
+            "unsupported_after_score": state.verification_response.score,
+            "validity": result.validity.value,
+            "support_dependency_index": dependency,
+        }
+        if result.validity is OutcomeValidity.VALID and result.raw_gain is not None:
+            gain_payload["independence_gain"] = result.raw_gain
+        self._publish(
+            completed,
+            event_type="independence_gain",
+            at=command.at,
+            model_version=result.formula_version,
+            confidence=None,
+            reference={
+                "episode_id": str(command.episode_id),
+                "outcome_id": str(outcome.outcome_id),
+            },
+            payload=gain_payload,
+        )
+        return self._save(replace(completed, closed_at=command.at))
 
 
 @dataclass(frozen=True, slots=True)
@@ -956,6 +1206,11 @@ def wire_episode_use_cases(
     allow_draft: bool,
     trigger: StruggleTrigger | None = None,
     templates: TemplateCompatibilityTable | None = None,
+    publisher: LearnerEvidencePublisher | None = None,
+    consent: ConsentStore | None = None,
+    summaries: SkillSummaryStore | None = None,
+    mastery: MasteryEvidenceGateway | None = None,
+    learner_state: LearnerStateGateway | None = None,
 ) -> EpisodeUseCases:
     controller = ScaffoldController(allow_draft=allow_draft)
     table = templates or TemplateCompatibilityTable(
@@ -963,7 +1218,7 @@ def wire_episode_use_cases(
         table_version=catalog.template_table_version(),
     )
     shared = {"uow": uow, "episodes": episodes, "catalog": catalog, "controller": controller}
-    return EpisodeUseCases(
+    cases = EpisodeUseCases(
         open_episode=OpenAdaptiveEpisode(templates=table, **shared),
         assess_struggle=AssessStruggle(trigger=trigger or StruggleTrigger(), **shared),
         infer_beliefs=InferMisconceptionBeliefs(predictor=predictor, **shared),
@@ -976,3 +1231,20 @@ def wire_episode_use_cases(
             calculator=calculator, allow_draft=allow_draft, **shared
         ),
     )
+    for command in (
+        cases.open_episode,
+        cases.assess_struggle,
+        cases.infer_beliefs,
+        cases.select_support,
+        cases.record_exposure,
+        cases.withdraw_support,
+        cases.schedule_verification,
+        cases.record_verification,
+        cases.calculate_outcome,
+    ):
+        command._publisher = publisher
+        command._consent = consent
+        command._summaries = summaries
+        command._mastery = mastery
+        command._learner_state = learner_state
+    return cases

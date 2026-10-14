@@ -24,13 +24,20 @@ from app.gamification.domain.types import (
 
 @dataclass(frozen=True, slots=True)
 class SkillMasteryEvidence:
+    """Knowledge Tracing mastery for the Universal parent of a gamification skill.
+
+    ``uncertainty`` and ``observed_at`` stay empty when the published mastery result does not
+    carry them. This is not a gamification-owned mastery estimate.
+    """
+
     learner_id: UUID
     skill_id: SkillId
+    universal_skill_id: str
     mastery_probability: float
-    uncertainty: float
     model_version: str
     contract_version: ContractVersion
-    observed_at: datetime
+    uncertainty: float | None = None
+    observed_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,11 +58,14 @@ class GamificationAttempt:
 @dataclass(frozen=True, slots=True)
 class LearnerStateEvidence:
     learner_id: UUID
-    support_need: float
-    confidence: float
-    reliability: float
+    skill_id: SkillId
+    universal_skill_id: str
     observed_at: datetime
     contract_version: ContractVersion
+    support_need: float | None = None
+    confidence: float | None = None
+    reliability: float | None = None
+    uncertain: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,13 +162,59 @@ class PolicyDecisionRecord:
 
 
 @dataclass(frozen=True, slots=True)
-class CurriculumEvidence:
-    evidence_id: str
-    skill_id: SkillId
-    source_version: str
-    content_hash: str
-    approved: bool
-    language: str
+class LearnerSkillSummary:
+    """Derived report counts. Not a mastery model."""
+
+    learner_id: UUID
+    skill_id: str
+    unsupported_attempts: int
+    supported_attempts: int
+    independent_accuracy: float | None
+    supported_accuracy: float | None
+    mean_independence_gain: float | None
+    support_dependency_index: float | None
+    valid_outcome_count: int
+    last_practiced_at: datetime | None
+    summary_version: str
+    updated_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class LearnerEvidenceEvent:
+    """Outbound learner-profile event. Payloads carry codes and scores, never item text."""
+
+    event_type: str
+    learner_id: UUID
+    skill_id: str
+    universal_skill_id: str
+    timestamp: datetime
+    model_version: str
+    confidence: float | None
+    evidence_reference: Mapping[str, str]
+    payload: Mapping[str, float | int | bool | str | None]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "evidence_reference", MappingProxyType(dict(self.evidence_reference)))
+        object.__setattr__(self, "payload", MappingProxyType(dict(self.payload)))
+
+    @property
+    def idempotency_key(self) -> str:
+        return f"{self.evidence_reference['episode_id']}:{self.event_type}"
+
+    def as_contract(self) -> dict[str, object]:
+        return {
+            "contract_version": "gamification-learner-evidence-v1",
+            "event_type": self.event_type,
+            "learner_id": self.learner_id,
+            "skill_id": self.skill_id,
+            "universal_skill_id": self.universal_skill_id,
+            "timestamp": self.timestamp,
+            "source_component": "gamification",
+            "model_version": self.model_version,
+            "confidence": self.confidence,
+            "evidence_reference": dict(self.evidence_reference),
+            "payload": dict(self.payload),
+        }
 
 
 @dataclass(frozen=True, slots=True)

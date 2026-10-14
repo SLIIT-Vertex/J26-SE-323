@@ -5,13 +5,14 @@ from uuid import UUID
 from app.gamification.application.records import (
     AuditEvent,
     ConsentDecision,
-    CurriculumEvidence,
     FeatureSnapshotRecord,
-    LearnerStateEvidence,
-    SkillMasteryEvidence,
-    ModelArtifact,
     GamificationAttempt,
+    LearnerEvidenceEvent,
+    LearnerSkillSummary,
+    LearnerStateEvidence,
+    ModelArtifact,
     PolicyDecisionRecord,
+    SkillMasteryEvidence,
     SupportAssetRequest,
     SupportAssetResult,
 )
@@ -25,21 +26,43 @@ from app.gamification.domain.types import (
 
 
 class LearningRecordStore(Protocol):
-    """Gamification-owned mastery and attempt storage."""
+    """Gamification-owned attempt storage and the derived skill-summary read model."""
 
-    def get_mastery(
+    def get_skill_summary(
         self, *, learner_id: UUID, skill_id: SkillId
-    ) -> SkillMasteryEvidence | None: ...
+    ) -> LearnerSkillSummary | None: ...
 
     def record_attempt(self, attempt: GamificationAttempt) -> None: ...
 
     def seen_item_ids(self, *, learner_id: UUID) -> tuple[ItemId, ...]: ...
 
 
+class SkillSummaryStore(Protocol):
+    def get(self, *, learner_id: UUID, skill_id: str) -> LearnerSkillSummary | None: ...
+
+    def save(self, summary: LearnerSkillSummary) -> None: ...
+
+
+class MasteryEvidenceGateway(Protocol):
+    """Read Knowledge Tracing mastery. ``None`` is missingness, never an episode failure."""
+
+    def get_mastery(
+        self, *, learner_id: UUID, skill_id: SkillId
+    ) -> SkillMasteryEvidence | None: ...
+
+
 class LearnerStateGateway(Protocol):
     def get_support_evidence(
-        self, *, learner_id: UUID, observed_no_earlier_than: datetime
+        self,
+        *,
+        learner_id: UUID,
+        skill_id: SkillId,
+        observed_no_earlier_than: datetime,
     ) -> LearnerStateEvidence | None: ...
+
+
+class LearnerEvidencePublisher(Protocol):
+    def publish(self, event: LearnerEvidenceEvent) -> None: ...
 
 
 class SupportAssetProvider(Protocol):
@@ -67,12 +90,6 @@ class PolicyDecisionStore(Protocol):
     def add(self, decision: PolicyDecisionRecord) -> None: ...
 
     def get(self, decision_id: PolicyDecisionId) -> PolicyDecisionRecord | None: ...
-
-
-class CurriculumRetriever(Protocol):
-    def find_approved(
-        self, *, skill_id: SkillId, language: str, limit: int
-    ) -> tuple[CurriculumEvidence, ...]: ...
 
 
 class Clock(Protocol):

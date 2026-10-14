@@ -277,6 +277,39 @@ def test_decision_mode_migration_adds_the_authored_reference_mode(tmp_path: Path
     get_settings.cache_clear()
 
 
+def test_reward_loop_migration_upgrades_and_downgrades(tmp_path: Path, monkeypatch) -> None:
+    database_path = tmp_path / "reward.sqlite"
+    database_url = f"sqlite:///{database_path}"
+    engine = sqlite_engine(database_url)
+    Base.metadata.create_all(engine, tables=[Base.metadata.tables["learners"]])
+    engine.dispose()
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    from app.config import get_settings
+
+    get_settings.cache_clear()
+    config = Config(str(BACKEND_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
+    command.stamp(config, "20261007_01")
+    command.upgrade(config, "20261014_04")
+    upgraded = sqlite_engine(database_url)
+    tables = set(inspect(upgraded).get_table_names())
+    assert {
+        "policy_update_cursors",
+        "learner_skill_summaries",
+        "learner_evidence_outbox",
+    } <= tables
+    upgraded.dispose()
+
+    command.downgrade(config, "20261014_03")
+    restored = sqlite_engine(database_url)
+    restored_tables = set(inspect(restored).get_table_names())
+    assert "policy_update_cursors" not in restored_tables
+    assert "learner_skill_summaries" not in restored_tables
+    assert "learner_evidence_outbox" not in restored_tables
+    restored.dispose()
+    get_settings.cache_clear()
+
+
 def _seed_session(session: Session) -> None:
     session.add(
         LearnerModel(

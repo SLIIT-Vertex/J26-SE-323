@@ -97,6 +97,20 @@ def test_stale_learner_state_does_not_fire_support_need() -> None:
     assert decision.skipped_rules == ("LEARNER_STATE_STALE",)
 
 
+def test_uncertain_learner_state_is_not_a_trigger() -> None:
+    decision = StruggleTrigger().evaluate(
+        evidence(
+            learner_support_need=None,
+            learner_state_observed_at=AT,
+            learner_state_uncertain=True,
+        )
+    )
+
+    assert "LEARNER_STATE_SUPPORT_NEED" not in decision.reason_codes
+    assert "LEARNER_STATE_UNCERTAIN" in decision.skipped_rules
+    assert "learner_support_need" in decision.missing_inputs
+
+
 def test_future_evidence_is_rejected() -> None:
     with pytest.raises(ValueError, match="future evidence"):
         StruggleTrigger().evaluate(

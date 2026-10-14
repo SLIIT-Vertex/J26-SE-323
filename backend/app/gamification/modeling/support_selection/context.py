@@ -1,8 +1,8 @@
 """Versioned numeric context for the support-selection bandit.
 
-The vector order is part of ``bandit-context-v1``. A null mastery gateway stands in until
-C5 supplies Knowledge Tracing evidence for the Universal parent skill. This module does
-not import Knowledge Tracing.
+The vector order is part of ``bandit-context-v1``. Mastery is a single probability for the
+Universal parent skill. The application use case resolves that probability before this
+builder runs. This module does not import Knowledge Tracing.
 """
 
 import hashlib
@@ -31,6 +31,17 @@ class MasteryEvidenceGateway(Protocol):
 class NullMasteryGateway:
     def parent_skill_mastery(self, *, learner_id: UUID, skill_id: str) -> float | None:
         return None
+
+
+class FixedMasteryGateway:
+    """Uses the probability the episode already resolved for the Universal parent."""
+
+    def __init__(self, probability: float | None) -> None:
+        self._probability = probability
+
+    def parent_skill_mastery(self, *, learner_id: UUID, skill_id: str) -> float | None:
+        del learner_id, skill_id
+        return self._probability
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +102,16 @@ class BanditContext:
             "bandit_context_version": self.version,
             "bandit_context": json.dumps(payload, separators=(",", ":")),
         }
+
+
+def bandit_context_from_values(values: Mapping[str, object]) -> BanditContext:
+    raw = json.loads(str(values["bandit_context"]))
+    return BanditContext(
+        str(raw["version"]),
+        tuple(str(name) for name in raw["names"]),
+        tuple(float(value) for value in raw["values"]),
+        {},
+    )
 
 
 def policy_context_snapshot(

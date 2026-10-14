@@ -13,6 +13,7 @@ from app.gamification.application.errors import EpisodeFlowError
 from app.gamification.application.records import (
     IndependenceOutcomeEvidence,
     ItemResponseEvidence,
+    LearnerSkillSummary,
     SupportExposureEvidence,
     VerificationPairEvidence,
 )
@@ -33,6 +34,7 @@ from app.gamification.infrastructure.db.models import (
     GameSessionModel,
     IndependenceOutcomeModel,
     ItemResponseModel,
+    LearnerSkillSummaryModel,
     MisconceptionInferenceModel,
     MisconceptionProbabilityModel,
     ModelVersionModel,
@@ -73,9 +75,28 @@ class SqlAlchemyLearningRecordStore:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def get_mastery(self, *, learner_id: UUID, skill_id: SkillId):
-        del learner_id, skill_id
-        return None
+    def get_skill_summary(
+        self, *, learner_id: UUID, skill_id: SkillId
+    ) -> LearnerSkillSummary | None:
+        row = self._session.get(LearnerSkillSummaryModel, (learner_id, str(skill_id)))
+        if row is None:
+            return None
+        return _summary_from_row(row)
+
+    def get(self, *, learner_id: UUID, skill_id: str) -> LearnerSkillSummary | None:
+        return self.get_skill_summary(learner_id=learner_id, skill_id=SkillId(skill_id))
+
+    def save(self, summary: LearnerSkillSummary) -> None:
+        row = self._session.get(
+            LearnerSkillSummaryModel, (summary.learner_id, summary.skill_id)
+        )
+        values = _summary_values(summary)
+        if row is None:
+            self._session.add(LearnerSkillSummaryModel(**values))
+        else:
+            for name, value in values.items():
+                setattr(row, name, value)
+        self._session.flush()
 
     def record_attempt(self, attempt: object) -> None:
         del attempt
@@ -619,3 +640,37 @@ class SqlAlchemyUnitOfWork:
     def rollback(self) -> None:
         self.session.rollback()
         del self.audit.events[self._audit_mark :]
+
+
+def _summary_values(summary: LearnerSkillSummary) -> dict[str, object]:
+    return {
+        "learner_id": summary.learner_id,
+        "skill_code": summary.skill_id,
+        "unsupported_attempts": summary.unsupported_attempts,
+        "supported_attempts": summary.supported_attempts,
+        "independent_accuracy": summary.independent_accuracy,
+        "supported_accuracy": summary.supported_accuracy,
+        "mean_independence_gain": summary.mean_independence_gain,
+        "support_dependency_index": summary.support_dependency_index,
+        "valid_outcome_count": summary.valid_outcome_count,
+        "last_practiced_at": summary.last_practiced_at,
+        "summary_version": summary.summary_version,
+        "updated_at": summary.updated_at,
+    }
+
+
+def _summary_from_row(row: LearnerSkillSummaryModel) -> LearnerSkillSummary:
+    return LearnerSkillSummary(
+        learner_id=row.learner_id,
+        skill_id=row.skill_code,
+        unsupported_attempts=row.unsupported_attempts,
+        supported_attempts=row.supported_attempts,
+        independent_accuracy=row.independent_accuracy,
+        supported_accuracy=row.supported_accuracy,
+        mean_independence_gain=row.mean_independence_gain,
+        support_dependency_index=row.support_dependency_index,
+        valid_outcome_count=row.valid_outcome_count,
+        last_practiced_at=_aware(row.last_practiced_at) if row.last_practiced_at else None,
+        summary_version=row.summary_version,
+        updated_at=_aware(row.updated_at),
+    )

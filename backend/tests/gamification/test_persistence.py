@@ -65,6 +65,9 @@ PHASE3_TABLES = {
     "support_exposures",
     "verification_pairs",
     "independence_outcomes",
+    "policy_update_cursors",
+    "learner_skill_summaries",
+    "learner_evidence_outbox",
 }
 
 
@@ -403,8 +406,8 @@ def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (gamification_head,) = script.get_revisions("gamification@head")
-    assert gamification_head.revision == "20261014_03"
-    assert gamification_head.down_revision == "20261014_02"
+    assert gamification_head.revision == "20261014_04"
+    assert gamification_head.down_revision == "20261014_03"
     assert gamification_head.revision in script.get_heads()
     for head in set(script.get_heads()) - {gamification_head.revision}:
         ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}

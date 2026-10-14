@@ -255,15 +255,47 @@ class IndependenceOutcomeContract(BoundaryModel):
         return self
 
 
-class CurriculumEvidenceContract(BoundaryModel):
-    contract_version: ContractVersion
-    evidence_id: Identifier
+_BANNED_EVIDENCE_FIELDS = {
+    "question_text",
+    "answer",
+    "option_text",
+    "body",
+    "prompt",
+    "selected_option_id",
+    "item_text",
+}
+
+
+class LearnerEvidenceContract(BoundaryModel):
+    """gamification-learner-evidence-v1. Codes and scores only; item text is rejected."""
+
+    contract_version: Literal["gamification-learner-evidence-v1"]
+    event_type: Literal[
+        "attempt_summary",
+        "detected_difficulty",
+        "misconception_probabilities",
+        "selected_scaffold",
+        "independence_gain",
+    ]
+    learner_id: UUID
     skill_id: Identifier
-    skill_taxonomy_version: Version
-    source_version: Version
-    content_hash: Annotated[str, StringConstraints(pattern=r"^sha256:[0-9a-f]{64}$")]
-    approved: StrictBool
-    language: Language
+    universal_skill_id: Identifier
+    timestamp: AwareDatetime
+    source_component: Literal["gamification"]
+    model_version: Version
+    confidence: Probability | None
+    evidence_reference: dict[Identifier, Identifier] = Field(min_length=1, max_length=8)
+    payload: dict[Identifier, StrictFloat | StrictInt | StrictBool | Identifier | None] = Field(
+        max_length=32
+    )
+
+    @model_validator(mode="after")
+    def reject_item_text(self) -> Self:
+        if _BANNED_EVIDENCE_FIELDS.intersection(self.payload):
+            raise ValueError("learner evidence must not contain item text or answers")
+        if "episode_id" not in self.evidence_reference:
+            raise ValueError("evidence_reference requires episode_id")
+        return self
 
 
 class AuditEventContract(BoundaryModel):

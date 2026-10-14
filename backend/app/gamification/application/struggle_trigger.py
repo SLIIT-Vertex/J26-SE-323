@@ -30,6 +30,7 @@ class StruggleEvidence:
     learner_requested_help: bool | None
     learner_support_need: float | None = None
     learner_state_observed_at: datetime | None = None
+    learner_state_uncertain: bool = False
     source_as_of: Mapping[str, datetime] | None = None
 
 
@@ -102,6 +103,10 @@ class StruggleTrigger:
         missing: list[str],
         skipped: list[str],
     ) -> None:
+        if evidence.learner_state_uncertain:
+            skipped.append("LEARNER_STATE_UNCERTAIN")
+            missing.append("learner_support_need")
+            return
         if evidence.learner_support_need is None:
             missing.append("learner_support_need")
             return

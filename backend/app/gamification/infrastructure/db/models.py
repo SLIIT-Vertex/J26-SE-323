@@ -506,3 +506,87 @@ class IndependenceOutcomeModel(Base):
     formula_version: Mapped[str] = mapped_column(String(128), nullable=False)
     calculated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
+
+class PolicyUpdateCursorModel(Base):
+    __tablename__ = "policy_update_cursors"
+    __table_args__ = (
+        CheckConstraint(
+            "artifact_sha256 IS NULL OR length(artifact_sha256) = 64",
+            name="ck_policy_update_cursors_sha256",
+        ),
+    )
+
+    episode_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("adaptive_episodes.id"), primary_key=True
+    )
+    artifact_sha256: Mapped[str | None] = mapped_column(String(64))
+    reason_code: Mapped[str | None] = mapped_column(String(64))
+    consumed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class LearnerSkillSummaryModel(Base):
+    __tablename__ = "learner_skill_summaries"
+    __table_args__ = (
+        CheckConstraint(
+            "unsupported_attempts >= 0", name="ck_learner_skill_summaries_unsupported"
+        ),
+        CheckConstraint("supported_attempts >= 0", name="ck_learner_skill_summaries_supported"),
+        CheckConstraint(
+            "valid_outcome_count >= 0", name="ck_learner_skill_summaries_valid_outcomes"
+        ),
+        CheckConstraint(
+            "independent_accuracy IS NULL OR "
+            "(independent_accuracy >= 0 AND independent_accuracy <= 1)",
+            name="ck_learner_skill_summaries_independent_accuracy",
+        ),
+        CheckConstraint(
+            "supported_accuracy IS NULL OR (supported_accuracy >= 0 AND supported_accuracy <= 1)",
+            name="ck_learner_skill_summaries_supported_accuracy",
+        ),
+        CheckConstraint(
+            "support_dependency_index IS NULL OR "
+            "(support_dependency_index >= 0 AND support_dependency_index <= 1)",
+            name="ck_learner_skill_summaries_dependency",
+        ),
+    )
+
+    learner_id: Mapped[UUID] = mapped_column(
+        Uuid, ForeignKey("learners.id"), primary_key=True
+    )
+    skill_code: Mapped[str] = mapped_column(String(128), primary_key=True)
+    unsupported_attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    supported_attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    independent_accuracy: Mapped[float | None] = mapped_column(Float)
+    supported_accuracy: Mapped[float | None] = mapped_column(Float)
+    mean_independence_gain: Mapped[float | None] = mapped_column(Float)
+    support_dependency_index: Mapped[float | None] = mapped_column(Float)
+    valid_outcome_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    last_practiced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    summary_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class LearnerEvidenceOutboxModel(Base):
+    __tablename__ = "learner_evidence_outbox"
+    __table_args__ = (
+        UniqueConstraint("idempotency_key", name="uq_learner_evidence_outbox_key"),
+        CheckConstraint(
+            "status IN ('pending', 'published')", name="ck_learner_evidence_outbox_status"
+        ),
+        CheckConstraint("attempt_count >= 1", name="ck_learner_evidence_outbox_attempts"),
+        Index("ix_learner_evidence_outbox_learner", "learner_id", "created_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    idempotency_key: Mapped[str] = mapped_column(String(220), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"), nullable=False)
+    skill_code: Mapped[str] = mapped_column(String(128), nullable=False)
+    universal_skill_id: Mapped[str] = mapped_column(String(16), nullable=False)
+    payload_json: Mapped[dict[str, object]] = mapped_column(JsonType, nullable=False)
+    contract_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+

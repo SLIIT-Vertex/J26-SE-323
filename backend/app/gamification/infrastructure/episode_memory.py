@@ -8,9 +8,9 @@ from app.gamification.application.errors import EpisodeFlowError
 from app.gamification.application.records import (
     AuditEvent,
     GamificationAttempt,
-    SkillMasteryEvidence,
+    LearnerSkillSummary,
 )
-from app.gamification.domain.types import EpisodeId, SkillId
+from app.gamification.domain.types import EpisodeId
 from app.gamification.infrastructure.memory import InMemoryAuditOutput, InMemoryLearningRecordStore
 
 
@@ -46,29 +46,29 @@ class InMemoryUnitOfWork:
         self.audit = InMemoryAuditOutput()
         self._states: dict[EpisodeId, EpisodeState] | None = None
         self._attempts: list[GamificationAttempt] | None = None
-        self._mastery: dict[tuple[UUID, SkillId], SkillMasteryEvidence] | None = None
+        self._summaries: dict[tuple[UUID, str], LearnerSkillSummary] | None = None
         self._events: list[AuditEvent] | None = None
 
     def begin(self) -> None:
         # Frozen records stay shared. Copy the containers so a rollback can restore them.
         self._states = dict(self.episodes._states)
         self._attempts = list(self.learning_records.recorded_attempts)
-        self._mastery = dict(self.learning_records._mastery)
+        self._summaries = dict(self.learning_records._summaries)
         self._events = list(self.audit.events)
 
     def commit(self) -> None:
         self._states = None
         self._attempts = None
-        self._mastery = None
+        self._summaries = None
         self._events = None
 
     def rollback(self) -> None:
-        if self._states is None or self._attempts is None or self._mastery is None:
+        if self._states is None or self._attempts is None or self._summaries is None:
             return
         if self._events is None:
             return
         self.episodes._states = self._states
         self.learning_records.recorded_attempts = self._attempts
-        self.learning_records._mastery = self._mastery
+        self.learning_records._summaries = self._summaries
         self.audit.events = self._events
         self.commit()
