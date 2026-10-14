@@ -49,8 +49,11 @@ Gamification contributions:
 
 - `data/gamification/grade5-curriculum-game-dataset/v2/curriculum_sources.jsonl`: 17 Grade 5
   sources (textbooks and teacher guides) with titles, subjects, and file locators.
-- `curriculum_nodes.jsonl`: 1,884 Subject → Unit → Lesson/Outcome nodes with page provenance,
-  transcribed by visual reading. They cover the pages where FM-font extraction fails.
+- `curriculum_nodes.jsonl`: 1,884 short curriculum statements (148 competencies, 94 competency
+  levels, 171 lessons, 306 learning outcomes, 330 content points, 835 source activities) with
+  Sinhala text, page ranges, and parent links. They were transcribed by visual reading/OCR, have
+  `extraction_confidence` mostly low, and are `needs_review`. They are statements, not full page
+  text.
 - A draft crosswalk from 548 Grade 5 gamification skills to Universal Skill Node parents.
 
 Not built yet: real source registry records, chunking, a pgvector index, a retriever
@@ -119,10 +122,16 @@ conversion.
 ### R3 — Text and chunking (joint)
 
 - The Adaptive Tutor extractor stays the source of machine text.
-- For pages flagged `conversion_unavailable`, gamification visual-read transcriptions are imported
-  as `transcription_method="visual_read"` candidates with `review_status=REVIEW_PENDING`. A human
-  approves page by page. Legacy FM→Unicode conversion stays an open shared task; once it exists,
-  its output is compared with the transcriptions before either is approved.
+- Gamification curriculum nodes supply the hierarchy (`unit_id`, `learning_outcome_id`) and page
+  ranges used to tag chunks. Their Sinhala statements may also be imported as small
+  outcome-level chunks with `transcription_method="visual_read"` and
+  `review_status=REVIEW_PENDING`, approved by a human one by one.
+- Full page text for pages flagged `conversion_unavailable` still needs a legacy FM→Unicode
+  converter or reviewed manual transcription; the gamification nodes do not cover it. When a
+  converter exists, its output is checked against the node statements on the same pages.
+- The gamification question bank (games, items, answer keys, misconceptions, scaffolds) is never
+  indexed into the RAG. It is not curriculum evidence, and indexing it would let the tutor
+  retrieve game answers.
 - One shared `chunking-v1`: structure-aware (unit → lesson → paragraph), page-bounded,
   about 300–500 tokens, versioned. Chunks inherit Universal skill tags through
   `learning_outcome_id`.
@@ -165,3 +174,5 @@ conversion.
 ## Change log
 
 - 2026-10-14: plan agreed by both owners (`shared-curriculum-rag-plan-v1`).
+- 2026-10-14: clarified that gamification curriculum nodes are short statements, not full page
+  text, and that the gamification question bank is never indexed.
