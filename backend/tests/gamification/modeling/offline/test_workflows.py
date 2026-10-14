@@ -17,7 +17,7 @@ from app.gamification.modeling.shared.artifact_registry import (
 )
 from app.gamification.modeling.support_selection.evaluation import evaluate_logged_policy
 from app.gamification.modeling.synthetic.datasets import (
-    FAKE_EXPERT_REVIEW_SIMULATION,
+    EXPERT_REVIEW_SIMULATION,
     load_dataset_rows,
     load_default_prototype_rows,
     load_fake_expert_review_rows,
@@ -187,7 +187,7 @@ def test_fake_expert_review_simulation_exercises_independent_review_workflow() -
 def test_fake_expert_review_rows_are_model_ready_and_reference_catalogue_items() -> None:
     payload = load_fake_expert_review_simulation()
     rows = load_fake_expert_review_rows()
-    assert load_dataset_rows(FAKE_EXPERT_REVIEW_SIMULATION) == rows
+    assert load_dataset_rows(EXPERT_REVIEW_SIMULATION) == rows
     assert len(rows) == len(payload["cases"])
     assert all(row.learner_id.startswith("synthetic-expert-sim-") for row in rows)
     assert all(row.label for row in rows)
@@ -197,7 +197,7 @@ def test_fake_expert_review_rows_are_model_ready_and_reference_catalogue_items()
         / "data"
         / "gamification"
         / "grade5-curriculum-game-dataset"
-        / "v1"
+        / "v2"
         / "game_items.jsonl"
     )
     catalogue_items = {
@@ -213,8 +213,9 @@ def test_fake_expert_review_rows_are_model_ready_and_reference_catalogue_items()
         assert case["language"] == source["language"]
         assert question["prompt"] == (source["prompt_en"] or source["prompt_primary"])
         assert question["stimulus"] == (source["stimulus_en"] or source["stimulus_primary"])
-        assert question["options"] == json.loads(source["options_json"])
-        assert question["correct_answer"] == json.loads(source["correct_answer_json"])[0]
+        assert case["provisional_skill_id"] == source["primary_skill_candidate_id"]
+        assert question["options"] == source["options"]
+        assert question["correct_answer"] == source["correct_answers"][0]
 
     manifest = DatasetManifest.build(
         rows,

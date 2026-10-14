@@ -1,17 +1,22 @@
 import json
+import os
 from pathlib import Path
 
 from app.gamification.domain.types import SupportActionType
 from app.gamification.modeling.offline.dataset_manifest import DatasetRow
 
-_DATA_DIRECTORY = Path(__file__).with_name("data")
-DEFAULT_PROTOTYPE_DATASET = _DATA_DIRECTORY / "default_prototype_dataset.json"
+_PROJECT_ROOT = Path(__file__).resolve().parents[5]
+GAMIFICATION_DATA_DIRECTORY = Path(
+    os.environ.get("MINDBRIDGE_GAMIFICATION_DATA_DIR", _PROJECT_ROOT / "data" / "gamification")
+).expanduser().resolve()
+SYNTHETIC_MODEL_DATA_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "synthetic-model-data" / "v1"
+DEFAULT_PROTOTYPE_EPISODES = SYNTHETIC_MODEL_DATA_DIRECTORY / "default-prototype-episodes.json"
 DEFAULT_PROTOTYPE_STATUS = "TODO_EXPERT_AUTHORIZATION_AND_REVIEW"
-FAKE_EXPERT_REVIEW_SIMULATION = _DATA_DIRECTORY / "fake_expert_review_simulation.json"
+EXPERT_REVIEW_SIMULATION = SYNTHETIC_MODEL_DATA_DIRECTORY / "expert-review-simulation.json"
 
 
 def load_dataset_rows(path: Path) -> list[DatasetRow]:
-    if path.resolve() == FAKE_EXPERT_REVIEW_SIMULATION.resolve():
+    if path.resolve() == EXPERT_REVIEW_SIMULATION.resolve():
         return load_fake_expert_review_rows()
     payload = json.loads(path.read_text())
     records = payload.get("records") if isinstance(payload, dict) else payload
@@ -23,13 +28,13 @@ def load_dataset_rows(path: Path) -> list[DatasetRow]:
 def load_default_prototype_rows() -> list[DatasetRow]:
     """Load synthetic defaults; these rows are not authorized expert evidence."""
 
-    return load_dataset_rows(DEFAULT_PROTOTYPE_DATASET)
+    return load_dataset_rows(DEFAULT_PROTOTYPE_EPISODES)
 
 
 def load_fake_expert_review_simulation() -> dict[str, object]:
     """Load and validate the realistic synthetic expert-review fallback."""
 
-    payload = json.loads(FAKE_EXPERT_REVIEW_SIMULATION.read_text())
+    payload = json.loads(EXPERT_REVIEW_SIMULATION.read_text())
     if not isinstance(payload, dict):
         raise ValueError("fake expert-review simulation must be an object")
     if payload.get("synthetic") is not True or payload.get("authorized_research_evidence") is not False:

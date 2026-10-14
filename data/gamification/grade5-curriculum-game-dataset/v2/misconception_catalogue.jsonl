@@ -1,0 +1,1 @@
+{"misconception_code": "unknown/other", "catalogue_version": "grade5-misconceptions-v2", "label_primary": "නොදන්නා හෝ වෙනත්", "label_en": "Unknown or other", "description": "Conservative fallback when no expert-approved diagnosis is available.", "applicable_skill_candidate_ids": [], "approval_status": "engineering_fallback_only", "child_facing_diagnosis_approved": false}

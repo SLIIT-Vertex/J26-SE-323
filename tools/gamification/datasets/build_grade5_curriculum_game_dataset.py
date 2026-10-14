@@ -7,14 +7,22 @@ import os
 import random
 import re
 from collections import defaultdict
+from datetime import date, datetime
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_OUTPUT_DIR = (
-    PROJECT_ROOT / "data" / "gamification" / "grade5-curriculum-game-dataset" / "v1"
+    PROJECT_ROOT / "data" / "gamification" / "grade5-curriculum-game-dataset" / "v2"
 )
 SOURCE_DIR_ENV = "MINDBRIDGE_GRADE5_SYLLABUS_DIR"
+PACKAGE_VERSION = "2.0.0"
+CURRICULUM_VERSION = "grade5-curriculum-v2"
+SKILL_TAXONOMY_VERSION = "grade5-skill-candidates-v2"
+MISCONCEPTION_CATALOGUE_VERSION = "grade5-misconceptions-v2"
+SUPPORT_CATALOGUE_VERSION = "grade5-support-v2"
+EQUIVALENCE_VERSION = "grade5-verification-candidates-v2"
+MASTER_WORKBOOK_NAME = "grade5_game_dataset_master.xlsx"
 SUBJECTS = ["ENV", "SIN", "ENG", "MAT"]
 SUBJECT_NAMES = {
     "ENV": "Environmental Studies",
@@ -32,11 +40,36 @@ def clean(value):
     return re.sub(r"\s+", " ", str(value)).strip()
 
 
+def json_value(value):
+    if value is None:
+        return ""
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if isinstance(value, (bool, int, float)):
+        return value
+    return clean(value)
+
+
+def source_record(row):
+    return {
+        key: json_value(value)
+        for key, value in row.items()
+        if not key.startswith("_")
+    }
+
+
 def read_sheet(workbook, sheet_name):
     ws = workbook[sheet_name]
     rows = list(ws.iter_rows(values_only=True))
     headers = [clean(v) for v in rows[0]]
-    return [dict(zip(headers, row)) for row in rows[1:] if any(v is not None for v in row)]
+    records = []
+    for row_number, row in enumerate(rows[1:], start=2):
+        if not any(v is not None for v in row):
+            continue
+        record = dict(zip(headers, row))
+        record["_source_row_number"] = row_number
+        records.append(record)
+    return records
 
 
 def first(row, *keys):
@@ -61,12 +94,43 @@ def jsonl_write(path, rows):
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def fallback_distractors(correct):
+    text = clean(correct)
+    time_match = re.fullmatch(r"(\d{2}):(\d{2})", text)
+    if time_match:
+        total_minutes = int(time_match.group(1)) * 60 + int(time_match.group(2))
+        return [
+            f"{((total_minutes + delta) // 60) % 24:02d}:{(total_minutes + delta) % 60:02d}"
+            for delta in (15, -15, 30, -30, 60, -60)
+        ]
+    numeric_match = re.fullmatch(r"(-?\d+)(.*)", text)
+    if numeric_match:
+        number = int(numeric_match.group(1))
+        suffix = numeric_match.group(2)
+        deltas = (1, -1, 2, -2, 10, -10, 100, -100)
+        return [f"{max(0, number + delta)}{suffix}" for delta in deltas]
+    decimal_match = re.fullmatch(r"(-?\d+\.\d+)", text)
+    if decimal_match:
+        number = float(decimal_match.group(1))
+        return [f"{max(0, number + delta):.1f}" for delta in (0.1, -0.1, 0.2, -0.2)]
+    return []
+
+
 def make_options(correct, pool, count=4):
-    candidates = [clean(v) for v in pool if clean(v) and clean(v) != clean(correct)]
+    candidates = list(
+        dict.fromkeys(
+            clean(v) for v in pool if clean(v) and clean(v) != clean(correct)
+        )
+    )
     RNG.shuffle(candidates)
+    for fallback in fallback_distractors(correct):
+        if len(candidates) >= count - 1:
+            break
+        if fallback != clean(correct) and fallback not in candidates:
+            candidates.append(fallback)
     options = [clean(correct)] + candidates[: max(0, count - 1)]
-    while len(options) < count:
-        options.append(f"Option {len(options) + 1}")
+    if len(options) < count:
+        raise ValueError(f"not enough unique distractors for {correct!r}")
     RNG.shuffle(options)
     return options
 
@@ -113,6 +177,7 @@ def collect_curriculum(source_dir: Path):
                     text_en = text_primary
                 nodes.append({
                     "curriculum_node_id": node_id,
+                    "curriculum_version": CURRICULUM_VERSION,
                     "subject": subject,
                     "subject_name": SUBJECT_NAMES[subject],
                     "grade": 5,
@@ -127,10 +192,22 @@ def collect_curriculum(source_dir: Path):
                     "source_id": first(row, "source_id"),
                     "source_page_from": first(row, "page_from"),
                     "source_page_to": first(row, "page_to"),
+                    "source_page_basis": first(row, "page_basis"),
+                    "allocated_periods": first(row, "allocated_periods"),
+                    "mapping_basis": first(row, "link_basis"),
+                    "materials_primary": first(
+                        row, "materials_mentioned", "materials_mentioned_si"
+                    ),
                     "extraction_confidence": source_confidence(row),
+                    "extraction_notes": first(row, "extraction_notes"),
                     "trace_status": first(row, "trace_status") or "draft",
                     "verification_status": "needs_review",
+                    "reviewed_by": first(row, "verified_by"),
+                    "reviewed_on": first(row, "verified_on"),
                     "source_file": path.name,
+                    "source_sheet": sheet,
+                    "source_row_number": row["_source_row_number"],
+                    "source_record": source_record(row),
                 })
 
     return nodes, raw
@@ -218,6 +295,9 @@ def build_game_catalog(nodes):
             refs = find_target_nodes(by_subject, subject, keyword)
             games.append({
                 "game_id": f"G5-{subject}-G{index:02d}",
+                "game_version": PACKAGE_VERSION,
+                "curriculum_version": CURRICULUM_VERSION,
+                "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
                 "subject": subject,
                 "subject_name": SUBJECT_NAMES[subject],
                 "grade": 5,
@@ -243,6 +323,9 @@ def build_game_catalog(nodes):
 def base_item(game, number, refs, lesson_id="", source_activity_id=""):
     return {
         "item_id": f"{game['game_id']}-I{number:03d}",
+        "item_version": PACKAGE_VERSION,
+        "curriculum_version": CURRICULUM_VERSION,
+        "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
         "game_id": game["game_id"],
         "subject": game["subject"],
         "language": game["language"],
@@ -268,6 +351,7 @@ def base_item(game, number, refs, lesson_id="", source_activity_id=""):
         "language_reviewed": False,
         "asset_status": "not_required",
         "publication_status": "needs_review",
+        "item_role": "practice_candidate",
     }
 
 
@@ -295,7 +379,13 @@ def make_math_items(game):
         elif mechanic == "number_order":
             values = RNG.sample(range(100, 9999 if difficulty < 3 else 99999), 4)
             correct = " < ".join(map(str, sorted(values)))
-            variants = [" < ".join(map(str, order)) for order in [values, list(reversed(sorted(values))), sorted(values, key=lambda x: str(x))]]
+            variants = []
+            while len(variants) < 4:
+                order = values[:]
+                RNG.shuffle(order)
+                candidate = " < ".join(map(str, order))
+                if candidate != correct and candidate not in variants:
+                    variants.append(candidate)
             item.update(prompt_primary="සංඛ්‍යා කුඩාම සිට විශාලම දක්වා සකසන්න.", prompt_en="Arrange the numbers from smallest to largest.", stimulus_primary=", ".join(map(str, values)), stimulus_en=", ".join(map(str, values)), options_json=json.dumps(make_options(correct, variants), ensure_ascii=False), correct_answer_json=json.dumps([correct]), hint="Compare the highest place value first.")
         elif mechanic == "addition":
             limit = 999 if difficulty < 3 else 9999
@@ -449,7 +539,7 @@ def make_english_items(game):
             shuffled = words_in_sentence[:]
             RNG.shuffle(shuffled)
             answer = sentence + "."
-            item.update(prompt_primary="Arrange the words to make a sentence.", prompt_en="Arrange the words to make a sentence.", stimulus_primary=" / ".join(shuffled), stimulus_en=" / ".join(shuffled), options_json=json.dumps([]), correct_answer_json=json.dumps([answer]), hint="Start with a capital letter and finish with a full stop.")
+            item.update(prompt_primary="Arrange the words to make a sentence.", prompt_en="Arrange the words to make a sentence.", stimulus_primary=" / ".join(shuffled), stimulus_en=" / ".join(shuffled), options_json=json.dumps(shuffled), correct_answer_json=json.dumps([answer]), hint="Start with a capital letter and finish with a full stop.")
         elif mechanic == "grammar_sort":
             categories = ["noun", "verb", "adjective"]
             category = "adjective" if word in {"kind", "healthy", "careful", "honest", "brave", "quiet", "rapid"} else ("verb" if word in {"share", "protect", "celebrate", "exercise", "invent", "respect", "recycle", "balance", "discover"} else "noun")
@@ -538,7 +628,7 @@ def make_source_derived_items(game, raw):
                 ordered = activity_title_pool[:4]
             shuffled = ordered[:]
             RNG.shuffle(shuffled)
-            item.update(prompt_primary="ක්‍රියාකාරකම් මූලාශ්‍ර අනුපිළිවෙළට සකසන්න.", prompt_en="Arrange the activities in source order.", stimulus_primary=" | ".join(shuffled), stimulus_en="", options_json=json.dumps([]), correct_answer_json=json.dumps(ordered, ensure_ascii=False), hint="Use the lesson progression from introduction to practice.")
+            item.update(prompt_primary="ක්‍රියාකාරකම් මූලාශ්‍ර අනුපිළිවෙළට සකසන්න.", prompt_en="Arrange the activities in source order.", stimulus_primary=" | ".join(shuffled), stimulus_en="", options_json=json.dumps(shuffled, ensure_ascii=False), correct_answer_json=json.dumps(ordered, ensure_ascii=False), hint="Use the lesson progression from introduction to practice.")
         elif mechanic == "outcome_match" and outcomes:
             outcome = outcomes[(i - 1) % len(outcomes)]
             primary = first(outcome, "outcome", "outcome_si")
@@ -566,20 +656,1060 @@ def build_items(games, raw):
     return items
 
 
-def schema_definition():
-    return {
-        "version": "1.0.0",
-        "entities": {
-            "curriculum_node": {"primary_key": "curriculum_node_id", "description": "Normalized source curriculum, lesson and activity nodes."},
-            "game": {"primary_key": "game_id", "description": "Reusable gameplay configuration tied to curriculum targets."},
-            "game_item": {"primary_key": "item_id", "description": "One playable round with prompt, response and QA metadata."},
+def snake_case(value):
+    return re.sub(r"[^a-z0-9]+", "_", clean(value).lower()).strip("_")
+
+
+def split_ids(value):
+    return [part.strip() for part in clean(value).split(",") if part.strip()]
+
+
+def read_master_table(workbook, sheet_name, header_row=5):
+    ws = workbook[sheet_name]
+    rows = list(ws.iter_rows(values_only=True))
+    headers = [snake_case(value) for value in rows[header_row - 1]]
+    records = []
+    for row_number, row in enumerate(rows[header_row:], start=header_row + 1):
+        if not any(value is not None and clean(value) for value in row):
+            continue
+        record = {
+            header: json_value(value)
+            for header, value in zip(headers, row)
+            if header
+        }
+        record["source_sheet"] = sheet_name
+        record["source_row_number"] = row_number
+        records.append(record)
+    return records
+
+
+def read_master_annotations(workbook):
+    annotations = []
+    for sheet_name in ("Overview", "ReadMe"):
+        ws = workbook[sheet_name]
+        for row_number, row in enumerate(ws.iter_rows(values_only=True), start=1):
+            values = [json_value(value) for value in row]
+            if not any(value != "" for value in values):
+                continue
+            annotations.append(
+                {
+                    "annotation_id": f"MASTER-{snake_case(sheet_name).upper()}-R{row_number:04d}",
+                    "source_workbook": MASTER_WORKBOOK_NAME,
+                    "source_sheet": sheet_name,
+                    "source_row_number": row_number,
+                    "values": values,
+                    "content_role": "source_reference_text",
+                    "instruction_authority": "none",
+                }
+            )
+    return annotations
+
+
+def collect_master_workbook(source_dir):
+    from openpyxl import load_workbook
+
+    path = source_dir / MASTER_WORKBOOK_NAME
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    traceability = read_master_table(workbook, "Traceability")
+    qa_issues = read_master_table(workbook, "QA Queue")
+    asset_requirements = read_master_table(workbook, "Assets")
+
+    item_curriculum_mappings = []
+    for row in traceability:
+        item_curriculum_mappings.append(
+            {
+                "item_curriculum_mapping_id": row["trace_id"],
+                "item_id": row["item_id"],
+                "game_id": row["game_id"],
+                "subject": row["subject"],
+                "curriculum_node_id": row["curriculum_node_id"],
+                "relationship": row["relationship"],
+                "mapping_method": row["mapping_method"],
+                "mapping_confidence": row["mapping_confidence"],
+                "review_status": row["review_status"],
+                "mapping_version": CURRICULUM_VERSION,
+                "source_workbook": MASTER_WORKBOOK_NAME,
+                "source_sheet": row["source_sheet"],
+                "source_row_number": row["source_row_number"],
+            }
+        )
+
+    normalized_qa = []
+    for row in qa_issues:
+        normalized_qa.append(
+            {
+                "qa_issue_id": row["qa_id"],
+                "scope": row["scope"],
+                "subject": row["subject"],
+                "game_id": row["game_id"],
+                "item_id": row["item_id"],
+                "issue_type": row["issue_type"],
+                "severity": row["severity"],
+                "description": row["description"],
+                "suggested_action": row["suggested_action"],
+                "status": row["status"],
+                "source_ref": row["source_ref"],
+                "source_workbook": MASTER_WORKBOOK_NAME,
+                "source_sheet": row["source_sheet"],
+                "source_row_number": row["source_row_number"],
+            }
+        )
+
+    normalized_assets = []
+    for row in asset_requirements:
+        normalized_assets.append(
+            {
+                "asset_requirement_id": row["asset_requirement_id"],
+                "game_id": row["game_id"],
+                "subject": row["subject"],
+                "asset_type": row["asset_type"],
+                "required_count": row["required_count"],
+                "specification": row["specification"],
+                "language": row["language"],
+                "license_requirement": row["license_requirement"],
+                "status": row["status"],
+                "source_workbook": MASTER_WORKBOOK_NAME,
+                "source_sheet": row["source_sheet"],
+                "source_row_number": row["source_row_number"],
+            }
+        )
+    return (
+        item_curriculum_mappings,
+        normalized_qa,
+        normalized_assets,
+        read_master_annotations(workbook),
+    )
+
+
+def collect_source_entities(raw, source_dir):
+    curriculum_sources = []
+    curriculum_terms = []
+    source_issues = []
+    for subject in SUBJECTS:
+        workbook_name = f"grade5_{subject}_syllabus_trace_v1.xlsx"
+        workbook_path = source_dir / workbook_name
+        workbook_sha256 = hashlib.sha256(workbook_path.read_bytes()).hexdigest()
+        for row in raw[subject]["01_sources"]:
+            curriculum_sources.append(
+                {
+                    "source_id": first(row, "source_id"),
+                    "subject": subject,
+                    "grade": 5,
+                    "document_file_name": first(row, "file_name"),
+                    "document_type": first(row, "document_type"),
+                    "title_primary": first(row, "title", "title_si"),
+                    "title_en": first(row, "title", "title_en_gloss"),
+                    "authority": first(row, "authority"),
+                    "edition_year": first(row, "edition_year"),
+                    "language": first(row, "language"),
+                    "pages_in_file": first(row, "pages_in_file"),
+                    "pages_traced": first(row, "pages_traced"),
+                    "text_quality": first(row, "text_quality"),
+                    "extraction_method": first(row, "extraction_method"),
+                    "notes": first(row, "notes"),
+                    "source_uri": "",
+                    "source_document_sha256": "",
+                    "license_note": "",
+                    "approval_status": "needs_review",
+                    "trace_workbook": workbook_name,
+                    "trace_workbook_sha256": workbook_sha256,
+                    "source_sheet": "01_sources",
+                    "source_row_number": row["_source_row_number"],
+                    "source_record": source_record(row),
+                }
+            )
+        for row in raw[subject]["08_terms"]:
+            curriculum_terms.append(
+                {
+                    "term_id": first(row, "term_id"),
+                    "subject": subject,
+                    "grade": 5,
+                    "term_primary": first(row, "term", "term_si"),
+                    "term_en": first(row, "term_en_gloss", "term"),
+                    "definition_primary": first(row, "definition", "definition_si"),
+                    "first_skill_candidate_id": first(
+                        row, "first_competency_level_id"
+                    ),
+                    "first_lesson_id": first(row, "first_lesson_id"),
+                    "source_id": first(row, "source_id"),
+                    "source_page_from": first(row, "page_from"),
+                    "trace_status": first(row, "trace_status") or "draft",
+                    "source_workbook": workbook_name,
+                    "source_sheet": "08_terms",
+                    "source_row_number": row["_source_row_number"],
+                    "source_record": source_record(row),
+                }
+            )
+        for row in raw[subject]["09_issues"]:
+            source_issues.append(
+                {
+                    "qa_issue_id": first(row, "issue_id"),
+                    "scope": "source",
+                    "subject": subject,
+                    "game_id": "",
+                    "item_id": first(row, "row_id") if first(row, "sheet") == "Game Items" else "",
+                    "issue_type": first(row, "issue_type"),
+                    "severity": "high" if first(row, "issue_type") == "unreadable" else "medium",
+                    "description": first(row, "description"),
+                    "suggested_action": first(row, "suggested_check"),
+                    "status": "open",
+                    "source_ref": f"{first(row, 'source_id')} p.{first(row, 'page')}",
+                    "source_workbook": workbook_name,
+                    "source_sheet": "09_issues",
+                    "source_row_number": row["_source_row_number"],
+                    "source_record": source_record(row),
+                }
+            )
+    return curriculum_sources, curriculum_terms, source_issues
+
+
+def normalize_games_and_items(games, items):
+    normalized_games = []
+    for game in games:
+        row = dict(game)
+        row["target_curriculum_node_ids"] = split_ids(row.pop("target_curriculum_ids"))
+        row["required_modalities"] = split_ids(row["required_modalities"])
+        normalized_games.append(row)
+
+    game_by_id = {game["game_id"]: game for game in normalized_games}
+    ordered_mechanics = {"sentence_order", "activity_sequence"}
+    normalized_items = []
+    for item in items:
+        row = dict(item)
+        row["curriculum_node_ids"] = split_ids(row.pop("curriculum_refs"))
+        row["options"] = json.loads(row.pop("options_json"))
+        row["correct_answers"] = json.loads(row.pop("correct_answer_json"))
+        row["response_format"] = (
+            "ordered_response" if row["mechanic"] in ordered_mechanics else "single_select"
+        )
+        modalities = game_by_id[row["game_id"]]["required_modalities"]
+        row["required_asset_types"] = [
+            modality for modality in modalities if modality != "text"
+        ]
+        row["asset_status"] = (
+            "audio_required" if "audio" in row["required_asset_types"] else "not_required"
+        )
+        row["primary_skill_candidate_id"] = ""
+        row["structured_error_mapping_status"] = "not_authored"
+        normalized_items.append(row)
+    return normalized_games, normalized_items
+
+
+def build_skill_entities(nodes):
+    skill_node_types = {"competency", "competency_level", "learning_outcome"}
+    skill_nodes = [node for node in nodes if node["node_type"] in skill_node_types]
+    skill_ids = {node["curriculum_node_id"] for node in skill_nodes}
+    skills = []
+    relationships = []
+    source_mappings = []
+    for node in skill_nodes:
+        skill_id = node["curriculum_node_id"]
+        parent_id = node["parent_node_id"] if node["parent_node_id"] in skill_ids else ""
+        if not parent_id and "-L00-O" in skill_id:
+            inferred_parent = skill_id.split("-L00-O", 1)[0]
+            if inferred_parent in skill_ids:
+                parent_id = inferred_parent
+        skills.append(
+            {
+                "skill_candidate_id": skill_id,
+                "knowledge_tracing_skill_id": "",
+                "taxonomy_version": SKILL_TAXONOMY_VERSION,
+                "subject": node["subject"],
+                "grade": node["grade"],
+                "skill_type": node["node_type"],
+                "parent_skill_candidate_id": parent_id,
+                "label_primary": node["text_primary"],
+                "label_en": node["text_en"],
+                "observable_success_primary": (
+                    node["text_primary"] if node["node_type"] == "learning_outcome" else ""
+                ),
+                "observable_success_en": (
+                    node["text_en"] if node["node_type"] == "learning_outcome" else ""
+                ),
+                "prerequisite_skill_candidate_ids": [],
+                "misconception_codes": ["unknown/other"],
+                "eligible_support_action_types": [],
+                "source_curriculum_node_id": skill_id,
+                "mapping_status": "needs_review",
+                "approval_status": "draft",
+                "approved_by": "",
+                "approved_on": "",
+            }
+        )
+        if parent_id:
+            relationships.append(
+                {
+                    "skill_relationship_id": f"{parent_id}--contains--{skill_id}",
+                    "from_skill_candidate_id": parent_id,
+                    "to_skill_candidate_id": skill_id,
+                    "relationship_type": "contains",
+                    "relationship_basis": node["parent_basis"],
+                    "taxonomy_version": SKILL_TAXONOMY_VERSION,
+                    "review_status": "needs_review",
+                }
+            )
+        source_mappings.append(
+            {
+                "skill_source_mapping_id": f"{skill_id}--defines--{skill_id}",
+                "skill_candidate_id": skill_id,
+                "curriculum_node_id": skill_id,
+                "mapping_type": "defines",
+                "mapping_confidence": node["extraction_confidence"],
+                "mapping_status": "needs_review",
+                "mapping_version": SKILL_TAXONOMY_VERSION,
+                "source_id": node["source_id"],
+                "source_page_from": node["source_page_from"],
+                "source_page_to": node["source_page_to"],
+            }
+        )
+    return skills, relationships, source_mappings
+
+
+def resolve_skill_candidates(curriculum_node_id, node_by_id, skill_ids):
+    node = node_by_id.get(curriculum_node_id)
+    if node is None:
+        return []
+    if curriculum_node_id in skill_ids:
+        return [curriculum_node_id]
+    candidates = []
+    for ref in split_ids(node.get("curriculum_refs", "")):
+        if ref in skill_ids:
+            candidates.append(ref)
+    parent_id = node.get("parent_node_id", "")
+    if parent_id in skill_ids:
+        candidates.append(parent_id)
+    if parent_id and parent_id in node_by_id and not candidates:
+        candidates.extend(resolve_skill_candidates(parent_id, node_by_id, skill_ids))
+    if not candidates and "-L00-K" in curriculum_node_id:
+        competency_id = curriculum_node_id.split("-L00-K", 1)[0]
+        if competency_id in skill_ids:
+            candidates.append(competency_id)
+    return list(dict.fromkeys(candidates))
+
+
+def build_item_skill_mappings(items, item_curriculum_mappings, nodes, skills):
+    node_by_id = {node["curriculum_node_id"]: node for node in nodes}
+    skill_ids = {skill["skill_candidate_id"] for skill in skills}
+    mappings = []
+    seen = set()
+    by_item = defaultdict(list)
+    for trace in item_curriculum_mappings:
+        candidate_ids = resolve_skill_candidates(
+            trace["curriculum_node_id"], node_by_id, skill_ids
+        )
+        for candidate_id in candidate_ids:
+            key = (trace["item_id"], candidate_id, trace["relationship"])
+            if key in seen:
+                continue
+            seen.add(key)
+            mapping = {
+                "item_skill_mapping_id": f"{trace['item_id']}--{candidate_id}--{trace['relationship']}",
+                "item_id": trace["item_id"],
+                "game_id": trace["game_id"],
+                "skill_candidate_id": candidate_id,
+                "knowledge_tracing_skill_id": "",
+                "relationship": trace["relationship"],
+                "mapping_method": trace["mapping_method"],
+                "mapping_confidence": trace["mapping_confidence"],
+                "mapping_status": "needs_review",
+                "mapping_version": SKILL_TAXONOMY_VERSION,
+            }
+            mappings.append(mapping)
+            by_item[trace["item_id"]].append(mapping)
+    for item in items:
+        candidates = sorted(
+            by_item[item["item_id"]],
+            key=lambda value: (
+                value["relationship"] != "assesses",
+                value["skill_candidate_id"],
+            ),
+        )
+        if candidates:
+            item["primary_skill_candidate_id"] = candidates[0]["skill_candidate_id"]
+    return mappings
+
+
+def actual_text_languages(text):
+    if re.search(r"[\u0D80-\u0DFF]", text):
+        return ["si"]
+    return ["en"] if clean(text) else []
+
+
+def intended_languages(language):
+    if language == "bilingual":
+        return ["si", "en"]
+    return [language]
+
+
+def build_support_entities(items, item_skill_mappings):
+    skills_by_item = defaultdict(list)
+    for mapping in item_skill_mappings:
+        skills_by_item[mapping["item_id"]].append(mapping["skill_candidate_id"])
+    support_actions = []
+    content_assets = []
+    for item in items:
+        asset_id = f"{item['item_id']}--HINT"
+        action_id = f"{item['item_id']}--TARGETED-HINT"
+        languages = actual_text_languages(item["hint"])
+        skill_ids = sorted(set(skills_by_item[item["item_id"]]))
+        content_assets.append(
+            {
+                "content_asset_id": asset_id,
+                "content_version": PACKAGE_VERSION,
+                "asset_type": "text_hint",
+                "source_item_id": item["item_id"],
+                "game_id": item["game_id"],
+                "skill_candidate_ids": skill_ids,
+                "misconception_codes": ["unknown/other"],
+                "languages": languages,
+                "intended_languages": intended_languages(item["language"]),
+                "content_primary": item["hint"],
+                "content_en": item["hint"] if "en" in languages else "",
+                "answer_leakage_status": "needs_review",
+                "age_appropriateness_status": "needs_review",
+                "language_review_status": (
+                    "reviewed" if item["language_reviewed"] and "en" in languages else "needs_review"
+                ),
+                "publication_status": "needs_review",
+                "approved_by": "",
+                "approved_on": "",
+            }
+        )
+        support_actions.append(
+            {
+                "action_id": action_id,
+                "catalogue_version": SUPPORT_CATALOGUE_VERSION,
+                "action_type": "targeted_hint",
+                "content_asset_id": asset_id,
+                "languages": languages,
+                "intended_languages": intended_languages(item["language"]),
+                "skill_candidate_ids": skill_ids,
+                "knowledge_tracing_skill_ids": [],
+                "misconception_codes": ["unknown/other"],
+                "approved": False,
+                "approval_status": "needs_review",
+                "reference_priority": 1,
+            }
+        )
+    return support_actions, content_assets
+
+
+def build_verification_pair_candidates(items):
+    groups = defaultdict(list)
+    for item in items:
+        skill_id = item["primary_skill_candidate_id"]
+        if not skill_id:
+            continue
+        key = (
+            item["game_id"],
+            skill_id,
+            item["difficulty"],
+            item["cognitive_level"],
+            item["response_format"],
+            item["language"],
+        )
+        groups[key].append(item)
+    pairs = []
+    for group_items in groups.values():
+        if len(group_items) < 2:
+            continue
+        ordered = sorted(group_items, key=lambda item: item["item_id"])
+        for index, baseline in enumerate(ordered):
+            verification = ordered[(index + 1) % len(ordered)]
+            pairs.append(
+                {
+                    "verification_pair_id": f"{baseline['item_id']}--{verification['item_id']}",
+                    "equivalence_version": EQUIVALENCE_VERSION,
+                    "baseline_item_id": baseline["item_id"],
+                    "verification_item_id": verification["item_id"],
+                    "skill_candidate_id": baseline["primary_skill_candidate_id"],
+                    "primary_skill_match": True,
+                    "cognitive_operation_match": True,
+                    "difficulty_band_match": True,
+                    "response_format_match": True,
+                    "language_reviewed": bool(
+                        baseline["language_reviewed"] and verification["language_reviewed"]
+                    ),
+                    "expected_time_match": (
+                        baseline["estimated_seconds"] == verification["estimated_seconds"]
+                    ),
+                    "unseen_item_required": True,
+                    "unseen_verification_item": None,
+                    "answer_overlap_acceptable": None,
+                    "approved": False,
+                    "review_status": "needs_review",
+                    "reviewed_by": "",
+                    "reviewed_on": "",
+                }
+            )
+    return pairs
+
+
+def generated_qa_issues(items, item_skill_mappings, support_actions, verification_pairs):
+    mapped_item_ids = {mapping["item_id"] for mapping in item_skill_mappings}
+    unresolved = [item for item in items if item["item_id"] not in mapped_item_ids]
+    untranslated = [item for item in items if not item["stimulus_en"]]
+    intended_language_mismatch = [
+        action
+        for action in support_actions
+        if not set(action["intended_languages"]) <= set(action["languages"])
+    ]
+    return [
+        {
+            "qa_issue_id": "G5-PKG-ISS001",
+            "scope": "dataset",
+            "subject": "ALL",
+            "game_id": "",
+            "item_id": "",
+            "issue_type": "unresolved_skill_mapping",
+            "severity": "high",
+            "description": f"{len(unresolved)} items have no source-supported skill candidate mapping.",
+            "suggested_action": "Review and approve item-to-skill mappings without inferring unsupported links.",
+            "status": "open",
+            "source_ref": "generated package validation",
+            "affected_count": len(unresolved),
         },
+        {
+            "qa_issue_id": "G5-PKG-ISS002",
+            "scope": "dataset",
+            "subject": "ALL",
+            "game_id": "",
+            "item_id": "",
+            "issue_type": "missing_translation",
+            "severity": "medium",
+            "description": f"{len(untranslated)} items have no English stimulus equivalent.",
+            "suggested_action": "Add and review language-equivalent stimulus text where required.",
+            "status": "open",
+            "source_ref": "generated package validation",
+            "affected_count": len(untranslated),
+        },
+        {
+            "qa_issue_id": "G5-PKG-ISS003",
+            "scope": "model",
+            "subject": "ALL",
+            "game_id": "",
+            "item_id": "",
+            "issue_type": "missing_structured_error_mapping",
+            "severity": "high",
+            "description": "No expert-approved structured error to misconception mappings exist.",
+            "suggested_action": "Complete double review and adjudication before enabling misconception diagnosis.",
+            "status": "open",
+            "source_ref": "misconception model release gate",
+            "affected_count": len(items),
+        },
+        {
+            "qa_issue_id": "G5-PKG-ISS004",
+            "scope": "model",
+            "subject": "ALL",
+            "game_id": "",
+            "item_id": "",
+            "issue_type": "support_language_mismatch",
+            "severity": "high",
+            "description": f"{len(intended_language_mismatch)} support actions lack all intended delivery languages.",
+            "suggested_action": "Author and review localized support assets before policy eligibility.",
+            "status": "open",
+            "source_ref": "support policy release gate",
+            "affected_count": len(intended_language_mismatch),
+        },
+        {
+            "qa_issue_id": "G5-PKG-ISS005",
+            "scope": "model",
+            "subject": "ALL",
+            "game_id": "",
+            "item_id": "",
+            "issue_type": "verification_pairs_unapproved",
+            "severity": "high",
+            "description": f"All {len(verification_pairs)} generated verification-pair candidates require equivalence review.",
+            "suggested_action": "Review skill, cognitive operation, format, language, time and answer overlap before approval.",
+            "status": "open",
+            "source_ref": "Independence Gain release gate",
+            "affected_count": len(verification_pairs),
+        },
+    ]
+
+
+FILE_ENTITY_SPECS = {
+    "curriculum_sources.jsonl": (
+        "curriculum_source",
+        "source_id",
+        ["source_id", "subject", "grade", "document_file_name", "approval_status"],
+    ),
+    "curriculum_nodes.jsonl": (
+        "curriculum_node",
+        "curriculum_node_id",
+        [
+            "curriculum_node_id",
+            "curriculum_version",
+            "subject",
+            "grade",
+            "node_type",
+            "text_primary",
+            "source_id",
+            "verification_status",
+        ],
+    ),
+    "curriculum_terms.jsonl": (
+        "curriculum_term",
+        "term_id",
+        ["term_id", "subject", "term_primary", "source_id", "trace_status"],
+    ),
+    "skill_candidates.jsonl": (
+        "skill_candidate",
+        "skill_candidate_id",
+        [
+            "skill_candidate_id",
+            "taxonomy_version",
+            "subject",
+            "grade",
+            "skill_type",
+            "label_primary",
+            "mapping_status",
+            "approval_status",
+        ],
+    ),
+    "skill_relationships.jsonl": (
+        "skill_relationship",
+        "skill_relationship_id",
+        [
+            "skill_relationship_id",
+            "from_skill_candidate_id",
+            "to_skill_candidate_id",
+            "relationship_type",
+            "taxonomy_version",
+            "review_status",
+        ],
+    ),
+    "skill_source_mappings.jsonl": (
+        "skill_source_mapping",
+        "skill_source_mapping_id",
+        [
+            "skill_source_mapping_id",
+            "skill_candidate_id",
+            "curriculum_node_id",
+            "mapping_type",
+            "mapping_status",
+            "mapping_version",
+        ],
+    ),
+    "games.jsonl": (
+        "game",
+        "game_id",
+        [
+            "game_id",
+            "game_version",
+            "subject",
+            "grade",
+            "mechanic",
+            "target_curriculum_node_ids",
+            "required_modalities",
+            "publication_status",
+        ],
+    ),
+    "game_items.jsonl": (
+        "game_item",
+        "item_id",
+        [
+            "item_id",
+            "item_version",
+            "game_id",
+            "subject",
+            "language",
+            "curriculum_node_ids",
+            "response_format",
+            "options",
+            "correct_answers",
+            "publication_status",
+        ],
+    ),
+    "item_curriculum_mappings.jsonl": (
+        "item_curriculum_mapping",
+        "item_curriculum_mapping_id",
+        [
+            "item_curriculum_mapping_id",
+            "item_id",
+            "game_id",
+            "curriculum_node_id",
+            "relationship",
+            "review_status",
+        ],
+    ),
+    "item_skill_mappings.jsonl": (
+        "item_skill_mapping",
+        "item_skill_mapping_id",
+        [
+            "item_skill_mapping_id",
+            "item_id",
+            "skill_candidate_id",
+            "relationship",
+            "mapping_status",
+            "mapping_version",
+        ],
+    ),
+    "misconception_catalogue.jsonl": (
+        "misconception",
+        "misconception_code",
+        [
+            "misconception_code",
+            "catalogue_version",
+            "label_en",
+            "approval_status",
+        ],
+    ),
+    "structured_error_mappings.jsonl": (
+        "structured_error_mapping",
+        "structured_error_mapping_id",
+        [
+            "structured_error_mapping_id",
+            "structured_error_code",
+            "misconception_code",
+            "mapping_status",
+        ],
+    ),
+    "support_actions.jsonl": (
+        "support_action",
+        "action_id",
+        [
+            "action_id",
+            "catalogue_version",
+            "action_type",
+            "content_asset_id",
+            "languages",
+            "skill_candidate_ids",
+            "misconception_codes",
+            "approved",
+        ],
+    ),
+    "content_assets.jsonl": (
+        "content_asset",
+        "content_asset_id",
+        [
+            "content_asset_id",
+            "content_version",
+            "asset_type",
+            "source_item_id",
+            "languages",
+            "publication_status",
+        ],
+    ),
+    "verification_pair_candidates.jsonl": (
+        "verification_pair_candidate",
+        "verification_pair_id",
+        [
+            "verification_pair_id",
+            "equivalence_version",
+            "baseline_item_id",
+            "verification_item_id",
+            "skill_candidate_id",
+            "approved",
+            "review_status",
+        ],
+    ),
+    "asset_requirements.jsonl": (
+        "asset_requirement",
+        "asset_requirement_id",
+        [
+            "asset_requirement_id",
+            "game_id",
+            "asset_type",
+            "required_count",
+            "language",
+            "status",
+        ],
+    ),
+    "qa_issues.jsonl": (
+        "qa_issue",
+        "qa_issue_id",
+        [
+            "qa_issue_id",
+            "scope",
+            "issue_type",
+            "severity",
+            "description",
+            "status",
+        ],
+    ),
+    "review_decisions.jsonl": (
+        "review_decision",
+        "review_decision_id",
+        [
+            "review_decision_id",
+            "entity_type",
+            "entity_id",
+            "decision",
+            "reviewer_id",
+            "reviewed_at",
+        ],
+    ),
+    "workbook_annotations.jsonl": (
+        "workbook_annotation",
+        "annotation_id",
+        [
+            "annotation_id",
+            "source_workbook",
+            "source_sheet",
+            "source_row_number",
+            "values",
+            "instruction_authority",
+        ],
+    ),
+}
+
+
+def json_schema_for_values(values):
+    type_names = set()
+    list_values = []
+    for value in values:
+        if value is None:
+            type_names.add("null")
+        elif isinstance(value, bool):
+            type_names.add("boolean")
+        elif isinstance(value, int):
+            type_names.add("integer")
+        elif isinstance(value, float):
+            type_names.add("number")
+        elif isinstance(value, list):
+            type_names.add("array")
+            list_values.extend(value)
+        elif isinstance(value, dict):
+            type_names.add("object")
+        else:
+            type_names.add("string")
+    schema = {"type": sorted(type_names)[0] if len(type_names) == 1 else sorted(type_names)}
+    if "array" in type_names:
+        schema["items"] = json_schema_for_values(list_values) if list_values else {}
+    return schema
+
+
+def schema_definition(datasets):
+    definitions = {}
+    files = {}
+    for filename, (entity, primary_key, required) in FILE_ENTITY_SPECS.items():
+        rows = datasets[filename]
+        field_names = sorted({field for row in rows for field in row} | set(required))
+        properties = {}
+        for field in field_names:
+            observed = [row[field] for row in rows if field in row]
+            properties[field] = json_schema_for_values(observed) if observed else {"type": "string"}
+        properties[primary_key] = {"type": "string", "minLength": 1}
+        definitions[entity] = {
+            "type": "object",
+            "required": required,
+            "properties": properties,
+            "additionalProperties": True,
+        }
+        files[filename] = {
+            "entity": entity,
+            "primary_key": primary_key,
+            "record_schema": {"$ref": f"#/$defs/{entity}"},
+        }
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://mindbridge.local/schemas/grade5-curriculum-game-dataset-v2.json",
+        "title": "Grade 5 curriculum game dataset schema registry",
+        "version": PACKAGE_VERSION,
+        "curriculum_version": CURRICULUM_VERSION,
+        "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
+        "files": files,
+        "$defs": definitions,
         "status_rules": {
-            "prototype": "Generated and structurally valid but not approved for learners.",
-            "needs_review": "Requires educator, native-language or mapping review.",
-            "published": "May be served to learners after all release gates pass.",
+            "draft": "Source-backed candidate that has not completed formal review.",
+            "needs_review": "Requires named curriculum, language, answer, asset or equivalence review.",
+            "published": "May be served only after every applicable release gate passes.",
         },
     }
+
+
+def require_unique(rows, primary_key, entity_name):
+    values = [row[primary_key] for row in rows]
+    if len(values) != len(set(values)):
+        raise ValueError(f"{entity_name} contains duplicate {primary_key} values")
+
+
+def validate_datasets(datasets):
+    checks = []
+    for filename, (entity, primary_key, required) in FILE_ENTITY_SPECS.items():
+        rows = datasets[filename]
+        for index, row in enumerate(rows, start=1):
+            missing = [field for field in required if field not in row]
+            if missing:
+                raise ValueError(f"{filename} row {index} is missing {missing}")
+        require_unique(rows, primary_key, entity)
+        checks.append({"check": f"{entity}_schema_and_unique_key", "status": "pass"})
+
+    nodes = datasets["curriculum_nodes.jsonl"]
+    games = datasets["games.jsonl"]
+    items = datasets["game_items.jsonl"]
+    sources = datasets["curriculum_sources.jsonl"]
+    item_curriculum = datasets["item_curriculum_mappings.jsonl"]
+    item_skills = datasets["item_skill_mappings.jsonl"]
+    skills = datasets["skill_candidates.jsonl"]
+    support_actions = datasets["support_actions.jsonl"]
+    content_assets = datasets["content_assets.jsonl"]
+    verification_pairs = datasets["verification_pair_candidates.jsonl"]
+
+    node_ids = {row["curriculum_node_id"] for row in nodes}
+    source_ids = {row["source_id"] for row in sources}
+    game_ids = {row["game_id"] for row in games}
+    item_ids = {row["item_id"] for row in items}
+    skill_ids = {row["skill_candidate_id"] for row in skills}
+    asset_ids = {row["content_asset_id"] for row in content_assets}
+
+    if any(row["source_id"] not in source_ids for row in nodes):
+        raise ValueError("curriculum node references an unknown source")
+    if any(row["game_id"] not in game_ids for row in items):
+        raise ValueError("game item references an unknown game")
+    if any(
+        curriculum_id not in node_ids
+        for row in items
+        for curriculum_id in row["curriculum_node_ids"]
+    ):
+        raise ValueError("game item references an unknown curriculum node")
+    if any(
+        row["item_id"] not in item_ids or row["curriculum_node_id"] not in node_ids
+        for row in item_curriculum
+    ):
+        raise ValueError("item curriculum mapping contains an unknown reference")
+    if any(
+        row["item_id"] not in item_ids or row["skill_candidate_id"] not in skill_ids
+        for row in item_skills
+    ):
+        raise ValueError("item skill mapping contains an unknown reference")
+    if any(row["content_asset_id"] not in asset_ids for row in support_actions):
+        raise ValueError("support action references an unknown content asset")
+    if any(
+        row["baseline_item_id"] not in item_ids
+        or row["verification_item_id"] not in item_ids
+        or row["skill_candidate_id"] not in skill_ids
+        for row in verification_pairs
+    ):
+        raise ValueError("verification pair contains an unknown reference")
+
+    for item in items:
+        if item["response_format"] == "single_select" and len(
+            item["options"]
+        ) != len(set(map(str, item["options"]))):
+            raise ValueError(f"{item['item_id']} contains duplicate options")
+        if item["response_format"] == "single_select" and any(
+            answer not in item["options"] for answer in item["correct_answers"]
+        ):
+            raise ValueError(f"{item['item_id']} has a correct answer outside its options")
+    checks.extend(
+        [
+            {"check": "all_references_resolve", "status": "pass"},
+            {"check": "single_select_answers_are_valid", "status": "pass"},
+            {"check": "option_lists_have_no_duplicates", "status": "pass"},
+        ]
+    )
+    return {
+        "schema_version": PACKAGE_VERSION,
+        "status": "pass",
+        "checks": checks,
+    }
+
+
+def build_readiness_report(datasets, validation_report):
+    nodes = datasets["curriculum_nodes.jsonl"]
+    items = datasets["game_items.jsonl"]
+    item_skill_mappings = datasets["item_skill_mappings.jsonl"]
+    support_actions = datasets["support_actions.jsonl"]
+    pairs = datasets["verification_pair_candidates.jsonl"]
+    qa_issues = datasets["qa_issues.jsonl"]
+    mapped_item_ids = {row["item_id"] for row in item_skill_mappings}
+    return {
+        "package_version": PACKAGE_VERSION,
+        "overall_status": "engineering_ready_research_and_learner_delivery_blocked",
+        "summary": {
+            "curriculum_sources": len(datasets["curriculum_sources.jsonl"]),
+            "curriculum_nodes": len(nodes),
+            "curriculum_terms": len(datasets["curriculum_terms.jsonl"]),
+            "games": len(datasets["games.jsonl"]),
+            "game_items": len(items),
+            "item_curriculum_mappings": len(
+                datasets["item_curriculum_mappings.jsonl"]
+            ),
+            "skill_candidates": len(datasets["skill_candidates.jsonl"]),
+            "items_with_skill_candidate_mapping": len(mapped_item_ids),
+            "items_without_skill_candidate_mapping": len(items) - len(mapped_item_ids),
+            "answer_verified_items": sum(bool(row["answer_verified"]) for row in items),
+            "language_reviewed_items": sum(bool(row["language_reviewed"]) for row in items),
+            "published_items": sum(row["publication_status"] == "published" for row in items),
+            "approved_curriculum_nodes": sum(
+                row["verification_status"] == "approved" for row in nodes
+            ),
+            "support_action_candidates": len(support_actions),
+            "approved_support_actions": sum(bool(row["approved"]) for row in support_actions),
+            "verification_pair_candidates": len(pairs),
+            "approved_verification_pairs": sum(bool(row["approved"]) for row in pairs),
+            "items_without_verification_pair_candidate": len(items)
+            - len({row["baseline_item_id"] for row in pairs}),
+            "structured_error_mappings": len(
+                datasets["structured_error_mappings.jsonl"]
+            ),
+            "formal_review_decisions": len(datasets["review_decisions.jsonl"]),
+            "audio_required_items": sum(
+                "audio" in row["required_asset_types"] for row in items
+            ),
+            "uncreated_required_audio_assets": sum(
+                row["required_count"]
+                for row in datasets["asset_requirements.jsonl"]
+                if row["asset_type"] == "audio" and row["status"] != "created"
+            ),
+            "open_high_severity_qa_issues": sum(
+                row["severity"] == "high" and row["status"] == "open"
+                for row in qa_issues
+            ),
+            "open_medium_severity_qa_issues": sum(
+                row["severity"] == "medium" and row["status"] == "open"
+                for row in qa_issues
+            ),
+        },
+        "gates": {
+            "package_integrity": {
+                "status": "ready" if validation_report["status"] == "pass" else "blocked",
+                "reason": "All generated schemas, identifiers and cross-references validate.",
+            },
+            "game_prototyping": {
+                "status": "ready_with_restrictions",
+                "reason": "Structurally playable content exists, but publication and asset reviews remain open.",
+            },
+            "curriculum_and_skill_approval": {
+                "status": "blocked",
+                "reason": "Skill candidates are not bound to Knowledge Tracing skill IDs and have no formal approvals.",
+            },
+            "misconception_inference": {
+                "status": "blocked",
+                "reason": "Only the unknown/other fallback exists; no expert-approved structured error mappings exist.",
+            },
+            "support_selection": {
+                "status": "blocked",
+                "reason": "Support actions and assets are review candidates and none are approved for eligibility.",
+            },
+            "independence_gain": {
+                "status": "blocked",
+                "reason": "Verification pairs are candidates only; unseen-item and answer-overlap evidence are runtime or review requirements.",
+            },
+            "child_facing_delivery": {
+                "status": "blocked",
+                "reason": "No content is published and curriculum, language, asset and ethics gates remain open.",
+            },
+        },
+    }
+
+
+def package_readme():
+    return f"""# Grade 5 curriculum game dataset v{PACKAGE_VERSION}
+
+This is the canonical package. It contains loss-aware source evidence, explicit curriculum and
+skill-candidate mappings, model-facing support and verification candidates, QA data, formal
+schemas, integrity validation and a machine-readable readiness report.
+
+All skill, misconception, support and verification records remain candidates unless their explicit
+approval fields say otherwise. Source workbook notes and instructions are stored as reference text
+with `instruction_authority: none`; they are never executed as package-building instructions.
+
+The package is suitable for engineering and review workflows. It is not approved for child-facing
+delivery, research claims or learned-model activation. See `readiness_report.json` for current gates.
+"""
 
 
 def parse_args() -> argparse.Namespace:
@@ -590,7 +1720,10 @@ def parse_args() -> argparse.Namespace:
         "--source-dir",
         type=Path,
         default=Path(os.environ[SOURCE_DIR_ENV]) if SOURCE_DIR_ENV in os.environ else None,
-        help=f"Directory containing the four syllabus trace workbooks (or set {SOURCE_DIR_ENV}).",
+        help=(
+            "Directory containing the four syllabus trace workbooks and the game dataset "
+            f"master workbook (or set {SOURCE_DIR_ENV})."
+        ),
     )
     parser.add_argument(
         "--output-dir",
@@ -605,14 +1738,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def validate_source_dir(source_dir: Path) -> None:
-    missing = [
+    required = [
         source_dir / f"grade5_{subject}_syllabus_trace_v1.xlsx"
         for subject in SUBJECTS
-        if not (source_dir / f"grade5_{subject}_syllabus_trace_v1.xlsx").is_file()
     ]
+    required.append(source_dir / MASTER_WORKBOOK_NAME)
+    missing = [path for path in required if not path.is_file()]
     if missing:
         formatted = "\n".join(f"- {path}" for path in missing)
-        raise FileNotFoundError(f"Missing required syllabus trace workbooks:\n{formatted}")
+        raise FileNotFoundError(f"Missing required Grade 5 workbooks:\n{formatted}")
 
 
 def main() -> None:
@@ -621,29 +1755,126 @@ def main() -> None:
     output_dir = args.output_dir.expanduser().resolve()
     validate_source_dir(source_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    RNG.seed(5323)
     nodes, raw = collect_curriculum(source_dir)
-    games = build_game_catalog(nodes)
-    items = build_items(games, raw)
-    jsonl_write(output_dir / "curriculum_nodes.jsonl", nodes)
-    jsonl_write(output_dir / "games.jsonl", games)
-    jsonl_write(output_dir / "game_items.jsonl", items)
+    raw_games = build_game_catalog(nodes)
+    raw_items = build_items(raw_games, raw)
+    games, items = normalize_games_and_items(raw_games, raw_items)
+    (
+        item_curriculum_mappings,
+        master_qa_issues,
+        asset_requirements,
+        workbook_annotations,
+    ) = collect_master_workbook(source_dir)
+    curriculum_sources, curriculum_terms, source_issues = collect_source_entities(
+        raw, source_dir
+    )
+    source_issue_by_id = {issue["qa_issue_id"]: issue for issue in source_issues}
+    for issue in master_qa_issues:
+        source_issue = source_issue_by_id.get(issue["qa_issue_id"])
+        if source_issue:
+            issue["source_trace_record"] = source_issue["source_record"]
+            issue["source_trace_workbook"] = source_issue["source_workbook"]
+            issue["source_trace_sheet"] = source_issue["source_sheet"]
+            issue["source_trace_row_number"] = source_issue["source_row_number"]
 
-    counts = {"nodes": len(nodes), "games": len(games), "items": len(items)}
-    (output_dir / "schema.json").write_text(
-        json.dumps(schema_definition(), ensure_ascii=False, indent=2), encoding="utf-8"
+    skills, skill_relationships, skill_source_mappings = build_skill_entities(nodes)
+    item_skill_mappings = build_item_skill_mappings(
+        items, item_curriculum_mappings, nodes, skills
+    )
+    support_actions, content_assets = build_support_entities(items, item_skill_mappings)
+    verification_pairs = build_verification_pair_candidates(items)
+    qa_issues = master_qa_issues + generated_qa_issues(
+        items, item_skill_mappings, support_actions, verification_pairs
     )
 
+    misconception_catalogue = [
+        {
+            "misconception_code": "unknown/other",
+            "catalogue_version": MISCONCEPTION_CATALOGUE_VERSION,
+            "label_primary": "නොදන්නා හෝ වෙනත්",
+            "label_en": "Unknown or other",
+            "description": "Conservative fallback when no expert-approved diagnosis is available.",
+            "applicable_skill_candidate_ids": [],
+            "approval_status": "engineering_fallback_only",
+            "child_facing_diagnosis_approved": False,
+        }
+    ]
+    datasets = {
+        "curriculum_sources.jsonl": curriculum_sources,
+        "curriculum_nodes.jsonl": nodes,
+        "curriculum_terms.jsonl": curriculum_terms,
+        "skill_candidates.jsonl": skills,
+        "skill_relationships.jsonl": skill_relationships,
+        "skill_source_mappings.jsonl": skill_source_mappings,
+        "games.jsonl": games,
+        "game_items.jsonl": items,
+        "item_curriculum_mappings.jsonl": item_curriculum_mappings,
+        "item_skill_mappings.jsonl": item_skill_mappings,
+        "misconception_catalogue.jsonl": misconception_catalogue,
+        "structured_error_mappings.jsonl": [],
+        "support_actions.jsonl": support_actions,
+        "content_assets.jsonl": content_assets,
+        "verification_pair_candidates.jsonl": verification_pairs,
+        "asset_requirements.jsonl": asset_requirements,
+        "qa_issues.jsonl": qa_issues,
+        "review_decisions.jsonl": [],
+        "workbook_annotations.jsonl": workbook_annotations,
+    }
+    validation_report = validate_datasets(datasets)
+    readiness_report = build_readiness_report(datasets, validation_report)
+
+    for filename, rows in datasets.items():
+        jsonl_write(output_dir / filename, rows)
+    (output_dir / "schema.json").write_text(
+        json.dumps(schema_definition(datasets), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "validation_report.json").write_text(
+        json.dumps(validation_report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "readiness_report.json").write_text(
+        json.dumps(readiness_report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    (output_dir / "README.md").write_text(
+        package_readme(),
+        encoding="utf-8",
+    )
+
+    counts = {
+        FILE_ENTITY_SPECS[filename][0]: len(rows)
+        for filename, rows in datasets.items()
+    }
     manifest = {
         "package": "grade5-curriculum-game-dataset",
-        "version": "1.0.0",
+        "version": PACKAGE_VERSION,
+        "curriculum_version": CURRICULUM_VERSION,
+        "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
+        "misconception_catalogue_version": MISCONCEPTION_CATALOGUE_VERSION,
+        "support_catalogue_version": SUPPORT_CATALOGUE_VERSION,
+        "equivalence_version": EQUIVALENCE_VERSION,
         "counts": counts,
+        "source_workbooks": {},
         "files": {},
     }
+    source_workbooks = [
+        *(f"grade5_{subject}_syllabus_trace_v1.xlsx" for subject in SUBJECTS),
+        MASTER_WORKBOOK_NAME,
+    ]
+    for filename in source_workbooks:
+        path = source_dir / filename
+        manifest["source_workbooks"][filename] = {
+            "bytes": path.stat().st_size,
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
     generated_files = (
-        "curriculum_nodes.jsonl",
-        "game_items.jsonl",
-        "games.jsonl",
+        *datasets.keys(),
         "schema.json",
+        "validation_report.json",
+        "readiness_report.json",
+        "README.md",
     )
     for filename in generated_files:
         path = output_dir / filename
@@ -651,8 +1882,10 @@ def main() -> None:
             "bytes": path.stat().st_size,
             "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         }
-    (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    print(json.dumps(counts))
+    (output_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
+    print(json.dumps({"counts": counts, "readiness": readiness_report["overall_status"]}))
 
 
 if __name__ == "__main__":

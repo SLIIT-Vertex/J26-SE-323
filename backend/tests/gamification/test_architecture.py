@@ -13,6 +13,7 @@ FORBIDDEN_PREFIXES = (
     "app.shared.learner.model",
     "app.shared.learner.repository",
 )
+DATA_FILE_SUFFIXES = {".csv", ".json", ".jsonl", ".xlsx"}
 
 
 def imported_modules(path: Path) -> set[str]:
@@ -51,4 +52,13 @@ def test_domain_does_not_depend_on_application_api_or_infrastructure() -> None:
                 violations.append(f"{path.relative_to(GAMIFICATION_ROOT)} -> {module}")
 
     assert violations == []
+
+
+def test_gamification_data_is_not_stored_inside_runtime_packages() -> None:
+    misplaced = [
+        path.relative_to(GAMIFICATION_ROOT)
+        for path in GAMIFICATION_ROOT.rglob("*")
+        if path.is_file() and path.suffix in DATA_FILE_SUFFIXES
+    ]
+    assert misplaced == []
 

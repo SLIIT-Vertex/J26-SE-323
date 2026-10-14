@@ -36,7 +36,7 @@ frontend/
 docs/                         # Architecture documentation
 research/                     # Research notes and non-runtime artifacts
 tools/gamification/           # Component-owned dataset tooling
-data/gamification/            # Versioned application/import datasets
+data/gamification/            # Central versioned gamification data and synthetic fixtures
 docker-compose.yml            # Local PostgreSQL only
 ```
 

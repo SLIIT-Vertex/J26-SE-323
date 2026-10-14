@@ -1,5 +1,5 @@
 {
-  "_comment": "REALISTIC SYNTHETIC FALLBACK ONLY. Curriculum item identifiers and prompts come from grade5-curriculum-game-dataset v1, but learner observations, reviewers, labels, support judgments, outcomes, and rewards are fictional. This file is not authorized research evidence and must not be used to claim expert agreement, calibration, feasibility, or educational effectiveness.",
+  "_comment": "REALISTIC SYNTHETIC FALLBACK ONLY. Curriculum item identifiers and prompts come from the canonical grade5-curriculum-game-dataset v2 package, but learner observations, reviewers, labels, support judgments, outcomes, and rewards are fictional. This file is not authorized research evidence and must not be used to claim expert agreement, calibration, feasibility, or educational effectiveness.",
   "schema_version": "fake-expert-review-simulation-v2",
   "dataset_id": "fake-expert-review-simulation-v2",
   "synthetic": true,
@@ -20,8 +20,8 @@
   ],
   "source_content": {
     "package": "grade5-curriculum-game-dataset",
-    "version": "1.0.0",
-    "path": "data/gamification/grade5-curriculum-game-dataset/v1/game_items.jsonl",
+    "version": "2.0.0",
+    "path": "data/gamification/grade5-curriculum-game-dataset/v2/game_items.jsonl",
     "content_status": "needs_review",
     "note": "Only identifiers and item wording are reused. All response and review evidence is synthetic."
   },
@@ -41,10 +41,10 @@
       "language": "bilingual",
       "provisional_skill_id": "G5-MAT-C01-L01-O01",
       "question_item": {
-        "prompt": "What is the place value of digit 1 in 2215?",
-        "stimulus": "2215",
-        "options": ["2215", "10", "1", "1"],
-        "correct_answer": "10"
+        "prompt": "What is the place value of digit 5 in 1485?",
+        "stimulus": "1485",
+        "options": ["1485", "1", "50", "5"],
+        "correct_answer": "5"
       },
       "synthetic_learner_observation": {
         "selected_answer": "1",
@@ -94,12 +94,12 @@
       "game_id": "G5-MAT-G03",
       "subject": "MAT",
       "language": "bilingual",
-      "provisional_skill_id": "G5-MAT-C06-L01-O01",
+      "provisional_skill_id": "G5-MAT-C06",
       "question_item": {
-        "prompt": "Calculate 143 + 389.",
-        "stimulus": "143 + 389",
-        "options": ["532", "533", "542", "246"],
-        "correct_answer": "532"
+        "prompt": "Calculate 699 + 971.",
+        "stimulus": "699 + 971",
+        "options": ["1671", "1670", "272", "1680"],
+        "correct_answer": "1670"
       },
       "synthetic_learner_observation": {
         "selected_answer": "542",
@@ -135,7 +135,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e02",
         "learner_id": "synthetic-expert-sim-l02",
-        "features": {"skill_id": "G5-MAT-C06-L01-O01", "item_id": "G5-MAT-G03-I001", "game_id": "G5-MAT-G03", "language": "bilingual", "current_score": 0.0, "response_time_ms": 29700, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "addition-regrouping-error"},
+        "features": {"skill_id": "G5-MAT-C06", "item_id": "G5-MAT-G03-I001", "game_id": "G5-MAT-G03", "language": "bilingual", "current_score": 0.0, "response_time_ms": 29700, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "addition-regrouping-error"},
         "action_id": "synthetic-similar-worked-example",
         "reward": 0.75,
         "propensity": 1.0,
@@ -149,12 +149,12 @@
       "game_id": "G5-MAT-G05",
       "subject": "MAT",
       "language": "bilingual",
-      "provisional_skill_id": "G5-MAT-C08-L01-O01",
+      "provisional_skill_id": "G5-MAT-C08",
       "question_item": {
-        "prompt": "Calculate 7 × 6.",
-        "stimulus": "7 × 6",
-        "options": ["35", "48", "42", "49"],
-        "correct_answer": "42"
+        "prompt": "Calculate 7 × 4.",
+        "stimulus": "7 × 4",
+        "options": ["28", "21", "32", "35"],
+        "correct_answer": "28"
       },
       "synthetic_learner_observation": {
         "selected_answer": "48",
@@ -190,7 +190,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e03",
         "learner_id": "synthetic-expert-sim-l03",
-        "features": {"skill_id": "G5-MAT-C08-L01-O01", "item_id": "G5-MAT-G05-I001", "game_id": "G5-MAT-G05", "language": "bilingual", "current_score": 0.0, "response_time_ms": 9100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "multiplication-fact-near-neighbor"},
+        "features": {"skill_id": "G5-MAT-C08", "item_id": "G5-MAT-G05-I001", "game_id": "G5-MAT-G05", "language": "bilingual", "current_score": 0.0, "response_time_ms": 9100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "multiplication-fact-near-neighbor"},
         "action_id": "synthetic-targeted-hint",
         "reward": 0.25,
         "propensity": 1.0,
@@ -204,12 +204,12 @@
       "game_id": "G5-MAT-G07",
       "subject": "MAT",
       "language": "bilingual",
-      "provisional_skill_id": "G5-MAT-C03-L01-O01",
+      "provisional_skill_id": "G5-MAT-C03",
       "question_item": {
-        "prompt": "What is 9/10 of 10?",
-        "stimulus": "9/10 of 10",
-        "options": ["1", "10", "9", "1"],
-        "correct_answer": "9"
+        "prompt": "What is 1/4 of 12?",
+        "stimulus": "1/4 of 12",
+        "options": ["3", "4", "2", "9"],
+        "correct_answer": "3"
       },
       "synthetic_learner_observation": {
         "selected_answer": "1",
@@ -245,7 +245,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e04",
         "learner_id": "synthetic-expert-sim-l04",
-        "features": {"skill_id": "G5-MAT-C03-L01-O01", "item_id": "G5-MAT-G07-I001", "game_id": "G5-MAT-G07", "language": "bilingual", "current_score": 0.0, "response_time_ms": 23600, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "fraction-denominator-only-operation"},
+        "features": {"skill_id": "G5-MAT-C03", "item_id": "G5-MAT-G07-I001", "game_id": "G5-MAT-G07", "language": "bilingual", "current_score": 0.0, "response_time_ms": 23600, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "fraction-denominator-only-operation"},
         "action_id": "synthetic-guided-steps",
         "reward": 0.5,
         "propensity": 1.0,
@@ -259,11 +259,11 @@
       "game_id": "G5-ENG-G01",
       "subject": "ENG",
       "language": "en",
-      "provisional_skill_id": "G5-ENG-C01-L01-O01",
+      "provisional_skill_id": "G5-ENG-C01-L01",
       "question_item": {
         "prompt": "Which word begins with the sound /i/?",
         "stimulus": "i",
-        "options": ["healthy", "shelter", "island", "recycle"],
+        "options": ["country", "team", "rapid", "island"],
         "correct_answer": "island"
       },
       "synthetic_learner_observation": {
@@ -300,7 +300,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e05",
         "learner_id": "synthetic-expert-sim-l05",
-        "features": {"skill_id": "G5-ENG-C01-L01-O01", "item_id": "G5-ENG-G01-I001", "game_id": "G5-ENG-G01", "language": "en", "current_score": 0.0, "response_time_ms": 12800, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "initial-sound-not-isolated"},
+        "features": {"skill_id": "G5-ENG-C01-L01", "item_id": "G5-ENG-G01-I001", "game_id": "G5-ENG-G01", "language": "en", "current_score": 0.0, "response_time_ms": 12800, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "initial-sound-not-isolated"},
         "action_id": "synthetic-targeted-hint",
         "reward": 0.5,
         "propensity": 1.0,
@@ -314,11 +314,11 @@
       "game_id": "G5-ENG-G03",
       "subject": "ENG",
       "language": "en",
-      "provisional_skill_id": "G5-ENG-C03",
+      "provisional_skill_id": "G5-ENG-C01",
       "question_item": {
         "prompt": "Which word means “land surrounded by water”?",
         "stimulus": "land surrounded by water",
-        "options": ["island", "traffic", "celebrate", "energy"],
+        "options": ["planet", "share", "garden", "island"],
         "correct_answer": "island"
       },
       "synthetic_learner_observation": {
@@ -355,7 +355,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e06",
         "learner_id": "synthetic-expert-sim-l06",
-        "features": {"skill_id": "G5-ENG-C03", "item_id": "G5-ENG-G03-I001", "game_id": "G5-ENG-G03", "language": "en", "current_score": 0.0, "response_time_ms": 7400, "hint_requests": 0, "attempt_count": 1, "structured_error_code": "vocabulary-meaning-unknown"},
+        "features": {"skill_id": "G5-ENG-C01", "item_id": "G5-ENG-G03-I001", "game_id": "G5-ENG-G03", "language": "en", "current_score": 0.0, "response_time_ms": 7400, "hint_requests": 0, "attempt_count": 1, "structured_error_code": "vocabulary-meaning-unknown"},
         "action_id": "synthetic-metacognitive-prompt",
         "reward": 0.0,
         "propensity": 1.0,
@@ -369,7 +369,7 @@
       "game_id": "G5-ENG-G05",
       "subject": "ENG",
       "language": "en",
-      "provisional_skill_id": "G5-ENG-C01-L03",
+      "provisional_skill_id": "G5-ENG-C01-L01",
       "question_item": {
         "prompt": "What kind of word is “island”?",
         "stimulus": "island",
@@ -410,7 +410,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e07",
         "learner_id": "synthetic-expert-sim-l07",
-        "features": {"skill_id": "G5-ENG-C01-L03", "item_id": "G5-ENG-G05-I001", "game_id": "G5-ENG-G05", "language": "en", "current_score": 0.0, "response_time_ms": 16300, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "word-class-noun-adjective-confusion"},
+        "features": {"skill_id": "G5-ENG-C01-L01", "item_id": "G5-ENG-G05-I001", "game_id": "G5-ENG-G05", "language": "en", "current_score": 0.0, "response_time_ms": 16300, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "word-class-noun-adjective-confusion"},
         "action_id": "synthetic-similar-worked-example",
         "reward": 0.5,
         "propensity": 1.0,
@@ -424,11 +424,11 @@
       "game_id": "G5-ENG-G08",
       "subject": "ENG",
       "language": "en",
-      "provisional_skill_id": "G5-ENG-C04",
+      "provisional_skill_id": "G5-ENG-C01",
       "question_item": {
         "prompt": "Choose the correctly spelled word.",
         "stimulus": "land surrounded by water",
-        "options": ["siland", "islan", "island", "islandd"],
+        "options": ["siland", "islandd", "island", "islan"],
         "correct_answer": "island"
       },
       "synthetic_learner_observation": {
@@ -465,7 +465,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e08",
         "learner_id": "synthetic-expert-sim-l08",
-        "features": {"skill_id": "G5-ENG-C04", "item_id": "G5-ENG-G08-I001", "game_id": "G5-ENG-G08", "language": "en", "current_score": 0.0, "response_time_ms": 11100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "final-consonant-omission"},
+        "features": {"skill_id": "G5-ENG-C01", "item_id": "G5-ENG-G08-I001", "game_id": "G5-ENG-G08", "language": "en", "current_score": 0.0, "response_time_ms": 11100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "final-consonant-omission"},
         "action_id": "synthetic-metacognitive-prompt",
         "reward": null,
         "propensity": 1.0,
