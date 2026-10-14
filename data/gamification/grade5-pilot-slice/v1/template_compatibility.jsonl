@@ -1,0 +1,3 @@
+{"compatible_templates": ["sort_and_group"], "item_type": "classification", "response_formats": ["binary_sort"], "specification_category": "Classification", "table_version": "grade5-pilot-templates-v1"}
+{"compatible_templates": ["build_manipulate"], "item_type": "representation_construction", "response_formats": ["numeric_construction"], "specification_category": "Spatial relationships (visual placement)", "table_version": "grade5-pilot-templates-v1"}
+{"compatible_templates": ["choice_quest"], "item_type": "single_answer_reasoning", "response_formats": ["single_choice"], "specification_category": "Single-answer reasoning", "table_version": "grade5-pilot-templates-v1"}

@@ -1,0 +1,100 @@
+{
+  "package": "grade5-pilot-slice",
+  "version": "1.0.0",
+  "scope": "Grade 5 Mathematics Fractions pilot slice (ADR-0006); slice coverage only, not the v2 inventory",
+  "gates": {
+    "misconception_inference": {
+      "status": "ready_pending_review",
+      "rule": "3-5 skill misconceptions per skill; every wrong option mapped"
+    },
+    "support_selection": {
+      "status": "ready_pending_review",
+      "rule": "visual_guidance, worked_example and step_by_step_guidance for every skill"
+    },
+    "independence_gain": {
+      "status": "ready_pending_review",
+      "rule": "2+ parallel groups of 3+ items per skill"
+    },
+    "child_facing_delivery": {
+      "status": "blocked_pending_review",
+      "rule": "every record approved by a named educator reviewer"
+    }
+  },
+  "review": {
+    "reviewable_records": 94,
+    "approved_records": 0
+  },
+  "skills": {
+    "G5-MAT-C03-L01-O01": {
+      "misconceptions": 3,
+      "items": 6,
+      "parallel_groups": 2,
+      "items_per_group": [
+        3,
+        3
+      ],
+      "scaffold_types": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "worked_example"
+      ]
+    },
+    "G5-MAT-C03-L01-O02": {
+      "misconceptions": 5,
+      "items": 6,
+      "parallel_groups": 2,
+      "items_per_group": [
+        3,
+        3
+      ],
+      "scaffold_types": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "worked_example"
+      ]
+    },
+    "G5-MAT-C03-L01-O03": {
+      "misconceptions": 4,
+      "items": 6,
+      "parallel_groups": 2,
+      "items_per_group": [
+        3,
+        3
+      ],
+      "scaffold_types": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "worked_example"
+      ]
+    },
+    "G5-MAT-C03-L01-O04": {
+      "misconceptions": 4,
+      "items": 9,
+      "parallel_groups": 3,
+      "items_per_group": [
+        3,
+        3,
+        3
+      ],
+      "scaffold_types": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "worked_example"
+      ]
+    },
+    "G5-MAT-C05-L01-O01": {
+      "misconceptions": 4,
+      "items": 6,
+      "parallel_groups": 2,
+      "items_per_group": [
+        3,
+        3
+      ],
+      "scaffold_types": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "worked_example"
+      ]
+    }
+  }
+}

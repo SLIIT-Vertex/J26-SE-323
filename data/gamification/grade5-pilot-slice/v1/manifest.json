@@ -1,0 +1,108 @@
+{
+  "package": "grade5-pilot-slice",
+  "version": "1.0.0",
+  "component_owner": "hareeshagunasekara",
+  "review_status": "researcher-authored draft; not reviewed or approved",
+  "versions": {
+    "skill_taxonomy_version": "grade5-pilot-skills-v1",
+    "crosswalk_version": "grade5-universal-crosswalk-v1",
+    "catalogue_version": "grade5-pilot-misconceptions-v1",
+    "content_version": "grade5-pilot-content-v1",
+    "scaffold_version": "grade5-pilot-scaffolds-v1",
+    "equivalence_version": "grade5-pilot-equivalence-v1",
+    "template_table_version": "grade5-pilot-templates-v1",
+    "error_mapping_version": "grade5-pilot-error-map-v1"
+  },
+  "counts": {
+    "skills": 5,
+    "misconception_catalogue": 15,
+    "items": 33,
+    "parallel_groups": 11,
+    "scaffolds": 15,
+    "content_assets": 15,
+    "template_compatibility": 3,
+    "source_documents": 3,
+    "structured_error_mappings": 102
+  },
+  "sources": {
+    "data/curriculum/registry/v1/sources.jsonl": {
+      "sha256": "136f188dda89caf63465d0855f82f5915efb3c4c11ad60f93c5b4165aa5e580c"
+    },
+    "data/curriculum/grade5-curriculum-trace/v1/manifest.json": {
+      "sha256": "bac7d69b204b76664d51a2c0cdaaf7e5926b11c9caf3904705fdedbe4f76c2e3"
+    },
+    "data/gamification/skill-catalogue-review/v1/universal-skill-crosswalk.jsonl": {
+      "sha256": "d5379daf7e0dd92760bdad5970f65610b17108d596e53d921706b9eae9e93c58"
+    },
+    "data/gamification/grade5-curriculum-game-dataset/v2/skill_candidates.jsonl": {
+      "sha256": "d781e2cc0cb9616e0dd7bd8175c769ec0424051139f79c7a92481881d30e0a65"
+    },
+    "docs/skill_nodes.xlsx": {
+      "sha256": "d1956a1509391a7bbe76f18e37dd8cd6e9034bd76de2a229fc6d555031cc2a28"
+    }
+  },
+  "source_documents": {
+    "SRC-G5-MAT-TB-01": {
+      "file_name": "Grade 5 - Maths (S).pdf",
+      "sha256": "d52f97712df05373c2b104382f1f1531999b6373b81b938f2fe8c391862b6796"
+    },
+    "SRC-G5-MAT-TG-01": {
+      "file_name": "grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf",
+      "sha256": "e749b168479f7d1df0e3c490cd71bc32e4821c2b020a3747085343147f8cc524"
+    },
+    "SRC-G5-MAT-TG-02": {
+      "file_name": "s5tim15.pdf",
+      "sha256": "2ef95994440479008305b384bfcfd989741e611c17f2469f4187784aadaeb5eb"
+    }
+  },
+  "files": {
+    "README.md": {
+      "bytes": 2710,
+      "sha256": "327d1020e33138020ce45e207110ab48687f4362bf5ed37d4cac92d7242c426c"
+    },
+    "content_assets.jsonl": {
+      "bytes": 17189,
+      "sha256": "f56b48856166c9dd87d5d00728d04328460862c4860293856b7f95554213461a"
+    },
+    "items.jsonl": {
+      "bytes": 63474,
+      "sha256": "eeb6a47ec7d3753c358caa6b349489c340130f876df4456fd7adc0156180af98"
+    },
+    "misconception_catalogue.jsonl": {
+      "bytes": 13485,
+      "sha256": "28153bd26f55f97f88abdd1231d0ae0416da7130e591fe30b6713d783f0d434c"
+    },
+    "parallel_groups.jsonl": {
+      "bytes": 5981,
+      "sha256": "9fbb82ec816cdefa0463b0ac3427be93eed36d04c39d411b2f8bc2a1ffb2fcee"
+    },
+    "readiness_report.json": {
+      "bytes": 2311,
+      "sha256": "78cda8afccd498a6a25b4b3f2e7befc3afad210081c0f8a7f3e97535e8366787"
+    },
+    "scaffolds.jsonl": {
+      "bytes": 9070,
+      "sha256": "20558715ffbf08a2dc3a793b80a99a23020da642553984701ea7863ec8d869cb"
+    },
+    "schema.json": {
+      "bytes": 25948,
+      "sha256": "695751a4800a3f3be33a0615cef201aa6a61d17f98c0d118121a1b8a9b87fda0"
+    },
+    "skills.jsonl": {
+      "bytes": 10981,
+      "sha256": "44f2fe9bd19dbcf698e9b029504002eeb302093bca5154819df62eaba41b3790"
+    },
+    "source_documents.jsonl": {
+      "bytes": 1255,
+      "sha256": "e19d98ee49aa3a844891436f842d2369030c3ecabedea7b8ba6dca48bf1b5e0e"
+    },
+    "structured_error_mappings.jsonl": {
+      "bytes": 34558,
+      "sha256": "39332822bff59234e238ef14a1e480517f0b2fa2a20047f58e3254718503a134"
+    },
+    "template_compatibility.jsonl": {
+      "bytes": 677,
+      "sha256": "310e6ddf35fec366709ae121c6729a94034329b2e129d44eb40205f007e6c647"
+    }
+  }
+}

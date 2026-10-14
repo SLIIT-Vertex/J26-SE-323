@@ -19,7 +19,6 @@ from app.gamification.infrastructure.db.models import (
     SupportExposureModel,
     VerificationPairModel,
 )
-from app.knowledge_tracing.infrastructure.db.models import SkillModel
 from app.shared.learner.model import LearnerModel
 
 NOW = datetime(2026, 10, 13, 9, 0, tzinfo=UTC)
@@ -56,16 +55,6 @@ def seed_complete_synthetic_episode(session: Session) -> SyntheticEpisodeIds:
             preferred_language="si",
             created_at=NOW,
             updated_at=NOW,
-        )
-    )
-    session.add(
-        SkillModel(
-            code=SKILL_CODE,
-            sort_index=0,
-            area="MAT",
-            name_en="Synthetic skill",
-            name_si=None,
-            description="Engineering-only fixture",
         )
     )
     session.flush()

@@ -38,7 +38,7 @@
     },
     "curriculum_and_skill_approval": {
       "status": "blocked",
-      "reason": "Skill candidates are not bound to Knowledge Tracing skill IDs and have no formal approvals."
+      "reason": "Gamification skill candidates have no formal curriculum approvals."
     },
     "misconception_inference": {
       "status": "blocked",

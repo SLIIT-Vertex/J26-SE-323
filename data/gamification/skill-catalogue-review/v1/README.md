@@ -1,34 +1,20 @@
-# Skill catalogue review v1
+# Gamification-owned Grade 5 skill catalogue
 
-This Phase 5A development package inventories the 30 stable Knowledge Tracing skills and every
-current question mapping. It provides draft development mappings for all 548 Grade 5 curriculum
-candidates and draft review records for the 25 stable skills used by those mappings. No record is
-approved for research or child-facing use.
+This development package is generated from
+`data/gamification/grade5-curriculum-game-dataset/v2/skill_candidates.jsonl`. It does not read
+another component's question bank or datasets.
 
-Version 1 is scoped to Sinhala-medium learners: instructions and adaptive support are Sinhala,
-while English remains valid as subject content. Tamil-medium delivery, Tamil content, Tamil labels,
-and Tamil evaluation are deliberately deferred to a later version.
+Every candidate has an identity binding to a gamification-owned skill ID. All records remain
+draft and development-only until an authorized curriculum reviewer approves them.
 
-Files:
+`universal-skill-crosswalk.jsonl` (ADR-0010) gives every gamification skill exactly one parent
+Universal Skill Node from `docs/skill_nodes.xlsx`, the shared cross-component taxonomy. The 548
+rows are restored from the Phase 5 bindings pinned at commit `7033835` and are validated against
+the workbook; parents are at most 16 characters so they fit Learner State. Crosswalk rows are
+draft until reviewed and never replace the fine-grained gamification skill IDs.
 
-- `skill-inventory.jsonl` — stable codes, indices, labels, and question counts.
-- `question-skill-mappings.jsonl` — normalized primary and secondary mappings from the current bank.
-- `pilot-skill-reviews.jsonl` and `pilot-skill-bindings.jsonl` — hand-authored detailed examples
-  and overrides retained as builder inputs.
-- `development-skill-reviews.jsonl` — complete generated draft reviews for referenced stable skills.
-- `grade5-candidate-skill-bindings.jsonl` — complete generated mapping of all 548 candidates.
-- `MAPPING_RULES.md` — concise, reviewable rules and confidence policy used to generate coverage.
-- `model-slice-evaluation.json` — synthetic Phase 4 evaluation grouped by bound skill and content
-  language, with learner medium recorded separately.
-- `change-impact-report.json` — compatibility assessment before any code/index change.
-- `schema.json` and `manifest.json` — import contract, hashes, counts, and gates.
+Regenerate the package with:
 
-Regenerate derived files from the repository root:
-
-```bash
+```sh
 PYTHONPATH=backend python3 tools/gamification/skills/build_skill_review_package.py
 ```
-
-This package passes the internal development gate and may be used to build Phase 5B for the
-Sinhala-medium Grade 5 application. External review is a future validation activity, not a blocker
-for the current development phase. Keep generated records visibly marked as development drafts.

@@ -73,7 +73,7 @@ class EpisodeStateContract(BoundaryModel):
         return self
 
 
-class KnowledgeTracingSnapshot(BoundaryModel):
+class SkillMasterySnapshot(BoundaryModel):
     contract_version: ContractVersion
     learner_id: UUID
     skill_id: Identifier
@@ -115,7 +115,7 @@ class MisconceptionBelief(BoundaryModel):
     probability: Probability
 
 
-class TutorSupportRequestContract(BoundaryModel):
+class SupportAssetRequestContract(BoundaryModel):
     contract_version: ContractVersion
     learner_id: UUID
     skill_id: Identifier
@@ -136,7 +136,7 @@ class TutorSupportRequestContract(BoundaryModel):
         return self
 
 
-class TutorSupportResponseContract(BoundaryModel):
+class SupportAssetResponseContract(BoundaryModel):
     contract_version: ContractVersion
     support_asset_id: Identifier
     content_version: Version

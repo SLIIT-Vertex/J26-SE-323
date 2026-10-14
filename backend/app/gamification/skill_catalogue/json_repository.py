@@ -9,6 +9,7 @@ from app.gamification.skill_catalogue.contracts import (
     SkillBinding,
     SkillReview,
     SourceCitation,
+    UniversalSkillLink,
 )
 
 SKILL_REVIEW_DATA_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "skill-catalogue-review" / "v1"
@@ -16,6 +17,7 @@ DEVELOPMENT_SKILL_REVIEWS = SKILL_REVIEW_DATA_DIRECTORY / "development-skill-rev
 GRADE5_CANDIDATE_SKILL_BINDINGS = (
     SKILL_REVIEW_DATA_DIRECTORY / "grade5-candidate-skill-bindings.jsonl"
 )
+UNIVERSAL_SKILL_CROSSWALK = SKILL_REVIEW_DATA_DIRECTORY / "universal-skill-crosswalk.jsonl"
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:
@@ -74,7 +76,7 @@ def load_skill_bindings(path: Path = GRADE5_CANDIDATE_SKILL_BINDINGS) -> list[Sk
     return [
         SkillBinding(
             skill_candidate_id=str(record["skill_candidate_id"]),
-            knowledge_tracing_skill_id=str(record["knowledge_tracing_skill_id"]),
+            gamification_skill_id=str(record["gamification_skill_id"]),
             mapping_version=str(record["mapping_version"]),
             status=ReviewStatus(str(record["status"])),
             confidence=str(record["confidence"]),
@@ -85,6 +87,26 @@ def load_skill_bindings(path: Path = GRADE5_CANDIDATE_SKILL_BINDINGS) -> list[Sk
         )
         for record in _read_jsonl(path)
     ]
+
+
+def load_universal_skill_crosswalk(
+    path: Path = UNIVERSAL_SKILL_CROSSWALK,
+) -> dict[str, UniversalSkillLink]:
+    links: dict[str, UniversalSkillLink] = {}
+    for record in _read_jsonl(path):
+        link = UniversalSkillLink(
+            gamification_skill_id=str(record["gamification_skill_id"]),
+            universal_skill_id=str(record["universal_skill_id"]),
+            crosswalk_version=str(record["crosswalk_version"]),
+            confidence=str(record["confidence"]),
+            status=ReviewStatus(str(record["status"])),
+            reviewer_id=record.get("reviewer_id"),  # type: ignore[arg-type]
+            reviewed_on=record.get("reviewed_on"),  # type: ignore[arg-type]
+        )
+        if link.gamification_skill_id in links:
+            raise ValueError(f"{link.gamification_skill_id} has more than one Universal parent")
+        links[link.gamification_skill_id] = link
+    return links
 
 
 def load_development_skill_catalogue() -> SkillCatalogue:

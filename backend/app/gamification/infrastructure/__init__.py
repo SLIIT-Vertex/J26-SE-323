@@ -6,11 +6,11 @@ from app.gamification.infrastructure.memory import (
     InMemoryFeatureSnapshotStore,
     InMemoryModelRegistry,
     InMemoryPolicyDecisionStore,
-    StubConsentGateway,
-    StubCurriculumRetriever,
-    StubKnowledgeTracingGateway,
+    InMemoryConsentStore,
+    InMemoryCurriculumRetriever,
+    InMemoryLearningRecordStore,
     StubLearnerStateGateway,
-    StubTutorSupportGateway,
+    InMemorySupportAssetProvider,
 )
 
 __all__ = [
@@ -19,9 +19,9 @@ __all__ = [
     "InMemoryFeatureSnapshotStore",
     "InMemoryModelRegistry",
     "InMemoryPolicyDecisionStore",
-    "StubConsentGateway",
-    "StubCurriculumRetriever",
-    "StubKnowledgeTracingGateway",
+    "InMemoryConsentStore",
+    "InMemoryCurriculumRetriever",
+    "InMemoryLearningRecordStore",
     "StubLearnerStateGateway",
-    "StubTutorSupportGateway",
+    "InMemorySupportAssetProvider",
 ]

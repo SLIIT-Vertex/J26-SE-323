@@ -6,11 +6,13 @@ from app.gamification.skill_catalogue.contracts import (
     SkillBinding,
     SkillReview,
     SourceCitation,
+    UniversalSkillLink,
 )
 from app.gamification.skill_catalogue.json_repository import (
     load_development_skill_catalogue,
     load_skill_bindings,
     load_skill_reviews,
+    load_universal_skill_crosswalk,
 )
 
 __all__ = [
@@ -19,7 +21,9 @@ __all__ = [
     "SkillCatalogue",
     "SkillReview",
     "SourceCitation",
+    "UniversalSkillLink",
     "load_development_skill_catalogue",
     "load_skill_bindings",
     "load_skill_reviews",
+    "load_universal_skill_crosswalk",
 ]

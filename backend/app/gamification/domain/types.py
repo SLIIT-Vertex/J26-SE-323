@@ -48,6 +48,7 @@ class EpisodePhase(StrEnum):
 class SupportActionType(StrEnum):
     INDEPENDENT_RETRY = "independent_retry"
     METACOGNITIVE_PROMPT = "metacognitive_prompt"
+    VISUAL_GUIDANCE = "visual_guidance"
     CONCEPTUAL_HINT = "conceptual_hint"
     TARGETED_HINT = "targeted_hint"
     GUIDED_STEPS = "guided_steps"

@@ -17,7 +17,7 @@ from app.gamification.domain.types import (
 from app.gamification.infrastructure.memory import (
     FixedClock,
     InMemoryFeatureSnapshotStore,
-    StubCurriculumRetriever,
+    InMemoryCurriculumRetriever,
     StubLearnerStateGateway,
 )
 
@@ -79,7 +79,7 @@ def test_curriculum_stub_returns_only_approved_matching_references() -> None:
         approved=True,
         language="si",
     )
-    retriever = StubCurriculumRetriever(
+    retriever = InMemoryCurriculumRetriever(
         [
             approved,
             CurriculumEvidence(

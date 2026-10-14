@@ -3,25 +3,25 @@
 from app.gamification.application.ports import (
     AuditOutput,
     Clock,
-    ConsentGateway,
+    ConsentStore,
     CurriculumRetriever,
     FeatureSnapshotStore,
-    KnowledgeTracingGateway,
+    LearningRecordStore,
     LearnerStateGateway,
     ModelRegistry,
     PolicyDecisionStore,
-    TutorSupportGateway,
+    SupportAssetProvider,
 )
 
 __all__ = [
     "AuditOutput",
     "Clock",
-    "ConsentGateway",
+    "ConsentStore",
     "CurriculumRetriever",
     "FeatureSnapshotStore",
-    "KnowledgeTracingGateway",
+    "LearningRecordStore",
     "LearnerStateGateway",
     "ModelRegistry",
     "PolicyDecisionStore",
-    "TutorSupportGateway",
+    "SupportAssetProvider",
 ]

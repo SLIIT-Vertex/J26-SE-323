@@ -23,7 +23,7 @@ from app.gamification.domain.types import (
 
 
 @dataclass(frozen=True, slots=True)
-class MasteryEvidence:
+class SkillMasteryEvidence:
     learner_id: UUID
     skill_id: SkillId
     mastery_probability: float
@@ -34,7 +34,7 @@ class MasteryEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class NormalizedAttempt:
+class GamificationAttempt:
     attempt_id: UUID
     learner_id: UUID
     item_id: ItemId
@@ -59,7 +59,7 @@ class LearnerStateEvidence:
 
 
 @dataclass(frozen=True, slots=True)
-class TutorSupportRequest:
+class SupportAssetRequest:
     learner_id: UUID
     skill_id: SkillId
     action_type: SupportActionType
@@ -77,7 +77,7 @@ class TutorSupportRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class TutorSupportResult:
+class SupportAssetResult:
     support_asset_id: str
     content_version: str
     verified: bool

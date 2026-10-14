@@ -6,8 +6,13 @@ from types import MappingProxyType
 
 from app.gamification.domain.types import SupportActionType
 
-SKILL_CODE_PATTERN = re.compile(r"^[A-Z]{3}-[A-Z]{3}$")
+SKILL_CODE_PATTERN = re.compile(
+    r"^G5-(?:ENV|SIN|ENG|MAT)-C\d{2,3}(?:-L\d{2}(?:-O\d{2})?)?$"
+)
 SUPPORTED_LANGUAGE_CODES = frozenset({"en", "si", "ta"})
+UNIVERSAL_SKILL_ID_PATTERN = re.compile(r"^[A-Z]{3}-[A-Z]{3}$")
+# Learner State rejects longer skill IDs (`SKILL_ID_MAX_LENGTH`).
+UNIVERSAL_SKILL_ID_MAX_LENGTH = 16
 
 
 class ReviewStatus(StrEnum):
@@ -61,10 +66,10 @@ class SkillReview:
         object.__setattr__(self, "labels", labels)
         object.__setattr__(self, "verification_pair_rules", rules)
         if not SKILL_CODE_PATTERN.fullmatch(self.skill_code):
-            raise ValueError("skill_code must use the stable AAA-BBB format")
-        if not 0 <= self.stable_index <= 29:
-            raise ValueError("stable_index must remain between 0 and 29")
-        if self.domain not in {"APT", "MAT", "LAN", "ENV"}:
+            raise ValueError("skill_code must use a canonical Grade 5 gamification skill ID")
+        if self.stable_index < 0:
+            raise ValueError("stable_index must be non-negative")
+        if self.domain not in {"MAT", "SIN", "ENG", "ENV"}:
             raise ValueError("unsupported skill domain")
         if self.grade not in {4, 5}:
             raise ValueError("skill grade must be 4 or 5")
@@ -82,8 +87,8 @@ class SkillReview:
             raise ValueError("scope contains an unsupported language")
         if not self.scope_note:
             raise ValueError("skill review requires a scope note")
-        if not self.taxonomy_version or not self.definition or not labels.get("en"):
-            raise ValueError("skill review requires a version, definition, and English label")
+        if not self.taxonomy_version or not self.definition or not any(labels.values()):
+            raise ValueError("skill review requires a version, definition, and label")
         if any(language not in labels for language in required_languages | deferred_languages):
             raise ValueError("scope languages must exist in labels")
         if not self.source_citations:
@@ -102,7 +107,7 @@ class SkillReview:
 @dataclass(frozen=True, slots=True)
 class SkillBinding:
     skill_candidate_id: str
-    knowledge_tracing_skill_id: str
+    gamification_skill_id: str
     mapping_version: str
     status: ReviewStatus
     confidence: str
@@ -113,9 +118,9 @@ class SkillBinding:
 
     def __post_init__(self) -> None:
         if not self.skill_candidate_id or not SKILL_CODE_PATTERN.fullmatch(
-            self.knowledge_tracing_skill_id
+            self.gamification_skill_id
         ):
-            raise ValueError("binding requires valid candidate and knowledge-tracing IDs")
+            raise ValueError("binding requires valid gamification candidate and skill IDs")
         if self.confidence not in {"low", "medium", "high"}:
             raise ValueError("binding confidence must be low, medium, or high")
         if not self.mapping_version or not self.rationale or not self.source_ids:
@@ -124,3 +129,33 @@ class SkillBinding:
             not self.reviewer_id or not self.reviewed_on
         ):
             raise ValueError("approved bindings require reviewer identity and date")
+
+
+@dataclass(frozen=True, slots=True)
+class UniversalSkillLink:
+    """One gamification skill's parent in the team-wide Universal Skill Node taxonomy."""
+
+    gamification_skill_id: str
+    universal_skill_id: str
+    crosswalk_version: str
+    confidence: str
+    status: ReviewStatus
+    reviewer_id: str | None = None
+    reviewed_on: str | None = None
+
+    def __post_init__(self) -> None:
+        if not SKILL_CODE_PATTERN.fullmatch(self.gamification_skill_id):
+            raise ValueError("crosswalk requires a canonical gamification skill ID")
+        if (
+            not UNIVERSAL_SKILL_ID_PATTERN.fullmatch(self.universal_skill_id)
+            or len(self.universal_skill_id) > UNIVERSAL_SKILL_ID_MAX_LENGTH
+        ):
+            raise ValueError("crosswalk requires a Universal Skill Node ID")
+        if not self.crosswalk_version:
+            raise ValueError("crosswalk requires a version")
+        if self.confidence not in {"low", "medium", "high"}:
+            raise ValueError("crosswalk confidence must be low, medium, or high")
+        if self.status is ReviewStatus.APPROVED and (
+            not self.reviewer_id or not self.reviewed_on
+        ):
+            raise ValueError("approved crosswalk links require reviewer identity and date")

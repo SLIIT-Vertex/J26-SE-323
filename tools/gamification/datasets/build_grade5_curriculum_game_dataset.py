@@ -15,6 +15,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_OUTPUT_DIR = (
     PROJECT_ROOT / "data" / "gamification" / "grade5-curriculum-game-dataset" / "v2"
 )
+DEFAULT_CURRICULUM_OUTPUT_DIR = (
+    PROJECT_ROOT / "data" / "curriculum" / "grade5-curriculum-trace" / "v1"
+)
+CURRICULUM_TRACE_PACKAGE = "grade5-curriculum-trace"
+CURRICULUM_TRACE_VERSION = "1.0.0"
+CURRICULUM_TRACE_FILES = (
+    "curriculum_sources.jsonl",
+    "curriculum_nodes.jsonl",
+    "curriculum_terms.jsonl",
+)
 SOURCE_DIR_ENV = "MINDBRIDGE_GRADE5_SYLLABUS_DIR"
 PACKAGE_VERSION = "2.0.0"
 CURRICULUM_VERSION = "grade5-curriculum-v2"
@@ -912,7 +922,7 @@ def build_skill_entities(nodes):
         skills.append(
             {
                 "skill_candidate_id": skill_id,
-                "knowledge_tracing_skill_id": "",
+                "gamification_skill_id": "",
                 "taxonomy_version": SKILL_TAXONOMY_VERSION,
                 "subject": node["subject"],
                 "grade": node["grade"],
@@ -1007,7 +1017,7 @@ def build_item_skill_mappings(items, item_curriculum_mappings, nodes, skills):
                 "item_id": trace["item_id"],
                 "game_id": trace["game_id"],
                 "skill_candidate_id": candidate_id,
-                "knowledge_tracing_skill_id": "",
+                "gamification_skill_id": "",
                 "relationship": trace["relationship"],
                 "mapping_method": trace["mapping_method"],
                 "mapping_confidence": trace["mapping_confidence"],
@@ -1084,7 +1094,7 @@ def build_support_entities(items, item_skill_mappings):
                 "languages": languages,
                 "intended_languages": intended_languages(item["language"]),
                 "skill_candidate_ids": skill_ids,
-                "knowledge_tracing_skill_ids": [],
+                "gamification_skill_ids": [],
                 "misconception_codes": ["unknown/other"],
                 "approved": False,
                 "approval_status": "needs_review",
@@ -1480,10 +1490,22 @@ def json_schema_for_values(values):
     return schema
 
 
-def schema_definition(datasets):
+STATUS_RULES = {
+    "draft": "Source-backed candidate that has not completed formal review.",
+    "needs_review": "Requires named curriculum, language, answer, asset or equivalence review.",
+    "published": "May be served only after every applicable release gate passes.",
+}
+
+
+def gamification_filenames(datasets):
+    return [filename for filename in datasets if filename not in CURRICULUM_TRACE_FILES]
+
+
+def schema_registry(datasets, filenames):
     definitions = {}
     files = {}
-    for filename, (entity, primary_key, required) in FILE_ENTITY_SPECS.items():
+    for filename in filenames:
+        entity, primary_key, required = FILE_ENTITY_SPECS[filename]
         rows = datasets[filename]
         field_names = sorted({field for row in rows for field in row} | set(required))
         properties = {}
@@ -1502,6 +1524,11 @@ def schema_definition(datasets):
             "primary_key": primary_key,
             "record_schema": {"$ref": f"#/$defs/{entity}"},
         }
+    return files, definitions
+
+
+def schema_definition(datasets):
+    files, definitions = schema_registry(datasets, gamification_filenames(datasets))
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": "https://mindbridge.local/schemas/grade5-curriculum-game-dataset-v2.json",
@@ -1511,11 +1538,21 @@ def schema_definition(datasets):
         "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
         "files": files,
         "$defs": definitions,
-        "status_rules": {
-            "draft": "Source-backed candidate that has not completed formal review.",
-            "needs_review": "Requires named curriculum, language, answer, asset or equivalence review.",
-            "published": "May be served only after every applicable release gate passes.",
-        },
+        "status_rules": STATUS_RULES,
+    }
+
+
+def curriculum_trace_schema(datasets):
+    files, definitions = schema_registry(datasets, CURRICULUM_TRACE_FILES)
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://mindbridge.local/schemas/grade5-curriculum-trace-v1.json",
+        "title": "Grade 5 curriculum trace schema registry",
+        "version": CURRICULUM_TRACE_VERSION,
+        "curriculum_version": CURRICULUM_VERSION,
+        "files": files,
+        "$defs": definitions,
+        "status_rules": STATUS_RULES,
     }
 
 
@@ -1674,7 +1711,7 @@ def build_readiness_report(datasets, validation_report):
             },
             "curriculum_and_skill_approval": {
                 "status": "blocked",
-                "reason": "Skill candidates are not bound to Knowledge Tracing skill IDs and have no formal approvals.",
+                "reason": "Gamification skill candidates have no formal curriculum approvals.",
             },
             "misconception_inference": {
                 "status": "blocked",
@@ -1709,6 +1746,33 @@ with `instruction_authority: none`; they are never executed as package-building 
 
 The package is suitable for engineering and review workflows. It is not approved for child-facing
 delivery, research claims or learned-model activation. See `readiness_report.json` for current gates.
+
+Curriculum sources, nodes and terms are not stored here. They are shared with the Adaptive Tutor
+in `data/curriculum/{CURRICULUM_TRACE_PACKAGE}/v1/`. `curriculum_node_id` and `source_id` values
+in this package refer to that shared package, whose version and manifest hash are recorded in
+`manifest.json` under `curriculum_trace_package`.
+"""
+
+
+def curriculum_trace_readme():
+    return f"""# Grade 5 curriculum trace v{CURRICULUM_TRACE_VERSION}
+
+Shared curriculum facts used by both the Adaptive Tutor and the Gamification component, and the
+seed for the shared curriculum RAG (`docs/curriculum/shared-rag-joint-plan.md`).
+
+- `curriculum_sources.jsonl`: Grade 5 textbooks, teacher guides and activity books that were traced.
+- `curriculum_nodes.jsonl`: competencies, competency levels, lessons, learning outcomes, content
+  points and source activities, with Sinhala text, page ranges and parent links.
+- `curriculum_terms.jsonl`: subject terms with Sinhala and English labels and source pages.
+
+Every record is a draft trace transcribed by visual reading or OCR. Nothing here is reviewed or
+approved, and no record may reach a learner until a named reviewer approves it. Source workbook
+notes are reference text only and are never executed as instructions.
+
+This package is generated by `tools/gamification/datasets/build_grade5_curriculum_game_dataset.py`
+together with the gamification dataset. Keep `curriculum_node_id` and `source_id` values stable;
+add a new version folder for incompatible changes. The shared source registry in
+`data/curriculum/registry/v1/` is generated from `curriculum_sources.jsonl`.
 """
 
 
@@ -1729,11 +1793,27 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help=f"Artifact destination (default: {DEFAULT_OUTPUT_DIR}).",
+        help=f"Gamification package destination (default: {DEFAULT_OUTPUT_DIR}).",
+    )
+    parser.add_argument(
+        "--curriculum-output-dir",
+        type=Path,
+        default=DEFAULT_CURRICULUM_OUTPUT_DIR,
+        help=f"Shared curriculum trace destination (default: {DEFAULT_CURRICULUM_OUTPUT_DIR}).",
+    )
+    parser.add_argument(
+        "--repackage-existing",
+        action="store_true",
+        help=(
+            "Rewrite both packages from their existing records instead of the source workbooks. "
+            "Use this to regenerate schemas, reports and manifests without the workbooks."
+        ),
     )
     args = parser.parse_args()
-    if args.source_dir is None:
-        parser.error(f"--source-dir is required unless {SOURCE_DIR_ENV} is set")
+    if args.source_dir is None and not args.repackage_existing:
+        parser.error(
+            f"--source-dir is required unless {SOURCE_DIR_ENV} is set or --repackage-existing is used"
+        )
     return args
 
 
@@ -1749,12 +1829,138 @@ def validate_source_dir(source_dir: Path) -> None:
         raise FileNotFoundError(f"Missing required Grade 5 workbooks:\n{formatted}")
 
 
-def main() -> None:
-    args = parse_args()
-    source_dir = args.source_dir.expanduser().resolve()
-    output_dir = args.output_dir.expanduser().resolve()
-    validate_source_dir(source_dir)
+def describe_source_workbooks(source_dir):
+    source_workbooks = [
+        *(f"grade5_{subject}_syllabus_trace_v1.xlsx" for subject in SUBJECTS),
+        MASTER_WORKBOOK_NAME,
+    ]
+    descriptions = {}
+    for filename in source_workbooks:
+        path = source_dir / filename
+        descriptions[filename] = {
+            "prepared_by": "hareeshagunasekara",
+            "bytes": path.stat().st_size,
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+    return descriptions
+
+
+def read_jsonl(path):
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def load_existing_packages(output_dir, curriculum_output_dir):
+    datasets = {}
+    for filename in FILE_ENTITY_SPECS:
+        directory = curriculum_output_dir if filename in CURRICULUM_TRACE_FILES else output_dir
+        datasets[filename] = read_jsonl(directory / filename)
+    manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+    return datasets, manifest["source_workbooks"]
+
+
+def file_descriptions(directory, filenames):
+    descriptions = {}
+    for filename in filenames:
+        payload = (directory / filename).read_bytes()
+        descriptions[filename] = {
+            "bytes": len(payload),
+            "sha256": hashlib.sha256(payload).hexdigest(),
+        }
+    return descriptions
+
+
+def write_json(path, payload):
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def write_curriculum_trace_package(datasets, source_workbooks, curriculum_output_dir):
+    curriculum_output_dir.mkdir(parents=True, exist_ok=True)
+    for filename in CURRICULUM_TRACE_FILES:
+        jsonl_write(curriculum_output_dir / filename, datasets[filename])
+    write_json(curriculum_output_dir / "schema.json", curriculum_trace_schema(datasets))
+    (curriculum_output_dir / "README.md").write_text(curriculum_trace_readme(), encoding="utf-8")
+    manifest = {
+        "package": CURRICULUM_TRACE_PACKAGE,
+        "version": CURRICULUM_TRACE_VERSION,
+        "curriculum_version": CURRICULUM_VERSION,
+        "ownership": "shared curriculum (Adaptive Tutor and Gamification)",
+        "review_status": "draft trace; not reviewed or approved",
+        "counts": {
+            FILE_ENTITY_SPECS[filename][0]: len(datasets[filename])
+            for filename in CURRICULUM_TRACE_FILES
+        },
+        "source_workbooks": {
+            filename: description
+            for filename, description in source_workbooks.items()
+            if filename != MASTER_WORKBOOK_NAME
+        },
+        "files": file_descriptions(
+            curriculum_output_dir, (*CURRICULUM_TRACE_FILES, "schema.json", "README.md")
+        ),
+    }
+    manifest_path = curriculum_output_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+
+
+def write_packages(
+    datasets,
+    validation_report,
+    readiness_report,
+    source_workbooks,
+    output_dir,
+    curriculum_output_dir,
+):
+    curriculum_manifest_sha256 = write_curriculum_trace_package(
+        datasets, source_workbooks, curriculum_output_dir
+    )
     output_dir.mkdir(parents=True, exist_ok=True)
+    package_files = gamification_filenames(datasets)
+    for filename in package_files:
+        jsonl_write(output_dir / filename, datasets[filename])
+    write_json(output_dir / "schema.json", schema_definition(datasets))
+    write_json(output_dir / "validation_report.json", validation_report)
+    write_json(output_dir / "readiness_report.json", readiness_report)
+    (output_dir / "README.md").write_text(package_readme(), encoding="utf-8")
+
+    manifest = {
+        "package": "grade5-curriculum-game-dataset",
+        "component_owner": "hareeshagunasekara",
+        "version": PACKAGE_VERSION,
+        "curriculum_version": CURRICULUM_VERSION,
+        "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
+        "misconception_catalogue_version": MISCONCEPTION_CATALOGUE_VERSION,
+        "support_catalogue_version": SUPPORT_CATALOGUE_VERSION,
+        "equivalence_version": EQUIVALENCE_VERSION,
+        "curriculum_trace_package": {
+            "package": CURRICULUM_TRACE_PACKAGE,
+            "version": CURRICULUM_TRACE_VERSION,
+            "path": Path(os.path.relpath(curriculum_output_dir, output_dir)).as_posix(),
+            "manifest_sha256": curriculum_manifest_sha256,
+        },
+        "counts": {
+            FILE_ENTITY_SPECS[filename][0]: len(datasets[filename]) for filename in package_files
+        },
+        "source_workbooks": source_workbooks,
+        "files": file_descriptions(
+            output_dir,
+            (
+                *package_files,
+                "schema.json",
+                "validation_report.json",
+                "readiness_report.json",
+                "README.md",
+            ),
+        ),
+    }
+    (output_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
+    return manifest
+
+
+def build_datasets_from_workbooks(source_dir):
+    validate_source_dir(source_dir)
     RNG.seed(5323)
     nodes, raw = collect_curriculum(source_dir)
     raw_games = build_game_catalog(nodes)
@@ -1821,71 +2027,38 @@ def main() -> None:
         "review_decisions.jsonl": [],
         "workbook_annotations.jsonl": workbook_annotations,
     }
+    return datasets, describe_source_workbooks(source_dir)
+
+
+def main() -> None:
+    args = parse_args()
+    output_dir = args.output_dir.expanduser().resolve()
+    curriculum_output_dir = args.curriculum_output_dir.expanduser().resolve()
+    if args.repackage_existing:
+        datasets, source_workbooks = load_existing_packages(output_dir, curriculum_output_dir)
+    else:
+        datasets, source_workbooks = build_datasets_from_workbooks(
+            args.source_dir.expanduser().resolve()
+        )
     validation_report = validate_datasets(datasets)
     readiness_report = build_readiness_report(datasets, validation_report)
-
-    for filename, rows in datasets.items():
-        jsonl_write(output_dir / filename, rows)
-    (output_dir / "schema.json").write_text(
-        json.dumps(schema_definition(datasets), ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+    manifest = write_packages(
+        datasets,
+        validation_report,
+        readiness_report,
+        source_workbooks,
+        output_dir,
+        curriculum_output_dir,
     )
-    (output_dir / "validation_report.json").write_text(
-        json.dumps(validation_report, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
+    print(
+        json.dumps(
+            {
+                "counts": manifest["counts"],
+                "curriculum_trace_package": manifest["curriculum_trace_package"],
+                "readiness": readiness_report["overall_status"],
+            }
+        )
     )
-    (output_dir / "readiness_report.json").write_text(
-        json.dumps(readiness_report, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    (output_dir / "README.md").write_text(
-        package_readme(),
-        encoding="utf-8",
-    )
-
-    counts = {
-        FILE_ENTITY_SPECS[filename][0]: len(rows)
-        for filename, rows in datasets.items()
-    }
-    manifest = {
-        "package": "grade5-curriculum-game-dataset",
-        "version": PACKAGE_VERSION,
-        "curriculum_version": CURRICULUM_VERSION,
-        "skill_taxonomy_version": SKILL_TAXONOMY_VERSION,
-        "misconception_catalogue_version": MISCONCEPTION_CATALOGUE_VERSION,
-        "support_catalogue_version": SUPPORT_CATALOGUE_VERSION,
-        "equivalence_version": EQUIVALENCE_VERSION,
-        "counts": counts,
-        "source_workbooks": {},
-        "files": {},
-    }
-    source_workbooks = [
-        *(f"grade5_{subject}_syllabus_trace_v1.xlsx" for subject in SUBJECTS),
-        MASTER_WORKBOOK_NAME,
-    ]
-    for filename in source_workbooks:
-        path = source_dir / filename
-        manifest["source_workbooks"][filename] = {
-            "bytes": path.stat().st_size,
-            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        }
-    generated_files = (
-        *datasets.keys(),
-        "schema.json",
-        "validation_report.json",
-        "readiness_report.json",
-        "README.md",
-    )
-    for filename in generated_files:
-        path = output_dir / filename
-        manifest["files"][filename] = {
-            "bytes": path.stat().st_size,
-            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-        }
-    (output_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
-    )
-    print(json.dumps({"counts": counts, "readiness": readiness_report["overall_status"]}))
 
 
 if __name__ == "__main__":

@@ -8,12 +8,12 @@ from app.gamification.application.records import (
     CurriculumEvidence,
     FeatureSnapshotRecord,
     LearnerStateEvidence,
-    MasteryEvidence,
+    SkillMasteryEvidence,
     ModelArtifact,
-    NormalizedAttempt,
+    GamificationAttempt,
     PolicyDecisionRecord,
-    TutorSupportRequest,
-    TutorSupportResult,
+    SupportAssetRequest,
+    SupportAssetResult,
 )
 from app.gamification.domain.types import (
     FeatureSnapshotId,
@@ -85,17 +85,19 @@ class InMemoryModelRegistry:
         return self._approved.get(model_id)
 
 
-class StubKnowledgeTracingGateway:
-    def __init__(self, mastery: Iterable[MasteryEvidence] = ()) -> None:
+class InMemoryLearningRecordStore:
+    def __init__(self, mastery: Iterable[SkillMasteryEvidence] = ()) -> None:
         self._mastery = {
             (evidence.learner_id, evidence.skill_id): evidence for evidence in mastery
         }
-        self.recorded_attempts: list[NormalizedAttempt] = []
+        self.recorded_attempts: list[GamificationAttempt] = []
 
-    def get_mastery(self, *, learner_id: UUID, skill_id: SkillId) -> MasteryEvidence | None:
+    def get_mastery(
+        self, *, learner_id: UUID, skill_id: SkillId
+    ) -> SkillMasteryEvidence | None:
         return self._mastery.get((learner_id, skill_id))
 
-    def record_attempt(self, attempt: NormalizedAttempt) -> None:
+    def record_attempt(self, attempt: GamificationAttempt) -> None:
         self.recorded_attempts.append(attempt)
 
 
@@ -112,19 +114,19 @@ class StubLearnerStateGateway:
         return record
 
 
-class StubTutorSupportGateway:
+class InMemorySupportAssetProvider:
     def __init__(
-        self, responder: Callable[[TutorSupportRequest], TutorSupportResult]
+        self, responder: Callable[[SupportAssetRequest], SupportAssetResult]
     ) -> None:
         self._responder = responder
-        self.requests: list[TutorSupportRequest] = []
+        self.requests: list[SupportAssetRequest] = []
 
-    def create_verified_support(self, request: TutorSupportRequest) -> TutorSupportResult:
+    def create_verified_support(self, request: SupportAssetRequest) -> SupportAssetResult:
         self.requests.append(request)
         return self._responder(request)
 
 
-class StubConsentGateway:
+class InMemoryConsentStore:
     def __init__(self, decisions: Iterable[ConsentDecision]) -> None:
         self._decisions = {
             (decision.learner_id, decision.purpose): decision for decision in decisions
@@ -137,7 +139,7 @@ class StubConsentGateway:
             raise LookupError("no consent decision exists for learner and purpose") from error
 
 
-class StubCurriculumRetriever:
+class InMemoryCurriculumRetriever:
     """Returns pre-approved references only; it performs no retrieval or ranking logic."""
 
     def __init__(self, evidence: Iterable[CurriculumEvidence] = ()) -> None:

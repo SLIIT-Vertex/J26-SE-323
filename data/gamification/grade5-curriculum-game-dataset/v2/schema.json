@@ -6,27 +6,6 @@
   "curriculum_version": "grade5-curriculum-v2",
   "skill_taxonomy_version": "grade5-skill-candidates-v2",
   "files": {
-    "curriculum_sources.jsonl": {
-      "entity": "curriculum_source",
-      "primary_key": "source_id",
-      "record_schema": {
-        "$ref": "#/$defs/curriculum_source"
-      }
-    },
-    "curriculum_nodes.jsonl": {
-      "entity": "curriculum_node",
-      "primary_key": "curriculum_node_id",
-      "record_schema": {
-        "$ref": "#/$defs/curriculum_node"
-      }
-    },
-    "curriculum_terms.jsonl": {
-      "entity": "curriculum_term",
-      "primary_key": "term_id",
-      "record_schema": {
-        "$ref": "#/$defs/curriculum_term"
-      }
-    },
     "skill_candidates.jsonl": {
       "entity": "skill_candidate",
       "primary_key": "skill_candidate_id",
@@ -141,258 +120,6 @@
     }
   },
   "$defs": {
-    "curriculum_source": {
-      "type": "object",
-      "required": [
-        "source_id",
-        "subject",
-        "grade",
-        "document_file_name",
-        "approval_status"
-      ],
-      "properties": {
-        "approval_status": {
-          "type": "string"
-        },
-        "authority": {
-          "type": "string"
-        },
-        "document_file_name": {
-          "type": "string"
-        },
-        "document_type": {
-          "type": "string"
-        },
-        "edition_year": {
-          "type": "string"
-        },
-        "extraction_method": {
-          "type": "string"
-        },
-        "grade": {
-          "type": "integer"
-        },
-        "language": {
-          "type": "string"
-        },
-        "license_note": {
-          "type": "string"
-        },
-        "notes": {
-          "type": "string"
-        },
-        "pages_in_file": {
-          "type": "string"
-        },
-        "pages_traced": {
-          "type": "string"
-        },
-        "source_document_sha256": {
-          "type": "string"
-        },
-        "source_id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_record": {
-          "type": "object"
-        },
-        "source_row_number": {
-          "type": "integer"
-        },
-        "source_sheet": {
-          "type": "string"
-        },
-        "source_uri": {
-          "type": "string"
-        },
-        "subject": {
-          "type": "string"
-        },
-        "text_quality": {
-          "type": "string"
-        },
-        "title_en": {
-          "type": "string"
-        },
-        "title_primary": {
-          "type": "string"
-        },
-        "trace_workbook": {
-          "type": "string"
-        },
-        "trace_workbook_sha256": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": true
-    },
-    "curriculum_node": {
-      "type": "object",
-      "required": [
-        "curriculum_node_id",
-        "curriculum_version",
-        "subject",
-        "grade",
-        "node_type",
-        "text_primary",
-        "source_id",
-        "verification_status"
-      ],
-      "properties": {
-        "allocated_periods": {
-          "type": "string"
-        },
-        "content_type": {
-          "type": "string"
-        },
-        "curriculum_node_id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "curriculum_refs": {
-          "type": "string"
-        },
-        "curriculum_version": {
-          "type": "string"
-        },
-        "extraction_confidence": {
-          "type": "string"
-        },
-        "extraction_notes": {
-          "type": "string"
-        },
-        "grade": {
-          "type": "integer"
-        },
-        "mapping_basis": {
-          "type": "string"
-        },
-        "materials_primary": {
-          "type": "string"
-        },
-        "node_type": {
-          "type": "string"
-        },
-        "official_ref": {
-          "type": "string"
-        },
-        "parent_basis": {
-          "type": "string"
-        },
-        "parent_node_id": {
-          "type": "string"
-        },
-        "reviewed_by": {
-          "type": "string"
-        },
-        "reviewed_on": {
-          "type": "string"
-        },
-        "source_file": {
-          "type": "string"
-        },
-        "source_id": {
-          "type": "string"
-        },
-        "source_page_basis": {
-          "type": "string"
-        },
-        "source_page_from": {
-          "type": "string"
-        },
-        "source_page_to": {
-          "type": "string"
-        },
-        "source_record": {
-          "type": "object"
-        },
-        "source_row_number": {
-          "type": "integer"
-        },
-        "source_sheet": {
-          "type": "string"
-        },
-        "subject": {
-          "type": "string"
-        },
-        "subject_name": {
-          "type": "string"
-        },
-        "text_en": {
-          "type": "string"
-        },
-        "text_primary": {
-          "type": "string"
-        },
-        "trace_status": {
-          "type": "string"
-        },
-        "verification_status": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": true
-    },
-    "curriculum_term": {
-      "type": "object",
-      "required": [
-        "term_id",
-        "subject",
-        "term_primary",
-        "source_id",
-        "trace_status"
-      ],
-      "properties": {
-        "definition_primary": {
-          "type": "string"
-        },
-        "first_lesson_id": {
-          "type": "string"
-        },
-        "first_skill_candidate_id": {
-          "type": "string"
-        },
-        "grade": {
-          "type": "integer"
-        },
-        "source_id": {
-          "type": "string"
-        },
-        "source_page_from": {
-          "type": "string"
-        },
-        "source_record": {
-          "type": "object"
-        },
-        "source_row_number": {
-          "type": "integer"
-        },
-        "source_sheet": {
-          "type": "string"
-        },
-        "source_workbook": {
-          "type": "string"
-        },
-        "subject": {
-          "type": "string"
-        },
-        "term_en": {
-          "type": "string"
-        },
-        "term_id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "term_primary": {
-          "type": "string"
-        },
-        "trace_status": {
-          "type": "string"
-        }
-      },
-      "additionalProperties": true
-    },
     "skill_candidate": {
       "type": "object",
       "required": [
@@ -419,11 +146,11 @@
           "type": "array",
           "items": {}
         },
+        "gamification_skill_id": {
+          "type": "string"
+        },
         "grade": {
           "type": "integer"
-        },
-        "knowledge_tracing_skill_id": {
-          "type": "string"
         },
         "label_en": {
           "type": "string"
@@ -843,15 +570,15 @@
         "game_id": {
           "type": "string"
         },
+        "gamification_skill_id": {
+          "type": "string"
+        },
         "item_id": {
           "type": "string"
         },
         "item_skill_mapping_id": {
           "type": "string",
           "minLength": 1
-        },
-        "knowledge_tracing_skill_id": {
-          "type": "string"
         },
         "mapping_confidence": {
           "type": "string"
@@ -969,15 +696,15 @@
         "content_asset_id": {
           "type": "string"
         },
+        "gamification_skill_ids": {
+          "type": "array",
+          "items": {}
+        },
         "intended_languages": {
           "type": "array",
           "items": {
             "type": "string"
           }
-        },
-        "knowledge_tracing_skill_ids": {
-          "type": "array",
-          "items": {}
         },
         "languages": {
           "type": "array",

@@ -24,9 +24,9 @@ each other's infrastructure. See [docs/architecture.md](docs/architecture.md).
 ```text
 backend/
   app/shared/                 # Database, auth boundary, shared learner
-  app/knowledge_tracing/      # Question/attempt persistence and model-supporting infrastructure
+  app/knowledge_tracing/      # Separately owned research component; not used by gamification
   app/learner_state/          # Learner-state inference service and API
-  app/adaptive_tutor/         # Deterministic scaffolding controller and contracts
+  app/adaptive_tutor/         # Separately owned research component; not used by gamification
   app/gamification/           # Adaptive episode, contracts, and evidence persistence
   alembic/                    # Database migrations
   tests/                      # API tests
@@ -67,7 +67,7 @@ source .venv/bin/activate
 pip install -e '.[dev]'
 cp .env.example .env
 # Set DATABASE_URL with the same local PostgreSQL credentials used above.
-alembic upgrade head
+alembic upgrade heads
 uvicorn app.main:app --reload
 ```
 

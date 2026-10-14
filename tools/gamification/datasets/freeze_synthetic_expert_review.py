@@ -118,6 +118,7 @@ def build_manifest(*, project_root: Path) -> dict[str, object]:
     }
     return {
         "schema_version": "synthetic-expert-review-manifest-v1",
+        "component_owner": "hareeshagunasekara",
         "dataset_id": review_payload["dataset_id"],
         "synthetic": True,
         "contains_human_data": False,

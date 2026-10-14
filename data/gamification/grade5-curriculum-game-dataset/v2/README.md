@@ -10,3 +10,8 @@ with `instruction_authority: none`; they are never executed as package-building 
 
 The package is suitable for engineering and review workflows. It is not approved for child-facing
 delivery, research claims or learned-model activation. See `readiness_report.json` for current gates.
+
+Curriculum sources, nodes and terms are not stored here. They are shared with the Adaptive Tutor
+in `data/curriculum/grade5-curriculum-trace/v1/`. `curriculum_node_id` and `source_id` values
+in this package refer to that shared package, whose version and manifest hash are recorded in
+`manifest.json` under `curriculum_trace_package`.

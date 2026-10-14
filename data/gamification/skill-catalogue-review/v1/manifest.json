@@ -1,111 +1,50 @@
 {
+  "package": "gamification-skill-catalogue",
+  "component_owner": "hareeshagunasekara",
+  "version": "1.0.0",
+  "taxonomy_version": "grade5-gamification-skills-v1",
+  "ownership": "gamification",
   "counts": {
-    "approved_bindings": 0,
-    "approved_skills": 0,
-    "development_skill_reviews": 25,
-    "grade5_candidate_skill_bindings": 548,
-    "question_skill_mappings": 331,
-    "questions": 328,
-    "skills": 30
+    "skills": 548,
+    "bindings": 548,
+    "crosswalk_rows": 548,
+    "approved": 0
   },
-  "delivery_scope": {
-    "content_languages": [
-      "si",
-      "en",
-      "bilingual"
-    ],
-    "deferred_languages": [
-      "ta"
-    ],
-    "learner_medium": "si",
-    "required_label_languages": [
-      "en",
-      "si"
-    ],
-    "support_language": "si"
+  "sources": {
+    "data/gamification/grade5-curriculum-game-dataset/v2/skill_candidates.jsonl": {
+      "sha256": "d781e2cc0cb9616e0dd7bd8175c769ec0424051139f79c7a92481881d30e0a65"
+    },
+    "docs/skill_nodes.xlsx": {
+      "sha256": "d1956a1509391a7bbe76f18e37dd8cd6e9034bd76de2a229fc6d555031cc2a28"
+    },
+    "git:7033835:data/gamification/skill-catalogue-review/v1/grade5-candidate-skill-bindings.jsonl": {
+      "sha256": "0115149b82c0b74e04f5b5662d2a98e0b2a3c9fc0e7e93fcc099c99ffa1c4742"
+    }
   },
-  "development_only": true,
   "files": {
-    "MAPPING_RULES.md": {
-      "bytes": 2409,
-      "sha256": "a5ce3e059e97122919dfb8ade693f4e8c18008fa08d0b481778091a0035e1f8a"
-    },
-    "README.md": {
-      "bytes": 2022,
-      "sha256": "61acf597b5ed3f531fd35e6d17e62fc9b3d168b965a9e37574a74c4baa211d8f"
-    },
-    "change-impact-report.json": {
-      "bytes": 10216,
-      "sha256": "f8de5cac41cb9606d441dcaa5c644ffb6da371c4b94730e9db312c0e888e3bd7"
+    "skill-inventory.jsonl": {
+      "bytes": 239653,
+      "sha256": "701aac5d89a70f3cb819d530ebf9a63c9d34b502ecd19685759c36bc24d81b76"
     },
     "development-skill-reviews.jsonl": {
-      "bytes": 45393,
-      "sha256": "cd43b07ca684faea65124abe31223286463f72e332b415efbf8dafc09b79d38d"
+      "bytes": 849185,
+      "sha256": "fe5957df6eceb03ab62d600690237da5c878b8421d376b4e3026b20a68c7e72f"
     },
     "grade5-candidate-skill-bindings.jsonl": {
-      "bytes": 231299,
-      "sha256": "0115149b82c0b74e04f5b5662d2a98e0b2a3c9fc0e7e93fcc099c99ffa1c4742"
+      "bytes": 184518,
+      "sha256": "c0170b592d87a5044b0858fbe6f3cce0a199c8594a1de3a99ea34908ffceb786"
     },
-    "model-slice-evaluation.json": {
-      "bytes": 1061,
-      "sha256": "8e4e052ddd0209e2a72441ceb532998798b789f90e9d4b2cae805d78abf48ca9"
-    },
-    "pilot-skill-bindings.jsonl": {
-      "bytes": 2436,
-      "sha256": "e56b397dde2207c6dfcf0f4d0a952581bf78f4ecf84fe77575bedfc44cd1dc31"
-    },
-    "pilot-skill-reviews.jsonl": {
-      "bytes": 6763,
-      "sha256": "a841d0d5339a7c617eac8626429428132734dfcd048cf8be89ba411ddc3344fd"
-    },
-    "question-skill-mappings.jsonl": {
-      "bytes": 73086,
-      "sha256": "120a68e15252eb88503e473d70b5c1aff15192923d0ab4ed73738a96027156d8"
+    "universal-skill-crosswalk.jsonl": {
+      "bytes": 265823,
+      "sha256": "d5379daf7e0dd92760bdad5970f65610b17108d596e53d921706b9eae9e93c58"
     },
     "schema.json": {
-      "bytes": 6753,
-      "sha256": "f5a23ac464338483bc3bbabb31ce1422b3e2cabade99529b252ba418f0e11f5e"
-    },
-    "skill-inventory.jsonl": {
-      "bytes": 14546,
-      "sha256": "23d38d21ea8dd55d745d98f38fe55aef3227c25d2fb5e79b251f1195bfaa77e3"
+      "bytes": 283,
+      "sha256": "1639c1afb14c9c6e1ba8aeaa7c27fbd8360b88143cde59ce9d323ca55fe3ed8b"
     }
   },
   "gates": {
-    "development_phase_5a": "pass",
-    "development_phase_5b": "ready",
-    "external_research_validation": "deferred_not_required_for_development",
-    "inventory_complete": true,
-    "model_binding_compatible": true,
-    "phase_5b": "ready_for_sinhala_medium_development",
-    "pilot_sources_resolve": true,
-    "question_mappings_inventoried": true,
-    "stable_indices_preserved": true
-  },
-  "package": "skill-catalogue-review",
-  "schema_version": "skill-catalogue-review-manifest-v1",
-  "source_commit": "5fd27c3b5d264999af7671dc91dd640d7c57ee63",
-  "source_worktree_dirty": true,
-  "sources": {
-    "backend/data/question_bank/skillMap-1.md": {
-      "sha256": "fe6c2fab128e9cd0d1398d449d163d04071be8ad9278d752bec1f06c3150635a"
-    },
-    "backend/data/question_bank/skillMap-2.md": {
-      "sha256": "16f2e94a84cc982b2ae959736b0476241c3754f728393217d074f3f9bf834749"
-    },
-    "backend/data/question_bank/skillMap-3.md": {
-      "sha256": "c0f8148fbb1648b459df6f1bafeef44c82c4468540082ca64b39a9cdf5bdecc7"
-    },
-    "backend/data/question_bank/skillMap-4.md": {
-      "sha256": "9b5977fc7d981bd3fd4f1a4f89f32c925152b76549f587815a2873e19660a01e"
-    },
-    "backend/data/question_bank/skill_nodes.md": {
-      "sha256": "ba21bd3a31adbfa3811e053e7eda89c06bacd7c63f0941124e580db94062deaa"
-    },
-    "data/gamification/grade5-curriculum-game-dataset/v2/manifest.json": {
-      "sha256": "d6eba7ddbd712b4964deb6450425bfdc5dba60066ee64beec1dd45489f31cba6"
-    }
-  },
-  "taxonomy_version": "grade5-kt-skill-review-v1",
-  "version": "1.0.0"
+    "development": "pass",
+    "child_facing": "blocked_pending_review"
+  }
 }

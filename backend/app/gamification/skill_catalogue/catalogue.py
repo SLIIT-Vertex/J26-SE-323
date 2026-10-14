@@ -38,15 +38,15 @@ class SkillCatalogue:
         for binding in bindings:
             if binding.mapping_version != taxonomy_version:
                 raise ValueError("every binding must use the catalogue taxonomy version")
-            if binding.knowledge_tracing_skill_id not in skills:
-                raise ValueError("binding references an unknown knowledge-tracing skill")
+            if binding.gamification_skill_id not in skills:
+                raise ValueError("binding references an unknown gamification skill")
         return cls(taxonomy_version, skills, binding_map)
 
     def resolve_candidate(self, skill_candidate_id: str, *, allow_draft: bool = False) -> str:
         binding = self.bindings.get(skill_candidate_id)
         if binding is None:
             raise LookupError(f"no skill binding exists for {skill_candidate_id}")
-        skill = self.skills[binding.knowledge_tracing_skill_id]
+        skill = self.skills[binding.gamification_skill_id]
         approved = (
             binding.status is ReviewStatus.APPROVED and skill.status is ReviewStatus.APPROVED
         )

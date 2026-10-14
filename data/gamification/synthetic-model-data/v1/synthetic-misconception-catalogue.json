@@ -1,0 +1,45 @@
+{
+  "_comment": "Synthetic engineering vocabulary only. These labels are fictional, are not educator-reviewed, and must never be merged with a reviewed misconception catalogue.",
+  "catalogue_version": "synthetic-misconceptions-v1",
+  "synthetic": true,
+  "applies_to": [
+    "classification-evaluation-example.json",
+    "default-prototype-episodes.json",
+    "expert-review-simulation.json"
+  ],
+  "reserved_codes": [
+    "unknown/other"
+  ],
+  "misconception_codes": [
+    "addition-carry-not-composed",
+    "addition-column-alignment-error",
+    "attention-slip",
+    "calculation-slip",
+    "final-consonant-not-represented",
+    "fraction-numerator-ignored",
+    "fraction-operation-unknown",
+    "grammar-terms-not-known",
+    "initial-phoneme-not-segmented",
+    "multiplication-fact-family-confusion",
+    "noun-adjective-category-confusion",
+    "place-value-counting-direction-error",
+    "place-value-position-ignored",
+    "synthetic-misconception-a",
+    "synthetic-misconception-b",
+    "target-word-meaning-not-known",
+    "visual-attention-slip",
+    "vocabulary-unknown"
+  ],
+  "structured_error_codes": [
+    "addition-regrouping-error",
+    "final-consonant-omission",
+    "fraction-denominator-only-operation",
+    "initial-sound-not-isolated",
+    "multiplication-fact-near-neighbor",
+    "place-value-digit-value-confusion",
+    "synthetic-error-a",
+    "synthetic-error-b",
+    "vocabulary-meaning-unknown",
+    "word-class-noun-adjective-confusion"
+  ]
+}

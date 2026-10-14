@@ -8,12 +8,12 @@ from app.gamification.application.records import (
     CurriculumEvidence,
     FeatureSnapshotRecord,
     LearnerStateEvidence,
-    MasteryEvidence,
+    SkillMasteryEvidence,
     ModelArtifact,
-    NormalizedAttempt,
+    GamificationAttempt,
     PolicyDecisionRecord,
-    TutorSupportRequest,
-    TutorSupportResult,
+    SupportAssetRequest,
+    SupportAssetResult,
 )
 from app.gamification.domain.types import (
     FeatureSnapshotId,
@@ -23,10 +23,14 @@ from app.gamification.domain.types import (
 )
 
 
-class KnowledgeTracingGateway(Protocol):
-    def get_mastery(self, *, learner_id: UUID, skill_id: SkillId) -> MasteryEvidence | None: ...
+class LearningRecordStore(Protocol):
+    """Gamification-owned mastery and attempt storage."""
 
-    def record_attempt(self, attempt: NormalizedAttempt) -> None: ...
+    def get_mastery(
+        self, *, learner_id: UUID, skill_id: SkillId
+    ) -> SkillMasteryEvidence | None: ...
+
+    def record_attempt(self, attempt: GamificationAttempt) -> None: ...
 
 
 class LearnerStateGateway(Protocol):
@@ -35,11 +39,14 @@ class LearnerStateGateway(Protocol):
     ) -> LearnerStateEvidence | None: ...
 
 
-class TutorSupportGateway(Protocol):
-    def create_verified_support(self, request: TutorSupportRequest) -> TutorSupportResult: ...
+class SupportAssetProvider(Protocol):
+    """Gamification-owned support authoring and retrieval boundary."""
+
+    def create_verified_support(self, request: SupportAssetRequest) -> SupportAssetResult: ...
 
 
-class ConsentGateway(Protocol):
+class ConsentStore(Protocol):
+    """Gamification-owned purpose-specific consent decisions."""
     def get_consent(self, *, learner_id: UUID, purpose: str) -> ConsentDecision: ...
 
 

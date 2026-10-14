@@ -10,14 +10,14 @@ from app.gamification.api.contracts import (
     EpisodeStateContract,
     FeatureSnapshotContract,
     IndependenceOutcomeContract,
-    KnowledgeTracingSnapshot,
+    SkillMasterySnapshot,
     PolicyCandidateContract,
     PolicyDecisionContract,
-    TutorSupportRequestContract,
+    SupportAssetRequestContract,
 )
 
 
-def knowledge_snapshot_data() -> dict[str, object]:
+def mastery_snapshot_data() -> dict[str, object]:
     return {
         "contract_version": BOUNDARY_CONTRACT_VERSION,
         "learner_id": str(uuid4()),
@@ -25,52 +25,52 @@ def knowledge_snapshot_data() -> dict[str, object]:
         "skill_taxonomy_version": "provisional-v1",
         "mastery_probability": 0.5,
         "uncertainty": 0.2,
-        "model_version": "kt-v1",
+        "model_version": "gamification-mastery-v1",
         "observed_at": "2026-10-13T09:00:00Z",
     }
 
 
 def test_contract_rejects_unknown_fields() -> None:
-    data = knowledge_snapshot_data()
+    data = mastery_snapshot_data()
     data["raw_child_answer"] = "must-not-be-accepted"
 
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        KnowledgeTracingSnapshot.model_validate(data)
+        SkillMasterySnapshot.model_validate(data)
 
 
 @pytest.mark.parametrize("field", ["mastery_probability", "uncertainty"])
 @pytest.mark.parametrize("value", [-0.01, 1.01])
 def test_probability_ranges_are_strict(field: str, value: float) -> None:
-    data = knowledge_snapshot_data()
+    data = mastery_snapshot_data()
     data[field] = value
 
     with pytest.raises(ValidationError):
-        KnowledgeTracingSnapshot.model_validate(data)
+        SkillMasterySnapshot.model_validate(data)
 
 
 def test_numeric_contract_fields_do_not_coerce_strings() -> None:
-    data = knowledge_snapshot_data()
+    data = mastery_snapshot_data()
     data["mastery_probability"] = "0.5"
 
     with pytest.raises(ValidationError):
-        KnowledgeTracingSnapshot.model_validate(data)
+        SkillMasterySnapshot.model_validate(data)
 
 
 def test_timestamps_must_include_an_offset() -> None:
-    data = knowledge_snapshot_data()
+    data = mastery_snapshot_data()
     data["observed_at"] = "2026-10-13T09:00:00"
 
     with pytest.raises(ValidationError):
-        KnowledgeTracingSnapshot.model_validate(data)
+        SkillMasterySnapshot.model_validate(data)
 
 
 @pytest.mark.parametrize("version", ["", "V1", "gamification-boundary", "bad version-v1"])
 def test_contract_version_has_explicit_version_shape(version: str) -> None:
-    data = knowledge_snapshot_data()
+    data = mastery_snapshot_data()
     data["contract_version"] = version
 
     with pytest.raises(ValidationError):
-        KnowledgeTracingSnapshot.model_validate(data)
+        SkillMasterySnapshot.model_validate(data)
 
 
 def test_consent_expiry_must_follow_decision() -> None:
@@ -100,7 +100,7 @@ def test_misconception_beliefs_must_be_unique_and_sum_to_one() -> None:
         "prohibited_content": ["current-answer", "answer-equivalent"],
     }
     with pytest.raises(ValidationError, match="must sum to 1"):
-        TutorSupportRequestContract.model_validate(
+        SupportAssetRequestContract.model_validate(
             {
                 **base,
                 "beliefs": [
@@ -111,7 +111,7 @@ def test_misconception_beliefs_must_be_unique_and_sum_to_one() -> None:
         )
 
     with pytest.raises(ValidationError, match="must be unique"):
-        TutorSupportRequestContract.model_validate(
+        SupportAssetRequestContract.model_validate(
             {
                 **base,
                 "beliefs": [

@@ -1,0 +1,1135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema_version": "grade5-pilot-slice-schema-v1",
+  "package": "grade5-pilot-slice",
+  "versions": {
+    "skill_taxonomy_version": "grade5-pilot-skills-v1",
+    "crosswalk_version": "grade5-universal-crosswalk-v1",
+    "catalogue_version": "grade5-pilot-misconceptions-v1",
+    "content_version": "grade5-pilot-content-v1",
+    "scaffold_version": "grade5-pilot-scaffolds-v1",
+    "equivalence_version": "grade5-pilot-equivalence-v1",
+    "template_table_version": "grade5-pilot-templates-v1",
+    "error_mapping_version": "grade5-pilot-error-map-v1"
+  },
+  "records": {
+    "skills.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "crosswalk_version",
+        "curriculum_node_ids",
+        "deferred_languages",
+        "definition",
+        "development_only",
+        "distinguishing_evidence",
+        "domain",
+        "eligible_support_action_types",
+        "grade",
+        "id_status",
+        "labels",
+        "learner_medium",
+        "misconceptions",
+        "observable_success",
+        "prerequisites",
+        "required_label_languages",
+        "reviewed_on",
+        "reviewer_id",
+        "scope_note",
+        "skill_code",
+        "source_citations",
+        "stable_index",
+        "status",
+        "superseded_by",
+        "taxonomy_version",
+        "universal_skill_id",
+        "verification_pair_rules"
+      ],
+      "properties": {
+        "skill_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stable_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "taxonomy_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-skills-v1"
+          ]
+        },
+        "domain": {
+          "type": "string",
+          "enum": [
+            "MAT"
+          ]
+        },
+        "grade": {
+          "type": "integer",
+          "enum": [
+            5
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "development_only": {
+          "type": "boolean"
+        },
+        "learner_medium": {
+          "type": "string",
+          "enum": [
+            "si"
+          ]
+        },
+        "required_label_languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "deferred_languages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "scope_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "definition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labels": {
+          "type": "object"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "observable_success": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "misconceptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "distinguishing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "eligible_support_action_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "verification_pair_rules": {
+          "type": "object"
+        },
+        "source_citations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "page_from",
+              "page_to",
+              "skill_candidate_ids",
+              "source_id"
+            ],
+            "properties": {
+              "source_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "page_from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "page_to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "skill_candidate_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            }
+          }
+        },
+        "superseded_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "universal_skill_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "crosswalk_version": {
+          "type": "string",
+          "enum": [
+            "grade5-universal-crosswalk-v1"
+          ]
+        },
+        "curriculum_node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "id_status": {
+          "type": "string",
+          "enum": [
+            "v2_candidate",
+            "pilot_only_pending_trace_correction"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "misconception_catalogue.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approval_status",
+        "authoring_basis",
+        "catalogue_version",
+        "description",
+        "distinguishing_evidence",
+        "label_en",
+        "label_si",
+        "misconception_code",
+        "observable_error_patterns",
+        "remediation_notes",
+        "reserved",
+        "reviewed_on",
+        "reviewer_id",
+        "skill_ids"
+      ],
+      "properties": {
+        "misconception_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skill_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "label_si": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observable_error_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "distinguishing_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "remediation_notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "catalogue_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-misconceptions-v1"
+          ]
+        },
+        "authoring_basis": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "note",
+            "page",
+            "source_id"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "curriculum_page",
+                "literature",
+                "researcher_hypothesis"
+              ]
+            },
+            "source_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "page": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "note": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "reserved": {
+          "type": "boolean"
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "items.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer_options",
+        "authoring_basis",
+        "available_scaffold_ids",
+        "cognitive_operation",
+        "compatible_templates",
+        "content_version",
+        "correct_option_id",
+        "default_template",
+        "difficulty",
+        "grade",
+        "item_id",
+        "item_type",
+        "medium",
+        "parallel_group_id",
+        "parameters",
+        "prompt_en",
+        "question_text",
+        "response_format",
+        "response_groups",
+        "review_status",
+        "reviewed_on",
+        "reviewer_id",
+        "skill_id",
+        "source_reference",
+        "stimulus"
+      ],
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skill_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grade": {
+          "type": "integer",
+          "enum": [
+            5
+          ]
+        },
+        "medium": {
+          "type": "string",
+          "enum": [
+            "si"
+          ]
+        },
+        "item_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "response_format": {
+          "type": "string",
+          "enum": [
+            "single_choice",
+            "binary_sort",
+            "numeric_construction"
+          ]
+        },
+        "cognitive_operation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stimulus": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "answer_options": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "option_id",
+              "text",
+              "text_en",
+              "misconception_code",
+              "alternative_misconception_codes"
+            ],
+            "properties": {
+              "option_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text_en": {
+                "type": "string",
+                "minLength": 1
+              },
+              "misconception_code": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "alternative_misconception_codes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "stimulus": {
+                "type": "object"
+              },
+              "correct_group": {
+                "type": "string",
+                "enum": [
+                  "yes",
+                  "no"
+                ]
+              }
+            }
+          }
+        },
+        "correct_option_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "response_groups": {
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "compatible_templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "choice_quest",
+              "sort_and_group",
+              "build_manipulate"
+            ]
+          }
+        },
+        "default_template": {
+          "type": "string",
+          "enum": [
+            "choice_quest",
+            "sort_and_group",
+            "build_manipulate"
+          ]
+        },
+        "available_scaffold_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 3
+        },
+        "parallel_group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_id",
+            "page",
+            "curriculum_node_id"
+          ],
+          "properties": {
+            "source_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "page": {
+              "type": "string",
+              "minLength": 1
+            },
+            "curriculum_node_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "authoring_basis": {
+          "type": "string",
+          "enum": [
+            "researcher_authored"
+          ]
+        },
+        "content_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-content-v1"
+          ]
+        },
+        "review_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "parallel_groups.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cognitive_operation",
+        "difficulty_band",
+        "equivalence_note",
+        "equivalence_version",
+        "item_ids",
+        "item_type",
+        "parallel_group_id",
+        "response_format",
+        "review_status",
+        "reviewed_on",
+        "reviewer_id",
+        "skill_id"
+      ],
+      "properties": {
+        "parallel_group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skill_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "item_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "difficulty_band": {
+          "type": "string",
+          "minLength": 1
+        },
+        "response_format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cognitive_operation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "item_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 3
+        },
+        "equivalence_note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "equivalence_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-equivalence-v1"
+          ]
+        },
+        "review_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "scaffolds.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "answer_leakage_rules",
+        "approval_status",
+        "assistance_level",
+        "content_asset_id",
+        "language",
+        "limits_status",
+        "maximum_duration_ms",
+        "maximum_number_of_steps",
+        "reviewed_on",
+        "reviewer_id",
+        "scaffold_id",
+        "scaffold_type",
+        "skill_ids",
+        "target_misconception_ids",
+        "version",
+        "withdrawal_rule"
+      ],
+      "properties": {
+        "scaffold_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scaffold_type": {
+          "type": "string",
+          "enum": [
+            "visual_guidance",
+            "worked_example",
+            "step_by_step_guidance",
+            "concept_reminder"
+          ]
+        },
+        "skill_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "target_misconception_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "assistance_level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "content_asset_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximum_duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximum_number_of_steps": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "answer_leakage_rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "different_values_required",
+              "no_final_answer"
+            ]
+          }
+        },
+        "withdrawal_rule": {
+          "type": "string",
+          "enum": [
+            "remove_before_verification"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "si"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-scaffolds-v1"
+          ]
+        },
+        "limits_status": {
+          "type": "string",
+          "enum": [
+            "provisional_assumption",
+            "reviewed"
+          ]
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "content_assets.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "approval_status",
+        "authoring_basis",
+        "body_en",
+        "body_si",
+        "content_asset_id",
+        "content_version",
+        "diagram",
+        "language",
+        "parameters",
+        "reviewed_on",
+        "reviewer_id",
+        "scaffold_type",
+        "skill_id",
+        "source_reference",
+        "title_en",
+        "title_si"
+      ],
+      "properties": {
+        "content_asset_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scaffold_type": {
+          "type": "string",
+          "enum": [
+            "visual_guidance",
+            "worked_example",
+            "step_by_step_guidance",
+            "concept_reminder"
+          ]
+        },
+        "skill_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "si"
+          ]
+        },
+        "title_si": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title_en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "body_si": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "body_en": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "diagram": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "source_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_id",
+            "page",
+            "curriculum_node_id"
+          ],
+          "properties": {
+            "source_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "page": {
+              "type": "string",
+              "minLength": 1
+            },
+            "curriculum_node_id": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "authoring_basis": {
+          "type": "string",
+          "enum": [
+            "researcher_authored"
+          ]
+        },
+        "content_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-content-v1"
+          ]
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "template_compatibility.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compatible_templates",
+        "item_type",
+        "response_formats",
+        "specification_category",
+        "table_version"
+      ],
+      "properties": {
+        "item_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specification_category": {
+          "type": "string",
+          "minLength": 1
+        },
+        "compatible_templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "choice_quest",
+              "sort_and_group",
+              "build_manipulate"
+            ]
+          }
+        },
+        "response_formats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "table_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-templates-v1"
+          ]
+        }
+      }
+    },
+    "source_documents.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check_note",
+        "file_name",
+        "pages_checked",
+        "pdf_page_count",
+        "printed_last_page",
+        "printed_page_offset",
+        "sha256",
+        "source_id"
+      ],
+      "properties": {
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "pdf_page_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "printed_page_offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "printed_last_page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pages_checked": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "check_note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "structured_error_mappings.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "alternative_misconception_codes",
+        "item_id",
+        "mapping_version",
+        "misconception_code",
+        "option_id",
+        "pattern_code",
+        "response_format",
+        "review_status",
+        "skill_id",
+        "structured_error_code"
+      ],
+      "properties": {
+        "item_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "option_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pattern_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skill_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "response_format": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "misconception_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alternative_misconception_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "structured_error_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mapping_version": {
+          "type": "string",
+          "enum": [
+            "grade5-pilot-error-map-v1"
+          ]
+        },
+        "review_status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved",
+            "retired"
+          ]
+        }
+      }
+    }
+  }
+}

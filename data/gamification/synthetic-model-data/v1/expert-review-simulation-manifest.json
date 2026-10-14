@@ -1,5 +1,6 @@
 {
   "authorized_research_evidence": false,
+  "component_owner": "hareeshagunasekara",
   "contains_human_data": false,
   "dataset_id": "synthetic-expert-review-simulation-v1",
   "delivery_scope": {
@@ -99,7 +100,7 @@
     "unknown_or_other_rate": 0.25,
     "valid_outcome_rate": 0.875
   },
-  "source_commit": "5fd27c3b5d264999af7671dc91dd640d7c57ee63",
+  "source_commit": "a4c9b2440b4161a4fc1195703078bf6e27292e9b",
   "source_files": {
     "data/gamification/synthetic-model-data/v1/classification-evaluation-example.json": {
       "sha256": "9cdbd3e3e2e63e632eee0c61f91a04290f4ef2ced9566ac9f1ea28623c9b1522"
