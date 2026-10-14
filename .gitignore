@@ -23,3 +23,8 @@ frontend/ios/
 .DS_Store
 .idea/
 .vscode/
+
+backend/data/curriculum/raw
+/data/curriculum/raw/
+/data/curriculum/extracted/
+/data/curriculum/reports/
