@@ -28,7 +28,10 @@ VERSIONS = Path(__file__).parents[2] / "alembic" / "versions"
 MIGRATIONS = [
     VERSIONS / "20261013_01_create_knowledge_tracing_tables.py",
     VERSIONS / "20261014_02_add_attempt_idempotency_key.py",
+<<<<<<< HEAD
     VERSIONS / "20261015_01_create_mastery_snapshots.py",
+=======
+>>>>>>> d45f196 (Add tests for knowledge tracing model and migration history validation)
 ]
 KT_TABLES = {
     "skills",
