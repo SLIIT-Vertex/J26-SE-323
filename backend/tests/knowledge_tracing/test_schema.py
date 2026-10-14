@@ -23,12 +23,12 @@ from app.knowledge_tracing.infrastructure.db.models import (
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 
-MIGRATION = (
-    Path(__file__).parents[2]
-    / "alembic"
-    / "versions"
-    / "20261013_01_create_knowledge_tracing_tables.py"
-)
+VERSIONS = Path(__file__).parents[2] / "alembic" / "versions"
+# The knowledge tracing migrations, oldest first.
+MIGRATIONS = [
+    VERSIONS / "20261013_01_create_knowledge_tracing_tables.py",
+    VERSIONS / "20261014_01_add_attempt_idempotency_key.py",
+]
 KT_TABLES = {"skills", "questions", "question_variants", "question_parts", "attempts"}
 
 
@@ -223,19 +223,25 @@ def test_deleting_a_variant_removes_its_parts(session: Session) -> None:
     assert session.query(QuestionPartModel).count() == 0
 
 
-def test_migration_matches_the_models() -> None:
-    """Running only this migration must produce exactly the schema the models describe."""
-    spec = importlib.util.spec_from_file_location("kt_migration", MIGRATION)
+def _load_migration(path: Path):
+    spec = importlib.util.spec_from_file_location(f"kt_migration_{path.stem}", path)
     assert spec is not None and spec.loader is not None
-    migration = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(migration)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_migrations_match_the_models() -> None:
+    """Running the knowledge tracing migrations must produce exactly the models' schema."""
+    migrations = [_load_migration(path) for path in MIGRATIONS]
 
     engine = _sqlite_engine()
     LearnerModel.__table__.create(engine)
     with engine.begin() as connection:
         context = MigrationContext.configure(connection)
         with Operations.context(context):
-            migration.upgrade()
+            for migration in migrations:
+                migration.upgrade()
 
         assert KT_TABLES <= set(inspect(connection).get_table_names())
         # Compare only the tables this migration creates (plus learners); other
@@ -247,5 +253,6 @@ def test_migration_matches_the_models() -> None:
         assert diff == []
 
         with Operations.context(context):
-            migration.downgrade()
+            for migration in reversed(migrations):
+                migration.downgrade()
         assert not KT_TABLES & set(inspect(connection).get_table_names())

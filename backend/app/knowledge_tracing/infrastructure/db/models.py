@@ -166,6 +166,8 @@ class AttemptModel(Base):
     penalty: Mapped[float] = mapped_column(Float)  # computed by the backend
     answered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     paper_item_id: Mapped[UUID | None] = mapped_column(Uuid)  # set for paper attempts
+    # Lets a repeated request return the same attempt instead of creating a duplicate.
+    idempotency_key: Mapped[str | None] = mapped_column(String(100), unique=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
