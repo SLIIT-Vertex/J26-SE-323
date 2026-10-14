@@ -39,7 +39,8 @@ def parse_feature_spec(data: dict) -> FeatureSpec:
     )
 
 
-def _resolve(path: str) -> Path:
+def resolve_path(path: str) -> Path:
+    """Find a file given relative to the working folder or to the backend folder."""
     candidate = Path(path)
     if candidate.is_absolute() and candidate.is_file():
         return candidate
@@ -47,11 +48,11 @@ def _resolve(path: str) -> Path:
         resolved = (base / candidate).resolve()
         if resolved.is_file():
             return resolved
-    raise FileNotFoundError(f"feature spec not found: {path} (set FEATURE_SPEC_PATH)")
+    raise FileNotFoundError(f"file not found: {path} (check the path in .env)")
 
 
 def load_feature_spec(path: str) -> FeatureSpec:
-    return parse_feature_spec(json.loads(_resolve(path).read_text(encoding="utf-8")))
+    return parse_feature_spec(json.loads(resolve_path(path).read_text(encoding="utf-8")))
 
 
 @lru_cache

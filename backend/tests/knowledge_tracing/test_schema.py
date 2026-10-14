@@ -27,7 +27,7 @@ VERSIONS = Path(__file__).parents[2] / "alembic" / "versions"
 # The knowledge tracing migrations, oldest first.
 MIGRATIONS = [
     VERSIONS / "20261013_01_create_knowledge_tracing_tables.py",
-    VERSIONS / "20261014_01_add_attempt_idempotency_key.py",
+    VERSIONS / "20261014_02_add_attempt_idempotency_key.py",
 ]
 KT_TABLES = {"skills", "questions", "question_variants", "question_parts", "attempts"}
 
