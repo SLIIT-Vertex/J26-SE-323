@@ -10,32 +10,53 @@
 | Level | What it shows | Status |
 | --- | --- | --- |
 | **A. Implemented prototype** | The pipeline runs end to end: features → models → reliability → fusion → temporal decision → action, behind a tested API. | Done. Verified by the automated tests ([`08`](08_IMPLEMENTATION_AND_TESTING.md)). |
-| **B. Unimodal model evaluation** | Each XGBoost model separates its target class on held-out data from **its own** public dataset (DAiSEE for visual, ASSISTments for behavioural). Thresholds were selected on validation data. | Done during model development, outside this repository. |
+| **B. Unimodal model evaluation** | How well each XGBoost model separates its proxy label on held-out data from **its own** public dataset (DAiSEE for visual, ASSISTments for behavioural). Thresholds were selected on validation data. | Done. Results in §2; notebooks in `research/learner-state/notebooks/`. |
 | **C. Multimodal evaluation** | Reliability-aware fusion and temporal decisions detect confusion and disengagement better, or more usefully, than single modalities on the **same** learners at the **same** time. | **Not done.** Needs synchronized MindBridge pilot data. |
 
 Level A is software correctness. Level B is per-model performance. Neither is evidence for level C.
 
-## 2. Prototype metrics
+## 2. Unimodal model results (level B)
 
-This repository contains the trained model files and the runtime code, but **no** training
-scripts, evaluation notebooks or metric reports for the learner-state models. No metric can
-therefore be verified from the repository, and none is reported here.
+The four models were trained and evaluated on Kaggle. The notebooks, with their saved outputs, are in
+`research/learner-state/notebooks/`. All numbers below are copied from those saved outputs. Each
+threshold was selected by the best macro-F1 on the **validation** split and then frozen; the
+results are on the separate **test** split, which was not used for training or threshold choice.
 
-What can be verified from the repository:
+| Model | Notebook | Data and proxy label | Test set (positive rate) | Threshold | ROC-AUC | PR-AUC | Macro-F1 | Positive-class precision / recall |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Confusion visual | `mindbridge-visual-model-01` | DAiSEE clips; `Confusion ≥ 1` | 1,784 clips (32.7%) | 0.50 | 0.576 | 0.388 | 0.543 | 0.383 / 0.579 |
+| Confusion behaviour | `mindbridge-behaviour-model-01` | ASSISTments 2012–13; `Average_confidence(CONFUSED) ≥ 0.5` | 935,093 interactions, 7,002 learners (4.2%) | 0.79 | 0.760 | 0.144 | 0.592 | 0.182 / 0.317 |
+| Disengagement visual | `mindbridge-disengagement-model-01` | DAiSEE clips; `Engagement ≤ 1` | 1,784 clips (4.9%) | 0.54 | 0.687 | 0.139 | 0.550 | 0.128 / 0.432 |
+| Disengagement behaviour (v2) | `mindbridge-disengagement-model-01` | ASSISTments 2012–13; `Average_confidence(BORED) ≥ 0.5` | 935,093 interactions (15.7%) | 0.53 | 0.536 | 0.173 | 0.516 | 0.183 / 0.195 |
+
+ROC-AUC 0.5 is chance level and 1.0 is perfect. PR-AUC should be compared with the positive rate,
+which is its chance level.
+
+How to read these results:
+
+- Only the **confusion behaviour** model separates its classes moderately well (ROC-AUC 0.76).
+  The **disengagement behaviour** (0.54) and **confusion visual** (0.58) models are close to chance,
+  and the **disengagement visual** model is weak (0.69).
+- The ASSISTments split is **learner-wise** (70/15/15 by `user_id`; no learner appears in two
+  splits). The DAiSEE results use the dataset's provided train/validation/test label files.
+- Learner-history features were tested as ablations. For confusion, adding lifetime or recent
+  (20-interaction) baselines did **not** improve validation ROC-AUC (0.7545 without them vs 0.7523
+  and 0.7520 with them), so the deployed confusion behaviour model uses no history features. For
+  disengagement, the recent-baseline v2 model was only marginally better than v1 (validation
+  ROC-AUC 0.536 vs 0.529).
+- On the test data, 7.3% of interactions reach the confusion behaviour threshold of 0.79
+  (68,457 of 935,093, derived from the notebook's test confusion matrix).
+
+These are **unimodal results on public datasets** with **proxy labels** (§4.1). They are not
+results for MindBridge learners and say nothing about the multimodal pipeline.
+
+Other facts that can be verified from the repository:
 
 | Item | Value | Source |
 | --- | --- | --- |
-| Model type | XGBoost, `binary:logistic`, 300 trees each | model JSON files |
+| Model type | XGBoost, `binary:logistic`, 300 trees each | model JSON files, notebooks |
 | Feature counts | 11 visual, 10 confusion behaviour, 20 disengagement behaviour | `model_loader.py`, checked against model files at load time |
-| Decision thresholds | confusion visual 0.50, confusion behaviour 0.79, disengagement visual 0.54, disengagement behaviour 0.53 | `domain/confusion.py`, `domain/disengagement.py` |
-| End-to-end API behaviour | 200 response with all fields; 409 on duplicate window | `backend/tests/test_learner_state.py` |
-
-When unimodal metrics (for example AUC, F1, precision and recall at the selected threshold, and
-the test-set size) are added to the project, they should be:
-
-1. reported **per model and per dataset**, never as a "multimodal" result;
-2. reproducible by a script or notebook committed under `research/`;
-3. reported with the threshold at which they were computed.
+| End-to-end API behaviour | 200, 404, 409 and 422 responses | `backend/tests/test_learner_state.py` |
 
 ## 3. Required multimodal validation (future work)
 
@@ -58,9 +79,17 @@ Final validation of the research contribution needs a **synchronized MindBridge 
 - **DAiSEE and ASSISTments are not synchronized.** They come from different learners and settings.
   No sample in either dataset contains both modalities, so the training data cannot show how the
   two modalities relate for one learner at one moment.
-- **Labels are proxies.** DAiSEE confusion and boredom labels are annotations of video clips, not
-  measured internal states. The behavioural labels used with ASSISTments are also proxy
-  definitions of confusion and disengagement. A model can only be as valid as the proxy it learned.
+- **Labels are proxies.** DAiSEE confusion and engagement labels are annotations of video clips,
+  not measured internal states. The ASSISTments labels are thresholded outputs of **existing affect
+  detectors** (`Average_confidence(CONFUSED)` and `Average_confidence(BORED)` in the "data with
+  predictions" release), not human judgements, so the behaviour models learn to imitate another
+  model. In an exploratory check in the fusion notebook, a personalised deviation score (slower,
+  more attempts, more hints, accuracy drop) was *inversely* related to the confusion proxy
+  (validation ROC-AUC 0.39), so intuitive signs of struggle do not match this label. A model can
+  only be as valid as the proxy it learned.
+- **Training history is lifetime, serving history is per session.** In training, learner-history
+  features used each learner's previous ASSISTments interactions across the whole 2012–13 dataset
+  (median 140 previous interactions). At runtime, history starts empty in every session.
 - **Population mismatch.** Neither dataset was collected from Sri Lankan Grade 4–5 learners or in
   the MindBridge app. Feature distributions (and therefore the reliability constants such as head-
   pose quantiles and response-time percentiles) may differ for the target users.
@@ -75,6 +104,11 @@ Final validation of the research contribution needs a **synchronized MindBridge 
   synchronized pilot data.
 - **Windows are counted, not timed.** The `timestamp` is not used; "persistent" means "across
   recent windows", whatever their duration.
+- **Confusion detection is conservative when the models disagree.** The 0.79 threshold was
+  selected on validation data, and 7.3% of test interactions reach it (§2). When the visual model
+  indicates confusion but the behaviour model does not, the fused evidence usually stays below the
+  0.60 intervention level, so the system monitors instead of requesting tutor support. Whether this
+  is the right behaviour can only be judged with synchronized pilot data.
 
 ### 4.3 Runtime and deployment
 

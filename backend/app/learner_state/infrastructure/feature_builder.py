@@ -6,6 +6,12 @@ from typing import Final
 HISTORY_WINDOW: Final = 20
 MIN_BASELINE_HISTORY: Final = 5
 
+# Training filled missing bottom_hint values with the train-split median
+# (0.0) and kept `bottom_hint_missing` as a separate flag. Serving does the
+# same so the models never receive a value pattern they were not trained on.
+# Source: research/learner-state/notebooks (behaviour and disengagement).
+BOTTOM_HINT_TRAIN_MEDIAN: Final = 0.0
+
 
 @dataclass(frozen=True)
 class BehaviorObservation:
@@ -28,10 +34,15 @@ def build_confusion_behavior_features(
     observation: BehaviorObservation,
 ) -> dict[str, float | None]:
     bottom_hint_missing = 1.0 if observation.bottom_hint is None else 0.0
+    bottom_hint = (
+        BOTTOM_HINT_TRAIN_MEDIAN
+        if observation.bottom_hint is None
+        else observation.bottom_hint
+    )
 
     return {
         "correct": observation.correct,
-        "bottom_hint": observation.bottom_hint,
+        "bottom_hint": bottom_hint,
         "hint_count": observation.hint_count,
         "attempt_count": observation.attempt_count,
         "ms_first_response": observation.ms_first_response,

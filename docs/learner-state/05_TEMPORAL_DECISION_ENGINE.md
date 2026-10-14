@@ -160,10 +160,10 @@ Disengagement detector (values rounded):
 
 | Window | Fused evidence | Confidence | Recent windows positive & trusted | `temporal_score` | State | Action |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 0.483 | 0.523 | 0 | 0.483 | `engaged` | `none` |
-| 2 | 0.618 | 0.701 | 1 | ≈ 0.560 | `transient_disengagement` | `monitor` |
-| 3 | 0.618 | 0.702 | 2 | ≈ 0.581 | `transient_disengagement` | `monitor` |
-| 4 | 0.624 | 0.713 | 3 | ≈ 0.620 | `persistent_disengagement` | `request_reengagement_support` |
+| 1 | 0.486 | 0.527 | 0 | 0.486 | `engaged` | `none` |
+| 2 | 0.618 | 0.700 | 1 | ≈ 0.561 | `transient_disengagement` | `monitor` |
+| 3 | 0.617 | 0.701 | 2 | ≈ 0.582 | `transient_disengagement` | `monitor` |
+| 4 | 0.623 | 0.712 | 3 | ≈ 0.619 | `persistent_disengagement` | `request_reengagement_support` |
 
 At window 3 there are already two positive, trusted windows, but the confidence-weighted score is
 still below 0.60 because window 1 is in the summary. At window 4, window 1 has dropped out of the

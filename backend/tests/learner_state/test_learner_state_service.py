@@ -153,6 +153,20 @@ def test_stalled_task_progress_makes_persistent_confusion_intervention_worthy() 
     assert result.recommended_action == "request_tutor_support"
 
 
+def test_confusion_reliability_does_not_depend_on_session_length() -> None:
+    service, _ = service_with(confusion_visual=0.78, confusion_behavior=0.60)
+    learner_id = uuid4()
+
+    results = [service.evaluate(window(w, learner_id=learner_id)) for w in range(1, 26)]
+
+    confusion_reliability = {r.confusion.behavior_reliability for r in results}
+    disengagement_reliability = [r.disengagement.behavior_reliability for r in results]
+    assert confusion_reliability == {1.0}
+    assert disengagement_reliability[0] == pytest.approx(0.70)
+    assert disengagement_reliability[-1] == pytest.approx(1.0)
+    assert {r.confusion.state for r in results[2:]} == {results[2].confusion.state}
+
+
 @pytest.mark.parametrize("window_id", [1, 0])
 def test_duplicate_or_older_window_is_rejected(window_id: int) -> None:
     service, _ = service_with()

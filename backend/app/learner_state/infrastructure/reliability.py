@@ -96,6 +96,10 @@ def calculate_behavior_reliability(
     - timing values are invalid
     - response time is outside the train-derived 1st/99th percentiles
     - little learner history is available
+
+    `data_quality` describes the current observation only. `reliability`
+    also applies the history factor; it is used for the disengagement
+    behaviour model, the only model that uses learner-history features.
     """
 
     data_quality = 1.0

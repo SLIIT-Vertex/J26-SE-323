@@ -87,7 +87,9 @@ Step by step:
    behaviour history).
 3. **Model inference** — four XGBoost models return four probabilities.
 4. **Reliability calculation** — one visual reliability and one behavioural reliability value are
-   computed for the window. Both detectors use the same two values.
+   computed for the window. Both detectors use the same visual reliability. The disengagement
+   detector applies the learner-history factor to behavioural reliability; the confusion detector
+   uses behavioural data quality only, because its model has no history features.
 5. **Reliability-aware fusion** — each detector converts its two probabilities into
    threshold-centred evidence and fuses them.
 6. **Temporal decision** — each detector combines the current fused evidence with up to two

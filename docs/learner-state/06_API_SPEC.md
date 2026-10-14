@@ -94,7 +94,7 @@ Both objects have the same fields. All numeric fields are 0.0–1.0 except `pers
 | `visual_probability` | Raw output of the visual model for this detector |
 | `behavior_probability` | Raw output of the behaviour model for this detector |
 | `visual_reliability` | Visual reliability of this window (same value in both objects) |
-| `behavior_reliability` | Behavioural reliability of this window (same value in both objects) |
+| `behavior_reliability` | Behavioural reliability used by this detector. Confusion: data quality only; disengagement: data quality × history factor (see [`04`](04_RELIABILITY_AND_FUSION.md#24-which-detector-uses-which-value)) |
 | `fused_evidence` | Reliability-weighted, threshold-centred evidence for **this window** |
 | `confidence` | Fusion confidence for **this window** (after the disagreement penalty) |
 | `temporal_score` | Confidence-weighted average of fused evidence over the recent windows (up to 3); used for the persistent-state decision |
@@ -182,26 +182,26 @@ session. Values are rounded to 4 decimal places here; the API returns full float
   "skill_id": "MAT-FRC",
   "confusion": {
     "visual_probability": 0.5224,
-    "behavior_probability": 0.1904,
+    "behavior_probability": 0.1293,
     "visual_reliability": 0.95,
-    "behavior_reliability": 0.63,
-    "fused_evidence": 0.3621,
-    "confidence": 0.6142,
-    "temporal_score": 0.3621,
-    "average_confidence": 0.6142,
+    "behavior_reliability": 0.9,
+    "fused_evidence": 0.3081,
+    "confidence": 0.5587,
+    "temporal_score": 0.3081,
+    "average_confidence": 0.5587,
     "persistent_count": 0,
     "state": "no_confusion",
     "support_need": "none"
   },
   "disengagement": {
     "visual_probability": 0.7368,
-    "behavior_probability": 0.1434,
+    "behavior_probability": 0.1522,
     "visual_reliability": 0.95,
     "behavior_reliability": 0.63,
-    "fused_evidence": 0.4832,
-    "confidence": 0.5226,
-    "temporal_score": 0.4832,
-    "average_confidence": 0.5226,
+    "fused_evidence": 0.4865,
+    "confidence": 0.5269,
+    "temporal_score": 0.4865,
+    "average_confidence": 0.5269,
     "persistent_count": 0,
     "state": "engaged",
     "support_need": "none"

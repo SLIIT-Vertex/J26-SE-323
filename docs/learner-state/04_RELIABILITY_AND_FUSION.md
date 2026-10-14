@@ -9,8 +9,9 @@ Code:
 - `infrastructure/reliability.py` — `calculate_visual_reliability`, `calculate_behavior_reliability`
 - `domain/fusion.py` — `threshold_centered_evidence`, `reliability_aware_fusion`
 
-The same visual reliability and the same behavioural reliability are used by both the confusion
-and the disengagement detector in a given window.
+Both detectors use the same visual reliability. For behaviour, the confusion detector uses the
+behavioural **data quality**, while the disengagement detector also applies the **history factor**
+(see §2.4).
 
 ## 1. Visual reliability
 
@@ -101,6 +102,22 @@ behavior_reliability = clip( data_quality * history_factor, 0, 1 )
 Example: first window, `bottom_hint = null`, normal response time:
 `data_quality = 0.90`, `history_factor = 0.70`, reliability = **0.63**.
 
+### 2.4 Which detector uses which value
+
+| Detector | Behavioural reliability used | Reason |
+| --- | --- | --- |
+| Disengagement | `data_quality * history_factor` | Its behaviour model uses learner-history features (baseline and deviations), which become available and more stable as history grows |
+| Confusion | `data_quality` only | Its behaviour model uses **no** history features, so more history does not make its evidence more trustworthy |
+
+In the example above, the confusion detector therefore uses **0.90** and the disengagement
+detector **0.63**.
+
+Earlier versions applied the history factor to both detectors. For confusion this meant the trust
+in behavioural evidence grew only because the session got longer. In a runtime check with the same
+struggling-learner input repeated, tutor support was requested in windows 2–11 and then stopped,
+although nothing about the learner changed. Using data quality alone removes this dependence on
+session length.
+
 ## 3. Reliability-aware fusion
 
 `reliability_aware_fusion()` receives the two **threshold-centred evidence** values (see
@@ -174,7 +191,7 @@ flowchart LR
 | Case | Effect |
 | --- | --- |
 | Visual reliability 0 (no face) | `w_v = 0`, `w_b = 1`. Fused evidence equals behavioural evidence. Confidence = `r_b`. |
-| Behavioural reliability lower early in a session | Visual evidence gets more weight until history grows. |
+| Behavioural reliability lower early in a session (disengagement only) | Visual evidence gets more weight until history grows. |
 | Both reliable, both agree | Weights ≈ balanced, conflict ≈ 0, confidence ≈ average reliability. |
 | Both reliable, strong disagreement | Fused evidence lands in the middle and confidence drops; the temporal engine is then more likely to return `uncertain`. |
 | Both reliabilities 0 | Equal weights; confidence 0, so the window cannot count towards persistence. |
@@ -190,17 +207,17 @@ detector:
 | Quantity | Value |
 | --- | --- |
 | Visual probability / threshold | 0.5224 / 0.50 → evidence 0.5224 |
-| Behaviour probability / threshold | 0.1904 / 0.79 → evidence 0.1205 |
+| Behaviour probability / threshold | 0.1293 / 0.79 → evidence 0.0819 |
 | Visual reliability | 0.95 (visibility 0.95, all angles below Q75) |
-| Behavioural reliability | 0.63 (missing `bottom_hint`, no history) |
-| Weights | `w_v ≈ 0.601`, `w_b ≈ 0.399` |
-| Fused evidence | ≈ 0.362 |
-| Disagreement / conflict | ≈ 0.402 / ≈ 0.253 |
-| Weighted reliability | ≈ 0.822 |
-| Fusion confidence | ≈ 0.614 |
+| Behavioural reliability | 0.90 (data quality; missing `bottom_hint`) |
+| Weights | `w_v ≈ 0.514`, `w_b ≈ 0.486` |
+| Fused evidence | ≈ 0.308 |
+| Disagreement / conflict | ≈ 0.440 / ≈ 0.396 |
+| Weighted reliability | ≈ 0.926 |
+| Fusion confidence | ≈ 0.559 |
 
 The visual model is slightly above its threshold and the behaviour model is well below. Because
-the two disagree and both are fairly reliable, confidence is reduced from ≈ 0.82 to ≈ 0.61.
+the two disagree and both are reliable, confidence is reduced from ≈ 0.93 to ≈ 0.56.
 
 ## 6. Design status
 

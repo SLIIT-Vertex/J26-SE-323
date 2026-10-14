@@ -234,6 +234,12 @@ class LearnerStateService:
                 )
             )
 
+            # The history factor reflects how complete the learner-history
+            # features are. Only the disengagement behaviour model uses those
+            # features, so confusion uses behavioural data quality alone.
+            confusion_behavior_reliability = behavior_reliability.data_quality
+            disengagement_behavior_reliability = behavior_reliability.reliability
+
             confusion_visual_probability = (
                 self._models.predict_confusion_visual(
                     visual_features
@@ -269,7 +275,7 @@ class LearnerStateService:
                     visual_reliability.reliability
                 ),
                 behavior_reliability=(
-                    behavior_reliability.reliability
+                    confusion_behavior_reliability
                 ),
                 previous_fused_evidence=list(
                     state.confusion_fused
@@ -294,7 +300,7 @@ class LearnerStateService:
                     visual_reliability.reliability
                 ),
                 behavior_reliability=(
-                    behavior_reliability.reliability
+                    disengagement_behavior_reliability
                 ),
                 previous_fused_evidence=list(
                     state.disengagement_fused
@@ -341,7 +347,7 @@ class LearnerStateService:
                         visual_reliability.reliability
                     ),
                     behavior_reliability=(
-                        behavior_reliability.reliability
+                        confusion_behavior_reliability
                     ),
                     fused_evidence=(
                         confusion.fused_evidence
@@ -368,7 +374,7 @@ class LearnerStateService:
                         visual_reliability.reliability
                     ),
                     behavior_reliability=(
-                        behavior_reliability.reliability
+                        disengagement_behavior_reliability
                     ),
                     fused_evidence=(
                         disengagement.fused_evidence
