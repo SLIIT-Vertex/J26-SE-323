@@ -9,7 +9,7 @@
     },
     "support_selection": {
       "status": "ready_pending_review",
-      "rule": "visual_guidance, worked_example and step_by_step_guidance for every skill"
+      "rule": "visual_guidance, worked_example and step_by_step_guidance for every skill; the authored reference table is a provisional assumption"
     },
     "independence_gain": {
       "status": "ready_pending_review",

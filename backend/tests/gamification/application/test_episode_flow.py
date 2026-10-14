@@ -71,7 +71,8 @@ def _flow(catalog: PilotContentCatalog | None = None):
             abstain_threshold=0.99,
         ),
         selector=SafeSupportPolicy(
-            catalogue_version=CatalogueVersion(catalog.support_catalogue_version())
+            catalogue_version=CatalogueVersion(catalog.support_catalogue_version()),
+            reference_table=catalog.reference_policy_table(),
         ),
         calculator=RawIndependenceGainCalculator(),
         allow_draft=True,
@@ -174,6 +175,9 @@ def test_happy_path_reaches_a_valid_outcome_with_one_template() -> None:
     assert decided.decision is not None
     assert decided.decision.mode is DecisionMode.DETERMINISTIC_REFERENCE
     assert decided.decision.selected_action_id == STEP_BY_STEP
+    assert "AUTHORED_REFERENCE_TABLE" in decided.decision.reason_codes
+    assert decided.policy_context_snapshot is not None
+    assert decided.policy_context_snapshot.purpose == "policy_context"
 
     delivered = cases.record_exposure.execute(
         RecordSupportExposureCommand(

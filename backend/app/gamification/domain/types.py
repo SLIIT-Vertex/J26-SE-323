@@ -57,6 +57,13 @@ class SupportActionType(StrEnum):
 
 
 class DecisionMode(StrEnum):
+    """How a support decision was produced.
+
+    ``DETERMINISTIC_REFERENCE`` is a deprecated alias of ``PERFORMANCE_TRIGGERED_FIXED``
+    (CF-13). Callers may still send the alias; new logs should use the canonical mode.
+    """
+
+    PERFORMANCE_TRIGGERED_FIXED = "performance_triggered_fixed"
     DETERMINISTIC_REFERENCE = "deterministic_reference"
     SHADOW = "shadow"
     LEARNED = "learned"

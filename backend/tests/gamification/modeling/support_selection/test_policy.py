@@ -86,7 +86,7 @@ def test_policy_shadow_and_cold_start_do_not_control_delivery() -> None:
     assert fallback.selected_action_id == "a-hint"
 
 
-def test_learned_policy_seeded_selection() -> None:
+def test_learned_policy_without_an_approved_artifact_falls_back() -> None:
     snapshot = FeatureBuilder().build(feature_input())
     decision = SafeSupportPolicy(catalogue_version=CatalogueVersion("support-v1")).decide(
         episode_id=EPISODE,
@@ -100,5 +100,6 @@ def test_learned_policy_seeded_selection() -> None:
         learned_policy=Scorer(),
         evidence_count=100,
     )
-    assert decision.selected_action_id == "b-worked"
+    assert decision.mode is DecisionMode.CONSERVATIVE_FALLBACK
+    assert decision.selected_action_id == "a-hint"
     assert decision.random_seed == 11

@@ -11,7 +11,8 @@
     "scaffold_version": "grade5-pilot-scaffolds-v1",
     "equivalence_version": "grade5-pilot-equivalence-v1",
     "template_table_version": "grade5-pilot-templates-v1",
-    "error_mapping_version": "grade5-pilot-error-map-v1"
+    "error_mapping_version": "grade5-pilot-error-map-v1",
+    "reference_policy_version": "authored-reference-policy-v1"
   },
   "counts": {
     "skills": 5,
@@ -22,7 +23,8 @@
     "content_assets": 15,
     "template_compatibility": 3,
     "source_documents": 3,
-    "structured_error_mappings": 102
+    "structured_error_mappings": 102,
+    "reference_policy_table": 30
   },
   "sources": {
     "data/curriculum/registry/v1/sources.jsonl": {
@@ -57,8 +59,8 @@
   },
   "files": {
     "README.md": {
-      "bytes": 2710,
-      "sha256": "327d1020e33138020ce45e207110ab48687f4362bf5ed37d4cac92d7242c426c"
+      "bytes": 2742,
+      "sha256": "4cac0d2bf0238f1524479971afb94d9646fed598801f28950dccb227ff24396f"
     },
     "content_assets.jsonl": {
       "bytes": 17189,
@@ -77,16 +79,20 @@
       "sha256": "9fbb82ec816cdefa0463b0ac3427be93eed36d04c39d411b2f8bc2a1ffb2fcee"
     },
     "readiness_report.json": {
-      "bytes": 2311,
-      "sha256": "78cda8afccd498a6a25b4b3f2e7befc3afad210081c0f8a7f3e97535e8366787"
+      "bytes": 2369,
+      "sha256": "4a3743602121305fb953b672ccae136f791e683a3f99210c499e48e4b2cf5690"
+    },
+    "reference_policy_table.jsonl": {
+      "bytes": 8315,
+      "sha256": "2d8581f906f8d2b7f27a5412e601ab0ce31d30e799daf2c084ddda050cc8766b"
     },
     "scaffolds.jsonl": {
       "bytes": 9070,
       "sha256": "20558715ffbf08a2dc3a793b80a99a23020da642553984701ea7863ec8d869cb"
     },
     "schema.json": {
-      "bytes": 25948,
-      "sha256": "695751a4800a3f3be33a0615cef201aa6a61d17f98c0d118121a1b8a9b87fda0"
+      "bytes": 27212,
+      "sha256": "82b50a4085d1e5443c0a374f122bdce0f0937e841a3f2264e3eb64832b789dde"
     },
     "skills.jsonl": {
       "bytes": 10981,

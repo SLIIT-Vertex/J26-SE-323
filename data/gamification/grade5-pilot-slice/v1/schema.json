@@ -10,7 +10,8 @@
     "scaffold_version": "grade5-pilot-scaffolds-v1",
     "equivalence_version": "grade5-pilot-equivalence-v1",
     "template_table_version": "grade5-pilot-templates-v1",
-    "error_mapping_version": "grade5-pilot-error-map-v1"
+    "error_mapping_version": "grade5-pilot-error-map-v1",
+    "reference_policy_version": "authored-reference-policy-v1"
   },
   "records": {
     "skills.jsonl": {
@@ -1127,6 +1128,55 @@
             "draft",
             "approved",
             "retired"
+          ]
+        }
+      }
+    },
+    "reference_policy_table.jsonl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authoring_basis",
+        "preferred_scaffold_type",
+        "rule",
+        "skill_id",
+        "table_version",
+        "top_misconception_code"
+      ],
+      "properties": {
+        "table_version": {
+          "type": "string",
+          "enum": [
+            "authored-reference-policy-v1"
+          ]
+        },
+        "skill_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "top_misconception_code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preferred_scaffold_type": {
+          "type": "string",
+          "enum": [
+            "visual_guidance",
+            "worked_example",
+            "step_by_step_guidance"
+          ]
+        },
+        "authoring_basis": {
+          "type": "string",
+          "enum": [
+            "provisional_assumption"
+          ]
+        },
+        "rule": {
+          "type": "string",
+          "enum": [
+            "lowest_assistance_among_scaffolds_targeting_code",
+            "least_assistance_scaffold_for_reserved_code"
           ]
         }
       }

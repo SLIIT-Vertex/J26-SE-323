@@ -22,6 +22,10 @@ from app.gamification.content.records import (
 )
 from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 from app.gamification.domain.types import SupportActionType
+from app.gamification.modeling.support_selection.reference_table import (
+    ReferencePolicyRow,
+    ReferencePolicyTable,
+)
 from app.gamification.skill_catalogue.contracts import ReviewStatus, SkillReview, SourceCitation
 
 PILOT_CONTENT_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "grade5-pilot-slice" / "v1"
@@ -286,6 +290,23 @@ def _unapproved(package: PilotContentPackage) -> int:
     return sum(status is not ContentStatus.APPROVED for status in records)
 
 
+def _reference_policy(rows: list[dict[str, Any]], version: str) -> ReferencePolicyTable:
+    parsed = []
+    for row in rows:
+        if row["table_version"] != version:
+            raise ValueError("reference policy row version does not match the package")
+        parsed.append(
+            ReferencePolicyRow(
+                skill_id=row["skill_id"],
+                top_misconception_code=row["top_misconception_code"],
+                preferred_scaffold_type=row["preferred_scaffold_type"],
+                rule=row["rule"],
+                authoring_basis=row["authoring_basis"],
+            )
+        )
+    return ReferencePolicyTable(version=version, rows=tuple(parsed))
+
+
 def load_pilot_content_package(
     path: Path = PILOT_CONTENT_DIRECTORY, *, allow_draft: bool = False
 ) -> PilotContentPackage:
@@ -327,6 +348,10 @@ def load_pilot_content_package(
             map(_error_mapping, _read_jsonl(path / "structured_error_mappings.jsonl")),
             lambda r: r.structured_error_code,
             "structured error code",
+        ),
+        reference_policy=_reference_policy(
+            _read_jsonl(path / "reference_policy_table.jsonl"),
+            str(manifest["versions"]["reference_policy_version"]),
         ),
     )
     _check_references(package)

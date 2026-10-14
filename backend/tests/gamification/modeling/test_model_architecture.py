@@ -39,22 +39,14 @@ def imported_modules_from_source(source: str) -> set[str]:
 
 
 def architecture_violations(owner: str, modules: set[str]) -> list[str]:
-    violations = [
-        module
-        for module in modules
-        if module.startswith(FORBIDDEN_FRAMEWORK_PREFIXES)
-    ]
+    violations = [module for module in modules if module.startswith(FORBIDDEN_FRAMEWORK_PREFIXES)]
     if owner in MODEL_PACKAGES:
         other_models = tuple(
-            f"app.gamification.modeling.{name}"
-            for name in MODEL_PACKAGES
-            if name != owner
+            f"app.gamification.modeling.{name}" for name in MODEL_PACKAGES if name != owner
         )
         violations.extend(module for module in modules if module.startswith(other_models))
     elif owner == "shared":
-        model_prefixes = tuple(
-            f"app.gamification.modeling.{name}" for name in MODEL_PACKAGES
-        )
+        model_prefixes = tuple(f"app.gamification.modeling.{name}" for name in MODEL_PACKAGES)
         violations.extend(module for module in modules if module.startswith(model_prefixes))
     elif owner == "orchestration":
         violations.extend(
@@ -117,6 +109,22 @@ def test_model_package_dependency_rules() -> None:
             for module in architecture_violations(owner, modules):
                 violations.append(f"{path.relative_to(MODELING_ROOT)} -> {module}")
     assert violations == []
+
+
+def test_support_selection_does_not_name_other_model_classes() -> None:
+    banned = (
+        "IndependenceGainResult",
+        "RawIndependenceGainCalculator",
+        "ProbabilisticMisconceptionModel",
+    )
+    root = MODELING_ROOT / "support_selection"
+    offenders = [
+        f"{path.name}:{name}"
+        for path in root.rglob("*.py")
+        for name in banned
+        if name in path.read_text()
+    ]
+    assert offenders == []
 
 
 def test_modeling_import_graph_has_no_cycles() -> None:

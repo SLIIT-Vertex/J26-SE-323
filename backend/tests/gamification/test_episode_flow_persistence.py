@@ -74,7 +74,8 @@ def test_seeded_episode_reconstructs_from_baseline_to_outcome(tmp_path: Path) ->
                 abstain_threshold=0.99,
             ),
             selector=SafeSupportPolicy(
-                catalogue_version=CatalogueVersion(catalog.support_catalogue_version())
+                catalogue_version=CatalogueVersion(catalog.support_catalogue_version()),
+                reference_table=catalog.reference_policy_table(),
             ),
             calculator=RawIndependenceGainCalculator(),
             allow_draft=True,
@@ -171,6 +172,8 @@ def test_seeded_episode_reconstructs_from_baseline_to_outcome(tmp_path: Path) ->
     assert bundle.baseline_response.phase == "baseline"
     assert bundle.baseline_response.support_state == "unsupported"
     assert bundle.feature_snapshot is not None
+    assert bundle.feature_snapshot.purpose == "policy_context"
+    assert "bandit_context" in bundle.feature_snapshot.values
     assert bundle.misconception_beliefs
     assert bundle.policy_decision is not None
     assert bundle.policy_decision.selected_action_id == "G5-MAT-FRC-SC2-STP"
@@ -238,6 +241,38 @@ def test_trigger_reason_migration_upgrades_and_downgrades(tmp_path: Path, monkey
     )
     assert "trigger_reasons_json" not in columns
     assert "completed_over_budget" not in checks
+    restored.dispose()
+    get_settings.cache_clear()
+
+
+def test_decision_mode_migration_adds_the_authored_reference_mode(tmp_path: Path, monkeypatch) -> None:
+    database_path = tmp_path / "mode.sqlite"
+    database_url = f"sqlite:///{database_path}"
+    engine = sqlite_engine(database_url)
+    Base.metadata.create_all(engine, tables=[Base.metadata.tables["learners"]])
+    engine.dispose()
+    monkeypatch.setenv("DATABASE_URL", database_url)
+    from app.config import get_settings
+
+    get_settings.cache_clear()
+    config = Config(str(BACKEND_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
+    command.stamp(config, "20261007_01")
+    command.upgrade(config, "20261014_03")
+    upgraded = sqlite_engine(database_url)
+    checks = " ".join(
+        check["sqltext"] for check in inspect(upgraded).get_check_constraints("support_decisions")
+    )
+    assert "performance_triggered_fixed" in checks
+    upgraded.dispose()
+
+    command.downgrade(config, "20261014_02")
+    restored = sqlite_engine(database_url)
+    checks = " ".join(
+        check["sqltext"] for check in inspect(restored).get_check_constraints("support_decisions")
+    )
+    assert "performance_triggered_fixed" not in checks
+    assert "deterministic_reference" in checks
     restored.dispose()
     get_settings.cache_clear()
 

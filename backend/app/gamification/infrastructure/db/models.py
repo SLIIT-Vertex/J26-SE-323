@@ -329,8 +329,8 @@ class SupportDecisionModel(Base):
     __table_args__ = (
         UniqueConstraint("episode_id", name="uq_support_decisions_episode"),
         CheckConstraint(
-            "decision_mode IN ('deterministic_reference', 'shadow', 'learned', "
-            "'conservative_fallback')",
+            "decision_mode IN ('performance_triggered_fixed', 'deterministic_reference', "
+            "'shadow', 'learned', 'conservative_fallback')",
             name="ck_support_decisions_mode",
         ),
         CheckConstraint(

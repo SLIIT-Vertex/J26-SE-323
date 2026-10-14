@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
+from app.gamification.modeling.support_selection.reference_table import ReferencePolicyTable
 from app.gamification.skill_catalogue.contracts import SkillReview
 
 
@@ -260,6 +261,7 @@ class PilotContentPackage:
     content_assets: Mapping[str, ContentAsset]
     template_rules: Mapping[str, TemplateRule]
     error_mappings: Mapping[str, StructuredErrorMapping]
+    reference_policy: ReferencePolicyTable
 
     def __post_init__(self) -> None:
         for name in (

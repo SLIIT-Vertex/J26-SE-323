@@ -43,6 +43,7 @@ class EpisodeState:
     verification_response: ItemResponseEvidence | None = None
     supported_responses: tuple[ItemResponseEvidence, ...] = ()
     feature_snapshot: FeatureSnapshotRecord | None = None
+    policy_context_snapshot: FeatureSnapshotRecord | None = None
     belief: MisconceptionDistribution | None = None
     decision: PolicyDecisionRecord | None = None
     exposures: tuple[SupportExposureRecord, ...] = ()

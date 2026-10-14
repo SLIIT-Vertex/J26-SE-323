@@ -10,6 +10,7 @@ from app.gamification.content.records import (
 )
 from app.gamification.content.support_candidates import skill_support_candidates
 from app.gamification.modeling.support_selection.contracts import SupportCandidate
+from app.gamification.modeling.support_selection.reference_table import ReferencePolicyTable
 
 
 class PilotContentCatalog:
@@ -64,3 +65,12 @@ class PilotContentCatalog:
 
     def template_table_version(self) -> str:
         return str(self._package.versions["template_table_version"])
+
+    def misconception_codes(self) -> tuple[str, ...]:
+        return tuple(self._package.misconceptions)
+
+    def skill_ids(self) -> tuple[str, ...]:
+        return tuple(self._package.skills)
+
+    def reference_policy_table(self) -> ReferencePolicyTable:
+        return self._package.reference_policy

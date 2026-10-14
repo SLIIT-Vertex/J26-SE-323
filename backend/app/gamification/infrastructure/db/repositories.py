@@ -147,9 +147,7 @@ class SqlAlchemyPolicyDecisionStore:
                     action_id=candidate.action_id,
                     action_type=candidate.action_type,
                     eligible=candidate.eligible,
-                    ineligibility_reasons_json=(
-                        [] if candidate.eligible else list(candidate.reason_codes)
-                    ),
+                    ineligibility_reasons_json=list(candidate.reason_codes),
                     predicted_reward=candidate.predicted_reward,
                     uncertainty=candidate.uncertainty,
                     propensity=candidate.propensity,

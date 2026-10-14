@@ -195,12 +195,10 @@ class SqlAlchemyEpisodeRepository:
             self._session.flush()
 
     def _write_snapshot(self, state: EpisodeState) -> None:
-        snapshot = state.feature_snapshot
-        if snapshot is None:
-            return
         store = SqlAlchemyFeatureSnapshotStore(self._session)
-        if store.get(snapshot.snapshot_id) is None:
-            store.add(snapshot)
+        for snapshot in (state.feature_snapshot, state.policy_context_snapshot):
+            if snapshot is not None and store.get(snapshot.snapshot_id) is None:
+                store.add(snapshot)
 
     def _write_inference(self, state: EpisodeState) -> None:
         belief = state.belief
@@ -415,12 +413,21 @@ class SqlAlchemyEpisodeRepository:
             select(SupportDecisionModel).where(SupportDecisionModel.episode_id == row.id)
         )
         decision = None
+        policy_context = None
         exposures: tuple[SupportExposureRecord, ...] = ()
         if decision_row is not None:
             decision = SqlAlchemyPolicyDecisionStore(self._session).get(
                 PolicyDecisionId(decision_row.id)
             )
             exposures = self._exposures(decision_row.id)
+            if (
+                decision is not None
+                and snapshot is not None
+                and decision.feature_snapshot_id != snapshot.snapshot_id
+            ):
+                policy_context = SqlAlchemyFeatureSnapshotStore(self._session).get(
+                    decision.feature_snapshot_id
+                )
         payload = row.trigger_reasons_json or {}
         game_session = self._session.get(GameSessionModel, row.session_id)
         baseline_row = (
@@ -458,6 +465,7 @@ class SqlAlchemyEpisodeRepository:
             verification_response=verification,
             supported_responses=self._supported_responses(row),
             feature_snapshot=snapshot,
+            policy_context_snapshot=policy_context,
             belief=belief,
             decision=decision,
             exposures=exposures,

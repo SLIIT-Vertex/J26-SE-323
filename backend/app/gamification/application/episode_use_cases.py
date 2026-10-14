@@ -49,6 +49,12 @@ from app.gamification.modeling.independence_gain.contracts import (
 )
 from app.gamification.modeling.misconception_inference.contracts import MisconceptionPredictor
 from app.gamification.modeling.shared.feature_building import DecisionFeatureInput, FeatureBuilder
+from app.gamification.modeling.support_selection.context import (
+    BanditContextBuilder,
+    QuestionContext,
+    SupportHistory,
+    policy_context_snapshot,
+)
 from app.gamification.modeling.support_selection.contracts import SupportSelector
 
 _NAMESPACE = UUID("6f0e0c3a-7b1d-4e5f-9a2c-1d8e4b7c0a11")
@@ -489,6 +495,7 @@ class SelectSupportAction(_EpisodeCommand):
             raise EpisodeFlowError("MISCONCEPTION_NOT_RECORDED")
         mode = command.mode or state.decision_mode
         candidates = self._policy_candidates(str(state.episode.skill_id))
+        context = self._bandit_context(state)
         decision = self._selector.decide(
             episode_id=command.episode_id,
             snapshot=state.feature_snapshot,
@@ -498,8 +505,11 @@ class SelectSupportAction(_EpisodeCommand):
             seed=command.seed,
             decided_at=command.at,
             mode=mode,
+            context=context,
         )
         decision, rejected = self._apply_leakage(state, decision)
+        context_snapshot = policy_context_snapshot(state.feature_snapshot, context)
+        decision = replace(decision, feature_snapshot_id=context_snapshot.snapshot_id)
         episode = state.episode.transition_to(EpisodePhase.SUPPORT_DECIDED, at=command.at)
         for action_id, failures in rejected:
             _audit(
@@ -518,7 +528,36 @@ class SelectSupportAction(_EpisodeCommand):
             reason_codes=decision.reason_codes,
             metadata={"action_id": str(decision.selected_action_id), "mode": str(mode)},
         )
-        return self._save(replace(state, episode=episode, decision=decision, decision_mode=mode))
+        return self._save(
+            replace(
+                state,
+                episode=episode,
+                decision=decision,
+                decision_mode=mode,
+                policy_context_snapshot=context_snapshot,
+            )
+        )
+
+    def _bandit_context(self, state: EpisodeState):
+        assert state.feature_snapshot is not None
+        assert state.belief is not None
+        assert state.baseline_response is not None
+        item = self._catalog.item(str(state.baseline_response.item_id))
+        builder = BanditContextBuilder(
+            catalogue_codes=self._catalog.misconception_codes(),
+            skill_ids=self._catalog.skill_ids(),
+        )
+        return builder.build(
+            snapshot=state.feature_snapshot,
+            belief=state.belief,
+            item=QuestionContext(
+                skill_id=item.skill_id,
+                difficulty=item.difficulty,
+                response_format=item.response_format.value,
+                template_key=item.default_template,
+            ),
+            history=SupportHistory.from_snapshot(state.feature_snapshot),
+        )
 
     def _policy_candidates(self, skill_id: str):
         adjusted = []
@@ -565,12 +604,26 @@ class SelectSupportAction(_EpisodeCommand):
                         reason_codes=("ANSWER_LEAKAGE", *failure_by_id[action_id]),
                     )
                 )
-            elif candidate.action_id == accepted.action_id:
-                rebuilt.append(replace(candidate, eligible=True, propensity=1.0))
-            elif candidate.eligible:
-                rebuilt.append(replace(candidate, propensity=0.0))
             else:
                 rebuilt.append(candidate)
+        remaining = [candidate for candidate in rebuilt if candidate.eligible]
+        total = sum(candidate.propensity for candidate in remaining)
+        if total <= 0:
+            rebuilt = [
+                replace(candidate, propensity=1.0)
+                if candidate.action_id == accepted.action_id
+                else replace(candidate, propensity=0.0)
+                if candidate.eligible
+                else candidate
+                for candidate in rebuilt
+            ]
+        else:
+            rebuilt = [
+                replace(candidate, propensity=candidate.propensity / total)
+                if candidate.eligible
+                else candidate
+                for candidate in rebuilt
+            ]
         return (
             replace(
                 decision,
