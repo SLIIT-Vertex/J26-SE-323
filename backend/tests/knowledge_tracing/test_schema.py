@@ -8,7 +8,7 @@ import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from alembic.operations import Operations
-from sqlalchemy import Engine, create_engine, event, inspect
+from sqlalchemy import Engine, MetaData, create_engine, event, inspect
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -238,7 +238,12 @@ def test_migration_matches_the_models() -> None:
             migration.upgrade()
 
         assert KT_TABLES <= set(inspect(connection).get_table_names())
-        diff = compare_metadata(context, Base.metadata)
+        # Compare only the tables this migration creates (plus learners); other
+        # modules' tables in Base.metadata are created by their own migrations.
+        expected = MetaData()
+        for name in KT_TABLES | {"learners"}:
+            Base.metadata.tables[name].to_metadata(expected)
+        diff = compare_metadata(context, expected)
         assert diff == []
 
         with Operations.context(context):

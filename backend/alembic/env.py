@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 from app.config import get_settings
 from app.knowledge_tracing.infrastructure.db import models as knowledge_tracing_models  # noqa: F401
+from app.learner_state.infrastructure.db import models as learner_state_models  # noqa: F401
 from app.shared.database.base import Base
 from app.shared.learner import model  # noqa: F401
 

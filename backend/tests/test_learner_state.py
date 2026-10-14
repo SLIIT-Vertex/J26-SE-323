@@ -1,6 +1,26 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
+
+from app.learner_state.application.support_need import (
+    StoredSupportNeedProvider,
+    SupportNeedRequest,
+    SupportNeedStatus,
+)
+from app.learner_state.infrastructure.db.repository import (
+    SqlAlchemyLearnerSkillStateRepository,
+)
+from app.main import app
+from app.shared.database.session import get_db
+
+
+def create_learner(client: TestClient) -> str:
+    response = client.post(
+        "/api/v1/learners",
+        json={"grade": 5, "preferred_language": "si"},
+    )
+    assert response.status_code == 201
+    return response.json()["id"]
 
 
 def learner_state_payload(learner_id: str, window_id: int = 1) -> dict:
@@ -8,6 +28,7 @@ def learner_state_payload(learner_id: str, window_id: int = 1) -> dict:
         "session_id": "learner-state-test-session",
         "learner_id": learner_id,
         "window_id": window_id,
+        "skill_id": "MAT-FRC",
         "timestamp": "2026-10-13T09:45:00+05:30",
         "visual": {
             "mean_eye_openness": 0.27,
@@ -40,7 +61,7 @@ def learner_state_payload(learner_id: str, window_id: int = 1) -> dict:
 def test_evaluate_learner_state_and_reject_duplicate_window(
     client: TestClient,
 ) -> None:
-    learner_id = str(uuid4())
+    learner_id = create_learner(client)
     payload = learner_state_payload(learner_id)
 
     response = client.post(
@@ -55,6 +76,7 @@ def test_evaluate_learner_state_and_reject_duplicate_window(
     assert body["session_id"] == payload["session_id"]
     assert body["learner_id"] == learner_id
     assert body["window_id"] == 1
+    assert body["skill_id"] == "MAT-FRC"
 
     assert "visual_probability" in body["confusion"]
     assert "behavior_probability" in body["confusion"]
@@ -91,7 +113,7 @@ def test_evaluate_learner_state_and_reject_duplicate_window(
 
 
 def test_window_ids_may_skip_values(client: TestClient) -> None:
-    learner_id = str(uuid4())
+    learner_id = create_learner(client)
 
     first = client.post("/api/v1/learner-state", json=learner_state_payload(learner_id, 1))
     later = client.post("/api/v1/learner-state", json=learner_state_payload(learner_id, 5))
@@ -102,7 +124,7 @@ def test_window_ids_may_skip_values(client: TestClient) -> None:
 
 
 def test_out_of_range_features_are_rejected(client: TestClient) -> None:
-    payload = learner_state_payload(str(uuid4()))
+    payload = learner_state_payload(create_learner(client))
     payload["visual"]["face_visibility_ratio"] = 1.4
 
     response = client.post("/api/v1/learner-state", json=payload)
@@ -113,3 +135,53 @@ def test_out_of_range_features_are_rejected(client: TestClient) -> None:
         "visual",
         "face_visibility_ratio",
     ]
+
+
+def test_unknown_learner_is_rejected(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/learner-state",
+        json=learner_state_payload(str(uuid4())),
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Learner not found"}
+
+
+def test_skill_id_is_required(client: TestClient) -> None:
+    payload = learner_state_payload(create_learner(client))
+    del payload["skill_id"]
+
+    response = client.post("/api/v1/learner-state", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "skill_id"]
+
+
+def test_latest_state_is_stored_per_skill(client: TestClient) -> None:
+    learner_id = create_learner(client)
+    first = learner_state_payload(learner_id, 1)
+    second = learner_state_payload(learner_id, 2)
+    second["skill_id"] = "LAN-CMP"
+
+    first_response = client.post("/api/v1/learner-state", json=first)
+    client.post("/api/v1/learner-state", json=second)
+
+    session = next(app.dependency_overrides[get_db]())
+    provider = StoredSupportNeedProvider(SqlAlchemyLearnerSkillStateRepository(session))
+
+    stored = provider.get_support_need(
+        SupportNeedRequest(learner_id=UUID(learner_id), skill_id="MAT-FRC")
+    )
+    other_skill = provider.get_support_need(
+        SupportNeedRequest(learner_id=UUID(learner_id), skill_id="LAN-CMP")
+    )
+    unseen_skill = provider.get_support_need(
+        SupportNeedRequest(learner_id=UUID(learner_id), skill_id="ENV-PLT")
+    )
+
+    confusion = first_response.json()["confusion"]
+    assert confusion["state"] != "uncertain"
+    assert stored.status is SupportNeedStatus.AVAILABLE
+    assert stored.support_need == confusion["temporal_score"]
+    assert other_skill.status is SupportNeedStatus.AVAILABLE
+    assert unseen_skill.status is SupportNeedStatus.NOT_FOUND

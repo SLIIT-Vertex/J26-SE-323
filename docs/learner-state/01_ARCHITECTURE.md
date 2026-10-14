@@ -21,8 +21,10 @@ backend/app/
 app.include_router(learner_state_router, prefix=settings.api_v1_prefix)  # "/api/v1"
 ```
 
-The module uses only the shared `learner_id` (UUID) concept. It does not import any other research
-module, and it currently owns no database tables.
+The module uses the shared learner identity (`learner_id`) and the shared learner service to check
+that a learner exists. It does not import any other research module. It owns one database table,
+`learner_skill_states` (see §6), linked to `learners.id`. It does not add anything to the shared
+`learners` table, as required by `docs/architecture.md`.
 
 ## 2. Clean Architecture layers
 
@@ -59,6 +61,7 @@ sequenceDiagram
 
     C->>R: POST /api/v1/learner-state
     R->>R: Pydantic validation (422 on failure)
+    R->>R: check learner exists (404 on failure)
     R->>S: evaluate(LearnerStateWindow)
     S->>S: lock, get session state, check window_id order (409 on failure)
     S->>FB: build confusion + disengagement behaviour features
@@ -69,13 +72,16 @@ sequenceDiagram
     Note over D: threshold-centred evidence<br/>-> reliability-aware fusion<br/>-> temporal decision
     S->>S: choose recommended_action, update history
     S-->>R: LearnerStateEvaluation
+    R->>R: save latest state for (learner_id, skill_id)
     R-->>C: LearnerStateResponse (200)
 ```
 
 Step by step:
 
-1. **API request** — `router.py` receives `LearnerStateRequest` and builds a `LearnerStateWindow`
-   containing a `VisualObservation` and a `BehaviorObservation`.
+1. **API request** — `router.py` receives `LearnerStateRequest`, checks through the shared learner
+   service that `learner_id` exists, and builds a `LearnerStateWindow` containing a
+   `VisualObservation` and a `BehaviorObservation`. The learner check happens before evaluation, so
+   an unknown learner never changes session history.
 2. **Feature construction** — the service passes visual features unchanged; it builds 10 confusion
    behaviour features and 20 disengagement behaviour features (the latter using the session's
    behaviour history).
@@ -88,7 +94,10 @@ Step by step:
    previous windows and chooses a state and support need.
 7. **Support recommendation** — `_choose_recommended_action` merges both support needs into one
    action.
-8. **API response** — the router maps the result into `LearnerStateResponse`.
+8. **Skill-state storage** — the router saves the latest result for (`learner_id`, `skill_id`) in
+   `learner_skill_states`, including the tutor-facing support need (see
+   [`09_TUTOR_HANDOFF.md`](09_TUTOR_HANDOFF.md)).
+9. **API response** — the router maps the result into `LearnerStateResponse`.
 
 ## 4. The unified `LearnerStateService`
 
@@ -131,19 +140,40 @@ of its own learner baseline.
 
 Important consequences (see also [`07_EVALUATION_AND_LIMITATIONS.md`](07_EVALUATION_AND_LIMITATIONS.md)):
 
-- All history is lost when the backend restarts.
+- All temporal history is lost when the backend restarts. (The latest result per skill is stored
+  in the database, but the windows needed for the next temporal decision are not.)
 - If the backend runs with several worker processes, each worker has its own separate history.
 - The service docstring notes that a persistent store can replace the dictionary later without
   changing domain logic.
 
-## 6. Error handling summary
+## 6. Stored skill state (database)
+
+`learner_skill_states` keeps **one row per (`learner_id`, `skill_id`)**, overwritten by each new
+window for that skill. It is defined in `infrastructure/db/models.py`, created by the Alembic
+migration `20261014_01`, and accessed through `SqlAlchemyLearnerSkillStateRepository`.
+
+| Column | Meaning |
+| --- | --- |
+| `learner_id`, `skill_id` | Primary key; `learner_id` references `learners.id`. `skill_id` is a label sent by the client, with no foreign key to another module. |
+| `session_id`, `window_id`, `observed_at` | Which window produced this row; `observed_at` is the request `timestamp` |
+| `confusion_state`, `confusion_support_need`, `confusion_temporal_score` | Confusion result |
+| `disengagement_state`, `disengagement_support_need` | Disengagement result |
+| `recommended_action` | Combined action |
+| `support_need` | Tutor-facing 0–1 value; `NULL` while confusion is `uncertain` |
+| `updated_at` | Set by the database |
+
+Only the latest result is stored, not a history of windows. The application layer depends on the
+`LearnerSkillStateRepository` protocol, not on SQLAlchemy.
+
+## 7. Error handling summary
 
 | Situation | Where | Result |
 | --- | --- | --- |
 | Request body fails Pydantic validation | FastAPI | HTTP 422 |
+| `learner_id` does not exist in the shared learners table | router, via `LearnerService.get` | HTTP 404 |
 | `window_id` not greater than the last accepted one for this session | `_validate_window_order` raises `ValueError` | HTTP 409 |
 
-HTTP 422 and HTTP 409 are the documented error responses of the endpoint. Separately, model
+HTTP 422, HTTP 404 and HTTP 409 are the documented error responses of the endpoint. Separately, model
 loading raises `FileNotFoundError` for a missing model file and `RuntimeError` for a feature-order
 mismatch. The router does not map these exceptions to a response; like any unexpected unhandled
 server error, they may result in HTTP 500, which is not part of the API contract.
