@@ -28,8 +28,16 @@ VERSIONS = Path(__file__).parents[2] / "alembic" / "versions"
 MIGRATIONS = [
     VERSIONS / "20261013_01_create_knowledge_tracing_tables.py",
     VERSIONS / "20261014_02_add_attempt_idempotency_key.py",
+    VERSIONS / "20261015_01_create_mastery_snapshots.py",
 ]
-KT_TABLES = {"skills", "questions", "question_variants", "question_parts", "attempts"}
+KT_TABLES = {
+    "skills",
+    "questions",
+    "question_variants",
+    "question_parts",
+    "attempts",
+    "mastery_snapshots",
+}
 
 
 def _sqlite_engine() -> Engine:
