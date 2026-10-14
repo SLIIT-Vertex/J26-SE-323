@@ -166,6 +166,26 @@ class AttemptModel(Base):
     penalty: Mapped[float] = mapped_column(Float)  # computed by the backend
     answered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     paper_item_id: Mapped[UUID | None] = mapped_column(Uuid)  # set for paper attempts
+    # Lets a repeated request return the same attempt instead of creating a duplicate.
+    idempotency_key: Mapped[str | None] = mapped_column(String(100), unique=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class MasterySnapshotModel(Base):
+    """One computed mastery vector for a learner. Snapshots are append-only history."""
+
+    __tablename__ = "mastery_snapshots"
+    __table_args__ = (
+        CheckConstraint("n_attempts >= 0", name="ck_mastery_snapshots_n_attempts"),
+        Index("ix_mastery_snapshots_latest", "learner_id", "computed_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigIntType, primary_key=True, autoincrement=True)
+    learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"))
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    model_version: Mapped[str] = mapped_column(String(40))
+    n_attempts: Mapped[int] = mapped_column(Integer)  # the learner's total attempts at that time
+    # [{"code": "MAT-FRC", "mastery": 0.62, "attempts": 14}, ...] in model skill order
+    skills: Mapped[list[dict]] = mapped_column(JsonType)
