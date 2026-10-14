@@ -8,8 +8,8 @@ from sqlalchemy.dialects import postgresql
 from alembic import op
 
 revision: str = "20261013_02"
-down_revision: str | None = "20261013_01"
-branch_labels: str | Sequence[str] | None = None
+down_revision: str | None = "20261007_01"
+branch_labels: str | Sequence[str] | None = ("gamification",)
 depends_on: str | Sequence[str] | None = None
 
 json_type = sa.JSON().with_variant(postgresql.JSONB(), "postgresql")
@@ -59,8 +59,7 @@ def upgrade() -> None:
         sa.Column("learner_id", sa.Uuid(), nullable=False),
         sa.Column("item_id", sa.String(length=128), nullable=False),
         sa.Column("item_version", sa.String(length=128), nullable=False),
-        sa.Column("canonical_question_id", sa.String(length=16), nullable=True),
-        sa.Column("skill_code", sa.String(length=16), nullable=False),
+        sa.Column("skill_code", sa.String(length=128), nullable=False),
         sa.Column("skill_taxonomy_version", sa.String(length=128), nullable=False),
         sa.Column("attempt_no", sa.Integer(), nullable=False),
         sa.Column("phase", sa.String(length=20), nullable=False),
@@ -71,7 +70,6 @@ def upgrade() -> None:
         sa.Column("response_time_ms", sa.Integer(), nullable=True),
         sa.Column("active_time_ms", sa.Integer(), nullable=True),
         sa.Column("hint_count", sa.Integer(), server_default=sa.text("0"), nullable=False),
-        sa.Column("knowledge_tracing_attempt_id", sa.BigInteger(), nullable=True),
         sa.Column("idempotency_key", sa.String(length=128), nullable=False),
         sa.Column("submitted_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
@@ -94,17 +92,13 @@ def upgrade() -> None:
             name="ck_item_responses_active_time",
         ),
         sa.CheckConstraint("hint_count >= 0", name="ck_item_responses_hint_count"),
-        sa.ForeignKeyConstraint(["canonical_question_id"], ["questions.id"]),
         sa.ForeignKeyConstraint(
             ["session_id", "learner_id"],
             ["game_sessions.id", "game_sessions.learner_id"],
             name="fk_item_responses_session_learner",
         ),
         sa.ForeignKeyConstraint(["learner_id"], ["learners.id"]),
-        sa.ForeignKeyConstraint(["knowledge_tracing_attempt_id"], ["attempts.id"]),
-        sa.ForeignKeyConstraint(["skill_code"], ["skills.code"]),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("knowledge_tracing_attempt_id"),
         sa.UniqueConstraint("session_id", "idempotency_key", name="uq_item_responses_idempotency"),
         sa.UniqueConstraint(
             "session_id",
@@ -127,7 +121,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("session_id", sa.Uuid(), nullable=False),
         sa.Column("learner_id", sa.Uuid(), nullable=False),
-        sa.Column("skill_code", sa.String(length=16), nullable=False),
+        sa.Column("skill_code", sa.String(length=128), nullable=False),
         sa.Column("skill_taxonomy_version", sa.String(length=128), nullable=False),
         sa.Column("phase", sa.String(length=32), nullable=False),
         sa.Column("trigger_type", sa.String(length=40), nullable=False),
@@ -166,7 +160,6 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["learner_id"], ["learners.id"]),
         sa.ForeignKeyConstraint(["retention_response_id"], ["item_responses.id"]),
-        sa.ForeignKeyConstraint(["skill_code"], ["skills.code"]),
         sa.ForeignKeyConstraint(["verification_response_id"], ["item_responses.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -223,7 +216,7 @@ def upgrade() -> None:
         "feature_snapshots",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("learner_id", sa.Uuid(), nullable=False),
-        sa.Column("skill_code", sa.String(length=16), nullable=False),
+        sa.Column("skill_code", sa.String(length=128), nullable=False),
         sa.Column("captured_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("protocol_version", sa.String(length=128), nullable=False),
         sa.Column("taxonomy_version", sa.String(length=128), nullable=False),
@@ -234,7 +227,6 @@ def upgrade() -> None:
         sa.Column("source_as_of_json", json_type, nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(["learner_id"], ["learners.id"]),
-        sa.ForeignKeyConstraint(["skill_code"], ["skills.code"]),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
@@ -420,7 +412,7 @@ def upgrade() -> None:
         sa.Column("baseline_item_version", sa.String(length=128), nullable=False),
         sa.Column("verification_item_id", sa.String(length=128), nullable=False),
         sa.Column("verification_item_version", sa.String(length=128), nullable=False),
-        sa.Column("skill_code", sa.String(length=16), nullable=False),
+        sa.Column("skill_code", sa.String(length=128), nullable=False),
         sa.Column("equivalence_version", sa.String(length=128), nullable=False),
         sa.Column("difficulty_delta", sa.Float(), nullable=False),
         sa.Column("surface_similarity", sa.Float(), nullable=False),
@@ -448,7 +440,6 @@ def upgrade() -> None:
             name="ck_verification_pairs_review_metadata",
         ),
         sa.ForeignKeyConstraint(["episode_id"], ["adaptive_episodes.id"]),
-        sa.ForeignKeyConstraint(["skill_code"], ["skills.code"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("episode_id", name="uq_verification_pairs_episode"),
     )

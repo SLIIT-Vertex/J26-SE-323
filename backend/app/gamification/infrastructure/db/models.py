@@ -113,8 +113,7 @@ class ItemResponseModel(Base):
     learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"), nullable=False)
     item_id: Mapped[str] = mapped_column(String(128), nullable=False)
     item_version: Mapped[str] = mapped_column(String(128), nullable=False)
-    canonical_question_id: Mapped[str | None] = mapped_column(ForeignKey("questions.id"))
-    skill_code: Mapped[str] = mapped_column(ForeignKey("skills.code"), nullable=False)
+    skill_code: Mapped[str] = mapped_column(String(128), nullable=False)
     skill_taxonomy_version: Mapped[str] = mapped_column(String(128), nullable=False)
     attempt_no: Mapped[int] = mapped_column(Integer, nullable=False)
     phase: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -126,9 +125,6 @@ class ItemResponseModel(Base):
     active_time_ms: Mapped[int | None] = mapped_column(Integer)
     hint_count: Mapped[int] = mapped_column(
         Integer, server_default=text("0"), nullable=False
-    )
-    knowledge_tracing_attempt_id: Mapped[int | None] = mapped_column(
-        ForeignKey("attempts.id"), unique=True
     )
     idempotency_key: Mapped[str] = mapped_column(String(128), nullable=False)
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -168,7 +164,7 @@ class AdaptiveEpisodeModel(Base):
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     session_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"), nullable=False)
-    skill_code: Mapped[str] = mapped_column(ForeignKey("skills.code"), nullable=False)
+    skill_code: Mapped[str] = mapped_column(String(128), nullable=False)
     skill_taxonomy_version: Mapped[str] = mapped_column(String(128), nullable=False)
     phase: Mapped[str] = mapped_column(String(32), nullable=False)
     trigger_type: Mapped[str] = mapped_column(String(40), nullable=False)
@@ -233,7 +229,7 @@ class FeatureSnapshotModel(Base):
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"), nullable=False)
-    skill_code: Mapped[str] = mapped_column(ForeignKey("skills.code"), nullable=False)
+    skill_code: Mapped[str] = mapped_column(String(128), nullable=False)
     captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     protocol_version: Mapped[str] = mapped_column(String(128), nullable=False)
     taxonomy_version: Mapped[str] = mapped_column(String(128), nullable=False)
@@ -443,7 +439,7 @@ class VerificationPairModel(Base):
     baseline_item_version: Mapped[str] = mapped_column(String(128), nullable=False)
     verification_item_id: Mapped[str] = mapped_column(String(128), nullable=False)
     verification_item_version: Mapped[str] = mapped_column(String(128), nullable=False)
-    skill_code: Mapped[str] = mapped_column(ForeignKey("skills.code"), nullable=False)
+    skill_code: Mapped[str] = mapped_column(String(128), nullable=False)
     equivalence_version: Mapped[str] = mapped_column(String(128), nullable=False)
     difficulty_delta: Mapped[float] = mapped_column(Float, nullable=False)
     surface_similarity: Mapped[float] = mapped_column(Float, nullable=False)

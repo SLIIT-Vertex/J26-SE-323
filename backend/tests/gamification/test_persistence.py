@@ -6,6 +6,7 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, event, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.engine import Engine
@@ -362,20 +363,13 @@ def test_policy_store_and_episode_reconstruction_use_frozen_evidence(db: Session
     assert bundle.outcome.raw_independence_gain == 1.0
 
 
-def test_phase3_migration_upgrades_previous_head_downgrades_and_reupgrades(
+def test_phase3_migration_upgrades_shared_learner_head_downgrades_and_reupgrades(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     database_path = tmp_path / "migration-cycle.sqlite"
     database_url = f"sqlite:///{database_path}"
     engine = sqlite_engine(database_url)
-    previous_table_names = (
-        "learners",
-        "skills",
-        "questions",
-        "question_variants",
-        "question_parts",
-        "attempts",
-    )
+    previous_table_names = ("learners",)
     Base.metadata.create_all(
         engine, tables=[Base.metadata.tables[name] for name in previous_table_names]
     )
@@ -385,22 +379,36 @@ def test_phase3_migration_upgrades_previous_head_downgrades_and_reupgrades(
     get_settings.cache_clear()
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
-    command.stamp(config, "20261013_01")
-    command.upgrade(config, "head")
+    command.stamp(config, "20261007_01")
+    command.upgrade(config, "gamification@head")
     migrated_engine = sqlite_engine(database_url)
     assert PHASE3_TABLES <= set(inspect(migrated_engine).get_table_names())
     migrated_engine.dispose()
 
-    command.downgrade(config, "20261013_01")
+    command.downgrade(config, "20261007_01")
     downgraded_engine = sqlite_engine(database_url)
     assert PHASE3_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
     downgraded_engine.dispose()
 
-    command.upgrade(config, "head")
+    command.upgrade(config, "gamification@head")
     reupgraded_engine = sqlite_engine(database_url)
     assert PHASE3_TABLES <= set(inspect(reupgraded_engine).get_table_names())
     reupgraded_engine.dispose()
     get_settings.cache_clear()
+
+
+def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
+    config = Config(str(BACKEND_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
+    script = ScriptDirectory.from_config(config)
+
+    (gamification_head,) = script.get_revisions("gamification@head")
+    assert gamification_head.revision == "20261013_02"
+    assert gamification_head.down_revision == "20261007_01"
+    assert gamification_head.revision in script.get_heads()
+    for head in set(script.get_heads()) - {gamification_head.revision}:
+        ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}
+        assert gamification_head.revision not in ancestors
 
 
 def test_indexed_history_query_returns_expected_session(db: Session) -> None:
