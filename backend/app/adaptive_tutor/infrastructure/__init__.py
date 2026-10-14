@@ -1,4 +1,3 @@
-"""Adaptive Tutor infrastructure layer."""
 """Adaptive Tutor infrastructure adapters."""
 
 from app.adaptive_tutor.infrastructure.embeddings import (
@@ -18,6 +17,10 @@ from app.adaptive_tutor.infrastructure.skill_mapper_resources import (
     SkillRetrievalEnrichment,
 )
 from app.adaptive_tutor.infrastructure.skill_taxonomy import XlsxSkillTaxonomyCatalog
+from app.adaptive_tutor.infrastructure.synthetic_context import (
+    SyntheticFixtureMode,
+    SyntheticTutorContextFixture,
+)
 
 __all__ = [
     "DEFAULT_E5_MODEL",
@@ -29,6 +32,8 @@ __all__ = [
     "JsonSkillTaxonomyEnrichmentCatalog",
     "SentenceTransformerE5EmbeddingModel",
     "SkillRetrievalEnrichment",
+    "SyntheticFixtureMode",
+    "SyntheticTutorContextFixture",
     "XlsxSkillTaxonomyCatalog",
     "select_tutor_llm_provider",
 ]
