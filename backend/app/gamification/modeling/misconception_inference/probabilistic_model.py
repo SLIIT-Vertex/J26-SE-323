@@ -6,6 +6,7 @@ from app.gamification.modeling.misconception_inference.contracts import (
     MISCONCEPTION_MODEL_VERSION,
     UNKNOWN_CODE,
 )
+from app.gamification.modeling.shared.artifact_registry import ModelArtifactBundle
 from app.gamification.modeling.shared.contracts import MisconceptionDistribution
 
 
@@ -29,12 +30,18 @@ class ProbabilisticMisconceptionModel:
         self.error_likelihoods = {
             error: dict(weights) for error, weights in error_likelihoods.items()
         }
-        self.class_priors = {
-            code: class_priors.get(code, 0.05) for code in sorted(classes)
-        }
+        self.class_priors = {code: class_priors.get(code, 0.05) for code in sorted(classes)}
         self.abstain_threshold = abstain_threshold
 
     def predict(self, snapshot: FeatureSnapshotRecord) -> MisconceptionDistribution:
+        if snapshot.values.get("misconception_catalogue_version") != self.catalogue_version:
+            return build_distribution(
+                {UNKNOWN_CODE: 1.0},
+                model_version=MISCONCEPTION_MODEL_VERSION,
+                catalogue_version=self.catalogue_version,
+                abstain_threshold=self.abstain_threshold,
+                reasons=("CATALOGUE_VERSION_MISMATCH",),
+            )
         error_code = str(snapshot.values.get("structured_error_code") or "")
         likelihoods = self.error_likelihoods.get(error_code, {})
         logits = {
@@ -54,6 +61,35 @@ class ProbabilisticMisconceptionModel:
             reasons=reasons,
         )
 
+    def to_parameters(self) -> dict[str, object]:
+        return {
+            "candidate": "log_linear",
+            "catalogue_version": self.catalogue_version,
+            "error_likelihoods": self.error_likelihoods,
+            "class_priors": self.class_priors,
+            "abstain_threshold": self.abstain_threshold,
+        }
+
+    @classmethod
+    def from_artifact(cls, artifact: ModelArtifactBundle) -> "ProbabilisticMisconceptionModel":
+        artifact.verify()
+        parameters = artifact.parameters
+        if parameters.get("candidate") not in (None, "log_linear"):
+            raise ValueError("artifact is not a log-linear misconception candidate")
+        catalogue_version = parameters.get("catalogue_version")
+        error_likelihoods = parameters.get("error_likelihoods")
+        class_priors = parameters.get("class_priors")
+        if not isinstance(catalogue_version, str) or not isinstance(class_priors, Mapping):
+            raise ValueError("log-linear artifact requires a catalogue version and class priors")
+        if not isinstance(error_likelihoods, Mapping):
+            raise ValueError("log-linear artifact requires error likelihoods")
+        return cls(
+            catalogue_version=catalogue_version,
+            error_likelihoods=error_likelihoods,
+            class_priors={str(code): float(value) for code, value in class_priors.items()},
+            abstain_threshold=float(parameters.get("abstain_threshold", 0.6)),
+        )
+
 
 def build_distribution(
     probabilities: Mapping[str, float],
@@ -67,9 +103,10 @@ def build_distribution(
 
     normalized = dict(probabilities)
     confidence = max(normalized.values())
-    abstained = confidence < abstain_threshold or max(
-        normalized, key=normalized.__getitem__
-    ) == UNKNOWN_CODE
+    abstained = (
+        confidence < abstain_threshold
+        or max(normalized, key=normalized.__getitem__) == UNKNOWN_CODE
+    )
     if abstained:
         reasons += ("ABSTAIN_LOW_CONFIDENCE",)
     entropy = -sum(value * math.log(value) for value in normalized.values() if value > 0)

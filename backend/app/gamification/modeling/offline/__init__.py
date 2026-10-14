@@ -6,6 +6,7 @@ from app.gamification.modeling.misconception_inference.evaluation import (
 )
 from app.gamification.modeling.misconception_inference.training import (
     train_frequency_candidate,
+    train_likelihood_tables,
 )
 from app.gamification.modeling.offline.dataset_manifest import DatasetManifest, DatasetRow
 from app.gamification.modeling.shared.artifact_registry import (
@@ -61,6 +62,7 @@ def load_synthetic_expert_review_rows() -> list[DatasetRow]:
 
     return load_synthetic_expert_review_rows()
 
+
 __all__ = [
     "DEFAULT_PROTOTYPE_STATUS",
     "ApprovalGatedArtifactRegistry",
@@ -77,4 +79,5 @@ __all__ = [
     "load_synthetic_expert_review_rows",
     "load_synthetic_expert_review_simulation",
     "train_frequency_candidate",
+    "train_likelihood_tables",
 ]
