@@ -107,6 +107,20 @@ class ConfusionResult(BaseModel):
         le=1.0,
     )
 
+    temporal_score: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    average_confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    persistent_count: int = Field(
+        ge=0,
+    )
+
     state: Literal[
         "no_confusion",
         "transient_confusion",
@@ -152,6 +166,20 @@ class DisengagementResult(BaseModel):
     confidence: float = Field(
         ge=0.0,
         le=1.0,
+    )
+
+    temporal_score: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    average_confidence: float = Field(
+        ge=0.0,
+        le=1.0,
+    )
+
+    persistent_count: int = Field(
+        ge=0,
     )
 
     state: Literal[

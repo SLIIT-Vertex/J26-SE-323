@@ -23,8 +23,9 @@ class ConfusionResult:
     fusion_confidence: float
 
     temporal_score: float
+    average_confidence: float
     persistent_count: int
-    recent_progress: float | None
+    progress_gain: float | None
 
     state: str
     support_need: str
@@ -47,6 +48,7 @@ def evaluate_confusion_window(
     intervention_threshold: float = 0.60,
     min_persistent_windows: int = 2,
     min_confidence: float = 0.50,
+    min_progress_gain: float = 0.05,
 ) -> ConfusionResult:
     """
     Evaluate confusion for one learner-state window.
@@ -102,6 +104,7 @@ def evaluate_confusion_window(
         intervention_threshold=intervention_threshold,
         min_persistent_windows=min_persistent_windows,
         min_confidence=min_confidence,
+        min_progress_gain=min_progress_gain,
     )
 
     # 5. Return one final domain result
@@ -114,8 +117,9 @@ def evaluate_confusion_window(
         modality_disagreement=fusion.disagreement,
         fusion_confidence=fusion.fusion_confidence,
         temporal_score=temporal.temporal_score,
+        average_confidence=temporal.avg_confidence,
         persistent_count=temporal.persistent_count,
-        recent_progress=temporal.recent_progress,
+        progress_gain=temporal.progress_gain,
         state=temporal.state,
         support_need=temporal.support_need,
     )

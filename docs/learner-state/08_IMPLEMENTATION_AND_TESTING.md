@@ -14,6 +14,7 @@ one depended on it. The order follows the repository history.
 | 5 | `feat: add learner state model inference (#8)` | Trained model files, feature builder, model loader with feature-order validation, reliability calculation; `xgboost` dependency | `infrastructure/models/*.json`, `infrastructure/feature_builder.py`, `infrastructure/model_loader.py`, `infrastructure/reliability.py`, `backend/pyproject.toml` |
 | 6 | `feat: add unified learner state service` | Unified service with in-memory session history and action priority | `application/service.py` |
 | 7 | `feat: expose learner state API` | Router, final schemas, registration in `main.py`, API test | `api/router.py`, `api/schemas.py`, `backend/app/main.py`, `backend/tests/test_learner_state.py` |
+| 8 | `feat: refine productive confusion and expose temporal decision values` | Progress-gain rule for productive confusion; `temporal_score`, `average_confidence` and `persistent_count` in the response; unit and service tests | `domain/temporal.py`, `domain/confusion.py`, `domain/disengagement.py`, `application/service.py`, `api/`, `backend/tests/learner_state/` |
 
 ## 2. How the modules interact
 
@@ -60,42 +61,33 @@ flowchart LR
 
 ### 3.1 Learner-state tests
 
-`backend/tests/test_learner_state.py` contains one end-to-end API test,
-`test_evaluate_learner_state_and_reject_duplicate_window`. Through FastAPI's `TestClient` and the
-real model files it checks that:
+Learner-state tests live in two places:
 
-1. a valid window returns HTTP 200;
-2. `session_id`, `learner_id` and `window_id` are echoed back;
-3. `confusion` and `disengagement` both contain `visual_probability`, `behavior_probability`,
-   `fused_evidence` and `confidence`;
-4. `recommended_action` is one of the five allowed values;
-5. sending the same `window_id` again returns HTTP 409 with
-   `{"detail": "window_id must increase within a learner session"}`.
+| File | Type | What it checks |
+| --- | --- | --- |
+| `tests/learner_state/test_fusion.py` | Unit | Threshold-centred evidence (0, threshold, 1, clipping, invalid thresholds); reliability weights; one unreliable modality; both reliabilities 0; agreement; conflict penalty; the documented worked example |
+| `tests/learner_state/test_reliability.py` | Unit | Visual reliability for normal pose, extreme pose, linear decrease between quantiles and hidden face; behavioural data-quality penalties and history factor |
+| `tests/learner_state/test_feature_builder.py` | Unit | Feature order matches each model; `bottom_hint_missing`; no baseline below 5 windows; deviation values; only the last 20 windows used; negative response time |
+| `tests/learner_state/test_temporal.py` | Unit | Every confusion and disengagement state; low-confidence windows not counted as persistent; progress-gain rule (rising, stuck, falling, unknown, configurable); confidence-weighted summary; history validation |
+| `tests/learner_state/test_learner_state_service.py` | Service | Action priority (every combination order); persistent disengagement; re-engagement before tutor support; productive vs intervention-worthy confusion; duplicate/older windows; rejected windows not changing history; session isolation; `clear_session` |
+| `tests/test_learner_state.py` | API | 200 response with all fields including the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field |
 
-Because the test runs the real service, it also covers model loading and the feature-order checks
-for all four models, feature construction, reliability, fusion and the temporal engine, at least
-for this input.
+The service tests use a small fake model object that returns fixed probabilities. This checks the
+decision logic independently of what the trained models output. The API tests use the real model
+files, so they also cover model loading and the feature-order checks.
 
-The test uses a random `learner_id` (`uuid4()`), so it does not clash with history left in the
+The API tests use a random `learner_id` (`uuid4()`), so they do not clash with history left in the
 cached service by other tests.
 
 ### 3.2 Current coverage gaps
 
-The following are **not** yet covered by dedicated tests and are good next additions:
-
-- unit tests for `threshold_centered_evidence` (0, threshold, 1, invalid threshold);
-- unit tests for `reliability_aware_fusion` (zero reliabilities, one modality unreliable,
-  strong conflict);
-- unit tests for each temporal state in both detectors, including `productive_confusion` vs
-  `intervention_worthy_confusion`;
-- tests for `calculate_visual_reliability` and `calculate_behavior_reliability` edge cases;
-- tests for learner-history features before and after `MIN_BASELINE_HISTORY`;
-- a multi-window API test that reaches a persistent state and checks the action priority;
-- 422 validation tests for out-of-range fields.
+- No test checks model outputs against expected values, because no reference outputs from the
+  training environment are stored in the repository.
+- Concurrent requests to the same session (the service lock) are not tested.
 
 ### 3.3 Full repository suite
 
-As of 2026-10-13, the repository test suite reports 72 passed.
+As of 2026-10-14, the repository test suite reports 146 passed.
 
 Rerun `pytest` (see §4.3) to get the current result, because the count can change as the
 repository evolves.

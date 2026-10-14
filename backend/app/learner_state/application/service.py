@@ -70,6 +70,9 @@ class SignalEvaluation:
     behavior_reliability: float
     fused_evidence: float
     confidence: float
+    temporal_score: float
+    average_confidence: float
+    persistent_count: int
     state: str
     support_need: str
 
@@ -346,6 +349,11 @@ class LearnerStateService:
                     confidence=(
                         confusion.fusion_confidence
                     ),
+                    temporal_score=confusion.temporal_score,
+                    average_confidence=(
+                        confusion.average_confidence
+                    ),
+                    persistent_count=confusion.persistent_count,
                     state=confusion.state,
                     support_need=confusion.support_need,
                 ),
@@ -368,6 +376,11 @@ class LearnerStateService:
                     confidence=(
                         disengagement.fusion_confidence
                     ),
+                    temporal_score=disengagement.temporal_score,
+                    average_confidence=(
+                        disengagement.average_confidence
+                    ),
+                    persistent_count=disengagement.persistent_count,
                     state=disengagement.state,
                     support_need=(
                         disengagement.support_need

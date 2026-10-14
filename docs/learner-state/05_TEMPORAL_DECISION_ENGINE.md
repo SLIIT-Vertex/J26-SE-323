@@ -53,7 +53,7 @@ persistent_count = number of windows with e_i ≥ 0.50 AND c_i ≥ 0.50
 | `min_persistent_windows` | 2 | Minimum `persistent_count` for a persistent state |
 | `min_confidence` | 0.50 | Minimum confidence for a window to count as persistent |
 | uncertainty cut-off | 0.40 (fixed in code) | `avg_confidence` below this → `uncertain` |
-| productive-progress cut-off | 0.50 (fixed in code) | Mean `task_progress` at or above this → productive confusion |
+| `min_progress_gain` | 0.05 (provisional) | Minimum increase in `task_progress` across the recent windows for persistent confusion to count as productive |
 
 ## 3. Confusion states
 
@@ -64,14 +64,27 @@ confusion evidence.
 | --- | --- | --- | --- |
 | 1 | `avg_confidence < 0.40` | `uncertain` | `collect_more_evidence` |
 | 2 | `current < 0.50` and `temporal_score ≥ 0.50` | `recovering_from_confusion` | `monitor` |
-| 3 | `current ≥ 0.50` and `temporal_score ≥ 0.60` and `persistent_count ≥ 2`, **and** recent progress ≥ 0.50 | `productive_confusion` | `monitor` |
-| 4 | same as 3, but recent progress < 0.50 or unknown | `intervention_worthy_confusion` | `request_tutor_support` |
+| 3 | `current ≥ 0.50` and `temporal_score ≥ 0.60` and `persistent_count ≥ 2`, **and** progress gain ≥ 0.05 | `productive_confusion` | `monitor` |
+| 4 | same as 3, but progress gain < 0.05 or unknown | `intervention_worthy_confusion` | `request_tutor_support` |
 | 5 | `current ≥ 0.50` | `transient_confusion` | `monitor` |
 | 6 | otherwise | `no_confusion` | `none` |
 
-**Recent progress** is the mean of the non-null `task_progress` values over the same recent
-windows. If all are null, progress is unknown and persistent confusion is treated as
-intervention-worthy.
+**Progress gain** asks whether the learner is still moving forward on the task. It is the
+newest known `task_progress` value minus the oldest known value within the same recent windows
+(`null` values are skipped). At least two known values are needed; otherwise progress is unknown
+and persistent confusion is treated as intervention-worthy.
+
+| Recent `task_progress` | Progress gain | Persistent confusion becomes |
+| --- | --- | --- |
+| 0.30 → 0.32 → 0.35 | 0.05 | `productive_confusion` |
+| 0.60 → 0.60 → 0.60 | 0.00 (stuck) | `intervention_worthy_confusion` |
+| 0.60 → 0.50 → 0.40 | −0.20 | `intervention_worthy_confusion` |
+| `null` → `null` → 0.90 | unknown | `intervention_worthy_confusion` |
+
+The gain is used rather than the progress level because a learner who is stuck at 60% of a task is
+not making progress, while a learner moving quickly from 10% to 40% is. The 0.05 minimum
+(`min_progress_gain` in `domain/temporal.py`) is a provisional design value that still has to be
+calibrated on synchronized pilot data.
 
 Meaning of each state:
 
@@ -95,7 +108,7 @@ flowchart TD
     U -- no --> R{current < 0.50 and<br/>temporal_score ≥ 0.50?}
     R -- yes --> RC[recovering_from_confusion<br/>monitor]
     R -- no --> P{current ≥ 0.50 and<br/>temporal_score ≥ 0.60 and<br/>persistent_count ≥ 2?}
-    P -- yes --> G{recent progress ≥ 0.50?}
+    P -- yes --> G{progress gain ≥ 0.05?}
     G -- yes --> PR[productive_confusion<br/>monitor]
     G -- no / unknown --> IW[intervention_worthy_confusion<br/>request_tutor_support]
     P -- no --> T{current ≥ 0.50?}
