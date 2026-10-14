@@ -130,9 +130,11 @@ Only derived states and scores are stored; no visual features, behaviour feature
 ## 6. Limitations
 
 - **Provisional mapping.** Neither the choice of `temporal_score` nor its scale is validated.
-- **Confusion evidence depends mostly on the visual model.** With the current model artifacts, the
-  confusion behaviour model rarely reaches its 0.79 threshold, so the value inherits that
-  limitation.
+- **Conservative when the models disagree.** When only the visual model indicates confusion and
+  the behaviour model does not, the value usually stays below 0.60 (see
+  [`07`](07_EVALUATION_AND_LIMITATIONS.md#42-fusion-and-temporal-design)).
+- **Weak underlying models.** The confusion visual model is close to chance on its test set
+  (ROC-AUC 0.58); see [`07`](07_EVALUATION_AND_LIMITATIONS.md#2-unimodal-model-results-level-b).
 - **Skill switches inside a session.** The temporal history is kept per session, not per skill. If
   a learner moves to a new skill, the first windows of the new skill still include up to two
   windows from the previous skill.

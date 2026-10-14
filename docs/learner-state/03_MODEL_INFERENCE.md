@@ -108,9 +108,11 @@ Without this step, a behaviour probability of 0.70 (below its 0.79 threshold) wo
 stronger confusion evidence than a visual probability of 0.55 (above its 0.50 threshold), which
 would be wrong.
 
-## 6. What this document does not claim
+## 6. Training notebooks and results
 
-The repository does not contain training scripts, evaluation reports or metric files for these
-models. This document therefore makes no claim about their accuracy. See
-[`07_EVALUATION_AND_LIMITATIONS.md`](07_EVALUATION_AND_LIMITATIONS.md) for how evaluation results
-should be reported.
+The Kaggle notebooks that trained these models, with their saved outputs, are in
+`research/learner-state/notebooks/`. They show how each label was defined, how each threshold was
+selected on the validation split, and the test results, which are summarised in
+[`07_EVALUATION_AND_LIMITATIONS.md`](07_EVALUATION_AND_LIMITATIONS.md#2-unimodal-model-results-level-b).
+They are unimodal results on public datasets with proxy labels, not results for MindBridge
+learners.

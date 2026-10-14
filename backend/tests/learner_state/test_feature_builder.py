@@ -4,6 +4,7 @@ from math import log
 import pytest
 
 from app.learner_state.infrastructure.feature_builder import (
+    BOTTOM_HINT_TRAIN_MEDIAN,
     HISTORY_WINDOW,
     MIN_BASELINE_HISTORY,
     BehaviorObservation,
@@ -54,8 +55,15 @@ def test_missing_bottom_hint_is_flagged() -> None:
 
     missing = build_confusion_behavior_features(observation(bottom_hint=None))
 
-    assert missing["bottom_hint"] is None
+    assert missing["bottom_hint"] == BOTTOM_HINT_TRAIN_MEDIAN
     assert missing["bottom_hint_missing"] == 1.0
+
+
+def test_missing_bottom_hint_is_filled_for_disengagement_too() -> None:
+    features = build_disengagement_behavior_features(observation(bottom_hint=None), [])
+
+    assert features["bottom_hint"] == BOTTOM_HINT_TRAIN_MEDIAN
+    assert features["bottom_hint_missing"] == 1.0
 
 
 def test_disengagement_features_match_model_feature_order() -> None:

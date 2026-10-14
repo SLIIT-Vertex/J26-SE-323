@@ -104,10 +104,10 @@ def test_conflict_between_reliable_modalities_reduces_confidence() -> None:
 def test_repository_example_matches_documented_values() -> None:
     result = reliability_aware_fusion(
         visual_evidence=threshold_centered_evidence(0.5223562717437744, 0.50),
-        behavior_evidence=threshold_centered_evidence(0.19043080508708954, 0.79),
+        behavior_evidence=threshold_centered_evidence(0.1293432116508484, 0.79),
         visual_reliability=0.95,
-        behavior_reliability=0.63,
+        behavior_reliability=0.90,
     )
 
-    assert result.fused_evidence == pytest.approx(0.3621, abs=1e-4)
-    assert result.fusion_confidence == pytest.approx(0.6142, abs=1e-4)
+    assert result.fused_evidence == pytest.approx(0.3081, abs=1e-4)
+    assert result.fusion_confidence == pytest.approx(0.5587, abs=1e-4)

@@ -13,8 +13,8 @@ The models were trained on two **independent** public datasets:
 | Visual | **DAiSEE** (webcam videos of students, labelled for affective states including confusion and boredom) | confusion visual model, disengagement visual model |
 | Behavioural | **ASSISTments** (logs from an online mathematics tutor) | confusion behaviour model, disengagement behaviour model |
 
-The training scripts and notebooks are not part of this repository; the repository contains only
-the trained model files and the runtime code.
+The Kaggle training notebooks are in `research/learner-state/notebooks/`. The datasets themselves
+are not stored in this repository.
 
 > **The two datasets are not synchronized.** DAiSEE videos and ASSISTments interaction logs come
 > from different learners, at different times, in different settings. No DAiSEE row was paired
@@ -70,8 +70,10 @@ Built by `build_confusion_behavior_features()` in `infrastructure/feature_builde
 | `original` | request | Behavioural model input field retained from the training data |
 | `bottom_hint_missing` | derived | `1.0` if `bottom_hint` is `null`, otherwise `0.0` |
 
-A `null` `bottom_hint` is passed to XGBoost as a missing value (`NaN`), which XGBoost handles
-natively. The extra `bottom_hint_missing` flag lets the model learn from missingness explicitly.
+A `null` `bottom_hint` is replaced by **0.0**, the training-split median used in the training
+notebooks, and `bottom_hint_missing` is set to 1. This matches exactly how the models were trained
+(`BOTTOM_HINT_TRAIN_MEDIAN` in `feature_builder.py`); the flag lets the model learn from
+missingness explicitly.
 
 The field names follow the ASSISTments column names used during training. This documentation does
 not assign a semantic meaning to `first_action`, `position` or `original`; they are passed to the
