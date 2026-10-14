@@ -189,6 +189,8 @@ class SupportExposureEvidence:
     completed_at: datetime | None
     duration_ms: int | None
     render_version: str
+    maximum_duration_ms: int | None = None
+    maximum_number_of_steps: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -200,6 +202,8 @@ class VerificationPairEvidence:
     verification_item_version: str
     equivalence_version: str
     review_status: str
+    unseen_verification_item: bool = True
+    answer_overlap: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)

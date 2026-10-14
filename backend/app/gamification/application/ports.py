@@ -17,6 +17,7 @@ from app.gamification.application.records import (
 )
 from app.gamification.domain.types import (
     FeatureSnapshotId,
+    ItemId,
     ModelId,
     PolicyDecisionId,
     SkillId,
@@ -31,6 +32,8 @@ class LearningRecordStore(Protocol):
     ) -> SkillMasteryEvidence | None: ...
 
     def record_attempt(self, attempt: GamificationAttempt) -> None: ...
+
+    def seen_item_ids(self, *, learner_id: UUID) -> tuple[ItemId, ...]: ...
 
 
 class LearnerStateGateway(Protocol):
@@ -78,4 +81,17 @@ class Clock(Protocol):
 
 class AuditOutput(Protocol):
     def write(self, event: AuditEvent) -> None: ...
+
+
+class UnitOfWork(Protocol):
+    """Transaction boundary. Adapters live in infrastructure; this protocol does not."""
+
+    learning_records: LearningRecordStore
+    audit: AuditOutput
+
+    def begin(self) -> None: ...
+
+    def commit(self) -> None: ...
+
+    def rollback(self) -> None: ...
 

@@ -168,6 +168,8 @@ class AdaptiveEpisodeModel(Base):
     skill_taxonomy_version: Mapped[str] = mapped_column(String(128), nullable=False)
     phase: Mapped[str] = mapped_column(String(32), nullable=False)
     trigger_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    trigger_reasons_json: Mapped[dict[str, object] | None] = mapped_column(JsonType)
+    baseline_template: Mapped[str | None] = mapped_column(String(40))
     baseline_response_id: Mapped[UUID | None] = mapped_column(ForeignKey("item_responses.id"))
     verification_response_id: Mapped[UUID | None] = mapped_column(ForeignKey("item_responses.id"))
     retention_response_id: Mapped[UUID | None] = mapped_column(ForeignKey("item_responses.id"))
@@ -385,7 +387,7 @@ class SupportExposureModel(Base):
     __table_args__ = (
         CheckConstraint(
             "delivery_status IN ('scheduled', 'presented', 'interacted', 'dismissed', "
-            "'completed', 'failed')",
+            "'completed', 'completed_over_budget', 'failed')",
             name="ck_support_exposures_status",
         ),
         CheckConstraint("duration_ms IS NULL OR duration_ms >= 0", name="ck_support_exposures_duration"),
@@ -404,8 +406,10 @@ class SupportExposureModel(Base):
     interaction_count: Mapped[int] = mapped_column(
         Integer, server_default=text("0"), nullable=False
     )
-    delivery_status: Mapped[str] = mapped_column(String(20), nullable=False)
+    delivery_status: Mapped[str] = mapped_column(String(40), nullable=False)
     render_version: Mapped[str] = mapped_column(String(128), nullable=False)
+    maximum_duration_ms: Mapped[int | None] = mapped_column(Integer)
+    maximum_number_of_steps: Mapped[int | None] = mapped_column(Integer)
 
 
 class VerificationPairModel(Base):

@@ -17,6 +17,7 @@ from app.gamification.application.records import (
 )
 from app.gamification.domain.types import (
     FeatureSnapshotId,
+    ItemId,
     ModelId,
     PolicyDecisionId,
     SkillId,
@@ -99,6 +100,13 @@ class InMemoryLearningRecordStore:
 
     def record_attempt(self, attempt: GamificationAttempt) -> None:
         self.recorded_attempts.append(attempt)
+
+    def seen_item_ids(self, *, learner_id: UUID) -> tuple[ItemId, ...]:
+        seen: list[ItemId] = []
+        for attempt in self.recorded_attempts:
+            if attempt.learner_id == learner_id and attempt.item_id not in seen:
+                seen.append(attempt.item_id)
+        return tuple(seen)
 
 
 class StubLearnerStateGateway:

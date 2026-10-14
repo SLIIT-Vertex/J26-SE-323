@@ -139,6 +139,7 @@ class SqlAlchemyPolicyDecisionStore:
                 decided_at=decision.decided_at,
             )
         )
+        self._session.flush()
         for rank, candidate in enumerate(decision.candidates, start=1):
             self._session.add(
                 SupportCandidateModel(
@@ -288,6 +289,8 @@ def reconstruct_episode_evidence(
                 completed_at=_aware(row.completed_at) if row.completed_at else None,
                 duration_ms=row.duration_ms,
                 render_version=row.render_version,
+                maximum_duration_ms=row.maximum_duration_ms,
+                maximum_number_of_steps=row.maximum_number_of_steps,
             )
             for row in exposure_rows
         )
@@ -304,6 +307,8 @@ def reconstruct_episode_evidence(
             verification_item_version=pair_row.verification_item_version,
             equivalence_version=pair_row.equivalence_version,
             review_status=pair_row.review_status,
+            unseen_verification_item=True,
+            answer_overlap=float(pair_row.answer_overlap),
         )
         if pair_row is not None
         else None
