@@ -1,10 +1,11 @@
 {
   "_comment": "REALISTIC SYNTHETIC FALLBACK ONLY. Curriculum item identifiers and prompts come from the canonical grade5-curriculum-game-dataset v2 package, but learner observations, reviewers, labels, support judgments, outcomes, and rewards are fictional. This file is not authorized research evidence and must not be used to claim expert agreement, calibration, feasibility, or educational effectiveness.",
-  "schema_version": "fake-expert-review-simulation-v2",
-  "dataset_id": "fake-expert-review-simulation-v2",
+  "schema_version": "synthetic-expert-review-simulation-v1",
+  "dataset_id": "synthetic-expert-review-simulation-v1",
   "synthetic": true,
   "expert_review_simulation": true,
   "authorized_research_evidence": false,
+  "learner_medium": "si",
   "intended_uses": [
     "local development of misconception-label workflows",
     "offline pipeline and manifest smoke tests",
@@ -34,7 +35,7 @@
   },
   "cases": [
     {
-      "case_id": "fake-case-mat-place-value-01",
+      "case_id": "synthetic-case-mat-place-value-01",
       "item_id": "G5-MAT-G01-I001",
       "game_id": "G5-MAT-G01",
       "subject": "MAT",
@@ -57,7 +58,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-mat-reviewer-a",
+          "reviewer_id": "synthetic-mat-reviewer-a",
           "expert_misconception_label": "place-value-position-ignored",
           "alternative_plausible_label": "unknown/other",
           "reason_for_label": "The response repeats the visible digit instead of applying its tens position.",
@@ -66,7 +67,7 @@
           "inappropriate_support_actions": ["full_explanation"]
         },
         {
-          "reviewer_id": "fake-mat-reviewer-b",
+          "reviewer_id": "synthetic-mat-reviewer-b",
           "expert_misconception_label": "place-value-position-ignored",
           "alternative_plausible_label": "place-value-counting-direction-error",
           "reason_for_label": "Selecting 1 rather than 10 is consistent with treating a digit as its face value.",
@@ -80,7 +81,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e01",
         "learner_id": "synthetic-expert-sim-l01",
-        "features": {"skill_id": "G5-MAT-C01-L01-O01", "item_id": "G5-MAT-G01-I001", "game_id": "G5-MAT-G01", "language": "bilingual", "current_score": 0.0, "response_time_ms": 18400, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "place-value-digit-value-confusion"},
+        "features": {"learner_medium": "si", "skill_id": "G5-MAT-C01-L01-O01", "item_id": "G5-MAT-G01-I001", "game_id": "G5-MAT-G01", "language": "bilingual", "current_score": 0.0, "response_time_ms": 18400, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "place-value-digit-value-confusion"},
         "action_id": "synthetic-guided-steps",
         "reward": 0.5,
         "propensity": 1.0,
@@ -89,7 +90,7 @@
       }
     },
     {
-      "case_id": "fake-case-mat-addition-01",
+      "case_id": "synthetic-case-mat-addition-01",
       "item_id": "G5-MAT-G03-I001",
       "game_id": "G5-MAT-G03",
       "subject": "MAT",
@@ -112,7 +113,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-mat-reviewer-a",
+          "reviewer_id": "synthetic-mat-reviewer-a",
           "expert_misconception_label": "addition-carry-not-composed",
           "alternative_plausible_label": "addition-column-alignment-error",
           "reason_for_label": "The distractor is consistent with mishandling a regrouped ten during column addition.",
@@ -121,7 +122,7 @@
           "inappropriate_support_actions": ["full_explanation"]
         },
         {
-          "reviewer_id": "fake-mat-reviewer-b",
+          "reviewer_id": "synthetic-mat-reviewer-b",
           "expert_misconception_label": "addition-carry-not-composed",
           "alternative_plausible_label": "unknown/other",
           "reason_for_label": "The response is plausible when the learner carries but combines the tens incorrectly.",
@@ -135,7 +136,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e02",
         "learner_id": "synthetic-expert-sim-l02",
-        "features": {"skill_id": "G5-MAT-C06", "item_id": "G5-MAT-G03-I001", "game_id": "G5-MAT-G03", "language": "bilingual", "current_score": 0.0, "response_time_ms": 29700, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "addition-regrouping-error"},
+        "features": {"learner_medium": "si", "skill_id": "G5-MAT-C06", "item_id": "G5-MAT-G03-I001", "game_id": "G5-MAT-G03", "language": "bilingual", "current_score": 0.0, "response_time_ms": 29700, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "addition-regrouping-error"},
         "action_id": "synthetic-similar-worked-example",
         "reward": 0.75,
         "propensity": 1.0,
@@ -144,7 +145,7 @@
       }
     },
     {
-      "case_id": "fake-case-mat-multiplication-01",
+      "case_id": "synthetic-case-mat-multiplication-01",
       "item_id": "G5-MAT-G05-I001",
       "game_id": "G5-MAT-G05",
       "subject": "MAT",
@@ -167,7 +168,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-mat-reviewer-a",
+          "reviewer_id": "synthetic-mat-reviewer-a",
           "expert_misconception_label": "multiplication-fact-family-confusion",
           "alternative_plausible_label": "calculation-slip",
           "reason_for_label": "The answer 48 is a nearby multiplication fact and may indicate fact-family interference.",
@@ -176,7 +177,7 @@
           "inappropriate_support_actions": ["full_explanation"]
         },
         {
-          "reviewer_id": "fake-mat-reviewer-b",
+          "reviewer_id": "synthetic-mat-reviewer-b",
           "expert_misconception_label": "multiplication-fact-family-confusion",
           "alternative_plausible_label": "unknown/other",
           "reason_for_label": "The fast response and nearby fact are consistent with recall interference, though a slip remains possible.",
@@ -190,7 +191,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e03",
         "learner_id": "synthetic-expert-sim-l03",
-        "features": {"skill_id": "G5-MAT-C08", "item_id": "G5-MAT-G05-I001", "game_id": "G5-MAT-G05", "language": "bilingual", "current_score": 0.0, "response_time_ms": 9100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "multiplication-fact-near-neighbor"},
+        "features": {"learner_medium": "si", "skill_id": "G5-MAT-C08", "item_id": "G5-MAT-G05-I001", "game_id": "G5-MAT-G05", "language": "bilingual", "current_score": 0.0, "response_time_ms": 9100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "multiplication-fact-near-neighbor"},
         "action_id": "synthetic-targeted-hint",
         "reward": 0.25,
         "propensity": 1.0,
@@ -199,7 +200,7 @@
       }
     },
     {
-      "case_id": "fake-case-mat-fraction-01",
+      "case_id": "synthetic-case-mat-fraction-01",
       "item_id": "G5-MAT-G07-I001",
       "game_id": "G5-MAT-G07",
       "subject": "MAT",
@@ -222,7 +223,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-mat-reviewer-a",
+          "reviewer_id": "synthetic-mat-reviewer-a",
           "expert_misconception_label": "fraction-numerator-ignored",
           "alternative_plausible_label": "fraction-operation-unknown",
           "reason_for_label": "The response appears to divide the whole by the denominator without taking nine groups.",
@@ -231,7 +232,7 @@
           "inappropriate_support_actions": ["independent_retry"]
         },
         {
-          "reviewer_id": "fake-mat-reviewer-b",
+          "reviewer_id": "synthetic-mat-reviewer-b",
           "expert_misconception_label": "fraction-numerator-ignored",
           "alternative_plausible_label": "unknown/other",
           "reason_for_label": "Selecting one matches completing only the divide-by-ten step.",
@@ -245,7 +246,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e04",
         "learner_id": "synthetic-expert-sim-l04",
-        "features": {"skill_id": "G5-MAT-C03", "item_id": "G5-MAT-G07-I001", "game_id": "G5-MAT-G07", "language": "bilingual", "current_score": 0.0, "response_time_ms": 23600, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "fraction-denominator-only-operation"},
+        "features": {"learner_medium": "si", "skill_id": "G5-MAT-C03", "item_id": "G5-MAT-G07-I001", "game_id": "G5-MAT-G07", "language": "bilingual", "current_score": 0.0, "response_time_ms": 23600, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "fraction-denominator-only-operation"},
         "action_id": "synthetic-guided-steps",
         "reward": 0.5,
         "propensity": 1.0,
@@ -254,7 +255,7 @@
       }
     },
     {
-      "case_id": "fake-case-eng-phonics-01",
+      "case_id": "synthetic-case-eng-phonics-01",
       "item_id": "G5-ENG-G01-I001",
       "game_id": "G5-ENG-G01",
       "subject": "ENG",
@@ -277,7 +278,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-language-reviewer-a",
+          "reviewer_id": "synthetic-language-reviewer-a",
           "expert_misconception_label": "initial-phoneme-not-segmented",
           "alternative_plausible_label": "vocabulary-unknown",
           "reason_for_label": "The learner does not select the only option beginning with the target initial sound.",
@@ -286,7 +287,7 @@
           "inappropriate_support_actions": ["full_explanation"]
         },
         {
-          "reviewer_id": "fake-language-reviewer-b",
+          "reviewer_id": "synthetic-language-reviewer-b",
           "expert_misconception_label": "initial-phoneme-not-segmented",
           "alternative_plausible_label": "attention-slip",
           "reason_for_label": "Recent errors and the selected distractor suggest difficulty isolating the first sound.",
@@ -300,7 +301,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e05",
         "learner_id": "synthetic-expert-sim-l05",
-        "features": {"skill_id": "G5-ENG-C01-L01", "item_id": "G5-ENG-G01-I001", "game_id": "G5-ENG-G01", "language": "en", "current_score": 0.0, "response_time_ms": 12800, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "initial-sound-not-isolated"},
+        "features": {"learner_medium": "si", "skill_id": "G5-ENG-C01-L01", "item_id": "G5-ENG-G01-I001", "game_id": "G5-ENG-G01", "language": "en", "current_score": 0.0, "response_time_ms": 12800, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "initial-sound-not-isolated"},
         "action_id": "synthetic-targeted-hint",
         "reward": 0.5,
         "propensity": 1.0,
@@ -309,7 +310,7 @@
       }
     },
     {
-      "case_id": "fake-case-eng-vocabulary-01",
+      "case_id": "synthetic-case-eng-vocabulary-01",
       "item_id": "G5-ENG-G03-I001",
       "game_id": "G5-ENG-G03",
       "subject": "ENG",
@@ -332,7 +333,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-language-reviewer-a",
+          "reviewer_id": "synthetic-language-reviewer-a",
           "expert_misconception_label": "unknown/other",
           "alternative_plausible_label": "target-word-meaning-not-known",
           "reason_for_label": "A single first-attempt response cannot distinguish missing vocabulary from guessing.",
@@ -341,7 +342,7 @@
           "inappropriate_support_actions": ["full_explanation"]
         },
         {
-          "reviewer_id": "fake-language-reviewer-b",
+          "reviewer_id": "synthetic-language-reviewer-b",
           "expert_misconception_label": "target-word-meaning-not-known",
           "alternative_plausible_label": "unknown/other",
           "reason_for_label": "The selected word is unrelated to the definition, which may indicate the target meaning is unknown.",
@@ -355,7 +356,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e06",
         "learner_id": "synthetic-expert-sim-l06",
-        "features": {"skill_id": "G5-ENG-C01", "item_id": "G5-ENG-G03-I001", "game_id": "G5-ENG-G03", "language": "en", "current_score": 0.0, "response_time_ms": 7400, "hint_requests": 0, "attempt_count": 1, "structured_error_code": "vocabulary-meaning-unknown"},
+        "features": {"learner_medium": "si", "skill_id": "G5-ENG-C01", "item_id": "G5-ENG-G03-I001", "game_id": "G5-ENG-G03", "language": "en", "current_score": 0.0, "response_time_ms": 7400, "hint_requests": 0, "attempt_count": 1, "structured_error_code": "vocabulary-meaning-unknown"},
         "action_id": "synthetic-metacognitive-prompt",
         "reward": 0.0,
         "propensity": 1.0,
@@ -364,7 +365,7 @@
       }
     },
     {
-      "case_id": "fake-case-eng-grammar-01",
+      "case_id": "synthetic-case-eng-grammar-01",
       "item_id": "G5-ENG-G05-I001",
       "game_id": "G5-ENG-G05",
       "subject": "ENG",
@@ -387,7 +388,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-language-reviewer-a",
+          "reviewer_id": "synthetic-language-reviewer-a",
           "expert_misconception_label": "noun-adjective-category-confusion",
           "alternative_plausible_label": "grammar-terms-not-known",
           "reason_for_label": "The learner classifies a naming word as a describing word after requesting a hint.",
@@ -396,7 +397,7 @@
           "inappropriate_support_actions": ["independent_retry"]
         },
         {
-          "reviewer_id": "fake-language-reviewer-b",
+          "reviewer_id": "synthetic-language-reviewer-b",
           "expert_misconception_label": "noun-adjective-category-confusion",
           "alternative_plausible_label": "unknown/other",
           "reason_for_label": "The response is consistent with confusion between the functions of nouns and adjectives.",
@@ -410,7 +411,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e07",
         "learner_id": "synthetic-expert-sim-l07",
-        "features": {"skill_id": "G5-ENG-C01-L01", "item_id": "G5-ENG-G05-I001", "game_id": "G5-ENG-G05", "language": "en", "current_score": 0.0, "response_time_ms": 16300, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "word-class-noun-adjective-confusion"},
+        "features": {"learner_medium": "si", "skill_id": "G5-ENG-C01-L01", "item_id": "G5-ENG-G05-I001", "game_id": "G5-ENG-G05", "language": "en", "current_score": 0.0, "response_time_ms": 16300, "hint_requests": 1, "attempt_count": 3, "structured_error_code": "word-class-noun-adjective-confusion"},
         "action_id": "synthetic-similar-worked-example",
         "reward": 0.5,
         "propensity": 1.0,
@@ -419,7 +420,7 @@
       }
     },
     {
-      "case_id": "fake-case-eng-spelling-01",
+      "case_id": "synthetic-case-eng-spelling-01",
       "item_id": "G5-ENG-G08-I001",
       "game_id": "G5-ENG-G08",
       "subject": "ENG",
@@ -442,7 +443,7 @@
       },
       "independent_reviews": [
         {
-          "reviewer_id": "fake-language-reviewer-a",
+          "reviewer_id": "synthetic-language-reviewer-a",
           "expert_misconception_label": "final-consonant-not-represented",
           "alternative_plausible_label": "visual-attention-slip",
           "reason_for_label": "The selected spelling omits the final consonant while preserving the rest of the word.",
@@ -451,7 +452,7 @@
           "inappropriate_support_actions": ["full_explanation"]
         },
         {
-          "reviewer_id": "fake-language-reviewer-b",
+          "reviewer_id": "synthetic-language-reviewer-b",
           "expert_misconception_label": "unknown/other",
           "alternative_plausible_label": "final-consonant-not-represented",
           "reason_for_label": "One multiple-choice response is insufficient to distinguish a spelling pattern from an attention slip.",
@@ -465,7 +466,7 @@
       "model_record": {
         "episode_id": "synthetic-expert-sim-e08",
         "learner_id": "synthetic-expert-sim-l08",
-        "features": {"skill_id": "G5-ENG-C01", "item_id": "G5-ENG-G08-I001", "game_id": "G5-ENG-G08", "language": "en", "current_score": 0.0, "response_time_ms": 11100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "final-consonant-omission"},
+        "features": {"learner_medium": "si", "skill_id": "G5-ENG-C01", "item_id": "G5-ENG-G08-I001", "game_id": "G5-ENG-G08", "language": "en", "current_score": 0.0, "response_time_ms": 11100, "hint_requests": 0, "attempt_count": 2, "structured_error_code": "final-consonant-omission"},
         "action_id": "synthetic-metacognitive-prompt",
         "reward": null,
         "propensity": 1.0,

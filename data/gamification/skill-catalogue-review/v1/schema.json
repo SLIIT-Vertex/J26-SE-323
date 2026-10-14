@@ -1,0 +1,311 @@
+{
+  "$defs": {
+    "review_status": {
+      "enum": [
+        "draft",
+        "approved",
+        "retired",
+        "superseded"
+      ],
+      "type": "string"
+    },
+    "skill_binding": {
+      "additionalProperties": false,
+      "properties": {
+        "binding_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "knowledge_tracing_skill_id": {
+          "pattern": "^[A-Z]{3}-[A-Z]{3}$",
+          "type": "string"
+        },
+        "mapping_version": {
+          "const": "grade5-kt-skill-review-v1"
+        },
+        "rationale": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skill_candidate_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "approved",
+            "retired",
+            "superseded"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "skill_candidate_id",
+        "knowledge_tracing_skill_id",
+        "mapping_version",
+        "status",
+        "confidence",
+        "rationale",
+        "source_ids"
+      ],
+      "type": "object"
+    },
+    "skill_review": {
+      "additionalProperties": false,
+      "properties": {
+        "deferred_languages": {
+          "items": {
+            "enum": [
+              "en",
+              "si",
+              "ta"
+            ]
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "definition": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "development_only": {
+          "type": "boolean"
+        },
+        "distinguishing_evidence": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "domain": {
+          "enum": [
+            "APT",
+            "MAT",
+            "LAN",
+            "ENV"
+          ]
+        },
+        "eligible_support_action_types": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "grade": {
+          "enum": [
+            4,
+            5
+          ]
+        },
+        "labels": {
+          "properties": {
+            "en": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "si": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "ta": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "en",
+            "si",
+            "ta"
+          ],
+          "type": "object"
+        },
+        "learner_medium": {
+          "enum": [
+            "si",
+            "ta",
+            "en"
+          ]
+        },
+        "misconceptions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "observable_success": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "prerequisites": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "required_label_languages": {
+          "items": {
+            "enum": [
+              "en",
+              "si",
+              "ta"
+            ]
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "reviewed_on": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope_note": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "skill_code": {
+          "pattern": "^[A-Z]{3}-[A-Z]{3}$",
+          "type": "string"
+        },
+        "source_citations": {
+          "items": {
+            "$ref": "#/$defs/source_citation"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "stable_index": {
+          "maximum": 29,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "approved",
+            "retired",
+            "superseded"
+          ],
+          "type": "string"
+        },
+        "superseded_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "taxonomy_version": {
+          "const": "grade5-kt-skill-review-v1"
+        },
+        "verification_pair_rules": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "skill_code",
+        "stable_index",
+        "taxonomy_version",
+        "domain",
+        "grade",
+        "status",
+        "development_only",
+        "learner_medium",
+        "required_label_languages",
+        "deferred_languages",
+        "scope_note",
+        "definition",
+        "labels",
+        "prerequisites",
+        "observable_success",
+        "misconceptions",
+        "distinguishing_evidence",
+        "eligible_support_action_types",
+        "verification_pair_rules",
+        "source_citations"
+      ],
+      "type": "object"
+    },
+    "source_citation": {
+      "additionalProperties": false,
+      "properties": {
+        "page_from": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "page_to": {
+          "type": "string"
+        },
+        "skill_candidate_ids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "source_id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_id",
+        "page_from",
+        "page_to",
+        "skill_candidate_ids"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://mindbridge.local/schemas/skill-catalogue-review-v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "files": {
+    "development-skill-reviews.jsonl": {
+      "record_schema": "#/$defs/skill_review"
+    },
+    "grade5-candidate-skill-bindings.jsonl": {
+      "record_schema": "#/$defs/skill_binding"
+    }
+  },
+  "taxonomy_version": "grade5-kt-skill-review-v1",
+  "title": "MindBridge Phase 5A skill review import schema",
+  "version": "1.0.0"
+}

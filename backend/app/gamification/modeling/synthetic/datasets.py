@@ -1,27 +1,32 @@
 import json
-import os
 from pathlib import Path
 
+from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 from app.gamification.domain.types import SupportActionType
 from app.gamification.modeling.offline.dataset_manifest import DatasetRow
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[5]
-GAMIFICATION_DATA_DIRECTORY = Path(
-    os.environ.get("MINDBRIDGE_GAMIFICATION_DATA_DIR", _PROJECT_ROOT / "data" / "gamification")
-).expanduser().resolve()
 SYNTHETIC_MODEL_DATA_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "synthetic-model-data" / "v1"
 DEFAULT_PROTOTYPE_EPISODES = SYNTHETIC_MODEL_DATA_DIRECTORY / "default-prototype-episodes.json"
 DEFAULT_PROTOTYPE_STATUS = "TODO_EXPERT_AUTHORIZATION_AND_REVIEW"
 EXPERT_REVIEW_SIMULATION = SYNTHETIC_MODEL_DATA_DIRECTORY / "expert-review-simulation.json"
+DEVELOPMENT_RESEARCH_PROTOCOL = (
+    SYNTHETIC_MODEL_DATA_DIRECTORY / "development-research-protocol.json"
+)
+CLASSIFICATION_EVALUATION_EXAMPLE = (
+    SYNTHETIC_MODEL_DATA_DIRECTORY / "classification-evaluation-example.json"
+)
+EXPERT_REVIEW_SIMULATION_MANIFEST = (
+    SYNTHETIC_MODEL_DATA_DIRECTORY / "expert-review-simulation-manifest.json"
+)
 
 
 def load_dataset_rows(path: Path) -> list[DatasetRow]:
     if path.resolve() == EXPERT_REVIEW_SIMULATION.resolve():
-        return load_fake_expert_review_rows()
+        return load_synthetic_expert_review_rows()
     payload = json.loads(path.read_text())
     records = payload.get("records") if isinstance(payload, dict) else payload
     if not isinstance(records, list):
-        raise ValueError("dataset must be a list or an object containing a records list")
+        raise TypeError("dataset must be a list or an object containing a records list")
     return [DatasetRow(**row) for row in records]
 
 
@@ -31,16 +36,23 @@ def load_default_prototype_rows() -> list[DatasetRow]:
     return load_dataset_rows(DEFAULT_PROTOTYPE_EPISODES)
 
 
-def load_fake_expert_review_simulation() -> dict[str, object]:
+def load_synthetic_expert_review_simulation() -> dict[str, object]:
     """Load and validate the realistic synthetic expert-review fallback."""
 
     payload = json.loads(EXPERT_REVIEW_SIMULATION.read_text())
     if not isinstance(payload, dict):
-        raise ValueError("fake expert-review simulation must be an object")
-    if payload.get("synthetic") is not True or payload.get("authorized_research_evidence") is not False:
-        raise ValueError("fake expert-review simulation must remain synthetic and unauthorized")
-    if payload.get("schema_version") != "fake-expert-review-simulation-v2":
-        raise ValueError("unsupported fake expert-review simulation schema")
+        raise TypeError("synthetic expert-review simulation must be an object")
+    if (
+        payload.get("synthetic") is not True
+        or payload.get("authorized_research_evidence") is not False
+    ):
+        raise ValueError(
+            "synthetic expert-review simulation must remain synthetic and unauthorized"
+        )
+    if payload.get("schema_version") != "synthetic-expert-review-simulation-v1":
+        raise ValueError("unsupported synthetic expert-review simulation schema")
+    if payload.get("learner_medium") != "si":
+        raise ValueError("this development package is scoped to Sinhala-medium learners")
     cases = payload.get("cases")
     if not isinstance(cases, list) or not cases:
         raise ValueError("fake expert-review simulation requires cases")
@@ -95,15 +107,17 @@ def load_fake_expert_review_simulation() -> dict[str, object]:
         if len(reviewers) != len(reviews):
             raise ValueError("independent reviews require distinct reviewer IDs")
         if not case.get("adjudicated_label"):
-            raise ValueError("each fake case requires an adjudicated label")
+            raise ValueError("each synthetic case requires an adjudicated label")
         model_record = case["model_record"]
         if not isinstance(model_record, dict):
-            raise ValueError("each fake case requires a model-ready record")
+            raise TypeError("each synthetic case requires a model-ready record")
         row = DatasetRow(**model_record)
+        if row.features.get("learner_medium") != "si":
+            raise ValueError("each model record must declare Sinhala learner medium")
         if row.label != case["adjudicated_label"]:
             raise ValueError("model record label must match the adjudicated label")
         if not row.learner_id.startswith("synthetic-expert-sim-"):
-            raise ValueError("fake expert-review learners must be explicitly synthetic")
+            raise ValueError("expert-review simulation learners must be explicitly synthetic")
         if row.features.get("item_id") != case["item_id"]:
             raise ValueError("model record item must match the reviewed case")
         if row.episode_id in episode_ids or row.learner_id in learner_ids:
@@ -113,8 +127,20 @@ def load_fake_expert_review_simulation() -> dict[str, object]:
     return payload
 
 
-def load_fake_expert_review_rows() -> list[DatasetRow]:
+def load_synthetic_expert_review_rows() -> list[DatasetRow]:
     """Return model-ready rows from the validated synthetic review simulation."""
 
-    payload = load_fake_expert_review_simulation()
+    payload = load_synthetic_expert_review_simulation()
     return [DatasetRow(**case["model_record"]) for case in payload["cases"]]  # type: ignore[index]
+
+
+def load_fake_expert_review_simulation() -> dict[str, object]:
+    """Compatibility alias for the former public function name."""
+
+    return load_synthetic_expert_review_simulation()
+
+
+def load_fake_expert_review_rows() -> list[DatasetRow]:
+    """Compatibility alias for the former public function name."""
+
+    return load_synthetic_expert_review_rows()

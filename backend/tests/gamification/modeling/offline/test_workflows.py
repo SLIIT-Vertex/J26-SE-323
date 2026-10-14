@@ -1,3 +1,4 @@
+import hashlib
 import json
 from dataclasses import replace
 from pathlib import Path
@@ -17,11 +18,14 @@ from app.gamification.modeling.shared.artifact_registry import (
 )
 from app.gamification.modeling.support_selection.evaluation import evaluate_logged_policy
 from app.gamification.modeling.synthetic.datasets import (
+    CLASSIFICATION_EVALUATION_EXAMPLE,
+    DEVELOPMENT_RESEARCH_PROTOCOL,
     EXPERT_REVIEW_SIMULATION,
+    EXPERT_REVIEW_SIMULATION_MANIFEST,
     load_dataset_rows,
     load_default_prototype_rows,
-    load_fake_expert_review_rows,
-    load_fake_expert_review_simulation,
+    load_synthetic_expert_review_rows,
+    load_synthetic_expert_review_simulation,
 )
 from tests.gamification.modeling.fixtures import NOW, dataset_rows
 
@@ -170,10 +174,11 @@ def test_default_prototype_dataset_is_explicitly_synthetic_and_usable() -> None:
     manifest.assert_no_learner_leakage()
 
 
-def test_fake_expert_review_simulation_exercises_independent_review_workflow() -> None:
-    payload = load_fake_expert_review_simulation()
+def test_synthetic_expert_review_simulation_exercises_independent_review_workflow() -> None:
+    payload = load_synthetic_expert_review_simulation()
     assert payload["synthetic"] is True
     assert payload["authorized_research_evidence"] is False
+    assert payload["learner_medium"] == "si"
     cases = payload["cases"]
     assert len(cases) == 8
     assert all(len(case["independent_reviews"]) == 2 for case in cases)
@@ -184,13 +189,14 @@ def test_fake_expert_review_simulation_exercises_independent_review_workflow() -
     )
 
 
-def test_fake_expert_review_rows_are_model_ready_and_reference_catalogue_items() -> None:
-    payload = load_fake_expert_review_simulation()
-    rows = load_fake_expert_review_rows()
+def test_synthetic_expert_review_rows_are_model_ready_and_reference_catalogue_items() -> None:
+    payload = load_synthetic_expert_review_simulation()
+    rows = load_synthetic_expert_review_rows()
     assert load_dataset_rows(EXPERT_REVIEW_SIMULATION) == rows
     assert len(rows) == len(payload["cases"])
     assert all(row.learner_id.startswith("synthetic-expert-sim-") for row in rows)
     assert all(row.label for row in rows)
+    assert all(row.features["learner_medium"] == "si" for row in rows)
 
     item_path = (
         Path(__file__).resolve().parents[5]
@@ -234,3 +240,47 @@ def test_fake_expert_review_rows_are_model_ready_and_reference_catalogue_items()
     )
     candidate.verify()
     assert candidate.parameters["class_priors"]
+
+
+def test_synthetic_research_package_is_frozen_and_development_ready() -> None:
+    protocol = json.loads(DEVELOPMENT_RESEARCH_PROTOCOL.read_text())
+    predictions = json.loads(CLASSIFICATION_EVALUATION_EXAMPLE.read_text())
+    manifest = json.loads(EXPERT_REVIEW_SIMULATION_MANIFEST.read_text())
+
+    assert protocol["synthetic"] is True
+    assert protocol["contains_human_data"] is False
+    assert protocol["authorized_research_evidence"] is False
+    assert protocol["delivery_scope"]["learner_medium"] == "si"
+    assert protocol["delivery_scope"]["deferred_languages"] == ["ta"]
+    assert all(record["learner_medium"] == "si" for record in predictions)
+    assert manifest["synthetic"] is True
+    assert manifest["authorized_research_evidence"] is False
+    assert manifest["delivery_scope"] == protocol["delivery_scope"]
+    assert manifest["development_gate"] == "pass"
+    assert manifest["research_and_child_facing_gate"].startswith("blocked")
+    assert all(manifest["engineering_threshold_checks"].values())
+
+    project_root = Path(__file__).resolve().parents[5]
+    for relative_path, metadata in manifest["source_files"].items():
+        actual = hashlib.sha256((project_root / relative_path).read_bytes()).hexdigest()
+        assert actual == metadata["sha256"]
+
+    report = evaluate_classification(predictions)
+    recorded = manifest["simulated_classification_evaluation"]
+    assert report.sample_count == recorded["sample_count"]
+    assert report.accuracy == recorded["accuracy"]
+    assert report.brier_score == pytest.approx(recorded["brier_score"])
+    assert report.expected_calibration_error == pytest.approx(
+        recorded["expected_calibration_error"]
+    )
+
+    rows = load_synthetic_expert_review_rows()
+    frozen = manifest["offline_dataset_manifest"]
+    rebuilt = DatasetManifest.build(
+        rows,
+        dataset_id=manifest["dataset_id"],
+        split_seed=frozen["split_seed"],
+        synthetic=True,
+    )
+    assert rebuilt.digest == frozen["manifest_sha256"]
+    rebuilt.assert_no_learner_leakage()

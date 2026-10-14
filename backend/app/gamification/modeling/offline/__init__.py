@@ -16,6 +16,7 @@ from app.gamification.modeling.support_selection.evaluation import (
     PolicyEvaluation,
     evaluate_logged_policy,
 )
+
 DEFAULT_PROTOTYPE_STATUS = "TODO_EXPERT_AUTHORIZATION_AND_REVIEW"
 
 
@@ -42,6 +43,24 @@ def load_fake_expert_review_rows() -> list[DatasetRow]:
 
     return load_fake_expert_review_rows()
 
+
+def load_synthetic_expert_review_simulation() -> dict[str, object]:
+    """Load the development-only expert-review simulation."""
+
+    from app.gamification.modeling.synthetic.datasets import (
+        load_synthetic_expert_review_simulation,
+    )
+
+    return load_synthetic_expert_review_simulation()
+
+
+def load_synthetic_expert_review_rows() -> list[DatasetRow]:
+    """Load model-ready rows from the synthetic review simulation."""
+
+    from app.gamification.modeling.synthetic.datasets import load_synthetic_expert_review_rows
+
+    return load_synthetic_expert_review_rows()
+
 __all__ = [
     "DEFAULT_PROTOTYPE_STATUS",
     "ApprovalGatedArtifactRegistry",
@@ -55,5 +74,7 @@ __all__ = [
     "load_default_prototype_rows",
     "load_fake_expert_review_rows",
     "load_fake_expert_review_simulation",
+    "load_synthetic_expert_review_rows",
+    "load_synthetic_expert_review_simulation",
     "train_frequency_candidate",
 ]

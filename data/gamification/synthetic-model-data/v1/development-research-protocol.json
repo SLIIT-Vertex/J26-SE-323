@@ -1,0 +1,79 @@
+{
+  "schema_version": "synthetic-development-protocol-v1",
+  "protocol_id": "gamification-synthetic-development-v1",
+  "status": "development_only",
+  "synthetic": true,
+  "contains_human_data": false,
+  "authorized_research_evidence": false,
+  "delivery_scope": {
+    "learner_medium": "si",
+    "support_language": "si",
+    "content_languages": ["si", "en", "bilingual"],
+    "deferred_languages": ["ta"]
+  },
+  "purpose": "Exercise the complete gamification data, review, training, evaluation, and replacement workflow before authorized human evidence exists.",
+  "development_basis": {
+    "ethics_review": "not_applicable_to_fictional_data",
+    "data_owner_approval": "not_applicable_to_fictional_data",
+    "child_facing_activation": "prohibited",
+    "research_claims": "prohibited"
+  },
+  "annotation_guide": {
+    "unit": "One fictional learner interaction with its item, observable response evidence, and pre-support context.",
+    "primary_label_rule": "Choose the narrowest supported provisional misconception label; use unknown/other when one interaction cannot distinguish plausible explanations.",
+    "incorrect_answer_rule": "An incorrect answer is evidence of an error, not automatic proof of a misconception.",
+    "independence_rule": "Each reviewer labels without seeing the other review.",
+    "confidence_values": ["low", "medium", "high"],
+    "required_fields": [
+      "expert_misconception_label",
+      "alternative_plausible_label",
+      "reason_for_label",
+      "expert_confidence",
+      "appropriate_support_actions",
+      "inappropriate_support_actions"
+    ],
+    "adjudication_rule": "Retain an agreed label when evidence supports it; otherwise select unknown/other and preserve the disagreement rationale."
+  },
+  "fictional_reviewer_profiles": [
+    {
+      "reviewer_id": "synthetic-mat-reviewer-a",
+      "example_qualification": "Primary mathematics teacher with Grade 5 classroom experience"
+    },
+    {
+      "reviewer_id": "synthetic-mat-reviewer-b",
+      "example_qualification": "Mathematics curriculum specialist with assessment-design experience"
+    },
+    {
+      "reviewer_id": "synthetic-language-reviewer-a",
+      "example_qualification": "Primary English teacher with literacy-intervention experience"
+    },
+    {
+      "reviewer_id": "synthetic-language-reviewer-b",
+      "example_qualification": "English curriculum specialist with language-assessment experience"
+    }
+  ],
+  "example_data_governance": {
+    "personal_data": "none",
+    "identifiers": "synthetic-prefixed identifiers only",
+    "access": "repository contributors",
+    "retention": "retain while needed for development regression tests",
+    "withdrawal": "not applicable because no person contributed data",
+    "deletion": "remove or archive this package after an authorized replacement passes validation",
+    "real_data_rule": "Do not add real learner or reviewer data to this package."
+  },
+  "predeclared_engineering_thresholds": {
+    "minimum_case_count": 8,
+    "minimum_reviewers_per_case": 2,
+    "minimum_raw_primary_label_agreement": 0.7,
+    "maximum_unknown_or_other_rate": 0.4,
+    "minimum_valid_outcome_rate": 0.75,
+    "maximum_classification_brier_score": 0.8,
+    "maximum_classification_ece": 0.35,
+    "minimum_classification_accuracy": 0.6,
+    "maximum_classification_abstention_rate": 0.4,
+    "require_learner_disjoint_splits": true,
+    "split_seed": 42
+  },
+  "threshold_scope": "Synthetic workflow smoke-test thresholds only; they are not research, safety, efficacy, or release thresholds.",
+  "replacement_guide": "docs/adaptive-gamified-learning/development-data-replacement.md"
+}

@@ -44,3 +44,31 @@ workflow needs them.
 
 The canonical package lives under `data/gamification/grade5-curriculum-game-dataset/v2/`.
 Superseded package copies are not retained in the repository.
+
+## Synthetic research-workflow fixture
+
+`datasets/freeze_synthetic_expert_review.py` validates and freezes the development-only expert
+review simulation. It calculates simulated reviewer agreement, creates learner-disjoint splits,
+runs the example classification evaluation, checks the predeclared engineering thresholds, and
+writes a content-addressed manifest:
+
+```bash
+PYTHONPATH=backend python3 tools/gamification/datasets/freeze_synthetic_expert_review.py
+```
+
+The resulting package is useful only for application development. It contains no human data and
+cannot authorize research claims or child-facing model activation.
+
+## Skill review package
+
+`skills/build_skill_review_package.py` builds the Phase 5A development package. It inventories the
+30 stable Knowledge Tracing skills and current question mappings, validates source-backed pilot
+reviews and draft bindings, produces a compatibility report, reruns the synthetic model evaluation
+by bound skill/language, and freezes hashes in a manifest:
+
+```bash
+PYTHONPATH=backend python3 tools/gamification/skills/build_skill_review_package.py
+```
+
+The builder never changes Knowledge Tracing codes or indices and never upgrades a draft record to
+approved.

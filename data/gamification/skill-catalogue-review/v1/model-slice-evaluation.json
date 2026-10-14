@@ -1,0 +1,43 @@
+{
+  "aggregate": {
+    "abstention_rate": 0.25,
+    "accuracy": 0.75,
+    "brier_score": 0.15250000000000002,
+    "expected_calibration_error": 0.22499999999999998
+  },
+  "authorized_research_evidence": false,
+  "content_language_slices": {
+    "bilingual": {
+      "accuracy": 1.0,
+      "sample_count": 4
+    },
+    "en": {
+      "accuracy": 0.5,
+      "sample_count": 4
+    }
+  },
+  "learner_medium": "si",
+  "note": "Engineering compatibility evidence only; predictions and reviews are synthetic/draft. Content may be English or bilingual while learner instructions and support remain Sinhala.",
+  "record_count": 8,
+  "schema_version": "skill-bound-synthetic-evaluation-v1",
+  "skill_slices": {
+    "LAN-BIL": {
+      "accuracy": 0.5,
+      "sample_count": 4
+    },
+    "MAT-FRC": {
+      "accuracy": 1.0,
+      "sample_count": 1
+    },
+    "MAT-NUM": {
+      "accuracy": 1.0,
+      "sample_count": 1
+    },
+    "MAT-OPS": {
+      "accuracy": 1.0,
+      "sample_count": 2
+    }
+  },
+  "synthetic": true,
+  "taxonomy_version": "grade5-kt-skill-review-v1"
+}

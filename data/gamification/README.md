@@ -8,7 +8,12 @@ This is the single location for data used by the gamification component.
   support candidates, review state, schema, and validation reports. Records are not learner-ready
   unless their approval fields explicitly permit delivery.
 - `synthetic-model-data/v1/` — fictional model-development data used by tests and offline workflows.
-  It must never be treated as learner evidence or expert validation.
+  It includes the development protocol, simulated two-reviewer cases, example classification
+  predictions, and their frozen manifest. It must never be treated as learner evidence or expert
+  validation.
+- `skill-catalogue-review/v1/` — Phase 5A inventory, normalized question mappings, draft pilot
+  reviews/bindings, compatibility report, model slice report, schema, and manifest. Draft records
+  are development-only and do not open the RAG or child-facing gates.
 
 ## Rules
 
