@@ -110,6 +110,11 @@ def evaluate_learner_state(
                 result.confusion.fused_evidence
             ),
             confidence=result.confusion.confidence,
+            temporal_score=result.confusion.temporal_score,
+            average_confidence=(
+                result.confusion.average_confidence
+            ),
+            persistent_count=result.confusion.persistent_count,
             state=result.confusion.state,
             support_need=result.confusion.support_need,
         ),
@@ -130,6 +135,11 @@ def evaluate_learner_state(
                 result.disengagement.fused_evidence
             ),
             confidence=result.disengagement.confidence,
+            temporal_score=result.disengagement.temporal_score,
+            average_confidence=(
+                result.disengagement.average_confidence
+            ),
+            persistent_count=result.disengagement.persistent_count,
             state=result.disengagement.state,
             support_need=result.disengagement.support_need,
         ),

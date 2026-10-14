@@ -85,7 +85,7 @@ Feature meanings and how they feed the models are described in
 
 ### 3.1 `confusion` and `disengagement` objects
 
-Both objects have the same numeric fields (all 0.0–1.0):
+Both objects have the same fields. All numeric fields are 0.0–1.0 except `persistent_count`:
 
 | Field | Meaning |
 | --- | --- |
@@ -95,8 +95,17 @@ Both objects have the same numeric fields (all 0.0–1.0):
 | `behavior_reliability` | Behavioural reliability of this window (same value in both objects) |
 | `fused_evidence` | Reliability-weighted, threshold-centred evidence for **this window** |
 | `confidence` | Fusion confidence for **this window** (after the disagreement penalty) |
+| `temporal_score` | Confidence-weighted average of fused evidence over the recent windows (up to 3); used for the persistent-state decision |
+| `average_confidence` | Average fusion confidence over the same recent windows; below 0.40 the state is `uncertain` |
+| `persistent_count` | Integer, not a 0–1 value: number of recent windows with evidence ≥ 0.50 and confidence ≥ 0.50 (0–3) |
 | `state` | Temporal state (uses recent history, see [`05`](05_TEMPORAL_DECISION_ENGINE.md)) |
 | `support_need` | Support requested by this detector |
+
+`fused_evidence` and `confidence` describe only the current window. `temporal_score`,
+`average_confidence` and `persistent_count` are the values the temporal engine actually used to
+choose `state` (see [`05`](05_TEMPORAL_DECISION_ENGINE.md)), so a caller can see why a state was
+chosen. For example, a window can show `confidence` 0.45 without being `uncertain`, because
+`uncertain` depends on `average_confidence`.
 
 Response field names use the code spelling `behavior_*`, while the request object is named
 `behaviour`.
@@ -173,6 +182,9 @@ session. Values are rounded to 4 decimal places here; the API returns full float
     "behavior_reliability": 0.63,
     "fused_evidence": 0.3621,
     "confidence": 0.6142,
+    "temporal_score": 0.3621,
+    "average_confidence": 0.6142,
+    "persistent_count": 0,
     "state": "no_confusion",
     "support_need": "none"
   },
@@ -183,6 +195,9 @@ session. Values are rounded to 4 decimal places here; the API returns full float
     "behavior_reliability": 0.63,
     "fused_evidence": 0.4832,
     "confidence": 0.5226,
+    "temporal_score": 0.4832,
+    "average_confidence": 0.5226,
+    "persistent_count": 0,
     "state": "engaged",
     "support_need": "none"
   },

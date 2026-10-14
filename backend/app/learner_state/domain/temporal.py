@@ -1,6 +1,10 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+# Absorbs floating-point error when comparing progress differences,
+# e.g. 0.35 - 0.30 evaluates to 0.04999999999999999.
+_PROGRESS_TOLERANCE = 1e-9
+
 
 @dataclass(frozen=True)
 class TemporalDecision:
@@ -9,7 +13,34 @@ class TemporalDecision:
     persistent_count: int
     state: str
     support_need: str
-    recent_progress: float | None = None
+    progress_gain: float | None = None
+
+
+def _progress_gain(
+    task_progress: Sequence[float | None] | None,
+    window_size: int,
+) -> float | None:
+    """
+    Return how much task progress increased across the recent windows.
+
+    The gain is the newest known progress value minus the oldest known
+    value in the window. At least two known values are required;
+    otherwise progress is treated as unknown.
+    """
+
+    if task_progress is None:
+        return None
+
+    known_values = [
+        value
+        for value in task_progress[-window_size:]
+        if value is not None
+    ]
+
+    if len(known_values) < 2:
+        return None
+
+    return known_values[-1] - known_values[0]
 
 
 def _validate_history(
@@ -90,7 +121,17 @@ def confusion_temporal_decision(
     intervention_threshold: float = 0.60,
     min_persistent_windows: int = 2,
     min_confidence: float = 0.50,
+    min_progress_gain: float = 0.05,
 ) -> TemporalDecision:
+    """
+    Decide the confusion state from recent fused evidence.
+
+    Persistent confusion is treated as productive only while task
+    progress is still increasing by at least `min_progress_gain` across
+    the recent windows. The 0.05 default is a provisional design value
+    that still requires calibration on synchronized pilot data.
+    """
+
     _validate_history(
         fused_evidence,
         fusion_confidence,
@@ -107,20 +148,11 @@ def confusion_temporal_decision(
     )
 
     current_evidence = fused_evidence[-1]
-    recent_progress: float | None = None
 
-    if task_progress is not None:
-        recent_values = [
-            value
-            for value in task_progress[-window_size:]
-            if value is not None
-        ]
-
-        if recent_values:
-            recent_progress = (
-                sum(recent_values)
-                / len(recent_values)
-            )
+    progress_gain = _progress_gain(
+        task_progress,
+        window_size,
+    )
 
     if avg_confidence < 0.40:
         state = "uncertain"
@@ -139,8 +171,8 @@ def confusion_temporal_decision(
         and persistent_count >= min_persistent_windows
     ):
         if (
-            recent_progress is not None
-            and recent_progress >= 0.50
+            progress_gain is not None
+            and progress_gain + _PROGRESS_TOLERANCE >= min_progress_gain
         ):
             state = "productive_confusion"
             support_need = "monitor"
@@ -162,7 +194,7 @@ def confusion_temporal_decision(
         persistent_count=persistent_count,
         state=state,
         support_need=support_need,
-        recent_progress=recent_progress,
+        progress_gain=progress_gain,
     )
 
 

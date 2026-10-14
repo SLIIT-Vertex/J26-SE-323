@@ -23,6 +23,7 @@ class DisengagementResult:
     fusion_confidence: float
 
     temporal_score: float
+    average_confidence: float
     persistent_count: int
 
     state: str
@@ -109,6 +110,7 @@ def evaluate_disengagement_window(
         modality_disagreement=fusion.disagreement,
         fusion_confidence=fusion.fusion_confidence,
         temporal_score=temporal.temporal_score,
+        average_confidence=temporal.avg_confidence,
         persistent_count=temporal.persistent_count,
         state=temporal.state,
         support_need=temporal.support_need,
