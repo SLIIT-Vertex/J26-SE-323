@@ -41,3 +41,93 @@ h1 {
 .status--online { color: #087443; }
 .status--offline { color: #a33a2b; }
 .status--checking { color: #6d6250; }
+
+h1.compact {
+  font-size: 2.4rem;
+}
+
+.shell {
+  width: min(42rem, calc(100% - 2rem));
+}
+
+.shell-nav {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.shell-nav a {
+  color: #087443;
+}
+
+.question,
+.support-layer h2 {
+  font-size: 1.25rem;
+  line-height: 1.45;
+}
+
+.options {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.option {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.8rem 1rem;
+  border: 1px solid #173f35;
+  border-radius: 0.8rem;
+  background: white;
+  color: inherit;
+  animation-name: rise;
+}
+
+.option--selected {
+  background: #d7e5dc;
+}
+
+.reduced-motion .option,
+.reduced-motion {
+  animation: none;
+}
+
+.option-id {
+  font-weight: 700;
+}
+
+.support-layer {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 2px solid #087443;
+  border-radius: 1rem;
+  background: white;
+}
+
+.locked-activity {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.hint,
+.inspector p {
+  color: #56786f;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.8rem;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+@keyframes rise {
+  from { transform: translateY(4px); }
+  to { transform: translateY(0); }
+}

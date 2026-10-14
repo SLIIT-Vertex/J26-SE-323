@@ -72,6 +72,9 @@ class PilotContentCatalog:
     def skill_ids(self) -> tuple[str, ...]:
         return tuple(self._package.skills)
 
+    def item_ids(self) -> tuple[str, ...]:
+        return tuple(self._package.items)
+
     def universal_skill_id(self, skill_id: str) -> str | None:
         skill = self._package.skills.get(skill_id)
         if skill is None:

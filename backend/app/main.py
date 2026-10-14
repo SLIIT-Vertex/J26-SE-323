@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.gamification.api.router import register_play_errors
+from app.gamification.api.router import router as gamification_router
 from app.knowledge_tracing.api.attempts_router import router as attempts_router
 from app.knowledge_tracing.api.mastery_router import router as mastery_router
 from app.knowledge_tracing.api.papers_router import router as papers_router
@@ -57,3 +59,5 @@ app.include_router(photo_check_router, prefix=settings.api_v1_prefix)
 app.include_router(vision_router, prefix=settings.api_v1_prefix)
 app.include_router(submissions_router, prefix=settings.api_v1_prefix)
 app.include_router(report_router, prefix=settings.api_v1_prefix)
+app.include_router(gamification_router, prefix=settings.api_v1_prefix)
+register_play_errors(app)
