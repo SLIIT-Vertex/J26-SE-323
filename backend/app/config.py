@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     vision_concurrency: int = 3
     vision_timeout_seconds: int = 90
 
+    # Adaptive Tutor: explicit Task 13B generation provider selection.
+    tutor_llm_provider: str = ""  # fake | gemini; blank is intentionally invalid
+    tutor_gemini_api_key: str = ""
+    tutor_gemini_model: str = ""
+    tutor_gemini_timeout_seconds: float = 30.0
+    tutor_gemini_max_output_tokens: int = 512
+    tutor_gemini_temperature: float = 0.2
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

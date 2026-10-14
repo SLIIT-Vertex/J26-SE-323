@@ -1,0 +1,167 @@
+{
+  "dataset_version": "skill-mapper-evaluation-v1",
+  "status": "preliminary design-authored examples; not validated ground truth",
+  "cases": [
+    {
+      "case_id": "SM-EVAL-001",
+      "language": "english",
+      "learner_message": "How do I add these fractions?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-002",
+      "language": "sinhala",
+      "learner_message": "භාග දෙකක් එකතු කරන්නේ කොහොමද?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-003",
+      "language": "tamil",
+      "learner_message": "இரண்டு எண்களை எப்படி வகுப்பது?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-OPS"
+    },
+    {
+      "case_id": "SM-EVAL-004",
+      "language": "singlish",
+      "learner_message": "bage dekak ekathu karanne kohomada?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-005",
+      "language": "tanglish",
+      "learner_message": "intha kanakkula epdi divide panrathu?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-OPS"
+    },
+    {
+      "case_id": "SM-EVAL-006",
+      "language": "code-mixed",
+      "learner_message": "මේ fraction eka explain pannunga",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-007",
+      "language": "english-misspelled",
+      "learner_message": "How do I devide 48 by 6?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-OPS"
+    },
+    {
+      "case_id": "SM-EVAL-008",
+      "language": "english",
+      "learner_message": "How many days are in a leap year?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-TIM"
+    },
+    {
+      "case_id": "SM-EVAL-009",
+      "language": "english",
+      "learner_message": "Can you explain this?",
+      "expected_status": "AMBIGUOUS",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": null
+    },
+    {
+      "case_id": "SM-EVAL-010",
+      "language": "english",
+      "learner_message": "Teach me algebraic equations",
+      "expected_status": "NO_MATCH",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": null
+    },
+    {
+      "case_id": "SM-EVAL-011",
+      "language": "singlish",
+      "learner_message": "Ayubowan teacher!",
+      "expected_status": "NOT_SKILL_RELATED",
+      "expected_intent": "GREETING",
+      "expected_skill_id": null
+    },
+    {
+      "case_id": "SM-EVAL-012",
+      "language": "english",
+      "learner_message": "Who won the cricket match?",
+      "expected_status": "NOT_SKILL_RELATED",
+      "expected_intent": "OFF_TOPIC",
+      "expected_skill_id": null
+    },
+    {
+      "case_id": "SM-EVAL-013",
+      "language": "english-contextual",
+      "learner_message": "Why did you multiply that?",
+      "conversation_context": [
+        {"role": "LEARNER", "message": "Help me add these fractions."},
+        {"role": "TUTOR", "message": "First find a common denominator."}
+      ],
+      "active_skill_id": "MAT-FRC",
+      "expected_status": "MATCHED",
+      "expected_intent": "FOLLOW_UP_QUESTION",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-014",
+      "language": "symbolic-contextual",
+      "learner_message": "3/4",
+      "conversation_context": [
+        {"role": "TUTOR", "message": "Write the answer as a fraction."}
+      ],
+      "active_skill_id": "MAT-FRC",
+      "expected_status": "MATCHED",
+      "expected_intent": "ANSWER_SUBMISSION",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-015",
+      "language": "english-contextual",
+      "learner_message": "Can I see another one?",
+      "conversation_context": [
+        {"role": "TUTOR", "message": "This example adds two fractions."}
+      ],
+      "active_skill_id": "MAT-FRC",
+      "expected_status": "MATCHED",
+      "expected_intent": "ANOTHER_EXAMPLE_REQUEST",
+      "expected_skill_id": "MAT-FRC"
+    },
+    {
+      "case_id": "SM-EVAL-016",
+      "language": "english-context-change",
+      "learner_message": "How do I read the time?",
+      "conversation_context": [
+        {"role": "LEARNER", "message": "Help me compare these fractions."}
+      ],
+      "active_skill_id": "MAT-FRC",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "MAT-TIM"
+    },
+    {
+      "case_id": "SM-EVAL-017",
+      "language": "english",
+      "learner_message": "Why do some seeds float in the wind?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "ENV-BIO"
+    },
+    {
+      "case_id": "SM-EVAL-018",
+      "language": "sinhala",
+      "learner_message": "ඩෙංගු රෝගයෙන් ආරක්ෂා වෙන්නේ කොහොමද?",
+      "expected_status": "MATCHED",
+      "expected_intent": "EXPLANATION_REQUEST",
+      "expected_skill_id": "ENV-HLT"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "resource_version": "skill-mapper-enrichment-v1",
+  "status": "design-authored provisional retrieval enrichment; qualified Sinhala and Tamil review pending",
+  "authoritative_identity_source": "docs/skill_nodes.xlsx",
+  "records": [
+    {
+      "skill_id": "MAT-FRC",
+      "entries": [
+        {"language": "english", "text": "Fractions, numerator, denominator, half, quarter, add fractions, compare fractions, and decimals.", "provenance": "derived from authoritative English scope", "review_status": "source_derived_unreviewed"},
+        {"language": "sinhala", "text": "භාග, ලවය, හරය, අර්ධය, කාල, භාග එකතු කිරීම සහ භාග සංසන්දනය", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "tamil", "text": "பின்னம், தொகுதி, பகுதி, அரை, கால், பின்னங்களை கூட்டுதல் மற்றும் ஒப்பிடுதல்", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "singlish", "text": "baga, bagayak, lavaya, haraya, baga ekathu karanna, baga compare karanna", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"},
+        {"language": "tanglish", "text": "pinnam, thoguthi, paguthi, arai, kaal, pinnangalai koottu, pinnangalai compare pannu", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"}
+      ]
+    },
+    {
+      "skill_id": "MAT-OPS",
+      "entries": [
+        {"language": "english", "text": "Addition, subtraction, multiplication, division, times tables, carrying, borrowing, and remainders.", "provenance": "derived from authoritative English scope", "review_status": "source_derived_unreviewed"},
+        {"language": "sinhala", "text": "එකතු කිරීම, අඩු කිරීම, ගුණ කිරීම, බෙදීම සහ ඉතිරිය", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "tamil", "text": "கூட்டல், கழித்தல், பெருக்கல், வகுத்தல் மற்றும் மீதி", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "singlish", "text": "ganan ekathu karanna, adu karanna, guna karanna, bedanna saha ithiriya", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"},
+        {"language": "tanglish", "text": "kanakku koottu, kazhi, perukku, vaguthal, divide panrathu, meethi", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"}
+      ]
+    },
+    {
+      "skill_id": "MAT-TIM",
+      "entries": [
+        {"language": "english", "text": "Read clocks, convert hours and minutes, calculate elapsed time, calendars, days, and leap years.", "provenance": "derived from authoritative English scope", "review_status": "source_derived_unreviewed"},
+        {"language": "sinhala", "text": "ඔරලෝසුව, පැය, මිනිත්තු, ගත වූ කාලය, දිනදර්ශනය සහ අධික අවුරුද්ද", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "tamil", "text": "கடிகாரம், மணி, நிமிடம், கழிந்த நேரம், நாட்காட்டி மற்றும் நெட்டாண்டு", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "singlish", "text": "welawa, oralosuwa, paya, miniththu, dinadarshane saha leap year", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"},
+        {"language": "tanglish", "text": "neram, kadikaram, mani, nimidam, calendar, leap year", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"}
+      ]
+    },
+    {
+      "skill_id": "ENV-HLT",
+      "entries": [
+        {"language": "english", "text": "Health, nutrition, hygiene, dengue, malaria, mosquito-borne disease prevention, and first aid.", "provenance": "derived from authoritative English scope", "review_status": "source_derived_unreviewed"},
+        {"language": "sinhala", "text": "සෞඛ්‍යය, පෝෂණය, සනීපාරක්ෂාව, ඩෙංගු, මැලේරියා සහ මදුරු රෝග වැළැක්වීම", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "tamil", "text": "சுகாதாரம், ஊட்டச்சத்து, தூய்மை, டெங்கு, மலேரியா மற்றும் கொசு நோய் தடுப்பு", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "singlish", "text": "saukya, poshanaya, dengue, malaria, maduru roga walakvanna", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"},
+        {"language": "tanglish", "text": "sugatharam, unavu, dengue, malaria, kosu noi thaduppu", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"}
+      ]
+    },
+    {
+      "skill_id": "ENV-BIO",
+      "entries": [
+        {"language": "english", "text": "Plants, animals, flowers, leaves, seed dispersal by wind or animals, adaptations, and life cycles.", "provenance": "derived from authoritative English scope", "review_status": "source_derived_unreviewed"},
+        {"language": "sinhala", "text": "ශාක, සතුන්, මල්, කොළ, සුළඟෙන් හෝ සතුන්ගෙන් බීජ පැතිරීම සහ ජීවන චක්‍ර", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "tamil", "text": "தாவரங்கள், விலங்குகள், பூக்கள், இலைகள், காற்று அல்லது விலங்குகளால் விதை பரவல் மற்றும் வாழ்க்கைச் சுழற்சி", "provenance": "design-authored provisional language variant", "review_status": "qualified_review_pending"},
+        {"language": "singlish", "text": "shaka, saththu, mal, kola, bijaya sulangin ho sathungen pathirima", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"},
+        {"language": "tanglish", "text": "thavaram, vilangu, poo, ilai, kaatru allathu vilangugalal vithai paraval", "provenance": "design-authored provisional romanized variant", "review_status": "qualified_review_pending"}
+      ]
+    }
+  ]
+}
