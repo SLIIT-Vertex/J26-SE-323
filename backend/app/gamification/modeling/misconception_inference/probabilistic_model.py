@@ -1,5 +1,5 @@
 import math
-from typing import Mapping
+from collections.abc import Mapping
 
 from app.gamification.application.records import FeatureSnapshotRecord
 from app.gamification.modeling.misconception_inference.contracts import (
@@ -80,9 +80,9 @@ class ProbabilisticMisconceptionModel:
         error_likelihoods = parameters.get("error_likelihoods")
         class_priors = parameters.get("class_priors")
         if not isinstance(catalogue_version, str) or not isinstance(class_priors, Mapping):
-            raise ValueError("log-linear artifact requires a catalogue version and class priors")
+            raise TypeError("log-linear artifact requires a catalogue version and class priors")
         if not isinstance(error_likelihoods, Mapping):
-            raise ValueError("log-linear artifact requires error likelihoods")
+            raise TypeError("log-linear artifact requires error likelihoods")
         return cls(
             catalogue_version=catalogue_version,
             error_likelihoods=error_likelihoods,

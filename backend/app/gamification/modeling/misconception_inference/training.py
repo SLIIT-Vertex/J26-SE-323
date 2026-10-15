@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Mapping, Protocol, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Protocol
 
 from app.gamification.modeling.misconception_inference.bayesian_model import (
     PROVISIONAL_ABSTAIN_THRESHOLD,

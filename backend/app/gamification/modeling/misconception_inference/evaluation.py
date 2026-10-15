@@ -1,7 +1,7 @@
 import math
 from collections import Counter, defaultdict
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, Sequence
 
 DEFAULT_ECE_BINS = 10
 DEFAULT_TOP_K = 3

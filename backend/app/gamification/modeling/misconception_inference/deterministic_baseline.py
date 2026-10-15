@@ -1,4 +1,4 @@
-from typing import Mapping
+from collections.abc import Mapping
 
 from app.gamification.application.records import FeatureSnapshotRecord
 from app.gamification.modeling.misconception_inference.contracts import UNKNOWN_CODE

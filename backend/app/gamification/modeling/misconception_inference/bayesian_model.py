@@ -6,8 +6,8 @@ empirical calibration of Grade 5 misconceptions.
 """
 
 import math
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Mapping
 
 from app.gamification.application.records import FeatureSnapshotRecord
 from app.gamification.modeling.misconception_inference.contracts import UNKNOWN_CODE
@@ -198,9 +198,9 @@ class BayesianMisconceptionModel:
         skill_codes = parameters.get("skill_codes")
         class_priors = parameters.get("class_priors")
         if not isinstance(catalogue_version, str) or not isinstance(skill_codes, Mapping):
-            raise ValueError("Bayesian artifact requires a catalogue version and skill codes")
+            raise TypeError("Bayesian artifact requires a catalogue version and skill codes")
         if not isinstance(class_priors, Mapping):
-            raise ValueError("Bayesian artifact requires class priors")
+            raise TypeError("Bayesian artifact requires class priors")
         return cls(
             catalogue_version=catalogue_version,
             skill_codes=skill_codes,
