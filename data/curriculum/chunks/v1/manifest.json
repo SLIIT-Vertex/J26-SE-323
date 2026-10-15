@@ -1,0 +1,43 @@
+{
+  "chunking_version": "chunking-v1",
+  "files": {
+    "chunks.jsonl": {
+      "bytes": 120451,
+      "sha256": "ce60ec670019d0e53cb4734e97bba91805fee9eed52ea9aa1f51ea07874e6c66"
+    },
+    "quarantine.jsonl": {
+      "bytes": 162974,
+      "sha256": "ce882fa344bf26bb41f6e53a2276865f17c5b163ae4b3a93525d72ad6ca4f91b"
+    }
+  },
+  "ingestion_status": "NOT_INGESTED",
+  "quarantine_reasons": {
+    "conversion_unavailable": 1208,
+    "no_covering_outcome": 443,
+    "no_usable_text": 31,
+    "unresolved_parent": 133
+  },
+  "quarantined_count": 1815,
+  "review_status": "REVIEW_PENDING",
+  "source_document_sha256": {
+    "SRC-G5-ENG-TB-01": "391181f0e357d3bb31439c2e101179dadeb672533b2afcd95034fe1e146e0144",
+    "SRC-G5-ENG-TG-01": "bacf359d1fae1c8df8d8bcc7cbb705829e2f7545809572acdd3ae8f1a3401041",
+    "SRC-G5-ENV-ACT-01": "f06344f679ce3ef185ee2a181d00b74bc207599e9da07858ce4b47feb8b8c3f8",
+    "SRC-G5-ENV-ACT-02": "3e45caf1eaeaddca8f50dfa4d2d3f1b16378d9bca6b2409ee8d11065a78562d2",
+    "SRC-G5-ENV-ACT-03": "55cbf8f8cddd9dc9f3716172174331665a9a721f5e7f4b4e0cdb16ac19f42f51",
+    "SRC-G5-ENV-ACT-04": "61a5eb364b61f55bbcdca0f2d807fe3ce40128cd5aa1f331cb925278135703a9",
+    "SRC-G5-ENV-ACT-05": "dd0db581bf609474e6d9fdbee3b56fe90ec79d90d9f163087c75efb78bd91bfe",
+    "SRC-G5-ENV-ACT-06": "af653b99947a50dc772f889e95c8458b28a5588599ea8f86cedf06e98ec65ced",
+    "SRC-G5-ENV-ACT-07": "e66b8e6aeacaabdd4ee435d93ed5234bdf76f8f60c61582d2ad696006e487dd1",
+    "SRC-G5-ENV-ACT-08": "287d642c438e22ccf16593382e79761ac29530e25453361bf20d298715fd3f27",
+    "SRC-G5-ENV-ACT-09": "d8754f09d1341ce25d77fcc75294101b70193bf402f41718093721e2264f8c36",
+    "SRC-G5-ENV-TG-01": "881a25605f26de090f56e45759a89f06e3aa334dfc2383d2ade3a5cc7f96ad5d",
+    "SRC-G5-MAT-TB-01": "d52f97712df05373c2b104382f1f1531999b6373b81b938f2fe8c391862b6796",
+    "SRC-G5-MAT-TG-01": "e749b168479f7d1df0e3c490cd71bc32e4821c2b020a3747085343147f8cc524",
+    "SRC-G5-MAT-TG-02": "2ef95994440479008305b384bfcfd989741e611c17f2469f4187784aadaeb5eb",
+    "SRC-G5-SIN-TB-01": "6f5360c27c35c1aaa65c2c43c46d426de427719c62345a32cf29ddacfbd10c95",
+    "SRC-G5-SIN-TG-01": "265741707fc6944913df8ee4081d948ee19a4aee20678e9589e2f8130f578cdd"
+  },
+  "unpinned_source_ids": [],
+  "written_count": 189
+}

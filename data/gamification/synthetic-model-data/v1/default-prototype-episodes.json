@@ -1,0 +1,117 @@
+{
+  "_comment": "Synthetic engineering fixture and template only. Replace synthetic examples with authorized, independently expert-reviewed records before research evaluation. Do not treat this file as evidence of model validity or educational effectiveness.",
+  "expert_review_template": {
+    "provisional_skill_id": "Opaque provisional skill identifier",
+    "question_item": "Question or item shown to the learner",
+    "example_learner_response": "Representative learner response with unnecessary personal data removed",
+    "expert_misconception_label": "Primary misconception label assigned independently by the reviewer",
+    "alternative_plausible_label": "Alternative label or unknown/other when evidence is ambiguous",
+    "reason_for_label": "Short evidence-based explanation",
+    "expert_confidence": "low | medium | high",
+    "appropriate_support_actions": ["One or more approved support actions"],
+    "inappropriate_support_actions": ["Support actions that would be misleading or unsuitable"],
+    "reviewer_id": "Pseudonymous reviewer identifier"
+  },
+  "records": [
+  {
+    "episode_id": "synthetic-default-e01",
+    "learner_id": "synthetic-default-l01",
+    "features": {"skill_id": "opaque-skill-01", "current_score": 0.0, "structured_error_code": "synthetic-error-a"},
+    "action_id": "synthetic-conceptual-hint",
+    "reward": 0.5,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-a"
+  },
+  {
+    "episode_id": "synthetic-default-e02",
+    "learner_id": "synthetic-default-l02",
+    "features": {"skill_id": "opaque-skill-01", "current_score": 0.25, "structured_error_code": "synthetic-error-a"},
+    "action_id": "synthetic-conceptual-hint",
+    "reward": 0.25,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-a"
+  },
+  {
+    "episode_id": "synthetic-default-e03",
+    "learner_id": "synthetic-default-l03",
+    "features": {"skill_id": "opaque-skill-01", "current_score": 0.0, "structured_error_code": "synthetic-error-b"},
+    "action_id": "synthetic-worked-example",
+    "reward": 0.75,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-b"
+  },
+  {
+    "episode_id": "synthetic-default-e04",
+    "learner_id": "synthetic-default-l04",
+    "features": {"skill_id": "opaque-skill-02", "current_score": 0.5, "structured_error_code": "synthetic-error-b"},
+    "action_id": "synthetic-worked-example",
+    "reward": 0.25,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-b"
+  },
+  {
+    "episode_id": "synthetic-default-e05",
+    "learner_id": "synthetic-default-l05",
+    "features": {"skill_id": "opaque-skill-02", "current_score": 0.0, "structured_error_code": null},
+    "action_id": "synthetic-metacognitive-prompt",
+    "reward": 0.0,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "unknown/other"
+  },
+  {
+    "episode_id": "synthetic-default-e06",
+    "learner_id": "synthetic-default-l06",
+    "features": {"skill_id": "opaque-skill-02", "current_score": 0.25, "structured_error_code": "synthetic-error-a"},
+    "action_id": "synthetic-conceptual-hint",
+    "reward": -0.25,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-a"
+  },
+  {
+    "episode_id": "synthetic-default-e07",
+    "learner_id": "synthetic-default-l07",
+    "features": {"skill_id": "opaque-skill-03", "current_score": 0.0, "structured_error_code": "synthetic-error-b"},
+    "action_id": "synthetic-worked-example",
+    "reward": null,
+    "propensity": 1.0,
+    "valid_outcome": false,
+    "label": "synthetic-misconception-b"
+  },
+  {
+    "episode_id": "synthetic-default-e08",
+    "learner_id": "synthetic-default-l08",
+    "features": {"skill_id": "opaque-skill-03", "current_score": 0.0, "structured_error_code": null},
+    "action_id": "synthetic-metacognitive-prompt",
+    "reward": 0.5,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "unknown/other"
+  },
+  {
+    "episode_id": "synthetic-default-e09",
+    "learner_id": "synthetic-default-l09",
+    "features": {"skill_id": "opaque-skill-03", "current_score": 0.5, "structured_error_code": "synthetic-error-a"},
+    "action_id": "synthetic-conceptual-hint",
+    "reward": 0.0,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-a"
+  },
+  {
+    "episode_id": "synthetic-default-e10",
+    "learner_id": "synthetic-default-l10",
+    "features": {"skill_id": "opaque-skill-03", "current_score": 0.25, "structured_error_code": "synthetic-error-b"},
+    "action_id": "synthetic-worked-example",
+    "reward": 0.5,
+    "propensity": 1.0,
+    "valid_outcome": true,
+    "label": "synthetic-misconception-b"
+  }
+  ]
+}

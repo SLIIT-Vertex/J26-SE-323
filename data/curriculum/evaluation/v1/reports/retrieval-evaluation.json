@@ -1,0 +1,45 @@
+{
+  "by_purpose": {
+    "CONTENT_AUTHORING": {
+      "insufficient_evidence_correct_count": 0,
+      "insufficient_evidence_correctness": null,
+      "no_passage_query_count": 0,
+      "query_count": 1,
+      "recall_at_k": 1.0,
+      "recall_query_count": 1,
+      "recalled_count": 1
+    },
+    "TUTOR_ANSWER": {
+      "insufficient_evidence_correct_count": 0,
+      "insufficient_evidence_correctness": null,
+      "no_passage_query_count": 0,
+      "query_count": 0,
+      "recall_at_k": null,
+      "recall_query_count": 0,
+      "recalled_count": 0
+    }
+  },
+  "chunk_manifest_sha256": "593769f283f9faa2dfea02ae8d666e3c439a38d7e087f5e11f91390e611f99bb",
+  "filter_check_passed": true,
+  "filter_violation_count": 0,
+  "filter_violation_rate": 0.0,
+  "frozen": true,
+  "insufficient_evidence_passed": null,
+  "k": 4,
+  "notes": "No reviewer signed this query. The listed chunk ids are the skill's pilot amount. Recall only says whether those ids came back. It is not an educational-effectiveness claim.",
+  "query_ids": [
+    "MAT-FRC-PILOT"
+  ],
+  "retriever_invoked": true,
+  "retriever_version": "chunking-v1;embedding-revision=pilot-hash-v1;fusion=reciprocal-rank-fusion-k60",
+  "returned_chunk_ids": [
+    "SRC-G5-MAT-TG-01:p0031:G5-MAT-C03-L01-O01:visual_read:0000",
+    "SRC-G5-MAT-TG-01:p0031:G5-MAT-C03-L01-O03:visual_read:0000",
+    "SRC-G5-MAT-TG-01:p0031:G5-MAT-C03-L01-O02:visual_read:0000",
+    "SRC-G5-MAT-TG-01:p0098:G5-MAT-C05-L01-O01:visual_read:0000"
+  ],
+  "returned_passage_count": 4,
+  "reviewed": false,
+  "skill_id": "MAT-FRC",
+  "tutor_queries_present": false
+}

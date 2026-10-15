@@ -1,7 +1,8 @@
-"""The Alembic history must be one straight line: unique revision ids and a single head.
+"""Alembic revisions must be unique and end at the intentional module heads.
 
-Two branches that both add a migration with the same id are silently shadowed (one is never
-applied), which is easy to miss after a rebase.
+Research modules deliberately branch from the shared learner migration. Duplicate IDs still
+silently shadow a migration after a rebase, while an unexpected head usually means a module's
+chain was split accidentally.
 """
 
 import re
@@ -25,10 +26,14 @@ def test_every_revision_id_is_unique() -> None:
     assert not duplicates, f"revision ids used by more than one file: {duplicates}"
 
 
-def test_there_is_exactly_one_head() -> None:
+def test_only_the_intentional_module_heads_exist() -> None:
     config = Config(str(BACKEND / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND / "alembic"))
 
     heads = ScriptDirectory.from_config(config).get_heads()
 
-    assert len(heads) == 1, f"migration branches need merging: {heads}"
+    assert set(heads) == {
+        "curr_20261015_01",
+        "gam_20261015_06",
+        "20261018_01",  # knowledge tracing, grading, and learner state
+    }

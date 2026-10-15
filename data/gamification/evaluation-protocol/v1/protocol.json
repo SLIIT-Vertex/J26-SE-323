@@ -1,0 +1,61 @@
+{
+  "protocol_version": "evaluation-protocol-v1",
+  "primary_outcome": {
+    "name": "independent_post_test_score",
+    "analysis": "ancova",
+    "covariate": "pre_test_score"
+  },
+  "secondary_outcomes": [
+    "episode_level_independence_gain",
+    "misconception_resolution",
+    "support_dependency",
+    "selection_quality"
+  ],
+  "exclusion_rules": [
+    "BASELINE_NOT_UNSUPPORTED",
+    "VERIFICATION_NOT_UNSUPPORTED",
+    "PAIR_NOT_APPROVED",
+    "PRIMARY_SKILL_MISMATCH",
+    "COGNITIVE_OPERATION_MISMATCH",
+    "DIFFICULTY_BAND_MISMATCH",
+    "RESPONSE_FORMAT_MISMATCH",
+    "LANGUAGE_NOT_REVIEWED",
+    "EXPECTED_TIME_MISMATCH",
+    "VERIFICATION_ITEM_PREVIOUSLY_SEEN",
+    "ANSWER_CLUE_OVERLAP",
+    "SUPPORT_NOT_DELIVERED",
+    "SUPPORT_NOT_COMPLETED",
+    "SUPPORT_NOT_WITHDRAWN",
+    "SUPPORT_VISIBLE_DURING_VERIFICATION",
+    "IDLE_THRESHOLD_EXCEEDED",
+    "CLIENT_ORDERING_CORRUPT",
+    "INTERVENING_SUPPORT"
+  ],
+  "formula_version": "raw-independence-gain-v1",
+  "reward_version": "raw-ig-reward-v1",
+  "context_version": "bandit-context-v1",
+  "resolution_formula_version": "posterior-mass-drop-v1",
+  "arms": [
+    {
+      "arm_key": "baseline_performance_triggered",
+      "decision_mode": "performance_triggered_fixed",
+      "ig_feedback": false,
+      "measures_independence_gain": true
+    },
+    {
+      "arm_key": "proposed_misconception_ig_policy",
+      "decision_mode": "learned",
+      "ig_feedback": true,
+      "exploration_floor": 0.05,
+      "requires_approved_artifact": true,
+      "measures_independence_gain": true
+    }
+  ],
+  "assignment_unit": "learner",
+  "allocation_rule": "sha256-learner-seed-mod-arms",
+  "stop_rules": [
+    "Stop if the invalid-episode rate exceeds the threshold named in the approved protocol.",
+    "Stop if the proposed arm is materially worse on the primary outcome under the approved analysis."
+  ],
+  "sample_size": "to be confirmed with supervisor/ethics"
+}

@@ -1,0 +1,60 @@
+{
+  "package_version": "2.0.0",
+  "overall_status": "engineering_ready_research_and_learner_delivery_blocked",
+  "summary": {
+    "curriculum_sources": 17,
+    "curriculum_nodes": 1884,
+    "curriculum_terms": 250,
+    "games": 48,
+    "game_items": 1920,
+    "item_curriculum_mappings": 4424,
+    "skill_candidates": 548,
+    "items_with_skill_candidate_mapping": 1440,
+    "items_without_skill_candidate_mapping": 480,
+    "answer_verified_items": 960,
+    "language_reviewed_items": 480,
+    "published_items": 0,
+    "approved_curriculum_nodes": 0,
+    "support_action_candidates": 1920,
+    "approved_support_actions": 0,
+    "verification_pair_candidates": 1400,
+    "approved_verification_pairs": 0,
+    "items_without_verification_pair_candidate": 520,
+    "structured_error_mappings": 0,
+    "formal_review_decisions": 0,
+    "audio_required_items": 120,
+    "uncreated_required_audio_assets": 120,
+    "open_high_severity_qa_issues": 49,
+    "open_medium_severity_qa_issues": 131
+  },
+  "gates": {
+    "package_integrity": {
+      "status": "ready",
+      "reason": "All generated schemas, identifiers and cross-references validate."
+    },
+    "game_prototyping": {
+      "status": "ready_with_restrictions",
+      "reason": "Structurally playable content exists, but publication and asset reviews remain open."
+    },
+    "curriculum_and_skill_approval": {
+      "status": "blocked",
+      "reason": "Gamification skill candidates have no formal curriculum approvals."
+    },
+    "misconception_inference": {
+      "status": "blocked",
+      "reason": "Only the unknown/other fallback exists; no expert-approved structured error mappings exist."
+    },
+    "support_selection": {
+      "status": "blocked",
+      "reason": "Support actions and assets are review candidates and none are approved for eligibility."
+    },
+    "independence_gain": {
+      "status": "blocked",
+      "reason": "Verification pairs are candidates only; unseen-item and answer-overlap evidence are runtime or review requirements."
+    },
+    "child_facing_delivery": {
+      "status": "blocked",
+      "reason": "No content is published and curriculum, language, asset and ethics gates remain open."
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": "gamification-skill-catalogue-v1",
+  "taxonomy_version": "grade5-gamification-skills-v1",
+  "ownership": "gamification",
+  "binding_key": "gamification_skill_id",
+  "crosswalk_key": "universal_skill_id",
+  "crosswalk_version": "grade5-universal-crosswalk-v1"
+}

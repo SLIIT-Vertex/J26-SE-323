@@ -157,6 +157,7 @@ def make_submission_service(
     second_provider: VisionProvider | None = None,
     estimator: object | None = None,
     use_default_readers: bool = True,
+    workers: int | None = None,
 ) -> SubmissionService:
     settings = get_settings()
     spec = get_feature_spec()
@@ -193,7 +194,7 @@ def make_submission_service(
         config=GradingConfig(
             confidence_min=settings.vision_confidence_min, review_policy=_review_policy()
         ),
-        workers=settings.vision_concurrency,
+        workers=settings.vision_concurrency if workers is None else workers,
     )
 
 

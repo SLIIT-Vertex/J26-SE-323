@@ -1,0 +1,56 @@
+{
+  "package": "grade5-curriculum-trace",
+  "version": "1.0.0",
+  "curriculum_version": "grade5-curriculum-v2",
+  "ownership": "shared curriculum (Adaptive Tutor and Gamification)",
+  "review_status": "draft trace; not reviewed or approved",
+  "counts": {
+    "curriculum_source": 17,
+    "curriculum_node": 1884,
+    "curriculum_term": 250
+  },
+  "source_workbooks": {
+    "grade5_ENV_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 90683,
+      "sha256": "ce2f085be18cdf2eb3d05140861b646ef658b8d7d6e8ca9f3590815b672ad251"
+    },
+    "grade5_SIN_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 83155,
+      "sha256": "8b93b96171660f809ebf462393cd146b72deee3d639e30cf6d0625971f1a5b03"
+    },
+    "grade5_ENG_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 37118,
+      "sha256": "db61cc34b68759b77cb11916475d2be243d6b2e36de790a3c3632eef85e3b934"
+    },
+    "grade5_MAT_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 88317,
+      "sha256": "bc32dedbc23573ed88e5b1c309e1c92aaeba87cb63d4d0dfc2dec56f808999b1"
+    }
+  },
+  "files": {
+    "curriculum_sources.jsonl": {
+      "bytes": 31247,
+      "sha256": "2f3232aaa86bf1aab8fd56c7ff8000beba20fd155a84a86b3a5f11ba09c577e8"
+    },
+    "curriculum_nodes.jsonl": {
+      "bytes": 3384461,
+      "sha256": "849af7a251e583f7edef65bc4b5e811b379dd6b42f20956934c35762642b7bad"
+    },
+    "curriculum_terms.jsonl": {
+      "bytes": 185230,
+      "sha256": "5c7de7bcb34f6995517faf88840236654c8bca5b91c9fdb88f26b858b8ec8121"
+    },
+    "schema.json": {
+      "bytes": 6564,
+      "sha256": "ed4b1d796e965f8aabc06b98f701fe3fd41c06430c5579f874839e58bf29fde7"
+    },
+    "README.md": {
+      "bytes": 1202,
+      "sha256": "a80e9af505cca058dc9fed7fa4d2c7311b57662eab0757e01ab9e26cc1aa0880"
+    }
+  }
+}

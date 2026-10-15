@@ -1,0 +1,50 @@
+{
+  "package": "gamification-skill-catalogue",
+  "component_owner": "hareeshagunasekara",
+  "version": "1.0.0",
+  "taxonomy_version": "grade5-gamification-skills-v1",
+  "ownership": "gamification",
+  "counts": {
+    "skills": 548,
+    "bindings": 548,
+    "crosswalk_rows": 548,
+    "approved": 0
+  },
+  "sources": {
+    "data/gamification/grade5-curriculum-game-dataset/v2/skill_candidates.jsonl": {
+      "sha256": "d781e2cc0cb9616e0dd7bd8175c769ec0424051139f79c7a92481881d30e0a65"
+    },
+    "docs/skill_nodes.xlsx": {
+      "sha256": "d1956a1509391a7bbe76f18e37dd8cd6e9034bd76de2a229fc6d555031cc2a28"
+    },
+    "git:7033835:data/gamification/skill-catalogue-review/v1/grade5-candidate-skill-bindings.jsonl": {
+      "sha256": "0115149b82c0b74e04f5b5662d2a98e0b2a3c9fc0e7e93fcc099c99ffa1c4742"
+    }
+  },
+  "files": {
+    "skill-inventory.jsonl": {
+      "bytes": 239653,
+      "sha256": "701aac5d89a70f3cb819d530ebf9a63c9d34b502ecd19685759c36bc24d81b76"
+    },
+    "development-skill-reviews.jsonl": {
+      "bytes": 849185,
+      "sha256": "fe5957df6eceb03ab62d600690237da5c878b8421d376b4e3026b20a68c7e72f"
+    },
+    "grade5-candidate-skill-bindings.jsonl": {
+      "bytes": 184518,
+      "sha256": "c0170b592d87a5044b0858fbe6f3cce0a199c8594a1de3a99ea34908ffceb786"
+    },
+    "universal-skill-crosswalk.jsonl": {
+      "bytes": 265823,
+      "sha256": "d5379daf7e0dd92760bdad5970f65610b17108d596e53d921706b9eae9e93c58"
+    },
+    "schema.json": {
+      "bytes": 283,
+      "sha256": "1639c1afb14c9c6e1ba8aeaa7c27fbd8360b88143cde59ce9d323ca55fe3ed8b"
+    }
+  },
+  "gates": {
+    "development": "pass",
+    "child_facing": "blocked_pending_review"
+  }
+}

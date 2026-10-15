@@ -1,0 +1,94 @@
+{
+  "schema_version": "2.0.0",
+  "status": "pass",
+  "checks": [
+    {
+      "check": "curriculum_source_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "curriculum_node_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "curriculum_term_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "skill_candidate_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "skill_relationship_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "skill_source_mapping_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "game_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "game_item_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "item_curriculum_mapping_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "item_skill_mapping_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "misconception_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "structured_error_mapping_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "support_action_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "content_asset_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "verification_pair_candidate_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "asset_requirement_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "qa_issue_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "review_decision_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "workbook_annotation_schema_and_unique_key",
+      "status": "pass"
+    },
+    {
+      "check": "all_references_resolve",
+      "status": "pass"
+    },
+    {
+      "check": "single_select_answers_are_valid",
+      "status": "pass"
+    },
+    {
+      "check": "option_lists_have_no_duplicates",
+      "status": "pass"
+    }
+  ]
+}

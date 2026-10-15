@@ -1,0 +1,74 @@
+[
+  {
+    "case_id": "synthetic-case-mat-place-value-01",
+    "learner_medium": "si",
+    "label": "place-value-position-ignored",
+    "probabilities": {"place-value-position-ignored": 0.9, "unknown/other": 0.1},
+    "abstained": false,
+    "skill_id": "G5-MAT-C01-L01-O01",
+    "language": "bilingual"
+  },
+  {
+    "case_id": "synthetic-case-mat-addition-01",
+    "learner_medium": "si",
+    "label": "addition-carry-not-composed",
+    "probabilities": {"addition-carry-not-composed": 0.85, "unknown/other": 0.15},
+    "abstained": false,
+    "skill_id": "G5-MAT-C06",
+    "language": "bilingual"
+  },
+  {
+    "case_id": "synthetic-case-mat-multiplication-01",
+    "learner_medium": "si",
+    "label": "multiplication-fact-family-confusion",
+    "probabilities": {"multiplication-fact-family-confusion": 0.85, "unknown/other": 0.15},
+    "abstained": false,
+    "skill_id": "G5-MAT-C08",
+    "language": "bilingual"
+  },
+  {
+    "case_id": "synthetic-case-mat-fraction-01",
+    "learner_medium": "si",
+    "label": "fraction-numerator-ignored",
+    "probabilities": {"fraction-numerator-ignored": 0.9, "unknown/other": 0.1},
+    "abstained": false,
+    "skill_id": "G5-MAT-C03",
+    "language": "bilingual"
+  },
+  {
+    "case_id": "synthetic-case-eng-phonics-01",
+    "learner_medium": "si",
+    "label": "initial-phoneme-not-segmented",
+    "probabilities": {"initial-phoneme-not-segmented": 0.85, "unknown/other": 0.15},
+    "abstained": false,
+    "skill_id": "G5-ENG-C01-L01",
+    "language": "en"
+  },
+  {
+    "case_id": "synthetic-case-eng-vocabulary-01",
+    "learner_medium": "si",
+    "label": "unknown/other",
+    "probabilities": {"target-word-meaning-not-known": 0.5, "unknown/other": 0.5},
+    "abstained": true,
+    "skill_id": "G5-ENG-C01",
+    "language": "en"
+  },
+  {
+    "case_id": "synthetic-case-eng-grammar-01",
+    "learner_medium": "si",
+    "label": "noun-adjective-category-confusion",
+    "probabilities": {"noun-adjective-category-confusion": 0.85, "unknown/other": 0.15},
+    "abstained": false,
+    "skill_id": "G5-ENG-C01-L01",
+    "language": "en"
+  },
+  {
+    "case_id": "synthetic-case-eng-spelling-01",
+    "learner_medium": "si",
+    "label": "unknown/other",
+    "probabilities": {"final-consonant-not-represented": 0.5, "unknown/other": 0.5},
+    "abstained": true,
+    "skill_id": "G5-ENG-C01",
+    "language": "en"
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "revision_id": "G5-MAT-HALF-I01@v1",
+    "correct_option_id": "B",
+    "accepted_response": "8",
+    "rubric": "Award 1 point only for selecting the option representing 16 divided into two equal groups.",
+    "scoring_version": "g5-mat-half-scoring-v1",
+    "distractor_misconception_ids": {"A": "subtracts_two", "C": "whole_set_as_half"},
+    "fallback_misconception_id": "unknown_or_other",
+    "review_status": "pending",
+    "reviewer_id": null,
+    "reviewed_on": null
+  },
+  {
+    "revision_id": "G5-MAT-HALF-I02@v1",
+    "correct_option_id": "C",
+    "accepted_response": "12",
+    "rubric": "Award 1 point only for selecting the option representing 24 divided into two equal groups.",
+    "scoring_version": "g5-mat-half-scoring-v1",
+    "distractor_misconception_ids": {"A": "subtracts_two", "B": "whole_set_as_half"},
+    "fallback_misconception_id": "unknown_or_other",
+    "review_status": "pending",
+    "reviewer_id": null,
+    "reviewed_on": null
+  },
+  {
+    "revision_id": "G5-MAT-HALF-I03@v1",
+    "correct_option_id": "C",
+    "accepted_response": "18",
+    "rubric": "Award 1 point only for selecting the option representing 36 divided into two equal groups.",
+    "scoring_version": "g5-mat-half-scoring-v1",
+    "distractor_misconception_ids": {"A": "whole_set_as_half", "B": "subtracts_two"},
+    "fallback_misconception_id": "unknown_or_other",
+    "review_status": "pending",
+    "reviewer_id": null,
+    "reviewed_on": null
+  }
+]

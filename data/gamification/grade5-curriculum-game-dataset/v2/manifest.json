@@ -1,0 +1,143 @@
+{
+  "package": "grade5-curriculum-game-dataset",
+  "component_owner": "hareeshagunasekara",
+  "version": "2.0.0",
+  "curriculum_version": "grade5-curriculum-v2",
+  "skill_taxonomy_version": "grade5-skill-candidates-v2",
+  "misconception_catalogue_version": "grade5-misconceptions-v2",
+  "support_catalogue_version": "grade5-support-v2",
+  "equivalence_version": "grade5-verification-candidates-v2",
+  "curriculum_trace_package": {
+    "package": "grade5-curriculum-trace",
+    "version": "1.0.0",
+    "path": "../../../curriculum/grade5-curriculum-trace/v1",
+    "manifest_sha256": "bac7d69b204b76664d51a2c0cdaaf7e5926b11c9caf3904705fdedbe4f76c2e3"
+  },
+  "counts": {
+    "skill_candidate": 548,
+    "skill_relationship": 400,
+    "skill_source_mapping": 548,
+    "game": 48,
+    "game_item": 1920,
+    "item_curriculum_mapping": 4424,
+    "item_skill_mapping": 3904,
+    "misconception": 1,
+    "structured_error_mapping": 0,
+    "support_action": 1920,
+    "content_asset": 1920,
+    "verification_pair_candidate": 1400,
+    "asset_requirement": 3,
+    "qa_issue": 180,
+    "review_decision": 0,
+    "workbook_annotation": 29
+  },
+  "source_workbooks": {
+    "grade5_ENV_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 90683,
+      "sha256": "ce2f085be18cdf2eb3d05140861b646ef658b8d7d6e8ca9f3590815b672ad251"
+    },
+    "grade5_SIN_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 83155,
+      "sha256": "8b93b96171660f809ebf462393cd146b72deee3d639e30cf6d0625971f1a5b03"
+    },
+    "grade5_ENG_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 37118,
+      "sha256": "db61cc34b68759b77cb11916475d2be243d6b2e36de790a3c3632eef85e3b934"
+    },
+    "grade5_MAT_syllabus_trace_v1.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 88317,
+      "sha256": "bc32dedbc23573ed88e5b1c309e1c92aaeba87cb63d4d0dfc2dec56f808999b1"
+    },
+    "grade5_game_dataset_master.xlsx": {
+      "prepared_by": "hareeshagunasekara",
+      "bytes": 691082,
+      "sha256": "f49ac8c903cba739234eb307175806676f4651e2ddbcdd4800e68b978daf58c8"
+    }
+  },
+  "files": {
+    "skill_candidates.jsonl": {
+      "bytes": 495324,
+      "sha256": "d781e2cc0cb9616e0dd7bd8175c769ec0424051139f79c7a92481881d30e0a65"
+    },
+    "skill_relationships.jsonl": {
+      "bytes": 124426,
+      "sha256": "d59f9fe6fb11257fea8daf01fd2d28e70b6d1fc3b9a85b2f916df76bbda8adff"
+    },
+    "skill_source_mappings.jsonl": {
+      "bytes": 207921,
+      "sha256": "28cda8b3fd83e1ee308bf514b18e6cd2fecd5728ec1e2b7a4b6112fe457c76d0"
+    },
+    "games.jsonl": {
+      "bytes": 42231,
+      "sha256": "6d407e4133f379c4f5f65a0aeedf0759854a62baeecb499995972794d19d3997"
+    },
+    "game_items.jsonl": {
+      "bytes": 2928645,
+      "sha256": "2c67ba54c2dbbcb9fc3ec3329ab97b41e603fbf5eac61bca55c3046b2c08e5e1"
+    },
+    "item_curriculum_mappings.jsonl": {
+      "bytes": 1981780,
+      "sha256": "e413691e2075d1528600deecbe0388a5d9b9d8eb095b686c8ac5e57364dc7e72"
+    },
+    "item_skill_mappings.jsonl": {
+      "bytes": 1450464,
+      "sha256": "c982a2c4acd10242a17dbe1054542f737f3ea7dbf8f394e954f56521657c9de8"
+    },
+    "misconception_catalogue.jsonl": {
+      "bytes": 402,
+      "sha256": "8e8f323e9060ba6a8f4bcc18c07215bfa489d501cd455b74f0b43b6645e562ce"
+    },
+    "structured_error_mappings.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "support_actions.jsonl": {
+      "bytes": 828512,
+      "sha256": "8214bb574425944f4d286e3ecbd50ede5cafcaf95790e7bc4662f8c954380fa6"
+    },
+    "content_assets.jsonl": {
+      "bytes": 1248328,
+      "sha256": "c7151e050559605618abe96a9ef8bc3281a5c00be2d1b32a7c1f229f40e938c1"
+    },
+    "verification_pair_candidates.jsonl": {
+      "bytes": 858440,
+      "sha256": "dec01ab34247bc287ac13e3ba33886c26b6092ebf31e672620e67260ae99bd74"
+    },
+    "asset_requirements.jsonl": {
+      "bytes": 1377,
+      "sha256": "4852fd66775e8687befb6e95593bd03751009975c01c63a6accb70e1f2699ef0"
+    },
+    "qa_issues.jsonl": {
+      "bytes": 174149,
+      "sha256": "57edb645bdaac3c660c5614388e1ae1bc197aba97eb8609e31efb6d30df9c010"
+    },
+    "review_decisions.jsonl": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "workbook_annotations.jsonl": {
+      "bytes": 9243,
+      "sha256": "cb4087965b894bba40c19ae4278e0907d2983c7930f27fe2070be4635eddbdcf"
+    },
+    "schema.json": {
+      "bytes": 24984,
+      "sha256": "4c310265045a589a653d65968ee13a01cefaa353e75069f7e7cd48e3869d15e3"
+    },
+    "validation_report.json": {
+      "bytes": 2086,
+      "sha256": "7dab5df4f7a0de2c4483fb968b9707bf06745845a8ea35220ab5ca566607a044"
+    },
+    "readiness_report.json": {
+      "bytes": 2201,
+      "sha256": "91ab1e1f9f45222535b896405783956d5ff71ab6a1d82e5d56a2155cb19ccb96"
+    },
+    "README.md": {
+      "bytes": 1130,
+      "sha256": "b236bedb1aac830df4f32f5d38dd65b0acfc954c054e38006ba1e16891b54804"
+    }
+  }
+}

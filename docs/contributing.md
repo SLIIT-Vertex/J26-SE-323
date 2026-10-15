@@ -73,6 +73,28 @@ npm run check
 
 Hooks can be bypassed with `--no-verify`, so GitHub rules are the authoritative enforcement.
 
+## Database migrations
+
+Research modules branch their Alembic migrations independently from the shared learner migration
+`20261007_01`, so the repository intentionally has more than one head:
+
+- gamification: `gam_20261015_06` (branch label `gamification`)
+- curriculum: `curr_20261015_01` (branch label `curriculum`)
+- knowledge tracing and learner state: `20261015_02`
+
+`alembic upgrade head` (singular) fails when there are several heads. Use one of:
+
+```bash
+cd backend
+alembic heads
+alembic upgrade heads
+alembic upgrade gamification@head
+alembic upgrade curriculum@head
+```
+
+Use `alembic upgrade heads` to upgrade every module, or `gamification@head` for one labelled
+branch. Do not chain one research module's migration behind another's to remove a head.
+
 ## Required GitHub rulesets
 
 Create rulesets for `main` and `develop` in the repository settings:

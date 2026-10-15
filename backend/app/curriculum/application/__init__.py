@@ -1,6 +1,7 @@
 """Public shared curriculum contracts."""
 
 from app.curriculum.application.retrieval import (
+    RETRIEVER_CONTRACT_VERSION,
     CurriculumChunk,
     CurriculumRetrievalRequest,
     CurriculumRetrievalResult,
@@ -16,8 +17,10 @@ from app.curriculum.application.retrieval import (
     validate_curriculum_skill_ids,
     validate_retrieval_result_for_request,
 )
+from app.curriculum.application.source_registry import CurriculumSourceRegistry
 
 __all__ = [
+    "RETRIEVER_CONTRACT_VERSION",
     "CurriculumChunk",
     "CurriculumRetrievalRequest",
     "CurriculumRetrievalResult",
@@ -25,6 +28,7 @@ __all__ = [
     "CurriculumRetriever",
     "CurriculumReviewStatus",
     "CurriculumSourceRecord",
+    "CurriculumSourceRegistry",
     "Grade",
     "IngestionStatus",
     "MetadataStatus",

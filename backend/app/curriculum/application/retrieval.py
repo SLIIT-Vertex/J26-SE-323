@@ -9,6 +9,8 @@ Grade = Literal[4, 5]
 PositivePage = Annotated[int, Field(strict=True, ge=1)]
 RetrievalLimit = Annotated[int, Field(strict=True, ge=1, le=10)]
 RetrievalScore = Annotated[float, Field(strict=True, allow_inf_nan=False)]
+RetrievalPurpose = Literal["TUTOR_ANSWER", "CONTENT_AUTHORING"]
+RETRIEVER_CONTRACT_VERSION = "curriculum-retriever-contract-v1.1"
 
 
 class MetadataStatus(StrEnum):
@@ -76,6 +78,8 @@ class CurriculumChunk(BaseModel):
     skill_ids: tuple[NonBlankText, ...] = Field(min_length=1)
     page_number: PositivePage | None = None
     section_locator: NonBlankText | None = None
+    unit_id: NonBlankText | None = None
+    learning_outcome_id: NonBlankText | None = None
     review_status: CurriculumReviewStatus
 
     @model_validator(mode="after")
@@ -92,6 +96,10 @@ class CurriculumRetrievalRequest(BaseModel):
     skill_id: NonBlankText
     grade: Grade
     requested_language: NonBlankText | None = None
+    subject: NonBlankText | None = None
+    required_language: NonBlankText | None = None
+    unit_id: NonBlankText | None = None
+    purpose: RetrievalPurpose = "TUTOR_ANSWER"
     limit: RetrievalLimit = 5
 
 
@@ -108,16 +116,14 @@ class RetrievedCurriculumPassage(BaseModel):
             raise ValueError("chunk source_id does not match source reference")
         if self.source.source_version != self.chunk.source_version:
             raise ValueError("chunk source_version does not match source reference")
-        if self.source.metadata_status is not MetadataStatus.VERIFIED:
-            raise ValueError("retrieved source metadata must be verified")
-        if self.source.ingestion_status is not IngestionStatus.INGESTED:
-            raise ValueError("retrieved source must be ingested")
-        if self.source.review_status is not CurriculumReviewStatus.APPROVED:
-            raise ValueError("retrieved source must be approved")
-        if self.chunk.review_status is not CurriculumReviewStatus.APPROVED:
-            raise ValueError("retrieved chunk must be approved")
-        if self.source.usage_rights_status is not UsageRightsStatus.PERMITTED:
-            raise ValueError("retrieved source usage rights must be permitted")
+        if self.source.review_status is CurriculumReviewStatus.REJECTED:
+            raise ValueError("retrieved source must not be rejected")
+        if self.chunk.review_status is CurriculumReviewStatus.REJECTED:
+            raise ValueError("retrieved chunk must not be rejected")
+        if self.source.usage_rights_status is UsageRightsStatus.RESTRICTED:
+            raise ValueError("retrieved source usage rights must not be restricted")
+        if self.source.ingestion_status is IngestionStatus.FAILED:
+            raise ValueError("retrieved source ingestion must not be failed")
         return self
 
 
@@ -126,6 +132,7 @@ class CurriculumRetrievalResult(BaseModel):
 
     status: CurriculumRetrievalStatus
     passages: tuple[RetrievedCurriculumPassage, ...] = Field(default=(), max_length=10)
+    retriever_version: NonBlankText = RETRIEVER_CONTRACT_VERSION
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
@@ -144,7 +151,9 @@ def validate_curriculum_skill_ids(
     contract: CurriculumChunk | CurriculumRetrievalRequest,
     valid_skill_ids: Collection[str],
 ) -> None:
-    referenced_ids = contract.skill_ids if isinstance(contract, CurriculumChunk) else (contract.skill_id,)
+    referenced_ids = (
+        contract.skill_ids if isinstance(contract, CurriculumChunk) else (contract.skill_id,)
+    )
     unknown_ids = sorted(set(referenced_ids) - set(valid_skill_ids))
     if unknown_ids:
         raise ValueError(f"unknown skill IDs: {', '.join(unknown_ids)}")
@@ -161,3 +170,12 @@ def validate_retrieval_result_for_request(
             raise ValueError("retrieved passage grade does not match request")
         if request.skill_id not in passage.chunk.skill_ids:
             raise ValueError("retrieved passage does not include requested skill")
+        if request.subject is not None and passage.chunk.subject != request.subject:
+            raise ValueError("retrieved passage subject does not match request")
+        if (
+            request.required_language is not None
+            and passage.chunk.language != request.required_language
+        ):
+            raise ValueError("retrieved passage language does not match request")
+        if request.unit_id is not None and passage.chunk.unit_id != request.unit_id:
+            raise ValueError("retrieved passage unit does not match request")

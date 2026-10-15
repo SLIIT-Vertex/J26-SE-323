@@ -204,16 +204,16 @@ def test_mixed_language_question_is_preserved_as_untrusted_data() -> None:
     assert "1/2 + 1/4" in prompt.user_content
 
 
-def test_unapproved_curriculum_evidence_is_rejected_by_canonical_contract() -> None:
+def test_rejected_curriculum_evidence_is_rejected_by_canonical_contract() -> None:
     passage = approved_passage()
-    pending_source = passage.source.model_copy(
-        update={"review_status": CurriculumReviewStatus.REVIEW_PENDING}
+    rejected_source = passage.source.model_copy(
+        update={"review_status": CurriculumReviewStatus.REJECTED}
     )
 
-    with pytest.raises(ValidationError, match="source must be approved"):
+    with pytest.raises(ValidationError, match="must not be rejected"):
         RetrievedCurriculumPassage(
             chunk=passage.chunk,
-            source=pending_source,
+            source=rejected_source,
             score=passage.score,
         )
 

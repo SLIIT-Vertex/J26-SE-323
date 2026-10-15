@@ -4,8 +4,6 @@ MindBridge is a university research project supporting Sri Lankan Grade 4–5 sc
 learners. This repository contains only the shared technical foundation: a modular-monolith API,
 a shared learner identity, PostgreSQL with pgvector readiness, and a minimal mobile-ready web app.
 
-The four research algorithms are intentionally not implemented.
-
 Contributors should complete the one-time hook setup and follow the rebase-only workflow in
 [docs/contributing.md](docs/contributing.md).
 
@@ -26,10 +24,10 @@ each other's infrastructure. See [docs/architecture.md](docs/architecture.md).
 ```text
 backend/
   app/shared/                 # Database, auth boundary, shared learner
-  app/knowledge_tracing/      # Empty Clean Architecture boundary
-  app/learner_state/          # Empty Clean Architecture boundary
-  app/adaptive_tutor/         # Scaffolding policy contracts; controller deferred
-  app/gamification/           # Empty Clean Architecture boundary
+  app/knowledge_tracing/      # Separately owned research component; not used by gamification
+  app/learner_state/          # Learner-state inference service and API
+  app/adaptive_tutor/         # Separately owned research component; not used by gamification
+  app/gamification/           # Adaptive episode, contracts, and evidence persistence
   alembic/                    # Database migrations
   tests/                      # API tests
 frontend/
@@ -37,12 +35,14 @@ frontend/
   src/features/               # Feature-owned UI
 docs/                         # Architecture documentation
 research/                     # Research notes and non-runtime artifacts
+tools/gamification/           # Component-owned dataset tooling
+data/gamification/            # Central versioned gamification data and synthetic fixtures
 docker-compose.yml            # Local PostgreSQL only
 ```
 
 ## Local setup
 
-Prerequisites: Python 3.11+, Node.js 20+, npm, and Docker.
+Prerequisites: Python 3.12+, Node.js 20+, npm, and Docker.
 
 Install the repository hooks once after cloning:
 
@@ -67,7 +67,7 @@ source .venv/bin/activate
 pip install -e '.[dev]'
 cp .env.example .env
 # Set DATABASE_URL with the same local PostgreSQL credentials used above.
-alembic upgrade head
+alembic upgrade heads
 uvicorn app.main:app --reload
 ```
 
@@ -140,4 +140,3 @@ npm run open:android   # Open the Android Studio project
 - `GET /api/v1/learners/{learner_id}`
 
 The learner stores only `id`, `grade`, `preferred_language`, `created_at`, and `updated_at`.
-Authentication and all research algorithms remain intentionally deferred.

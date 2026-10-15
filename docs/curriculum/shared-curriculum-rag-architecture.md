@@ -56,8 +56,9 @@ The shared module is the only implementation of:
 - taxonomy membership and request/result consistency validation
 
 The contracts preserve the Task 12A rules: frozen models, forbidden extra fields, Grade 4–5 limits,
-unique skill IDs, finite scores, retrieval limits, matching source ID/version, verified metadata,
-ingested and approved sources, approved chunks, and permitted usage rights.
+unique skill IDs, finite scores, retrieval limits, and matching source ID/version. On 2026-10-15
+the Gamification owner removed the requirement that retrieved rows be verified, ingested, approved,
+and permitted. Rejected chunks and restricted sources stay out. Rows are not relabeled.
 
 Project approval is not a claim of government approval. Metadata verification, educational review,
 ingestion, and usage permission remain separate. A retrieved passage keeps the full source reference

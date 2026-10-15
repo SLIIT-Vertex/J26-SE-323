@@ -1,0 +1,1085 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mindbridge.local/schemas/grade5-curriculum-game-dataset-v2.json",
+  "title": "Grade 5 curriculum game dataset schema registry",
+  "version": "2.0.0",
+  "curriculum_version": "grade5-curriculum-v2",
+  "skill_taxonomy_version": "grade5-skill-candidates-v2",
+  "files": {
+    "skill_candidates.jsonl": {
+      "entity": "skill_candidate",
+      "primary_key": "skill_candidate_id",
+      "record_schema": {
+        "$ref": "#/$defs/skill_candidate"
+      }
+    },
+    "skill_relationships.jsonl": {
+      "entity": "skill_relationship",
+      "primary_key": "skill_relationship_id",
+      "record_schema": {
+        "$ref": "#/$defs/skill_relationship"
+      }
+    },
+    "skill_source_mappings.jsonl": {
+      "entity": "skill_source_mapping",
+      "primary_key": "skill_source_mapping_id",
+      "record_schema": {
+        "$ref": "#/$defs/skill_source_mapping"
+      }
+    },
+    "games.jsonl": {
+      "entity": "game",
+      "primary_key": "game_id",
+      "record_schema": {
+        "$ref": "#/$defs/game"
+      }
+    },
+    "game_items.jsonl": {
+      "entity": "game_item",
+      "primary_key": "item_id",
+      "record_schema": {
+        "$ref": "#/$defs/game_item"
+      }
+    },
+    "item_curriculum_mappings.jsonl": {
+      "entity": "item_curriculum_mapping",
+      "primary_key": "item_curriculum_mapping_id",
+      "record_schema": {
+        "$ref": "#/$defs/item_curriculum_mapping"
+      }
+    },
+    "item_skill_mappings.jsonl": {
+      "entity": "item_skill_mapping",
+      "primary_key": "item_skill_mapping_id",
+      "record_schema": {
+        "$ref": "#/$defs/item_skill_mapping"
+      }
+    },
+    "misconception_catalogue.jsonl": {
+      "entity": "misconception",
+      "primary_key": "misconception_code",
+      "record_schema": {
+        "$ref": "#/$defs/misconception"
+      }
+    },
+    "structured_error_mappings.jsonl": {
+      "entity": "structured_error_mapping",
+      "primary_key": "structured_error_mapping_id",
+      "record_schema": {
+        "$ref": "#/$defs/structured_error_mapping"
+      }
+    },
+    "support_actions.jsonl": {
+      "entity": "support_action",
+      "primary_key": "action_id",
+      "record_schema": {
+        "$ref": "#/$defs/support_action"
+      }
+    },
+    "content_assets.jsonl": {
+      "entity": "content_asset",
+      "primary_key": "content_asset_id",
+      "record_schema": {
+        "$ref": "#/$defs/content_asset"
+      }
+    },
+    "verification_pair_candidates.jsonl": {
+      "entity": "verification_pair_candidate",
+      "primary_key": "verification_pair_id",
+      "record_schema": {
+        "$ref": "#/$defs/verification_pair_candidate"
+      }
+    },
+    "asset_requirements.jsonl": {
+      "entity": "asset_requirement",
+      "primary_key": "asset_requirement_id",
+      "record_schema": {
+        "$ref": "#/$defs/asset_requirement"
+      }
+    },
+    "qa_issues.jsonl": {
+      "entity": "qa_issue",
+      "primary_key": "qa_issue_id",
+      "record_schema": {
+        "$ref": "#/$defs/qa_issue"
+      }
+    },
+    "review_decisions.jsonl": {
+      "entity": "review_decision",
+      "primary_key": "review_decision_id",
+      "record_schema": {
+        "$ref": "#/$defs/review_decision"
+      }
+    },
+    "workbook_annotations.jsonl": {
+      "entity": "workbook_annotation",
+      "primary_key": "annotation_id",
+      "record_schema": {
+        "$ref": "#/$defs/workbook_annotation"
+      }
+    }
+  },
+  "$defs": {
+    "skill_candidate": {
+      "type": "object",
+      "required": [
+        "skill_candidate_id",
+        "taxonomy_version",
+        "subject",
+        "grade",
+        "skill_type",
+        "label_primary",
+        "mapping_status",
+        "approval_status"
+      ],
+      "properties": {
+        "approval_status": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "approved_on": {
+          "type": "string"
+        },
+        "eligible_support_action_types": {
+          "type": "array",
+          "items": {}
+        },
+        "gamification_skill_id": {
+          "type": "string"
+        },
+        "grade": {
+          "type": "integer"
+        },
+        "label_en": {
+          "type": "string"
+        },
+        "label_primary": {
+          "type": "string"
+        },
+        "mapping_status": {
+          "type": "string"
+        },
+        "misconception_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "observable_success_en": {
+          "type": "string"
+        },
+        "observable_success_primary": {
+          "type": "string"
+        },
+        "parent_skill_candidate_id": {
+          "type": "string"
+        },
+        "prerequisite_skill_candidate_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "skill_candidate_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skill_type": {
+          "type": "string"
+        },
+        "source_curriculum_node_id": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "taxonomy_version": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "skill_relationship": {
+      "type": "object",
+      "required": [
+        "skill_relationship_id",
+        "from_skill_candidate_id",
+        "to_skill_candidate_id",
+        "relationship_type",
+        "taxonomy_version",
+        "review_status"
+      ],
+      "properties": {
+        "from_skill_candidate_id": {
+          "type": "string"
+        },
+        "relationship_basis": {
+          "type": "string"
+        },
+        "relationship_type": {
+          "type": "string"
+        },
+        "review_status": {
+          "type": "string"
+        },
+        "skill_relationship_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "taxonomy_version": {
+          "type": "string"
+        },
+        "to_skill_candidate_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "skill_source_mapping": {
+      "type": "object",
+      "required": [
+        "skill_source_mapping_id",
+        "skill_candidate_id",
+        "curriculum_node_id",
+        "mapping_type",
+        "mapping_status",
+        "mapping_version"
+      ],
+      "properties": {
+        "curriculum_node_id": {
+          "type": "string"
+        },
+        "mapping_confidence": {
+          "type": "string"
+        },
+        "mapping_status": {
+          "type": "string"
+        },
+        "mapping_type": {
+          "type": "string"
+        },
+        "mapping_version": {
+          "type": "string"
+        },
+        "skill_candidate_id": {
+          "type": "string"
+        },
+        "skill_source_mapping_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_id": {
+          "type": "string"
+        },
+        "source_page_from": {
+          "type": "string"
+        },
+        "source_page_to": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "game": {
+      "type": "object",
+      "required": [
+        "game_id",
+        "game_version",
+        "subject",
+        "grade",
+        "mechanic",
+        "target_curriculum_node_ids",
+        "required_modalities",
+        "publication_status"
+      ],
+      "properties": {
+        "content_status": {
+          "type": "string"
+        },
+        "curriculum_version": {
+          "type": "string"
+        },
+        "difficulty_end": {
+          "type": "integer"
+        },
+        "difficulty_start": {
+          "type": "integer"
+        },
+        "game_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "game_version": {
+          "type": "string"
+        },
+        "grade": {
+          "type": "integer"
+        },
+        "hint_rule": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "learning_objective": {
+          "type": "string"
+        },
+        "mechanic": {
+          "type": "string"
+        },
+        "minimum_items": {
+          "type": "integer"
+        },
+        "publication_status": {
+          "type": "string"
+        },
+        "required_modalities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scoring_rule": {
+          "type": "string"
+        },
+        "session_minutes": {
+          "type": "integer"
+        },
+        "skill_taxonomy_version": {
+          "type": "string"
+        },
+        "starter_items": {
+          "type": "integer"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "subject_name": {
+          "type": "string"
+        },
+        "target_curriculum_node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "game_item": {
+      "type": "object",
+      "required": [
+        "item_id",
+        "item_version",
+        "game_id",
+        "subject",
+        "language",
+        "curriculum_node_ids",
+        "response_format",
+        "options",
+        "correct_answers",
+        "publication_status"
+      ],
+      "properties": {
+        "answer_verified": {
+          "type": "boolean"
+        },
+        "asset_status": {
+          "type": "string"
+        },
+        "cognitive_level": {
+          "type": "string"
+        },
+        "correct_answers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "curriculum_node_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "curriculum_version": {
+          "type": "string"
+        },
+        "difficulty": {
+          "type": "integer"
+        },
+        "estimated_seconds": {
+          "type": "integer"
+        },
+        "feedback_correct": {
+          "type": "string"
+        },
+        "feedback_incorrect": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": "string"
+        },
+        "generation_method": {
+          "type": "string"
+        },
+        "hint": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "item_role": {
+          "type": "string"
+        },
+        "item_version": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "language_reviewed": {
+          "type": "boolean"
+        },
+        "lesson_id": {
+          "type": "string"
+        },
+        "mechanic": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "primary_skill_candidate_id": {
+          "type": "string"
+        },
+        "prompt_en": {
+          "type": "string"
+        },
+        "prompt_primary": {
+          "type": "string"
+        },
+        "publication_status": {
+          "type": "string"
+        },
+        "required_asset_types": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "response_format": {
+          "type": "string"
+        },
+        "skill_taxonomy_version": {
+          "type": "string"
+        },
+        "source_activity_id": {
+          "type": "string"
+        },
+        "source_confidence": {
+          "type": "string"
+        },
+        "stimulus_en": {
+          "type": "string"
+        },
+        "stimulus_primary": {
+          "type": "string"
+        },
+        "structured_error_mapping_status": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "item_curriculum_mapping": {
+      "type": "object",
+      "required": [
+        "item_curriculum_mapping_id",
+        "item_id",
+        "game_id",
+        "curriculum_node_id",
+        "relationship",
+        "review_status"
+      ],
+      "properties": {
+        "curriculum_node_id": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": "string"
+        },
+        "item_curriculum_mapping_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "mapping_confidence": {
+          "type": "string"
+        },
+        "mapping_method": {
+          "type": "string"
+        },
+        "mapping_version": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        },
+        "review_status": {
+          "type": "string"
+        },
+        "source_row_number": {
+          "type": "integer"
+        },
+        "source_sheet": {
+          "type": "string"
+        },
+        "source_workbook": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "item_skill_mapping": {
+      "type": "object",
+      "required": [
+        "item_skill_mapping_id",
+        "item_id",
+        "skill_candidate_id",
+        "relationship",
+        "mapping_status",
+        "mapping_version"
+      ],
+      "properties": {
+        "game_id": {
+          "type": "string"
+        },
+        "gamification_skill_id": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "item_skill_mapping_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mapping_confidence": {
+          "type": "string"
+        },
+        "mapping_method": {
+          "type": "string"
+        },
+        "mapping_status": {
+          "type": "string"
+        },
+        "mapping_version": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string"
+        },
+        "skill_candidate_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "misconception": {
+      "type": "object",
+      "required": [
+        "misconception_code",
+        "catalogue_version",
+        "label_en",
+        "approval_status"
+      ],
+      "properties": {
+        "applicable_skill_candidate_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "approval_status": {
+          "type": "string"
+        },
+        "catalogue_version": {
+          "type": "string"
+        },
+        "child_facing_diagnosis_approved": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        },
+        "label_en": {
+          "type": "string"
+        },
+        "label_primary": {
+          "type": "string"
+        },
+        "misconception_code": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "structured_error_mapping": {
+      "type": "object",
+      "required": [
+        "structured_error_mapping_id",
+        "structured_error_code",
+        "misconception_code",
+        "mapping_status"
+      ],
+      "properties": {
+        "mapping_status": {
+          "type": "string"
+        },
+        "misconception_code": {
+          "type": "string"
+        },
+        "structured_error_code": {
+          "type": "string"
+        },
+        "structured_error_mapping_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "support_action": {
+      "type": "object",
+      "required": [
+        "action_id",
+        "catalogue_version",
+        "action_type",
+        "content_asset_id",
+        "languages",
+        "skill_candidate_ids",
+        "misconception_codes",
+        "approved"
+      ],
+      "properties": {
+        "action_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action_type": {
+          "type": "string"
+        },
+        "approval_status": {
+          "type": "string"
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "catalogue_version": {
+          "type": "string"
+        },
+        "content_asset_id": {
+          "type": "string"
+        },
+        "gamification_skill_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "intended_languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "misconception_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reference_priority": {
+          "type": "integer"
+        },
+        "skill_candidate_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "content_asset": {
+      "type": "object",
+      "required": [
+        "content_asset_id",
+        "content_version",
+        "asset_type",
+        "source_item_id",
+        "languages",
+        "publication_status"
+      ],
+      "properties": {
+        "age_appropriateness_status": {
+          "type": "string"
+        },
+        "answer_leakage_status": {
+          "type": "string"
+        },
+        "approved_by": {
+          "type": "string"
+        },
+        "approved_on": {
+          "type": "string"
+        },
+        "asset_type": {
+          "type": "string"
+        },
+        "content_asset_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_en": {
+          "type": "string"
+        },
+        "content_primary": {
+          "type": "string"
+        },
+        "content_version": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": "string"
+        },
+        "intended_languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "language_review_status": {
+          "type": "string"
+        },
+        "languages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "misconception_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "publication_status": {
+          "type": "string"
+        },
+        "skill_candidate_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "source_item_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "verification_pair_candidate": {
+      "type": "object",
+      "required": [
+        "verification_pair_id",
+        "equivalence_version",
+        "baseline_item_id",
+        "verification_item_id",
+        "skill_candidate_id",
+        "approved",
+        "review_status"
+      ],
+      "properties": {
+        "answer_overlap_acceptable": {
+          "type": "null"
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "baseline_item_id": {
+          "type": "string"
+        },
+        "cognitive_operation_match": {
+          "type": "boolean"
+        },
+        "difficulty_band_match": {
+          "type": "boolean"
+        },
+        "equivalence_version": {
+          "type": "string"
+        },
+        "expected_time_match": {
+          "type": "boolean"
+        },
+        "language_reviewed": {
+          "type": "boolean"
+        },
+        "primary_skill_match": {
+          "type": "boolean"
+        },
+        "response_format_match": {
+          "type": "boolean"
+        },
+        "review_status": {
+          "type": "string"
+        },
+        "reviewed_by": {
+          "type": "string"
+        },
+        "reviewed_on": {
+          "type": "string"
+        },
+        "skill_candidate_id": {
+          "type": "string"
+        },
+        "unseen_item_required": {
+          "type": "boolean"
+        },
+        "unseen_verification_item": {
+          "type": "null"
+        },
+        "verification_item_id": {
+          "type": "string"
+        },
+        "verification_pair_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "asset_requirement": {
+      "type": "object",
+      "required": [
+        "asset_requirement_id",
+        "game_id",
+        "asset_type",
+        "required_count",
+        "language",
+        "status"
+      ],
+      "properties": {
+        "asset_requirement_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "asset_type": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
+        "license_requirement": {
+          "type": "string"
+        },
+        "required_count": {
+          "type": "integer"
+        },
+        "source_row_number": {
+          "type": "integer"
+        },
+        "source_sheet": {
+          "type": "string"
+        },
+        "source_workbook": {
+          "type": "string"
+        },
+        "specification": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "qa_issue": {
+      "type": "object",
+      "required": [
+        "qa_issue_id",
+        "scope",
+        "issue_type",
+        "severity",
+        "description",
+        "status"
+      ],
+      "properties": {
+        "affected_count": {
+          "type": "integer"
+        },
+        "description": {
+          "type": "string"
+        },
+        "game_id": {
+          "type": "string"
+        },
+        "issue_type": {
+          "type": "string"
+        },
+        "item_id": {
+          "type": "string"
+        },
+        "qa_issue_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "source_ref": {
+          "type": "string"
+        },
+        "source_row_number": {
+          "type": "integer"
+        },
+        "source_sheet": {
+          "type": "string"
+        },
+        "source_trace_record": {
+          "type": "object"
+        },
+        "source_trace_row_number": {
+          "type": "integer"
+        },
+        "source_trace_sheet": {
+          "type": "string"
+        },
+        "source_trace_workbook": {
+          "type": "string"
+        },
+        "source_workbook": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "suggested_action": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "review_decision": {
+      "type": "object",
+      "required": [
+        "review_decision_id",
+        "entity_type",
+        "entity_id",
+        "decision",
+        "reviewer_id",
+        "reviewed_at"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "entity_type": {
+          "type": "string"
+        },
+        "review_decision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reviewed_at": {
+          "type": "string"
+        },
+        "reviewer_id": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "workbook_annotation": {
+      "type": "object",
+      "required": [
+        "annotation_id",
+        "source_workbook",
+        "source_sheet",
+        "source_row_number",
+        "values",
+        "instruction_authority"
+      ],
+      "properties": {
+        "annotation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content_role": {
+          "type": "string"
+        },
+        "instruction_authority": {
+          "type": "string"
+        },
+        "source_row_number": {
+          "type": "integer"
+        },
+        "source_sheet": {
+          "type": "string"
+        },
+        "source_workbook": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": [
+              "integer",
+              "string"
+            ]
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "status_rules": {
+    "draft": "Source-backed candidate that has not completed formal review.",
+    "needs_review": "Requires named curriculum, language, answer, asset or equivalence review.",
+    "published": "May be served only after every applicable release gate passes."
+  }
+}

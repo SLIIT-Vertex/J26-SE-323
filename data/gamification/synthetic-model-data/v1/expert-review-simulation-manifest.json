@@ -1,0 +1,117 @@
+{
+  "authorized_research_evidence": false,
+  "component_owner": "hareeshagunasekara",
+  "contains_human_data": false,
+  "dataset_id": "synthetic-expert-review-simulation-v1",
+  "delivery_scope": {
+    "content_languages": [
+      "si",
+      "en",
+      "bilingual"
+    ],
+    "deferred_languages": [
+      "ta"
+    ],
+    "learner_medium": "si",
+    "support_language": "si"
+  },
+  "development_gate": "pass",
+  "engineering_threshold_checks": {
+    "maximum_classification_abstention_rate": true,
+    "maximum_classification_brier_score": true,
+    "maximum_classification_ece": true,
+    "maximum_unknown_or_other_rate": true,
+    "minimum_case_count": true,
+    "minimum_classification_accuracy": true,
+    "minimum_raw_primary_label_agreement": true,
+    "minimum_reviewers_per_case": true,
+    "minimum_valid_outcome_rate": true
+  },
+  "offline_dataset_manifest": {
+    "dataset_id": "synthetic-expert-review-simulation-v1",
+    "exclusion_rules": [
+      "invalid_outcome",
+      "missing_reward"
+    ],
+    "learner_splits": {
+      "test": [
+        "synthetic-expert-sim-l02",
+        "synthetic-expert-sim-l01"
+      ],
+      "train": [
+        "synthetic-expert-sim-l03",
+        "synthetic-expert-sim-l08",
+        "synthetic-expert-sim-l06",
+        "synthetic-expert-sim-l07",
+        "synthetic-expert-sim-l05"
+      ],
+      "validation": [
+        "synthetic-expert-sim-l04"
+      ]
+    },
+    "manifest_sha256": "05069f9a9eec33ff59abfa1748086163efc2016cca105c0b30320f2f6131fa5b",
+    "schema_version": "offline-dataset-v1",
+    "source_sha256": "0360bb1aa9420292cbe944840724bd5fe1654d7d68adf539c2c43dfab08859ab",
+    "split_seed": 42,
+    "synthetic": true
+  },
+  "replacement_guide": "data/gamification/synthetic-model-data/v1/README.md",
+  "research_and_child_facing_gate": "blocked_requires_authorized_replacement",
+  "schema_version": "synthetic-expert-review-manifest-v1",
+  "simulated_classification_evaluation": {
+    "abstention_rate": 0.25,
+    "accuracy": 0.75,
+    "brier_score": 0.15250000000000002,
+    "expected_calibration_error": 0.22499999999999998,
+    "sample_count": 8,
+    "slices": {
+      "G5-ENG-C01": {
+        "accuracy": 0.0,
+        "sample_count": 2
+      },
+      "G5-ENG-C01-L01": {
+        "accuracy": 1.0,
+        "sample_count": 2
+      },
+      "G5-MAT-C01-L01-O01": {
+        "accuracy": 1.0,
+        "sample_count": 1
+      },
+      "G5-MAT-C03": {
+        "accuracy": 1.0,
+        "sample_count": 1
+      },
+      "G5-MAT-C06": {
+        "accuracy": 1.0,
+        "sample_count": 1
+      },
+      "G5-MAT-C08": {
+        "accuracy": 1.0,
+        "sample_count": 1
+      }
+    }
+  },
+  "simulated_review_summary": {
+    "adjudicated_case_count": 8,
+    "case_count": 8,
+    "cohen_kappa": 0.7192982456140351,
+    "double_reviewed_case_count": 8,
+    "raw_primary_label_agreement": 0.75,
+    "unknown_or_other_rate": 0.25,
+    "valid_outcome_rate": 0.875
+  },
+  "source_commit": "a4c9b2440b4161a4fc1195703078bf6e27292e9b",
+  "source_files": {
+    "data/gamification/synthetic-model-data/v1/classification-evaluation-example.json": {
+      "sha256": "9cdbd3e3e2e63e632eee0c61f91a04290f4ef2ced9566ac9f1ea28623c9b1522"
+    },
+    "data/gamification/synthetic-model-data/v1/development-research-protocol.json": {
+      "sha256": "09f8eef98e8c46078dabc78bf661eefed6869d32bf0c8b27eaca1242936dd353"
+    },
+    "data/gamification/synthetic-model-data/v1/expert-review-simulation.json": {
+      "sha256": "5974b31012b1d73ef11a4866d92471117589a93b65c8baba9e423400dedeadf9"
+    }
+  },
+  "source_worktree_dirty": true,
+  "synthetic": true
+}

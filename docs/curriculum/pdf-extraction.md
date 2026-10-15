@@ -49,7 +49,7 @@ Inspect the sample without writing extraction outputs or reports:
 
 ```bash
 backend/.venv/bin/python backend/scripts/extract_curriculum_pdfs.py \
-  --input data/curriculum/raw/grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf \
+  --input data/curriculum/raw/grade5/mathematics/grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf \
   --max-pages 5 \
   --dry-run
 ```
@@ -58,7 +58,7 @@ Extract the first five pages and generate reports:
 
 ```bash
 backend/.venv/bin/python backend/scripts/extract_curriculum_pdfs.py \
-  --input data/curriculum/raw/grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf \
+  --input data/curriculum/raw/grade5/mathematics/grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf \
   --output data/curriculum/extracted \
   --report-dir data/curriculum/reports \
   --max-pages 5
@@ -77,7 +77,7 @@ After approval, atomically replace the pilot with all 189 pages:
 
 ```bash
 backend/.venv/bin/python backend/scripts/extract_curriculum_pdfs.py \
-  --input data/curriculum/raw/grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf \
+  --input data/curriculum/raw/grade5/mathematics/grade-5-mathematics-teacher-guide-61923d6dbce3d.pdf \
   --output data/curriculum/extracted \
   --report-dir data/curriculum/reports \
   --force
