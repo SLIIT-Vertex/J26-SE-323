@@ -14,11 +14,14 @@ from app.knowledge_tracing.application.mastery_service import (
     MasteryService,
 )
 from app.knowledge_tracing.application.paper_generation import (
+    Availability,
     GeneratedPaper,
+    NotEligibleYetError,
     PaperGenerationError,
     PaperNotFoundError,
     PaperRequest,
     PaperService,
+    next_paper_date,
 )
 from app.knowledge_tracing.application.paper_planning import PaperPlanner
 from app.knowledge_tracing.application.paper_selection import NotEnoughQuestions
@@ -66,13 +69,30 @@ class PaperItemRead(BaseModel):
     role: str
 
 
+class AvailabilityRead(BaseModel):
+    """The state of the get-this-week-paper button."""
+
+    # not_yet_eligible: joined too recently, button unavailable
+    # available:        button clickable (one paper per week)
+    # generated:        this week's paper exists; show it, button unavailable until next Saturday
+    state: Literal["not_yet_eligible", "available", "generated"]
+    can_generate: bool
+    joined_at: datetime
+    eligible_from: datetime  # the moment the first paper can be asked for
+    days_until_eligible: int  # 0 once eligible
+    week_start: date  # the Saturday the current week began
+    next_paper_date: date  # the Saturday the next paper can be asked for
+    paper: "PaperRead | None" = None
+
+
 class PaperRead(BaseModel):
     paper_id: UUID
     code: str
     status: str
     mode: str
     language: str
-    week_start: date
+    week_start: date  # the Saturday this paper belongs to
+    next_paper_date: date  # the Saturday the following paper appears
     page_count: int
     question_count: int
     estimated_minutes: float
@@ -92,16 +112,32 @@ def get_paper_storage() -> StorageBackend:
     return create_paper_storage(get_settings())
 
 
+def make_paper_service(
+    session: Session,
+    estimator: KnowledgeModel,
+    question_storage: StorageBackend,
+    paper_storage: StorageBackend,
+) -> PaperService:
+    """Wire the paper service. Used by the API and by the Saturday batch script."""
+    spec = get_feature_spec()
+    mastery = MasteryService(SqlAlchemyMasteryRepository(session), estimator, spec)
+    planner = PaperPlanner(SqlAlchemyPaperInputRepository(session), mastery, estimator, spec)
+    return PaperService(
+        SqlAlchemyPaperRepository(session),
+        planner,
+        question_storage,
+        paper_storage,
+        min_days_after_joining=get_settings().paper_min_days_after_joining,
+    )
+
+
 def get_paper_service(
     session: Annotated[Session, Depends(get_db)],
     estimator: Annotated[KnowledgeModel, Depends(get_estimator)],
     question_storage: Annotated[StorageBackend, Depends(get_question_storage)],
     paper_storage: Annotated[StorageBackend, Depends(get_paper_storage)],
 ) -> PaperService:
-    spec = get_feature_spec()
-    mastery = MasteryService(SqlAlchemyMasteryRepository(session), estimator, spec)
-    planner = PaperPlanner(SqlAlchemyPaperInputRepository(session), mastery, estimator, spec)
-    return PaperService(SqlAlchemyPaperRepository(session), planner, question_storage, paper_storage)
+    return make_paper_service(session, estimator, question_storage, paper_storage)
 
 
 def _read(paper: Paper, skipped: list[str], items: list | None = None) -> PaperRead:
@@ -113,6 +149,7 @@ def _read(paper: Paper, skipped: list[str], items: list | None = None) -> PaperR
         mode=paper.mode,
         language=paper.language,
         week_start=paper.week_start,
+        next_paper_date=next_paper_date(paper.week_start),
         page_count=paper.page_count,
         question_count=paper.question_count,
         estimated_minutes=paper.estimated_minutes,
@@ -171,6 +208,15 @@ def create_weekly_paper(
         result = service.generate_weekly(learner_id, request)
     except LearnerNotFoundError as error:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Learner not found") from error
+    except NotEligibleYetError as error:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail={
+                "code": "not_eligible_yet",
+                "message": "The weekly paper is available after the first week in the app",
+                "eligible_from": error.eligible_from.isoformat(),
+            },
+        ) from error
     except NotEnoughQuestions as error:
         raise HTTPException(status.HTTP_409_CONFLICT, "Not enough questions for a paper") from error
     except (PaperGenerationError, PdfSelfCheckError) as error:
@@ -179,6 +225,37 @@ def create_weekly_paper(
         ) from error
     if not result.created:
         response.status_code = status.HTTP_200_OK
+    return _from_generated(result, with_items=True)
+
+
+def _availability(result: Availability) -> AvailabilityRead:
+    return AvailabilityRead(
+        state=result.state,
+        can_generate=result.can_generate,
+        joined_at=result.joined_at,
+        eligible_from=result.eligible_from,
+        days_until_eligible=result.days_until_eligible,
+        week_start=result.week_start,
+        next_paper_date=result.next_paper_date,
+        paper=None if result.paper is None else _from_generated(result.paper, with_items=True),
+    )
+
+
+@router.get("/learners/{learner_id}/papers/availability", response_model=AvailabilityRead)
+def paper_availability(learner_id: UUID, service: ServiceDep) -> AvailabilityRead:
+    """Everything the app needs to draw the weekly-paper button for this child."""
+    try:
+        return _availability(service.availability(learner_id))
+    except LearnerNotFoundError as error:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Learner not found") from error
+
+
+@router.get("/learners/{learner_id}/papers/current", response_model=PaperRead)
+def current_paper(learner_id: UUID, service: ServiceDep) -> PaperRead:
+    """This week's paper (Saturday to Friday). 404 if it has not been made yet."""
+    result = service.current(learner_id)
+    if result is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "This week's paper has not been made yet")
     return _from_generated(result, with_items=True)
 
 

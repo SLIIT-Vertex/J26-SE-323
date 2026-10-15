@@ -1,17 +1,25 @@
 """Makes this week's paper for a learner: choose, lay out, draw, check, store.
 
-One live paper per learner per week. Asking again in the same week returns the same paper, so
-a retry, a double tap or a second device never prints two different papers.
+One live paper per learner per week. A week runs from Saturday 00:00 to Friday 23:59 in Sri
+Lanka time: a paper made in a week stays the paper of that week until the next Saturday. Asking
+again in the same week returns the same paper, so a retry, a double tap or a second device never
+prints two different papers.
+
+A child may ask for a paper only after they have been in the app for a while (by default one
+week), so there is some play history to build it from. The app shows a button that is
+unavailable before that, available once, and then shows the paper until the next Saturday.
 """
 
 import logging
+import math
 import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta, timezone
-from typing import Protocol
+from typing import Literal, Protocol
 from uuid import UUID, uuid4
 
+from app.knowledge_tracing.application.mastery_service import LearnerNotFoundError
 from app.knowledge_tracing.application.paper_layout import (
     LayoutError,
     LayoutQuestion,
@@ -32,11 +40,24 @@ logger = logging.getLogger("mindbridge.papers")
 
 # Papers belong to a week in Sri Lanka time, whatever time zone the server runs in.
 LOCAL_TIME = timezone(timedelta(hours=5, minutes=30))
+WEEK_START_DAY = 5  # Saturday (Monday is 0)
+WEEK_DAYS = 7
 MAX_TOKEN_TRIES = 5
 
 
 class PaperNotFoundError(Exception):
     pass
+
+
+class NotEligibleYetError(Exception):
+    """The child has not been in the app long enough to ask for a paper."""
+
+    def __init__(self, eligible_from: datetime) -> None:
+        super().__init__(f"eligible from {eligible_from.isoformat()}")
+        self.eligible_from = eligible_from
+
+
+AvailabilityState = Literal["not_yet_eligible", "available", "generated"]
 
 
 class PaperGenerationError(Exception):
@@ -68,6 +89,23 @@ class GeneratedPaper:
     items: list[PaperItem] = field(default_factory=list)
 
 
+@dataclass(slots=True)
+class Availability:
+    """What the app needs to draw the get-this-week-paper button."""
+
+    state: AvailabilityState
+    joined_at: datetime
+    eligible_from: datetime
+    days_until_eligible: int
+    week_start: date
+    next_paper_date: date
+    paper: GeneratedPaper | None = None
+
+    @property
+    def can_generate(self) -> bool:
+        return self.state == "available"
+
+
 class PaperRepository(Protocol):
     def find_for_week(self, learner_id: UUID, week_start: date) -> Paper | None: ...
 
@@ -85,11 +123,24 @@ class PaperRepository(Protocol):
 
     def set_status(self, paper_id: UUID, status: str) -> Paper | None: ...
 
+    def learner_joined_at(self, learner_id: UUID) -> datetime | None:
+        """When the learner joined, or None if there is no such learner."""
+        ...
+
+    def covered_diagnostic_skills(self, learner_id: UUID) -> set[str]:
+        """Skills that earlier diagnostic papers of this learner already covered."""
+        ...
+
 
 def week_start_for(moment: datetime) -> date:
-    """The Monday of the week that `moment` falls in, in Sri Lanka time."""
+    """The Saturday that starts the week `moment` falls in, in Sri Lanka time."""
     local = moment.astimezone(LOCAL_TIME).date()
-    return local - timedelta(days=local.weekday())
+    return local - timedelta(days=(local.weekday() - WEEK_START_DAY) % WEEK_DAYS)
+
+
+def next_paper_date(week_start: date) -> date:
+    """The Saturday on which the following paper appears."""
+    return week_start + timedelta(days=WEEK_DAYS)
 
 
 class PaperService:
@@ -100,21 +151,66 @@ class PaperService:
         question_storage: StorageBackend,
         paper_storage: StorageBackend,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        min_days_after_joining: int = 7,
     ) -> None:
         self.repository = repository
         self.planner = planner
         self.question_storage = question_storage
         self.paper_storage = paper_storage
         self.now = now
+        self.min_days_after_joining = min_days_after_joining
+
+    # ---- eligibility ---------------------------------------------------------------------
+
+    def availability(self, learner_id: UUID) -> Availability:
+        """Whether the child can ask for a paper now, cannot yet, or already has this week."""
+        joined = self._joined_at(learner_id)
+        eligible_from = joined + timedelta(days=self.min_days_after_joining)
+        now = self.now()
+        week = week_start_for(now)
+        existing = self.current(learner_id)
+        if existing is not None:
+            state: AvailabilityState = "generated"
+        elif now < eligible_from:
+            state = "not_yet_eligible"
+        else:
+            state = "available"
+        remaining = max(timedelta(0), eligible_from - now)
+        return Availability(
+            state=state,
+            joined_at=joined,
+            eligible_from=eligible_from,
+            days_until_eligible=math.ceil(remaining.total_seconds() / 86400),
+            week_start=week,
+            next_paper_date=next_paper_date(week),
+            paper=existing,
+        )
+
+    def _joined_at(self, learner_id: UUID) -> datetime:
+        joined = self.repository.learner_joined_at(learner_id)
+        if joined is None:
+            raise LearnerNotFoundError(learner_id)
+        return joined if joined.tzinfo else joined.replace(tzinfo=UTC)
 
     # ---- generate ------------------------------------------------------------------------
+
+    def current(self, learner_id: UUID) -> GeneratedPaper | None:
+        """This week's paper if it has been made; nothing is created."""
+        existing = self.repository.find_for_week(learner_id, week_start_for(self.now()))
+        if existing is None:
+            return None
+        return GeneratedPaper(existing, False, self.repository.items(existing.id))
 
     def generate_weekly(self, learner_id: UUID, request: PaperRequest = PaperRequest()) -> GeneratedPaper:  # noqa: B008
         """This week's paper: the existing one, or a new one made now."""
         week = week_start_for(self.now())
         existing = self.repository.find_for_week(learner_id, week)
-        if existing is not None:
+        if existing is not None:  # a paper already made this week is always returned
             return GeneratedPaper(existing, False, self.repository.items(existing.id))
+
+        eligible_from = self._joined_at(learner_id) + timedelta(days=self.min_days_after_joining)
+        if self.now() < eligible_from:
+            raise NotEligibleYetError(eligible_from)
 
         seed = request.seed if request.seed is not None else random.SystemRandom().randrange(2**31)
         params = PaperParams(
@@ -124,6 +220,11 @@ class PaperService:
             seed=seed,
             mode=request.mode,  # type: ignore[arg-type]
             focus_skills=request.focus_skills,
+            # A child with no recorded activity gets a diagnostic paper each week. Each one moves
+            # on to skills the earlier ones did not cover, so the weeks walk through all 30.
+            covered_diagnostic_skills=tuple(
+                sorted(self.repository.covered_diagnostic_skills(learner_id))
+            ),
         )
         plan = self.planner.plan_detailed(learner_id, params, request.language)
         return self._make(learner_id, week, params, plan)

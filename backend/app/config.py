@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Generated papers (PDFs) are written here. Kept apart from the question images because
     # the question bank is only read, while papers need write access.
     paper_storage_backend: str = "local"  # local | s3
+    # A child can ask for the weekly paper only this many days after joining, so that there is
+    # some play history to build it from. 0 turns the rule off (useful when testing).
+    paper_min_days_after_joining: int = 7
 
     # Knowledge tracing: model and feature spec.
     model_weights_path: str = (

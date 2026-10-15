@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import select
@@ -40,6 +40,24 @@ class SqlAlchemyPaperRepository:
 
     def learner_exists(self, learner_id: UUID) -> bool:
         return self.session.get(LearnerModel, learner_id) is not None
+
+    def learner_joined_at(self, learner_id: UUID) -> datetime | None:
+        learner = self.session.get(LearnerModel, learner_id)
+        return learner.created_at if learner else None
+
+    def covered_diagnostic_skills(self, learner_id: UUID) -> set[str]:
+        """Skills that the learner's earlier diagnostic papers already asked about."""
+        rows = self.session.scalars(
+            select(PaperModel.params).where(
+                PaperModel.learner_id == learner_id,
+                PaperModel.mode == "diagnostic",
+                PaperModel.status != "cancelled",
+            )
+        ).all()
+        covered: set[str] = set()
+        for params in rows:
+            covered.update(params.get("diagnostic_skills", []))
+        return covered
 
     def find_for_week(self, learner_id: UUID, week_start: date) -> Paper | None:
         model = self.session.scalars(
