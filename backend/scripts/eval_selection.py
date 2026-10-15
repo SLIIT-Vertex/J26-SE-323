@@ -225,7 +225,7 @@ def main() -> int:
     result = run(args.students, args.seed, args.source, args.language)
     print_report(result)
     if args.out:
-        with open(args.out, "w", encoding="utf-8") as handle:
+        with open(args.out, "w", encoding="utf-8", newline="\n") as handle:
             json.dump(result, handle, indent=2)
         print(f"written: {args.out}")
     return 0
