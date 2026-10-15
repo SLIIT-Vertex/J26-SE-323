@@ -135,6 +135,7 @@ def env(world: dict) -> Iterator[Env]:
                     provider=provider_ref[0],
                     estimator=get_knowledge_model(),
                     use_default_readers=False,
+                    workers=1,
                 ).grade(submission_id)
 
         return launch
@@ -152,6 +153,7 @@ def env(world: dict) -> Iterator[Env]:
         kwargs.setdefault("provider", provider_ref[0])
         kwargs.setdefault("estimator", get_knowledge_model())
         kwargs["use_default_readers"] = False
+        kwargs["workers"] = 1
         return original(session, paper_storage, **kwargs)
 
     module.make_submission_service = make_for_requests
