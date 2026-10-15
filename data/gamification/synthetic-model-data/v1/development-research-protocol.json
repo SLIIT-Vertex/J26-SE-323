@@ -75,5 +75,5 @@
     "split_seed": 42
   },
   "threshold_scope": "Synthetic workflow smoke-test thresholds only; they are not research, safety, efficacy, or release thresholds.",
-  "replacement_guide": "docs/adaptive-gamified-learning/development-data-replacement.md"
+  "replacement_guide": "data/gamification/synthetic-model-data/v1/README.md"
 }

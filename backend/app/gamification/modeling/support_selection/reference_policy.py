@@ -38,7 +38,7 @@ _REFERENCE_MODES = {
 
 
 class SafeSupportPolicy:
-    """Deliver the authored reference action unless an approved bandit is allowed to sample."""
+    """Legacy adapter that never treats a boolean flag as learned-policy authorization."""
 
     def __init__(
         self,
@@ -55,6 +55,8 @@ class SafeSupportPolicy:
         self.reference_table = reference_table
         self.probability_floor = probability_floor
         self.bandit = bandit
+        # Retained only for call-site compatibility. A mutable boolean is not an
+        # exact-hash, independently reviewed human authorization.
         self.artifact_approved = artifact_approved
 
     def decide(
@@ -88,7 +90,9 @@ class SafeSupportPolicy:
             raise ValueError("no approved eligible support action")
 
         active_bandit = self.bandit if bandit is None else bandit
-        approved = self.artifact_approved if artifact_approved is None else artifact_approved
+        legacy_approval_requested = (
+            self.artifact_approved if artifact_approved is None else artifact_approved
+        )
         reference, reference_reasons = _reference_choice(
             eligible, snapshot, belief, self.reference_table
         )
@@ -100,14 +104,10 @@ class SafeSupportPolicy:
         scorer_predictions = (
             learned_policy.score(snapshot, belief, eligible) if learned_policy is not None else {}
         )
-        learned_ready = (
-            mode is DecisionMode.LEARNED
-            and approved
-            and evidence_count >= self.minimum_learned_evidence
-            and active_bandit is not None
-            and context is not None
-            and would_select is not None
-        )
+        # Proposed scoring is permitted only in shadow/offline workflows.
+        # Learned delivery remains closed until a later integration can provide
+        # the complete exact-artifact human authorization record.
+        learned_ready = False
         effective_mode = mode
         if mode is DecisionMode.SHADOW:
             selected = reference
@@ -115,7 +115,12 @@ class SafeSupportPolicy:
         elif mode is DecisionMode.LEARNED and not learned_ready:
             selected = reference
             effective_mode = DecisionMode.CONSERVATIVE_FALLBACK
-            reason_codes = ("COLD_START_REFERENCE_FALLBACK", *reference_reasons)
+            reason_codes = (
+                "EXACT_HASH_HUMAN_AUTHORIZATION_REQUIRED"
+                if legacy_approval_requested
+                else "COLD_START_REFERENCE_FALLBACK",
+                *reference_reasons,
+            )
             propensities = {}
         elif learned_ready:
             assert would_select is not None

@@ -1,5 +1,6 @@
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Protocol
+from typing import Protocol
 
 
 class LoggedPolicyRow(Protocol):
@@ -54,6 +55,46 @@ def evaluate_logged_policy(
         direct_method=direct_method,
         doubly_robust=doubly_robust,
     )
+
+
+@dataclass(frozen=True, slots=True)
+class SelectionObservation:
+    cohort_id: str
+    action_id: str
+    predicted_reward: float
+    observed_reward: float
+
+
+def selection_quality(rows: Iterable[SelectionObservation]) -> float:
+    """Share of cohorts whose predicted best arm is also the observed best arm.
+
+    Within a cohort, the predicted best arm has the highest mean predicted reward and
+    the observed best arm has the highest mean observed reward. Ties break on action id.
+    """
+
+    grouped: dict[str, dict[str, list[SelectionObservation]]] = {}
+    for row in rows:
+        grouped.setdefault(row.cohort_id, {}).setdefault(row.action_id, []).append(row)
+    if not grouped:
+        raise ValueError("selection quality requires observations")
+    agreements = 0
+    for actions in grouped.values():
+        predicted = max(
+            actions,
+            key=lambda action: (
+                sum(row.predicted_reward for row in actions[action]) / len(actions[action]),
+                action,
+            ),
+        )
+        observed = max(
+            actions,
+            key=lambda action: (
+                sum(row.observed_reward for row in actions[action]) / len(actions[action]),
+                action,
+            ),
+        )
+        agreements += predicted == observed
+    return agreements / len(grouped)
 
 
 def cumulative_regret(optimal: Iterable[float], chosen: Iterable[float]) -> float:

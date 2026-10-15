@@ -2,7 +2,8 @@
 
 import math
 import random
-from typing import Protocol, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 from app.gamification.modeling.support_selection.context import BanditContext
 
@@ -103,10 +104,10 @@ class LinUCBPolicy:
         )
         arms = parameters.get("arms")
         if not isinstance(arms, dict):
-            raise ValueError("LinUCB parameters require an arms mapping")
+            raise TypeError("LinUCB parameters require an arms mapping")
         for arm, state in arms.items():
             if not isinstance(state, dict):
-                raise ValueError("LinUCB arm state must be a mapping")
+                raise TypeError("LinUCB arm state must be a mapping")
             policy._arms[str(arm)] = {
                 "A": _copy_matrix(state["A"]),
                 "b": [float(value) for value in state["b"]],
@@ -218,10 +219,10 @@ class ThompsonSamplingPolicy:
         )
         arms = parameters.get("arms")
         if not isinstance(arms, dict):
-            raise ValueError("Thompson parameters require an arms mapping")
+            raise TypeError("Thompson parameters require an arms mapping")
         for arm, state in arms.items():
             if not isinstance(state, dict):
-                raise ValueError("Thompson arm state must be a mapping")
+                raise TypeError("Thompson arm state must be a mapping")
             policy._arms[str(arm)] = {
                 "A": _copy_matrix(state["A"]),
                 "b": [float(value) for value in state["b"]],
@@ -315,7 +316,7 @@ def _identity(dimension: int, scale: float) -> list[list[float]]:
 
 def _copy_matrix(matrix: object) -> list[list[float]]:
     if not isinstance(matrix, list):
-        raise ValueError("arm matrix must be a list of rows")
+        raise TypeError("arm matrix must be a list of rows")
     return [[float(value) for value in row] for row in matrix]
 
 

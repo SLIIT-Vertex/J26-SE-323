@@ -7,8 +7,9 @@ builder runs. This module does not import Knowledge Tracing.
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Mapping, Protocol
+from typing import Protocol
 from uuid import UUID, uuid5
 
 from app.gamification.application.records import FeatureSnapshotRecord
@@ -179,9 +180,7 @@ class BanditContextBuilder:
         missingness = {
             name: values[name] == 1.0
             for name in self.feature_names
-            if name.endswith("_missing")
-            or name.startswith("missing_")
-            or name.endswith("_uncertain")
+            if name.endswith(("_missing", "_uncertain")) or name.startswith("missing_")
         }
         return BanditContext(CONTEXT_VERSION, self.feature_names, vector, missingness)
 

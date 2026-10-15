@@ -301,7 +301,7 @@ def test_shadow_keeps_the_reference_action_and_logs_bandit_propensities() -> Non
     assert any(code.startswith("BANDIT_WOULD_SELECT:") for code in shadow.reason_codes)
 
 
-def test_learned_mode_samples_only_an_approved_artifact() -> None:
+def test_learned_mode_rejects_legacy_boolean_approval_without_human_authorization() -> None:
     snapshot = FeatureBuilder().build(feature_input())
     belief = misconception_model().predict(snapshot)
     context = _context(snapshot, belief)
@@ -354,9 +354,10 @@ def test_learned_mode_samples_only_an_approved_artifact() -> None:
     )
 
     assert blocked.mode is DecisionMode.CONSERVATIVE_FALLBACK
-    assert allowed.mode is DecisionMode.LEARNED
+    assert allowed.mode is DecisionMode.CONSERVATIVE_FALLBACK
     assert allowed.selected_action_id == again.selected_action_id
-    assert allowed.policy_version == "linucb-disjoint-v1"
+    assert allowed.policy_version != "linucb-disjoint-v1"
+    assert "EXACT_HASH_HUMAN_AUTHORIZATION_REQUIRED" in allowed.reason_codes
     assert sum(item.propensity for item in allowed.candidates if item.eligible) == pytest.approx(1)
 
 

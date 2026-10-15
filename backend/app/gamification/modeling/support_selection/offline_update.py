@@ -1,8 +1,9 @@
 """Replay logged decisions into a bandit and seal the parameters as an artifact."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from app.gamification.modeling.shared.artifact_registry import (
     ManifestReference,

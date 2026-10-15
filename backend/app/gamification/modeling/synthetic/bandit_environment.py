@@ -43,19 +43,38 @@ def run_bandit_simulation(
     )
     regrets = {name: [] for name in names}
     rewards = {name: [] for name in names}
+    arms = {name: [] for name in names}
+    hidden: dict[str, list[str]] = {name: [] for name in names}
     for seed in range(seeds):
         per_seed = _one_seed(seed, learners_per_seed, rounds_per_learner)
         for name in names:
             regrets[name].append(per_seed[name]["regret"])
             rewards[name].extend(per_seed[name]["rewards"])
+            arms[name].extend(per_seed[name]["arms"])
+            hidden[name].extend(per_seed[name]["hidden"])
     return {
         "generator": GENERATOR_VERSION,
         "synthetic": True,
+        "provenance": "synthetic",
         "seeds": seeds,
         "learners_per_seed": learners_per_seed,
         "rounds_per_learner": rounds_per_learner,
         "mean_valid_ig": {name: fmean(rewards[name]) for name in names},
         "mean_cumulative_regret": {name: fmean(regrets[name]) for name in names},
+        "action_coverage": {name: len(set(arms[name])) / len(_ARMS) for name in names},
+        "fallback_rate": {name: 0.0 for name in names},
+        "per_misconception_mean_ig": {
+            name: {
+                code: fmean(
+                    reward
+                    for reward, label in zip(rewards[name], hidden[name], strict=True)
+                    if label == code
+                )
+                for code in _MISCONCEPTIONS
+            }
+            for name in names
+        },
+        "ablation": "LinUCB_belief_ablated",
         "label": "synthetic engineering comparison; not educational effectiveness",
     }
 
@@ -75,6 +94,8 @@ def _one_seed(
     }
     optimal: list[float] = []
     chosen = {name: [] for name in observed}
+    arms: dict[str, list[str]] = {name: [] for name in observed}
+    hidden_labels: list[str] = []
     for learner_index in range(learners_per_seed):
         hidden = _MISCONCEPTIONS[learner_index % len(_MISCONCEPTIONS)]
         context = _context(hidden)
@@ -83,6 +104,7 @@ def _one_seed(
         for round_index in range(rounds_per_learner):
             draw = random.Random(seed * 1_000_003 + learner_index * 97 + round_index)
             optimal.append(best)
+            hidden_labels.append(hidden)
             _record(
                 "performance_triggered_fixed",
                 "visual",
@@ -90,6 +112,7 @@ def _one_seed(
                 draw,
                 observed,
                 chosen,
+                arms,
             )
             _record(
                 "random_eligible",
@@ -98,20 +121,23 @@ def _one_seed(
                 draw,
                 observed,
                 chosen,
+                arms,
             )
             full_arm, _ = linucb.sample_action(context, _ARMS, seed=draw.randint(0, 10**9))
-            _record("LinUCB", full_arm, hidden, draw, observed, chosen)
+            _record("LinUCB", full_arm, hidden, draw, observed, chosen, arms)
             linucb.update(context, full_arm, observed["LinUCB"][-1])
             thompson_arm, _ = thompson.sample_action(context, _ARMS, seed=draw.randint(0, 10**9))
-            _record("ThompsonSampling", thompson_arm, hidden, draw, observed, chosen)
+            _record("ThompsonSampling", thompson_arm, hidden, draw, observed, chosen, arms)
             thompson.update(context, thompson_arm, observed["ThompsonSampling"][-1])
             blind_arm, _ = ablated.sample_action(blinded, _ARMS, seed=draw.randint(0, 10**9))
-            _record("LinUCB_belief_ablated", blind_arm, hidden, draw, observed, chosen)
+            _record("LinUCB_belief_ablated", blind_arm, hidden, draw, observed, chosen, arms)
             ablated.update(blinded, blind_arm, observed["LinUCB_belief_ablated"][-1])
     return {
         name: {
             "regret": cumulative_regret(optimal, values),
             "rewards": observed[name],
+            "arms": arms[name],
+            "hidden": hidden_labels,
         }
         for name, values in chosen.items()
     }
@@ -124,11 +150,13 @@ def _record(
     draw: random.Random,
     observed: dict[str, list[float]],
     chosen: dict[str, list[float]],
+    arms: dict[str, list[str]],
 ) -> None:
     expected = _EXPECTED[hidden][arm]
     noisy = min(1.0, max(-1.0, draw.gauss(expected, _NOISE)))
     observed[name].append(noisy)
     chosen[name].append(expected)
+    arms[name].append(arm)
 
 
 def _context(hidden: str) -> BanditContext:

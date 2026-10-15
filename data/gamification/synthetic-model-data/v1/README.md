@@ -18,5 +18,5 @@ Regenerate and verify the manifest from the repository root:
 PYTHONPATH=backend python3 tools/gamification/datasets/freeze_synthetic_expert_review.py
 ```
 
-The development gate may pass; the research and child-facing gate must remain blocked. See
-`docs/adaptive-gamified-learning/development-data-replacement.md` before introducing real data.
+The development gate may pass; the research and child-facing gate must remain blocked. This
+package is synthetic. Replace it with reviewed learner evidence before any child study.

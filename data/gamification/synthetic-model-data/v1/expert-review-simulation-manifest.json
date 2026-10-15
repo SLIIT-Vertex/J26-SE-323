@@ -55,7 +55,7 @@
     "split_seed": 42,
     "synthetic": true
   },
-  "replacement_guide": "docs/adaptive-gamified-learning/development-data-replacement.md",
+  "replacement_guide": "data/gamification/synthetic-model-data/v1/README.md",
   "research_and_child_facing_gate": "blocked_requires_authorized_replacement",
   "schema_version": "synthetic-expert-review-manifest-v1",
   "simulated_classification_evaluation": {
@@ -106,7 +106,7 @@
       "sha256": "9cdbd3e3e2e63e632eee0c61f91a04290f4ef2ced9566ac9f1ea28623c9b1522"
     },
     "data/gamification/synthetic-model-data/v1/development-research-protocol.json": {
-      "sha256": "8b0c1d32c067fcd8393edec7734fa893419d100b89f6b0df85793d25b2ce3f7c"
+      "sha256": "09f8eef98e8c46078dabc78bf661eefed6869d32bf0c8b27eaca1242936dd353"
     },
     "data/gamification/synthetic-model-data/v1/expert-review-simulation.json": {
       "sha256": "5974b31012b1d73ef11a4866d92471117589a93b65c8baba9e423400dedeadf9"

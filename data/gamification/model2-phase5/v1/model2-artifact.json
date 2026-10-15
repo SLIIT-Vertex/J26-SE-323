@@ -1,0 +1,26 @@
+{
+  "artifact_schema_version": "model2-artifact-v1",
+  "artifact_sha256": "33e1ecdd3e2d264a6d2c1e3ac67af2b309970a066ec531a423f2f80f102c4ef4",
+  "artifact_version": "model2-synthetic-engineering-v1",
+  "catalogue_version": "g5-mat-half-misconceptions-v1",
+  "child_delivery_status": "blocked_pending_human_approval",
+  "context_schema_version": "model2-context-v1",
+  "data_authorization_reference": null,
+  "dataset_manifest_sha256": "cb2c4efb0e75790cec45ff97b9e6598d956a5291f838ae77eaf511d233e1d67c",
+  "evaluation_sha256": "9f5534e5b2d896d6a2ea07c439521bfce185e3151e57c503c6f692d560d4a3f4",
+  "evidence_status": "synthetic_engineering_only",
+  "lifecycle": "draft",
+  "parameters": {
+    "action_types": {
+      "subtracts_two_error": "worked_parallel_example",
+      "unknown_error": "step_by_step_guidance",
+      "whole_set_error": "visual_guidance"
+    },
+    "alpha": 0.1,
+    "candidate": "disjoint_linucb",
+    "epsilon_min": 0.05,
+    "ridge": 1.0
+  },
+  "policy_version": "model2-linucb-v1",
+  "seed": 31
+}
