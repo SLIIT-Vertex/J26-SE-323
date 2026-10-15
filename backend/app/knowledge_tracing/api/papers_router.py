@@ -85,6 +85,14 @@ class AvailabilityRead(BaseModel):
     paper: "PaperRead | None" = None
 
 
+class PagePhotoRead(BaseModel):
+    """Where one printed page stands: not photographed yet, being marked, or done."""
+
+    page: int
+    submission_id: UUID | None = None
+    submission_status: str | None = None  # null until a photo of this page was uploaded
+
+
 class PaperRead(BaseModel):
     paper_id: UUID
     code: str
@@ -100,6 +108,7 @@ class PaperRead(BaseModel):
     created_at: datetime | None
     skipped_skills: list[str]
     items: list[PaperItemRead] | None = None
+    pages: list[PagePhotoRead] | None = None  # only on the detail view
 
 
 @lru_cache
@@ -269,9 +278,27 @@ def list_papers(
 
 
 @router.get("/papers/{paper_id}", response_model=PaperRead)
-def get_paper(paper_id: UUID, service: ServiceDep) -> PaperRead:
+def get_paper(
+    paper_id: UUID, service: ServiceDep, session: Annotated[Session, Depends(get_db)]
+) -> PaperRead:
     try:
-        return _from_generated(service.get(paper_id), with_items=True)
+        result = _from_generated(service.get(paper_id), with_items=True)
+        from app.knowledge_tracing.infrastructure.db.submission_repository import (
+            SqlAlchemySubmissionRepository,
+        )
+
+        current = {
+            s.page: s for s in SqlAlchemySubmissionRepository(session).current_for_paper(paper_id)
+        }
+        result.pages = [
+            PagePhotoRead(
+                page=page,
+                submission_id=current[page].id if page in current else None,
+                submission_status=current[page].status if page in current else None,
+            )
+            for page in range(1, result.page_count + 1)
+        ]
+        return result
     except PaperNotFoundError as error:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Paper not found") from error
 

@@ -82,6 +82,11 @@ class MasteryService:
             return latest
         return self._compute(learner_id)
 
+    def refresh(self, learner_id: UUID) -> MasterySnapshot:
+        """Recompute now, whatever the debounce says (new paper answers just arrived)."""
+        self._require_learner(learner_id)
+        return self._compute(learner_id)
+
     def _compute(self, learner_id: UUID) -> MasterySnapshot:
         total = self.repository.count_attempts(learner_id)
         history = self.repository.history(learner_id, self.spec.history_cap)

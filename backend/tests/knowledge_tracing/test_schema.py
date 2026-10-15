@@ -31,6 +31,7 @@ MIGRATIONS = [
     VERSIONS / "20261015_01_create_mastery_snapshots.py",
     VERSIONS / "20261015_02_create_papers.py",
     VERSIONS / "20261016_01_create_vision_calls.py",
+    VERSIONS / "20261017_01_create_submissions.py",
 ]
 KT_TABLES = {
     "skills",
@@ -42,6 +43,8 @@ KT_TABLES = {
     "papers",
     "paper_items",
     "vision_calls",
+    "paper_submissions",
+    "graded_answers",
 }
 
 

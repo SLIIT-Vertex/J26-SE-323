@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     vision_second_provider: str = ""  # optional second opinion: mock | gemini (empty = off)
     gemini_base_url: str = "https://generativelanguage.googleapis.com"
     gemini_max_output_tokens: int = 1024
+    # reader_unsure: the parent only sees what the reader could not make sense of.
+    # strict: every doubt of the rules also goes to the parent.
+    grading_review_policy: str = "reader_unsure"
     vision_confidence_min: float = 0.60
     vision_concurrency: int = 3
     vision_timeout_seconds: int = 90
