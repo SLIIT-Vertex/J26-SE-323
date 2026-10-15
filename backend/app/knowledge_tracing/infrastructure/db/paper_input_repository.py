@@ -13,6 +13,8 @@ from app.knowledge_tracing.infrastructure.db.attempt_repository import (
 from app.knowledge_tracing.infrastructure.db.models import (
     AttemptModel,
     MasterySnapshotModel,
+    PaperItemModel,
+    PaperModel,
     QuestionModel,
     QuestionVariantModel,
     SkillModel,
@@ -90,6 +92,20 @@ class SqlAlchemyPaperInputRepository:
             .order_by(QuestionModel.id)
         ).all()
         return [QuestionRow(*row) for row in rows]
+
+    def recent_paper_question_ids(self, learner_id: UUID, papers: int) -> set[str]:
+        recent = self.session.scalars(
+            select(PaperModel.id)
+            .where(PaperModel.learner_id == learner_id, PaperModel.status != "cancelled")
+            .order_by(PaperModel.week_start.desc(), PaperModel.created_at.desc())
+            .limit(papers)
+        ).all()
+        if not recent:
+            return set()
+        rows = self.session.scalars(
+            select(PaperItemModel.question_id).where(PaperItemModel.paper_id.in_(recent))
+        ).all()
+        return set(rows)
 
     def previous_snapshot(self, learner_id: UUID) -> MasterySnapshot | None:
         model = self.session.scalars(

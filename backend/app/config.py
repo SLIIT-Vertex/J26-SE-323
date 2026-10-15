@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     s3_region: str = ""
     s3_question_prefix: str = ""
     signed_url_seconds: int = 600
+    # Generated papers (PDFs) are written here. Kept apart from the question images because
+    # the question bank is only read, while papers need write access.
+    paper_storage_backend: str = "local"  # local | s3
 
     # Knowledge tracing: model and feature spec.
     model_weights_path: str = (

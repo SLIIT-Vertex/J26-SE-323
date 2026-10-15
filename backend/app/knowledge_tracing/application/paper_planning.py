@@ -28,8 +28,16 @@ from app.knowledge_tracing.domain.feature_spec import FeatureSpec
 from app.knowledge_tracing.domain.mastery import MasterySnapshot
 
 RECENT_DAYS = 30
+RECENT_PAPERS = 3  # questions on the learner's last papers are not repeated
 LANGUAGES = ("si", "ta")
 DEFAULT_LANGUAGE = "si"
+
+
+@dataclass(frozen=True, slots=True)
+class PlanDetails:
+    selection: Selection
+    snapshot: MasterySnapshot
+    language: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,6 +69,10 @@ class PaperInputRepository(Protocol):
     def recently_answered(self, learner_id: UUID, since: datetime) -> set[str]: ...
 
     def question_rows(self, language: str) -> list[QuestionRow]: ...
+
+    def recent_paper_question_ids(self, learner_id: UUID, papers: int) -> set[str]:
+        """Questions printed on the learner's most recent `papers` papers."""
+        ...
 
     def previous_snapshot(self, learner_id: UUID) -> MasterySnapshot | None:
         """The snapshot before the latest one."""
@@ -97,6 +109,15 @@ class PaperPlanner:
         language: str | None = None,
     ) -> Selection:
         """The questions of this week's paper for one learner (not yet laid out or printed)."""
+        return self.plan_detailed(learner_id, params, language).selection
+
+    def plan_detailed(
+        self,
+        learner_id: UUID,
+        params: PaperParams = PaperParams(),  # noqa: B008
+        language: str | None = None,
+    ) -> "PlanDetails":
+        """The selection together with the mastery snapshot and language it was made from."""
         snapshot = self.mastery.current(learner_id)  # raises LearnerNotFoundError
         language = self._language(learner_id, language)
 
@@ -132,6 +153,7 @@ class PaperPlanner:
 
         since = self.now() - timedelta(days=RECENT_DAYS)
         recent = self.inputs.recently_answered(learner_id, since)
+        recent |= self.inputs.recent_paper_question_ids(learner_id, RECENT_PAPERS)
         candidates = [
             Candidate(
                 question_id=row.question_id,
@@ -143,7 +165,8 @@ class PaperPlanner:
             for row in self.inputs.question_rows(language)
             if row.question_id not in recent
         ]
-        return select_questions(states, item_probs, candidates, params, self.config)
+        selection = select_questions(states, item_probs, candidates, params, self.config)
+        return PlanDetails(selection, snapshot, language)
 
     def _language(self, learner_id: UUID, requested: str | None) -> str:
         if requested in LANGUAGES:
