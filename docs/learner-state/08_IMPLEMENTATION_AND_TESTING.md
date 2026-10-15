@@ -16,8 +16,9 @@ one depended on it. The order follows the repository history.
 | 7 | `feat: expose learner state API` | Router, final schemas, registration in `main.py`, API test | `api/router.py`, `api/schemas.py`, `backend/app/main.py`, `backend/tests/test_learner_state.py` |
 | 8 | `feat: refine productive confusion and expose temporal decision values` | Progress-gain rule for productive confusion; `temporal_score`, `average_confidence` and `persistent_count` in the response; unit and service tests | `domain/temporal.py`, `domain/confusion.py`, `domain/disengagement.py`, `application/service.py`, `api/`, `backend/tests/learner_state/` |
 | 9 | `feat: store skill-specific learner state for the AI Tutor` | `skill_id` in the request; learner existence check; `learner_skill_states` table and migration; support-need contract and provider | `application/support_need.py`, `infrastructure/db/`, `api/`, `backend/alembic/versions/20261014_01_create_learner_state_tables.py` |
-| 10 | `fix: keep confusion behaviour reliability independent of session length` | Confusion uses behavioural data quality only; the history factor applies to disengagement only | `application/service.py`, `infrastructure/reliability.py` |
-| 11 | `fix: match training handling of missing bottom_hint; add training notebooks` | Missing `bottom_hint` filled with the training median (0.0); Kaggle training notebooks and verified unimodal results added | `infrastructure/feature_builder.py`, `research/learner-state/`, docs 02, 03, 07 |
+| 10 | `fix: align learner-state inference with training and add verified model results (#15)` | Confusion uses behavioural data quality only (the history factor applies to disengagement only); missing `bottom_hint` filled with the training median (0.0); Kaggle training notebooks and verified unimodal results | `application/service.py`, `infrastructure/reliability.py`, `infrastructure/feature_builder.py`, `research/learner-state/`, docs 02, 03, 07 |
+| 11 | `Feature/game dev (#20)` (by a teammate) | Model loader rewritten to evaluate the XGBoost JSON trees directly, removing the `xgboost` dependency | `infrastructure/model_loader.py`, `tests/learner_state/test_model_loader.py` |
+| 12 | `fix: match XGBoost float32 comparisons in the learner-state model loader` | Inputs and split thresholds rounded to float32 as in XGBoost; reference predictions from real XGBoost | `infrastructure/model_loader.py`, `tests/learner_state/test_model_reference_predictions.py`, `research/learner-state/tools/generate_model_reference_predictions.py` |
 
 ## 2. How the modules interact
 
@@ -73,6 +74,8 @@ Learner-state tests live in two places:
 | `tests/learner_state/test_feature_builder.py` | Unit | Feature order matches each model; missing `bottom_hint` filled with the training median and flagged; no baseline below 5 windows; deviation values; only the last 20 windows used; negative response time |
 | `tests/learner_state/test_temporal.py` | Unit | Every confusion and disengagement state; low-confidence windows not counted as persistent; progress-gain rule (rising, stuck, falling, unknown, configurable); confidence-weighted summary; history validation |
 | `tests/learner_state/test_learner_state_service.py` | Service | Action priority (every combination order); confusion reliability independent of session length; persistent disengagement; re-engagement before tutor support; productive vs intervention-worthy confusion; duplicate/older windows; rejected windows not changing history; session isolation; `clear_session` |
+| `tests/learner_state/test_model_loader.py` | Unit | Four fixed predictions; every named feature required |
+| `tests/learner_state/test_model_reference_predictions.py` | Unit | Evaluator equals real XGBoost on 1,200 reference cases (split-threshold and realistic inputs); float32 rounding; extreme inputs |
 | `tests/learner_state/test_support_need.py` | Unit + repository | Support need = confusion `temporal_score`, none when `uncertain`; provider statuses `AVAILABLE` / `UNCERTAIN` / `NOT_FOUND`; request and result validation; repository keeps the latest row per learner and skill |
 | `tests/learner_state/test_migration.py` | Migration | Migration `20261014_01` creates exactly the `learner_skill_states` table the model describes, and its downgrade removes it |
 | `tests/test_learner_state.py` | API | 200 response with all fields including `skill_id` and the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field or missing `skill_id`; 404 for an unknown learner; latest state stored and readable per skill |
@@ -96,7 +99,9 @@ module added a table.
 
 ### 3.3 Full repository suite
 
-As of 2026-10-14, the repository test suite reports 271 passed.
+As of 2026-10-15, the learner-state tests (`tests/learner_state` and `tests/test_learner_state.py`)
+report 114 passed. The full repository suite also contains gamification tests that currently fail
+on Windows only (file encoding, path separators and line endings in that component).
 
 Rerun `pytest` (see §4.3) to get the current result, because the count can change as the
 repository evolves.

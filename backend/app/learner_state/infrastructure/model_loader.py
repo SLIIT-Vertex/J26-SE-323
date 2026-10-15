@@ -1,10 +1,22 @@
 import json
 import math
+import struct
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final
 
 MODEL_DIRECTORY: Final = Path(__file__).resolve().parent / "models"
+
+
+_FLOAT32_MAX: Final = 3.4028234663852886e38
+
+
+def _float32(value: float) -> float:
+    """Round to the nearest float32, as XGBoost does with inputs and split thresholds."""
+    if abs(value) > _FLOAT32_MAX:
+        # Too large for float32: XGBoost turns it into infinity; struct would raise instead.
+        return math.copysign(math.inf, value)
+    return struct.unpack("f", struct.pack("f", value))[0]
 
 
 CONFUSION_BEHAVIOR_FEATURES: Final = (
@@ -72,7 +84,8 @@ class _Tree:
             left_children=tuple(data["left_children"]),
             right_children=tuple(data["right_children"]),
             split_indices=tuple(data["split_indices"]),
-            split_conditions=tuple(data["split_conditions"]),
+            # XGBoost compares in float32; the JSON stores thresholds as decimal text.
+            split_conditions=tuple(_float32(value) for value in data["split_conditions"]),
             default_left=tuple(bool(value) for value in data["default_left"]),
         )
         node_count = len(tree.left_children)
@@ -108,6 +121,10 @@ class _JsonTreeModel:
     trees: tuple[_Tree, ...]
 
     def predict_probability(self, values: tuple[float, ...]) -> float:
+        # XGBoost converts every input to float32 before comparing it with a threshold.
+        # Comparing in float64 instead sends values that lie on or next to a threshold
+        # (for example history_confidence = k / 20) down the wrong branch.
+        values = tuple(value if math.isnan(value) else _float32(value) for value in values)
         margin = self.base_margin + sum(tree.predict_margin(values) for tree in self.trees)
         if margin >= 0:
             return 1.0 / (1.0 + math.exp(-margin))

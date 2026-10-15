@@ -110,7 +110,7 @@ current window with the same learner's recent behaviour in this session.
 | `baseline_available` | `1.0` |
 
 When fewer than 5 previous observations exist, the eight `recent_*` and `*_deviation` features are
-set to `None` (missing for XGBoost), `history_confidence` is still reported, and
+set to `None` (missing for the models), `history_confidence` is still reported, and
 `baseline_available` is `0.0`.
 
 This is the "learner-specific" part of the design: the disengagement behaviour model judges the
