@@ -1,0 +1,36 @@
+{
+  "students": 100,
+  "evaluated": 100,
+  "skipped": 0,
+  "pool_questions": 328,
+  "source": "db",
+  "seed": 2026,
+  "knapsack_better": 99,
+  "tie": 1,
+  "knapsack_worse": 0,
+  "value_gain_percent": 14.04,
+  "summary": {
+    "cp_sat": {
+      "value": 4.5703,
+      "questions": 14.97,
+      "weakest3_covered": 1.0,
+      "weak_skill_coverage": 0.3891,
+      "weak_share": 0.5513,
+      "weak_or_unknown_share": 0.7378,
+      "verify_coverage": 0.6772,
+      "minutes": 23.24,
+      "ms": 58.9721
+    },
+    "greedy": {
+      "value": 4.0078,
+      "questions": 14.1,
+      "weakest3_covered": 1.0,
+      "weak_skill_coverage": 0.391,
+      "weak_share": 0.5421,
+      "weak_or_unknown_share": 0.7248,
+      "verify_coverage": 0.6741,
+      "minutes": 19.585,
+      "ms": 1.0524
+    }
+  }
+}
