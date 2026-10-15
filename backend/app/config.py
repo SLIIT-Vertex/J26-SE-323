@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     vision_provider: str = "mock"  # mock | gemini
     gemini_api_key: str = ""
     gemini_model: str = ""
-    vision_confidence_min: float = 0.70
+    vision_confidence_min: float = 0.60
     vision_concurrency: int = 3
     vision_timeout_seconds: int = 90
 
