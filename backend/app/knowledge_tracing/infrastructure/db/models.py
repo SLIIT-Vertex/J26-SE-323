@@ -269,3 +269,36 @@ class PaperItemModel(Base):
     shown_difficulty: Mapped[str] = mapped_column(String(10))
     role: Mapped[str] = mapped_column(String(12))  # weak | strong | verify | unknown | diagnostic
     predicted_p: Mapped[float | None] = mapped_column(Float)  # model's P(correct) when selected
+
+
+class VisionCallModel(Base):
+    """One HTTP attempt to a reader: cost, speed and quota monitoring.
+
+    Holds no picture and no transcription of handwriting, only timings, token counts and an
+    error code.
+    """
+
+    __tablename__ = "vision_calls"
+    __table_args__ = (
+        CheckConstraint("role IN ('primary', 'second_opinion')", name="ck_vision_calls_role"),
+        Index("ix_vision_calls_day", "provider", "model", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigIntType, primary_key=True, autoincrement=True)
+    # The submission table comes with the upload step; until then this is a plain identifier.
+    submission_id: Mapped[UUID | None] = mapped_column(Uuid)
+    paper_item_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("paper_items.id", ondelete="SET NULL")
+    )
+    provider: Mapped[str] = mapped_column(String(20))
+    model: Mapped[str] = mapped_column(String(80))
+    prompt_version: Mapped[str] = mapped_column(String(30))
+    role: Mapped[str] = mapped_column(String(16), server_default="primary")
+    latency_ms: Mapped[int | None] = mapped_column(Integer)
+    tokens_in: Mapped[int | None] = mapped_column(Integer)
+    tokens_out: Mapped[int | None] = mapped_column(Integer)
+    http_status: Mapped[int | None] = mapped_column(SmallInteger)
+    error_code: Mapped[str | None] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

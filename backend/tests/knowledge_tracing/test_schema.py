@@ -30,6 +30,7 @@ MIGRATIONS = [
     VERSIONS / "20261014_02_add_attempt_idempotency_key.py",
     VERSIONS / "20261015_01_create_mastery_snapshots.py",
     VERSIONS / "20261015_02_create_papers.py",
+    VERSIONS / "20261016_01_create_vision_calls.py",
 ]
 KT_TABLES = {
     "skills",
@@ -40,6 +41,7 @@ KT_TABLES = {
     "mastery_snapshots",
     "papers",
     "paper_items",
+    "vision_calls",
 }
 
 

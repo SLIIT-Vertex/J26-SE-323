@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     vision_provider: str = "mock"  # mock | gemini
     gemini_api_key: str = ""
     gemini_model: str = ""
+    vision_second_provider: str = ""  # optional second opinion: mock | gemini (empty = off)
+    gemini_base_url: str = "https://generativelanguage.googleapis.com"
+    gemini_max_output_tokens: int = 1024
     vision_confidence_min: float = 0.60
     vision_concurrency: int = 3
     vision_timeout_seconds: int = 90

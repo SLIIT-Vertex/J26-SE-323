@@ -4,9 +4,16 @@ No network of its own: the reader is a `VisionProvider` (a mock in tests, Gemini
 A failure of the reader never turns into "wrong": the parts go to the parent instead.
 """
 
+import contextvars
 from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
+from app.knowledge_tracing.application.grading.call_log import (
+    CallContext,
+    vision_context,
+    vision_role,
+)
 from app.knowledge_tracing.application.grading.combine import combine_parts
 from app.knowledge_tracing.application.grading.compare import compare_part, norm
 from app.knowledge_tracing.application.grading.types import (
@@ -144,9 +151,10 @@ def grade_item(
     second_reading: ItemRead | None = None
     if second_provider is not None:
         try:
-            second_reading, second_info = second_provider.read_item(
-                crop, specs, language, blank_reference
-            )
+            with vision_role("second_opinion"):
+                second_reading, second_info = second_provider.read_item(
+                    crop, specs, language, blank_reference
+                )
             calls.append(second_info)
         except VisionError as error:
             # A second opinion that fails is not a reason to doubt the first reading's rules,
@@ -171,3 +179,55 @@ def grade_item(
     return ItemGrade(
         question, tuple(calls), tuple(errors), provider.name, provider.model, provider.prompt_version
     )
+
+
+@dataclass(frozen=True, slots=True)
+class ItemJob:
+    """One question block to read and grade."""
+
+    key: Sequence[KeyPart]
+    crop: bytes
+    language: str
+    blank_reference: bytes | None = None
+    context: CallContext | None = None  # which submission and paper item this is for
+
+
+def grade_items(
+    jobs: Sequence[ItemJob],
+    provider: VisionProvider,
+    *,
+    workers: int = 3,
+    second_provider: VisionProvider | None = None,
+    config: GradingConfig = GradingConfig(),  # noqa: B008
+) -> list[ItemGrade]:
+    """Grade many question blocks with a few readers working at once (3 to 4 is plenty).
+
+    The results are in the order of `jobs`. Each job runs inside its own call context, so the
+    call records and the reading cache know which submission and paper item they belong to.
+    """
+
+    def run(job: ItemJob) -> ItemGrade:
+        def call() -> ItemGrade:
+            return grade_item(
+                job.key,
+                provider,
+                job.crop,
+                job.language,
+                blank_reference=job.blank_reference,
+                second_provider=second_provider,
+                config=config,
+            )
+
+        if job.context is None:
+            return call()
+        with vision_context(
+            job.context.submission_id, job.context.paper_item_id, job.context.role
+        ):
+            return call()
+
+    if workers <= 1 or len(jobs) <= 1:
+        return [run(job) for job in jobs]
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        # copy_context so each worker thread starts from the caller's context, not a stale one
+        futures = [pool.submit(contextvars.copy_context().run, run, job) for job in jobs]
+        return [future.result() for future in futures]

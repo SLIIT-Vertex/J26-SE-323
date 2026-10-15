@@ -7,10 +7,20 @@ from app.knowledge_tracing.application.grading import (
     KeyPart,
     PartRead,
     combine_parts,
-    compare_part,
     loose,
     norm,
 )
+from app.knowledge_tracing.application.grading import compare_part as _compare_part
+from app.knowledge_tracing.application.grading.types import ReviewPolicy
+
+# These tests check the rule table itself, where every doubt goes to the parent. The product
+# default settles some doubts automatically (see test_review_policy.py).
+STRICT = GradingConfig(review_policy=ReviewPolicy.strict())
+
+
+def compare_part(read, key, config=STRICT, **kwargs):
+    return _compare_part(read, key, config, **kwargs)
+
 
 
 def read(

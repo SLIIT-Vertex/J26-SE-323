@@ -18,6 +18,7 @@ from app.knowledge_tracing.application.grading import (
     parse_item_read,
     part_specs,
 )
+from app.knowledge_tracing.application.grading.types import ReviewPolicy
 from app.knowledge_tracing.application.question_import import ImageInfo, build_plan, load_files
 from app.knowledge_tracing.infrastructure.vision.mock import MockProvider, reading
 
@@ -32,7 +33,13 @@ def short(part_no: int, *alternatives: str, kind: str = "text") -> KeyPart:
     return KeyPart(part_no, kind, alternatives)  # type: ignore[arg-type]
 
 
+# The rule table with every doubt going to the parent. The product default is tested in
+# test_review_policy.py.
+STRICT = GradingConfig(review_policy=ReviewPolicy.strict())
+
+
 def grade(key: list[KeyPart], provider: MockProvider, **kwargs):
+    kwargs.setdefault("config", STRICT)
     return grade_item(key, provider, CROP, "si", **kwargs)
 
 

@@ -11,7 +11,7 @@ could hold an answer. `KeyPart` is the answer key and never leaves the server.
 """
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -141,6 +141,60 @@ class QuestionGrade:
         return any(p.needs_review for p in self.parts)
 
 
+ReviewAction = Literal["review", "correct", "wrong"]
+
+
+@dataclass(frozen=True)
+class ReviewPolicy:
+    """What happens to a part when a rule is unsure about it.
+
+    The rules (compare.py) name WHY a part is uncertain. The policy decides whether that
+    uncertainty is worth a parent's time ("review") or is settled automatically ("correct" or
+    "wrong"). Failures of the reader itself are never settled automatically: a reading that could
+    not be made, or was made with low confidence, always goes to the parent.
+    """
+
+    actions: dict[str, ReviewAction]
+    # An instruction part ("colour three boxes") is accepted on one confident reading. With True
+    # it also needs a second reader to agree, otherwise it always goes to the parent.
+    instruction_needs_second_reader: bool = False
+
+    def action_for(self, reason: str | None) -> ReviewAction:
+        return self.actions.get(reason or "", "review")
+
+    @classmethod
+    def reader_unsure(cls) -> "ReviewPolicy":
+        """The default: the parent only sees what the reader itself could not make sense of.
+
+        Rule-level doubts are settled automatically. These choices are judgment calls that the
+        project owner should confirm; see the notes next to each one.
+        """
+        return cls(
+            actions={
+                # the child's word is a slip of the right word: a spelling mistake is wrong
+                "near_miss": "wrong",
+                "long_text_close": "wrong",
+                # the right words are all there, with more around them
+                "extra_words": "correct",
+                # the same words in another order: not what the key says
+                "word_order": "wrong",
+                # the key asks for one numeral system and the child used the other
+                "roman_arabic": "wrong",
+                # the numbers are right and only the unit is missing or spelled unusually
+                "unit_missing": "correct",
+                "unit_unknown": "correct",
+                # "6 less" is not 6
+                "negation_words": "wrong",
+            },
+            instruction_needs_second_reader=False,
+        )
+
+    @classmethod
+    def strict(cls) -> "ReviewPolicy":
+        """Every doubt goes to the parent (the rule table exactly as specified)."""
+        return cls(actions={}, instruction_needs_second_reader=True)
+
+
 @dataclass(frozen=True, slots=True)
 class GradingConfig:
     confidence_min: float = 0.60  # below this a reading goes to the parent
@@ -153,3 +207,4 @@ class GradingConfig:
     # but not equal goes to the parent: a child's slip in a long word is not "clearly wrong".
     long_length: int = 15
     near_long_ratio: float = 0.60
+    review_policy: ReviewPolicy = field(default_factory=ReviewPolicy.reader_unsure)

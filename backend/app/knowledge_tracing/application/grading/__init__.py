@@ -2,7 +2,9 @@ from app.knowledge_tracing.application.grading.combine import combine_parts
 from app.knowledge_tracing.application.grading.compare import compare_part, loose, norm
 from app.knowledge_tracing.application.grading.pipeline import (
     ItemGrade,
+    ItemJob,
     grade_item,
+    grade_items,
     grade_reading,
     part_specs,
 )
@@ -29,6 +31,7 @@ __all__ = [
     "CallInfo",
     "GradingConfig",
     "ItemGrade",
+    "ItemJob",
     "ItemRead",
     "KeyPart",
     "PartGrade",
@@ -41,6 +44,7 @@ __all__ = [
     "combine_parts",
     "compare_part",
     "grade_item",
+    "grade_items",
     "grade_reading",
     "loose",
     "norm",

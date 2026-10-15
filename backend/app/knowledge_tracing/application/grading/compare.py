@@ -476,10 +476,36 @@ def compare_part(
             instruction_met=read.instruction_met,
         )
 
-    # An uncertain reading goes to the parent, whatever the rules decided.
-    if not grade.needs_review and read.confidence < config.confidence_min:
-        grade = _flag(grade, "low_confidence")
-    return grade
+    # A reading the reader itself was unsure about always goes to the parent, even where a
+    # rule-level doubt would otherwise have been settled automatically.
+    if read.confidence < config.confidence_min:
+        rule_level_doubt = (
+            grade.needs_review and config.review_policy.action_for(grade.review_reason) != "review"
+        )
+        if not grade.needs_review or rule_level_doubt:
+            return _flag(grade, "low_confidence")
+        return grade
+
+    return _settle(grade, config)
+
+
+def _settle(grade: PartGrade, config: GradingConfig) -> PartGrade:
+    """Apply the review policy: some rule-level doubts are decided here, not by the parent."""
+    if not grade.needs_review:
+        return grade
+    action = config.review_policy.action_for(grade.review_reason)
+    if action == "review":
+        return grade
+    return PartGrade(
+        part_no=grade.part_no,
+        status=action,
+        how=f"{grade.how} (settled as {action}: {grade.review_reason})",
+        needs_review=False,
+        review_reason=None,
+        read_text=grade.read_text,
+        confidence=grade.confidence,
+        instruction_met=grade.instruction_met,
+    )
 
 
 def _apply_instruction(
@@ -516,7 +542,8 @@ def _apply_instruction(
     else:
         status = instruction_status
 
-    confident_and_agreed = read.confidence >= config.confidence_min and second_agrees is True
+    second_ok = second_agrees is True or not config.review_policy.instruction_needs_second_reader
+    confident_and_agreed = read.confidence >= config.confidence_min and second_ok and second_agrees is not False
     review: ReviewReason | None = grade.review_reason
     if review is None and (not confident_and_agreed or status == "ambiguous") and status != "blank":
         review = "instruction_check"

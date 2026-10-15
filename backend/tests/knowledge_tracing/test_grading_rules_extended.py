@@ -2,8 +2,19 @@
 
 import pytest
 
-from app.knowledge_tracing.application.grading import KeyPart, PartRead, compare_part, norm
+from app.knowledge_tracing.application.grading import GradingConfig, KeyPart, PartRead, norm
+from app.knowledge_tracing.application.grading import compare_part as _compare_part
 from app.knowledge_tracing.application.grading.compare import UNIT_ALIASES
+from app.knowledge_tracing.application.grading.types import ReviewPolicy
+
+# These tests check the rule table itself, where every doubt goes to the parent. The product
+# default settles some doubts automatically (see test_review_policy.py).
+STRICT = GradingConfig(review_policy=ReviewPolicy.strict())
+
+
+def compare_part(read, key, config=STRICT, **kwargs):
+    return _compare_part(read, key, config, **kwargs)
+
 
 
 def read(answer: str = "", *, blank: bool = False, confidence: float = 0.95) -> PartRead:
