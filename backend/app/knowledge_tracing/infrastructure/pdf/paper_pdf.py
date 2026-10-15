@@ -221,6 +221,15 @@ def _qr_reads(pdf: bytes, page_index: int, first_gray: np.ndarray, expected: str
     return False
 
 
+RENDER_PX_PER_MM = 5.67  # 2 pixels per PDF point, as used when comparing photos with a page
+
+
+def render_pages(pdf: bytes, px_per_mm: float = RENDER_PX_PER_MM) -> tuple[list[np.ndarray], float]:
+    """Every page of a stored PDF as a grey image, and the pixels per millimetre used."""
+    dpi = round(px_per_mm * 25.4)
+    return _render(pdf, dpi), dpi / 25.4  # the exact scale that was used
+
+
 def verify_paper_pdf(pdf: bytes, token: str, page_count: int) -> None:
     """Render every page and find the four markers and the QR code again.
 
