@@ -269,3 +269,129 @@ class PaperItemModel(Base):
     shown_difficulty: Mapped[str] = mapped_column(String(10))
     role: Mapped[str] = mapped_column(String(12))  # weak | strong | verify | unknown | diagnostic
     predicted_p: Mapped[float | None] = mapped_column(Float)  # model's P(correct) when selected
+
+
+class VisionCallModel(Base):
+    """One HTTP attempt to a reader: cost, speed and quota monitoring.
+
+    Holds no picture and no transcription of handwriting, only timings, token counts and an
+    error code.
+    """
+
+    __tablename__ = "vision_calls"
+    __table_args__ = (
+        CheckConstraint("role IN ('primary', 'second_opinion')", name="ck_vision_calls_role"),
+        Index("ix_vision_calls_day", "provider", "model", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigIntType, primary_key=True, autoincrement=True)
+    # The submission table comes with the upload step; until then this is a plain identifier.
+    submission_id: Mapped[UUID | None] = mapped_column(Uuid)
+    paper_item_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("paper_items.id", ondelete="SET NULL")
+    )
+    provider: Mapped[str] = mapped_column(String(20))
+    model: Mapped[str] = mapped_column(String(80))
+    prompt_version: Mapped[str] = mapped_column(String(30))
+    role: Mapped[str] = mapped_column(String(16), server_default="primary")
+    latency_ms: Mapped[int | None] = mapped_column(Integer)
+    tokens_in: Mapped[int | None] = mapped_column(Integer)
+    tokens_out: Mapped[int | None] = mapped_column(Integer)
+    http_status: Mapped[int | None] = mapped_column(SmallInteger)
+    error_code: Mapped[str | None] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+SUBMISSION_STATUSES = (
+    "uploaded",  # stored, waiting to be graded
+    "grading",  # being straightened, read and marked
+    "failed_alignment",  # the photo cannot be used: the parent retakes it
+    "graded",  # every answer on the page was decided without the parent
+    "needs_review",  # some answers wait for the parent
+    "confirmed",  # the parent decided the unclear answers
+    "error",  # something went wrong on our side
+)
+
+
+class PaperSubmissionModel(Base):
+    """One uploaded photo of one page of a paper."""
+
+    __tablename__ = "paper_submissions"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('uploaded', 'grading', 'failed_alignment', 'graded', 'needs_review', "
+            "'confirmed', 'error')",
+            name="ck_paper_submissions_status",
+        ),
+        CheckConstraint("page >= 1", name="ck_paper_submissions_page"),
+        Index(
+            "uq_paper_submissions_current",
+            "paper_id",
+            "page",
+            unique=True,
+            postgresql_where=text("is_current"),
+            sqlite_where=text("is_current"),
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    paper_id: Mapped[UUID] = mapped_column(ForeignKey("papers.id"))
+    page: Mapped[int] = mapped_column(SmallInteger)
+    image_key: Mapped[str] = mapped_column(String(255))  # the original photo, private
+    status: Mapped[str] = mapped_column(String(20), server_default="uploaded")
+    failure_reason: Mapped[str | None] = mapped_column(String(40))
+    alignment_info: Mapped[dict | None] = mapped_column(JsonType)
+    is_current: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    graded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The first time the parent saw this page in a result report: its photos then have 7 days.
+    report_viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # When the photo and the crops were removed from storage (retention).
+    files_deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class GradedAnswerModel(Base):
+    """The reading and the marking of one part of one question on one submission."""
+
+    __tablename__ = "graded_answers"
+    __table_args__ = (
+        UniqueConstraint(
+            "submission_id", "paper_item_id", "part_no", name="uq_graded_answers_part"
+        ),
+        CheckConstraint(
+            "auto_status IN ('correct', 'wrong', 'blank', 'ambiguous')",
+            name="ck_graded_answers_auto_status",
+        ),
+        CheckConstraint(
+            "final_status IS NULL OR final_status IN ('correct', 'wrong', 'blank')",
+            name="ck_graded_answers_final_status",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    submission_id: Mapped[UUID] = mapped_column(
+        ForeignKey("paper_submissions.id", ondelete="CASCADE")
+    )
+    paper_item_id: Mapped[UUID] = mapped_column(ForeignKey("paper_items.id"))
+    part_no: Mapped[int] = mapped_column(SmallInteger, server_default="1")
+    crop_key: Mapped[str | None] = mapped_column(String(255))  # the picture the reader saw
+    vision_provider: Mapped[str] = mapped_column(String(20))
+    vision_model: Mapped[str] = mapped_column(String(80))
+    prompt_version: Mapped[str] = mapped_column(String(30))
+    raw_response: Mapped[dict | None] = mapped_column(JsonType)  # the reading; never the key
+    match_how: Mapped[str | None] = mapped_column(String(120))
+    instruction_met: Mapped[bool | None] = mapped_column(Boolean)
+    read_selected: Mapped[str | None] = mapped_column(String(40))  # a choice part: the label
+    read_text: Mapped[str | None] = mapped_column(Text)  # a short part: what was written
+    auto_status: Mapped[str] = mapped_column(String(10))
+    confidence: Mapped[float | None] = mapped_column(Float)
+    needs_review: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    review_reason: Mapped[str | None] = mapped_column(String(40))
+    final_status: Mapped[str | None] = mapped_column(String(10))  # null until decided
+    confirmed_by: Mapped[str | None] = mapped_column(String(64))  # "auto" or the parent
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
