@@ -51,6 +51,46 @@ from app.gamification.modeling.shared.contracts import MisconceptionDistribution
 
 _MODEL_NAMESPACE = UUID("91c0b7e2-4a55-4d1e-8f33-0c6a9b2d4e70")
 
+# The deployed table constraint predates the canonical episode vocabulary. Keep persistence
+# compatible without rewriting historical rows; all application/domain values remain canonical.
+_CANONICAL_TO_LEGACY_PHASE = {
+    EpisodePhase.CREATED: "created",
+    EpisodePhase.BASELINE_RESERVED: "baseline_started",
+    EpisodePhase.BASELINE_ACTIVE: "baseline_started",
+    EpisodePhase.BASELINE_SCORED: "baseline_recorded",
+    EpisodePhase.GAMEPLAY_ACTIVE: "baseline_recorded",
+    EpisodePhase.DIFFICULTY_DETECTED: "struggle_assessed",
+    EpisodePhase.MISCONCEPTION_ESTIMATED: "misconception_recorded",
+    EpisodePhase.SUPPORT_DECIDED: "support_decided",
+    EpisodePhase.SUPPORT_ACTIVE: "support_delivered",
+    EpisodePhase.SUPPORTED_PRACTICE_COMPLETE: "support_delivered",
+    EpisodePhase.SUPPORT_WITHDRAWN: "support_withdrawn",
+    EpisodePhase.INDEPENDENT_CHECK_ACTIVE: "verification_scheduled",
+    EpisodePhase.INDEPENDENT_CHECK_SCORED: "verification_recorded",
+    EpisodePhase.REWARD_VALIDATED: "outcome_recorded",
+    EpisodePhase.POLICY_UPDATED: "outcome_recorded",
+    EpisodePhase.COMPLETED: "completed",
+    EpisodePhase.ABORTED: "abandoned",
+    EpisodePhase.INVALIDATED: "invalidated",
+}
+_LEGACY_TO_CANONICAL_PHASE = {
+    "created": EpisodePhase.CREATED,
+    "baseline_started": EpisodePhase.BASELINE_ACTIVE,
+    "baseline_recorded": EpisodePhase.BASELINE_SCORED,
+    "struggle_assessed": EpisodePhase.DIFFICULTY_DETECTED,
+    "misconception_recorded": EpisodePhase.MISCONCEPTION_ESTIMATED,
+    "support_decided": EpisodePhase.SUPPORT_DECIDED,
+    "support_delivered": EpisodePhase.SUPPORT_ACTIVE,
+    "support_withdrawn": EpisodePhase.SUPPORT_WITHDRAWN,
+    "verification_scheduled": EpisodePhase.INDEPENDENT_CHECK_ACTIVE,
+    "verification_started": EpisodePhase.INDEPENDENT_CHECK_ACTIVE,
+    "verification_recorded": EpisodePhase.INDEPENDENT_CHECK_SCORED,
+    "outcome_recorded": EpisodePhase.REWARD_VALIDATED,
+    "completed": EpisodePhase.COMPLETED,
+    "abandoned": EpisodePhase.ABORTED,
+    "invalidated": EpisodePhase.INVALIDATED,
+}
+
 
 def _aware(value: datetime) -> datetime:
     return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
@@ -377,6 +417,7 @@ class SqlAlchemyEpisodeRepository:
                 invalid_reason=outcome.invalid_reason,
                 formula_version=outcome.formula_version,
                 calculated_at=outcome.calculated_at,
+                misconception_resolution=outcome.misconception_resolution,
             )
         )
         self._session.flush()
@@ -384,7 +425,7 @@ class SqlAlchemyEpisodeRepository:
     def _episode_values(self, state: EpisodeState) -> dict[str, object]:
         episode = state.episode
         return {
-            "phase": episode.phase.value,
+            "phase": _CANONICAL_TO_LEGACY_PHASE[episode.phase],
             "trigger_type": state.trigger_type,
             "trigger_reasons_json": _trigger_json(state),
             "baseline_template": state.baseline_template,
@@ -462,7 +503,7 @@ class SqlAlchemyEpisodeRepository:
                 learner_id=row.learner_id,
                 skill_id=SkillId(row.skill_code),
                 protocol_version=ProtocolVersion(row.episode_protocol_version),
-                phase=EpisodePhase(row.phase),
+                phase=_LEGACY_TO_CANONICAL_PHASE[row.phase],
                 created_at=_aware(row.opened_at),
                 transitioned_at=_aware(row.transitioned_at),
                 terminal_reason=row.terminal_reason,

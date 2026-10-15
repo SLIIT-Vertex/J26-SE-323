@@ -1,9 +1,9 @@
 """Batched, consent-aware update of the support policy. The active artifact stays put."""
 
 import hashlib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Mapping
 from uuid import UUID
 
 from app.gamification.application.consent_gate import research_consent_granted

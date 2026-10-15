@@ -7,13 +7,11 @@ from fastapi.testclient import TestClient
 
 from app.gamification.api.dependencies import NOT_FOR_PRODUCTION, PILOT_SKILL, build_session_play
 from app.gamification.api.router import get_play_service
-from app.gamification.content.catalog import PilotContentCatalog
-from app.gamification.content.loader import load_pilot_content_package
+from app.gamification.application.evaluation_protocol import load_frozen_protocol
 from app.main import app
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000201")
 OTHER = UUID("00000000-0000-4000-8000-000000000299")
-_CATALOG = PilotContentCatalog(load_pilot_content_package(allow_draft=True))
 
 
 @pytest.fixture
@@ -54,11 +52,6 @@ def _create(api: TestClient, key: str = "create-1") -> tuple[dict[str, object], 
     return response.json(), payload
 
 
-def _correct_option(item_id: str) -> str:
-    item = _CATALOG.item(item_id)
-    return item.correct_option_id
-
-
 def test_missing_dev_auth_is_rejected(api: TestClient) -> None:
     response = api.post("/api/v1/game-sessions", headers={"Idempotency-Key": "none"}, json=_body())
     assert response.status_code == 401
@@ -77,24 +70,16 @@ def test_idempotent_create_replays_and_rejects_a_different_body(api: TestClient)
     assert conflict.json()["code"] == "DUPLICATE_IDEMPOTENCY_KEY"
 
 
-def test_manifest_hides_the_answer_key_until_support_is_decided(api: TestClient) -> None:
+def test_next_activity_does_not_serve_a_drafted_question(api: TestClient) -> None:
     created, _payload = _create(api)
-    session_id = created["session_id"]
     activity = api.post(
-        f"/api/v1/game-sessions/{session_id}/next-activity",
+        f"/api/v1/game-sessions/{created['session_id']}/next-activity",
         headers=_headers(key="next-1"),
         json={"skill_id": PILOT_SKILL, "device_capabilities": ["choice_quest", "build_manipulate"]},
     )
-    assert activity.status_code == 200, activity.text
-    body = activity.json()
-    manifest = body["manifest"]
-    encoded = str(body)
-    assert "correct_option_id" not in encoded
-    assert "misconception" not in encoded
-    assert body["support"] is None
-    assert manifest["options"]
-    assert all("text" in option and "option_id" in option for option in manifest["options"])
-    assert set(manifest) == {"item_id", "question_text", "language", "template_key", "options"}
+    assert activity.status_code == 409, activity.text
+    assert activity.json()["code"] == "CURRICULUM_RETRIEVAL_UNAVAILABLE"
+    assert "question_text" not in activity.text
 
 
 def test_cross_learner_access_and_researcher_reconstruction(api: TestClient) -> None:
@@ -191,72 +176,71 @@ def test_learned_mode_without_an_approved_artifact_is_not_ready(api: TestClient)
 
 
 @pytest.mark.parametrize("mode", ["performance_triggered_fixed", "shadow"])
-def test_adult_tester_completes_one_episode(api: TestClient, mode: str) -> None:
+def test_play_refuses_curriculum_questions_from_the_draft_package(
+    api: TestClient, mode: str
+) -> None:
     created, _payload = _create(api, f"play-{mode}")
-    session_id = created["session_id"]
     activity = api.post(
-        f"/api/v1/game-sessions/{session_id}/next-activity",
+        f"/api/v1/game-sessions/{created['session_id']}/next-activity",
         headers=_headers(key=f"next-{mode}", **{"X-Decision-Mode": mode}),
         json={"skill_id": PILOT_SKILL, "device_capabilities": ["choice_quest", "build_manipulate"]},
     )
-    assert activity.status_code == 200, activity.text
-    opened = activity.json()
-    episode_id = opened["episode_id"]
-    baseline_item = opened["manifest"]["item_id"]
-    answered = api.post(
-        f"/api/v1/game-sessions/{session_id}/responses",
-        headers=_headers(key=f"base-{mode}"),
+    assert activity.status_code == 409, activity.text
+    assert activity.json()["code"] == "CURRICULUM_RETRIEVAL_UNAVAILABLE"
+
+
+def test_assigned_arm_and_monitoring_are_researcher_operations(api: TestClient) -> None:
+    protocol = load_frozen_protocol()
+    learner = uuid4()
+    body = {
+        "experiment_id": str(uuid4()),
+        "learner_id": str(learner),
+        "seed": 3,
+        "protocol_hash": protocol.digest,
+    }
+    denied = api.post(
+        "/api/v1/experiments/assignments",
+        headers=_headers(role="learner", key="assign-denied"),
+        json=body,
+    )
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "RESEARCHER_ROLE_REQUIRED"
+    assigned = api.post(
+        "/api/v1/experiments/assignments",
+        headers=_headers(role="researcher", key="assign-1"),
+        json=body,
+    )
+    assert assigned.status_code == 200, assigned.text
+    assert assigned.json()["arm_key"] in {
+        "baseline_performance_triggered",
+        "proposed_misconception_ig_policy",
+    }
+    mismatch = api.post(
+        "/api/v1/experiments/assignments",
+        headers=_headers(role="researcher", key="assign-bad"),
+        json={**body, "protocol_hash": "0" * 64},
+    )
+    assert mismatch.status_code == 409
+    assert mismatch.json()["code"] == "PROTOCOL_HASH_MISMATCH"
+    created = api.post(
+        "/api/v1/game-sessions",
+        headers=_headers(learner=learner, key="assign-session"),
         json={
-            "episode_id": episode_id,
-            "selected_option_id": "A",
-            "response_time_ms": 5000,
+            "learner_id": str(learner),
+            "client_session_id": str(uuid4()),
+            "language": "si",
         },
     )
-    assert answered.status_code == 200, answered.text
-    support = answered.json()
-    assert support["next_step"] == "present_support"
-    assert support["support"]["steps"]
-    assert "misconception" not in str(support).lower()
-    completed = api.post(
-        f"/api/v1/adaptive-episodes/{episode_id}/support/complete",
-        headers=_headers(key=f"done-{mode}"),
-        json={"duration_ms": 4000, "step_count": 2},
+    assert created.status_code == 200, created.text
+    activity = api.post(
+        f"/api/v1/game-sessions/{created.json()['session_id']}/next-activity",
+        headers=_headers(learner=learner, key="assign-next", **{"X-Decision-Mode": "learned"}),
+        json={"skill_id": PILOT_SKILL},
     )
-    assert completed.status_code == 200, completed.text
-    assert completed.json()["next_step"] == "continue"
-    withdrawn = api.post(
-        f"/api/v1/adaptive-episodes/{episode_id}/support/withdraw",
-        headers=_headers(key=f"withdraw-{mode}"),
-    )
-    assert withdrawn.status_code == 200, withdrawn.text
-    verification = withdrawn.json()
-    assert verification["next_step"] == "present_verification"
-    assert verification["support"] is None
-    assert verification["manifest"]["item_id"] != baseline_item
-    assert "correct_option_id" not in str(verification)
-    verified = api.post(
-        f"/api/v1/game-sessions/{session_id}/responses",
-        headers=_headers(key=f"verify-{mode}"),
-        json={
-            "episode_id": episode_id,
-            "selected_option_id": _correct_option(verification["manifest"]["item_id"]),
-            "response_time_ms": 4000,
-        },
-    )
-    assert verified.status_code == 200, verified.text
-    assert verified.json()["next_step"] == "finish"
-    assert "independence_gain" not in verified.json()
-    reconstruction = api.get(
-        f"/api/v1/adaptive-episodes/{episode_id}/reconstruction",
-        headers=_headers(role="researcher"),
-    )
-    assert reconstruction.status_code == 200, reconstruction.text
-    evidence = reconstruction.json()
-    assert evidence["beliefs"]
-    assert evidence["candidates"]
-    assert evidence["delivered_scaffold_id"]
-    assert evidence["baseline_score"] == 0
-    assert evidence["verification_score"] == 1
-    assert evidence["independence_gain"] == 1
-    assert evidence["validity"] == "valid"
-    assert "selected_option" not in str(evidence)
+    assert activity.status_code == 409, activity.text
+    assert activity.json()["code"] == "CURRICULUM_RETRIEVAL_UNAVAILABLE"
+    counters = api.get("/api/v1/evaluation/monitoring", headers=_headers(role="researcher"))
+    assert counters.status_code == 200, counters.text
+    assert counters.json()["inputs"] == "in-process engineering counters"
+    hidden = api.get("/api/v1/evaluation/monitoring", headers=_headers(role="learner"))
+    assert hidden.status_code == 403

@@ -73,6 +73,7 @@ class SupportAssetProvider(Protocol):
 
 class ConsentStore(Protocol):
     """Gamification-owned purpose-specific consent decisions."""
+
     def get_consent(self, *, learner_id: UUID, purpose: str) -> ConsentDecision: ...
 
 
@@ -112,3 +113,36 @@ class UnitOfWork(Protocol):
 
     def rollback(self) -> None: ...
 
+
+class SessionRepository(Protocol):
+    def get(self, session_id: UUID) -> object | None: ...
+
+
+class EventRepository(Protocol):
+    def expected_sequence(self, session_id: UUID) -> int: ...
+
+
+class ContentRepository(Protocol):
+    def get(self, content_id: str) -> object | None: ...
+
+
+class AdaptiveEpisodeRepository(Protocol):
+    def get(self, episode_id: UUID) -> object | None: ...
+
+
+class VerifiedTutorGateway(Protocol):
+    """Verified tutoring outcome. ``None`` is missingness, not an episode failure."""
+
+    def latest_outcome(self, *, learner_id: UUID, skill_id: str, as_of: datetime) -> str | None: ...
+
+
+class CurriculumReferenceGateway(Protocol):
+    """Shared curriculum identifier lookup. Returns a version token, never source text."""
+
+    def source_version(self, source_id: str) -> str | None: ...
+
+
+class ConsentEligibilityGateway(Protocol):
+    """Reference into the authoritative consent system. This module does not store the decision."""
+
+    def reference_for(self, *, learner_id: UUID, purpose: str) -> str | None: ...

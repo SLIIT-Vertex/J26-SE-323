@@ -120,7 +120,7 @@ def _rebuild(
 def _correct_count(accuracy: float | None, attempts: int) -> int:
     if accuracy is None or attempts == 0:
         return 0
-    return int(round(accuracy * attempts))
+    return round(accuracy * attempts)
 
 
 def _ratio(correct: int, attempts: int) -> float | None:

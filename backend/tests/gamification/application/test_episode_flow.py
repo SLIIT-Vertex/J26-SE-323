@@ -1,3 +1,4 @@
+import inspect
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
@@ -535,3 +536,80 @@ def test_available_mastery_reaches_the_decision_snapshot() -> None:
     assert inferred.feature_snapshot is not None
     assert inferred.feature_snapshot.values["mastery_probability"] == 0.42
     assert inferred.feature_snapshot.missingness["mastery_probability"] is False
+
+
+def test_episode_completes_without_a_curriculum_retriever() -> None:
+    assert "curriculum" not in inspect.signature(wire_episode_use_cases).parameters
+    assert "retriever" not in inspect.signature(wire_episode_use_cases).parameters
+    uow, cases, catalog = _flow()
+    episode_id = EpisodeId(uuid4())
+    _through_decision(cases, episode_id)
+    cases.record_exposure.execute(
+        RecordSupportExposureCommand(
+            episode_id=episode_id,
+            at=AT + timedelta(seconds=4),
+            duration_ms=1_000,
+            step_count=1,
+        )
+    )
+    cases.withdraw_support.execute(
+        WithdrawSupportCommand(episode_id=episode_id, at=AT + timedelta(seconds=5))
+    )
+    scheduled = cases.schedule_verification.execute(
+        ScheduleUnsupportedVerificationCommand(episode_id=episode_id, at=AT + timedelta(seconds=6))
+    )
+    assert scheduled.verification_pair is not None
+    verification = catalog.item(str(scheduled.verification_pair.verification_item_id))
+    cases.record_verification.execute(
+        RecordVerificationResponseCommand(
+            episode_id=episode_id,
+            at=AT + timedelta(seconds=7),
+            selected_option_id=verification.correct_option_id or "",
+        )
+    )
+    finished = cases.calculate_outcome.execute(
+        CalculateIndependenceOutcomeCommand(episode_id=episode_id, at=AT + timedelta(seconds=8))
+    )
+    assert finished.outcome is not None
+    assert finished.outcome.validity == "valid"
+    assert uow.episodes.get(episode_id).outcome is not None
+
+
+def test_misconception_resolution_stays_out_of_decision_features() -> None:
+    _uow, cases, catalog = _flow()
+    episode_id = EpisodeId(uuid4())
+    _through_decision(cases, episode_id)
+    cases.record_exposure.execute(
+        RecordSupportExposureCommand(
+            episode_id=episode_id,
+            at=AT + timedelta(seconds=4),
+            duration_ms=1_000,
+            step_count=1,
+        )
+    )
+    cases.withdraw_support.execute(
+        WithdrawSupportCommand(episode_id=episode_id, at=AT + timedelta(seconds=5))
+    )
+    scheduled = cases.schedule_verification.execute(
+        ScheduleUnsupportedVerificationCommand(episode_id=episode_id, at=AT + timedelta(seconds=6))
+    )
+    assert scheduled.verification_pair is not None
+    verification = catalog.item(str(scheduled.verification_pair.verification_item_id))
+    cases.record_verification.execute(
+        RecordVerificationResponseCommand(
+            episode_id=episode_id,
+            at=AT + timedelta(seconds=7),
+            selected_option_id=verification.correct_option_id or "",
+        )
+    )
+    finished = cases.calculate_outcome.execute(
+        CalculateIndependenceOutcomeCommand(episode_id=episode_id, at=AT + timedelta(seconds=8))
+    )
+    assert finished.outcome is not None
+    assert finished.outcome.misconception_resolution is not None
+    assert finished.feature_snapshot is not None
+    assert finished.feature_snapshot.purpose == "model_decision"
+    assert "misconception_resolution" not in finished.feature_snapshot.values
+    assert finished.policy_context_snapshot is not None
+    assert finished.policy_context_snapshot.purpose == "policy_context"
+    assert "misconception_resolution" not in finished.policy_context_snapshot.values

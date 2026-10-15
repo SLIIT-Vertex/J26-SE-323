@@ -56,7 +56,7 @@ class LearnerStateSupportNeedGateway:
             result = self._provider.get_support_need(
                 SupportNeedRequest(learner_id=learner_id, skill_id=universal)
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # a provider failure is a recorded absence
             self._audit_missing("SUPPORT_NEED_PROVIDER_EXCEPTION", skill_id)
             return None
         if result.status is SupportNeedStatus.NOT_FOUND:

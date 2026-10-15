@@ -1,18 +1,19 @@
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, event, inspect, select, text
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.engine import Engine
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
+from alembic import command
 from app.config import get_settings
 from app.gamification.application.records import FeatureSnapshotRecord
 from app.gamification.domain.types import (
@@ -25,21 +26,64 @@ from app.gamification.domain.types import (
 )
 from app.gamification.infrastructure.db.models import (
     AdaptiveEpisodeModel,
+    AuthoritativeAttemptV3Model,
     FeatureSnapshotModel,
     GameSessionModel,
+    IndependenceMeasurementV3Model,
     IndependenceOutcomeModel,
     InteractionEventModel,
+    ItemPresentationV3Model,
     ItemResponseModel,
+    Model1BeliefProbabilityV4Model,
+    Model1BeliefSnapshotV4Model,
+    Model1FeatureSnapshotV4Model,
+    Model2CandidateDecisionV5Model,
+    Model2ContextSnapshotV5Model,
+    Model2RewardLinkV5Model,
+    Model2ScaffoldDecisionV5Model,
+    ProbeReservationV3Model,
+    ScaffoldExposureRecordV3Model,
     SupportCandidateModel,
     VerificationPairModel,
 )
+from app.gamification.infrastructure.db.phase3_measurement_store import (
+    SqlAlchemyPhase3MeasurementStore,
+)
+from app.gamification.infrastructure.db.phase4_model1_store import SqlAlchemyModel1Store
+from app.gamification.infrastructure.db.phase5_model2_store import SqlAlchemyModel2Store
 from app.gamification.infrastructure.db.repositories import (
     SqlAlchemyFeatureSnapshotStore,
     SqlAlchemyPolicyDecisionStore,
     reconstruct_episode_evidence,
 )
+from app.gamification.modeling.independence_gain.phase3 import (
+    IndependenceMeasurement,
+    Phase3Error,
+    PolicyUpdateStatus,
+    ScoreTotal,
+)
+from app.gamification.modeling.misconception_inference.phase4 import Model1Error, replay_inference
+from app.gamification.modeling.support_selection.phase5 import (
+    Model2Error,
+    PolicyMode,
+    RewardLink,
+)
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.modeling.independence_gain.test_phase3_measurement import valid_input
+from tests.gamification.modeling.misconception_inference.test_phase4_model1 import (
+    inference_input as model1_input,
+)
+from tests.gamification.modeling.misconception_inference.test_phase4_model1 import (
+    model as model1_model,
+)
+from tests.gamification.modeling.support_selection.test_phase5_model2 import (
+    context_input as model2_context_input,
+)
+from tests.gamification.modeling.support_selection.test_phase5_model2 import (
+    decide as model2_decide,
+)
+
 from .fixtures import (
     DECISION_ID,
     EPISODE_ID,
@@ -68,7 +112,41 @@ PHASE3_TABLES = {
     "policy_update_cursors",
     "learner_skill_summaries",
     "learner_evidence_outbox",
+    "experiments",
+    "experiment_arms",
+    "experiment_assignments",
+    "delivery_jobs",
+    "learning_reward_entries",
+    "research_exports",
+    "consent_eligibility_references",
 }
+PHASE3_MEASUREMENT_TABLES = {
+    "item_presentations_v3",
+    "probe_reservations_v3",
+    "scaffold_exposure_records_v3",
+    "support_withdrawal_confirmations_v3",
+    "authoritative_attempts_v3",
+    "independence_measurements_v3",
+}
+PHASE4_MODEL1_TABLES = {
+    "model1_feature_snapshots_v4",
+    "model1_belief_snapshots_v4",
+    "model1_belief_probabilities_v4",
+}
+PHASE5_MODEL2_TABLES = {
+    "model2_context_snapshots_v5",
+    "model2_scaffold_decisions_v5",
+    "model2_candidate_decisions_v5",
+    "model2_reward_links_v5",
+}
+PHASE6_ORCHESTRATION_TABLES = {
+    "phase6_episode_runs",
+    "phase6_probe_reservations",
+    "phase6_episode_events",
+    "phase6_idempotency_receipts",
+    "phase6_audit_events",
+}
+MODEL1_PRESENTATION_ID = uuid4()
 
 
 def sqlite_engine(url: str = "sqlite://") -> Engine:
@@ -366,6 +444,193 @@ def test_policy_store_and_episode_reconstruction_use_frozen_evidence(db: Session
     assert bundle.outcome.raw_independence_gain == 1.0
 
 
+def test_phase3_measurement_store_is_idempotent_and_transaction_rollback_safe(db: Session) -> None:
+    seed_complete_synthetic_episode(db)
+    authoritative = valid_input()
+    authoritative = replace(
+        authoritative,
+        episode_id=EPISODE_ID,
+        decision_id=DECISION_ID,
+        presentations=tuple(
+            replace(row, episode_id=EPISODE_ID, learner_id=LEARNER_ID)
+            for row in authoritative.presentations
+        ),
+        reservations=tuple(
+            replace(row, episode_id=EPISODE_ID, learner_id=LEARNER_ID)
+            for row in authoritative.reservations
+        ),
+        scaffold_exposures=tuple(
+            replace(row, episode_id=EPISODE_ID) for row in authoritative.scaffold_exposures
+        ),
+        withdrawal=replace(authoritative.withdrawal, episode_id=EPISODE_ID),
+    )
+    before_id = uuid4()
+    after_id = uuid4()
+    measurement = IndependenceMeasurement(
+        measurement_id=uuid4(),
+        episode_id=EPISODE_ID,
+        decision_id=DECISION_ID,
+        before=ScoreTotal((before_id,), Decimal("0.5"), Decimal(1)),
+        after=ScoreTotal((after_id,), Decimal(1), Decimal(1)),
+        raw_independence_gain=Decimal("0.5"),
+        percentage_point_value=Decimal(50),
+        formula_version="raw-independence-gain-v1",
+        scoring_versions=("scoring-v1",),
+        rubric_versions=("rubric-v1",),
+        equivalence_version="equivalence-v1",
+        valid=True,
+        exclusion_reasons=(),
+        policy_update_status=PolicyUpdateStatus.AUTHORIZED_DELAYED,
+        measurement_version="independence-measurement-v1",
+        calculated_at=NOW,
+    )
+    store = SqlAlchemyPhase3MeasurementStore(db)
+    store.add_authoritative_input(authoritative)
+    store.add_authoritative_input(authoritative)
+    assert db.query(ItemPresentationV3Model).count() == len(authoritative.presentations)
+    assert db.query(AuthoritativeAttemptV3Model).count() == len(authoritative.attempts)
+    assert db.query(ProbeReservationV3Model).count() == len(authoritative.reservations)
+    assert db.query(ScaffoldExposureRecordV3Model).count() == 1
+    assert store.add(measurement).raw_independence_gain == Decimal("0.5")
+    assert store.add(measurement).id == measurement.measurement_id
+    with pytest.raises(Phase3Error, match="IDEMPOTENCY_CONFLICT"):
+        store.add(replace(measurement, raw_independence_gain=Decimal("0.4")))
+    db.rollback()
+    assert db.get(IndependenceMeasurementV3Model, measurement.measurement_id) is None
+
+
+def test_phase4_model1_store_reconstructs_exactly_and_rejects_conflicting_retry(
+    db: Session,
+) -> None:
+    seed_complete_synthetic_episode(db)
+    db.commit()
+    feature, belief = replay_inference(
+        replace(
+            model1_input(),
+            learner_id=LEARNER_ID,
+            episode_id=EPISODE_ID,
+            evidence=tuple(
+                replace(row, episode_id=EPISODE_ID, presentation_id=MODEL1_PRESENTATION_ID)
+                for row in model1_input().evidence
+            ),
+            presentation_id=MODEL1_PRESENTATION_ID,
+        ),
+        model1_model(),
+    )
+    store = SqlAlchemyModel1Store(db)
+    store.add(feature, belief)
+    store.add(feature, belief)
+    assert db.query(Model1FeatureSnapshotV4Model).count() == 1
+    assert db.query(Model1BeliefSnapshotV4Model).count() == 1
+    assert db.query(Model1BeliefProbabilityV4Model).count() == 3
+    assert store.reconstruct(belief.belief_snapshot_id) == (feature, belief)
+    with pytest.raises(Model1Error, match="BELIEF_SNAPSHOT_IDEMPOTENCY_CONFLICT"):
+        store.add(feature, replace(belief, confidence=belief.confidence / 2))
+    db.rollback()
+    assert db.get(Model1BeliefSnapshotV4Model, belief.belief_snapshot_id) is None
+
+
+def test_phase5_model2_store_reconstructs_complete_decision_and_reward_atomically(
+    db: Session,
+) -> None:
+    seed_complete_synthetic_episode(db)
+    feature, belief = replay_inference(
+        replace(
+            model1_input(),
+            learner_id=LEARNER_ID,
+            episode_id=EPISODE_ID,
+            presentation_id=MODEL1_PRESENTATION_ID,
+            evidence=(),
+            recent_same_skill_errors=(),
+            recent_error_evidence_ids=(),
+            recent_errors_as_of=None,
+        ),
+        model1_model(),
+    )
+    SqlAlchemyModel1Store(db).add(feature, belief)
+    source = model2_context_input()
+    current = replace(source.current_unsupported, episode_id=EPISODE_ID)
+    data = replace(
+        source,
+        learner_id=LEARNER_ID,
+        episode_id=EPISODE_ID,
+        presentation_id=MODEL1_PRESENTATION_ID,
+        current_unsupported=current,
+        recent_unsupported=tuple(
+            replace(item, episode_id=EPISODE_ID) for item in source.recent_unsupported
+        ),
+        belief=belief,
+    )
+    context, decision = model2_decide(mode=PolicyMode.PROPOSED_OFFLINE, data=data)
+    assert context is not None
+    decision = replace(decision, decision_id=DECISION_ID)
+    store = SqlAlchemyModel2Store(db)
+    store.add_decision(context, decision)
+    store.add_decision(context, decision)
+    assert db.query(Model2ContextSnapshotV5Model).count() == 1
+    assert db.query(Model2ScaffoldDecisionV5Model).count() == 1
+    assert db.query(Model2CandidateDecisionV5Model).count() == 3
+    assert store.reconstruct(DECISION_ID) == (context, decision)
+
+    authoritative = valid_input()
+    authoritative = replace(
+        authoritative,
+        episode_id=EPISODE_ID,
+        decision_id=DECISION_ID,
+        presentations=tuple(
+            replace(item, episode_id=EPISODE_ID, learner_id=LEARNER_ID)
+            for item in authoritative.presentations
+        ),
+        reservations=tuple(
+            replace(item, episode_id=EPISODE_ID, learner_id=LEARNER_ID)
+            for item in authoritative.reservations
+        ),
+        scaffold_exposures=tuple(
+            replace(item, episode_id=EPISODE_ID) for item in authoritative.scaffold_exposures
+        ),
+        withdrawal=replace(authoritative.withdrawal, episode_id=EPISODE_ID),
+    )
+    result = IndependenceMeasurement(
+        measurement_id=uuid4(),
+        episode_id=EPISODE_ID,
+        decision_id=DECISION_ID,
+        before=ScoreTotal((uuid4(),), Decimal(0), Decimal(1)),
+        after=ScoreTotal((uuid4(),), Decimal("0.5"), Decimal(1)),
+        raw_independence_gain=Decimal("0.5"),
+        percentage_point_value=Decimal(50),
+        formula_version="raw-independence-gain-v1",
+        scoring_versions=("scoring-v1",),
+        rubric_versions=("rubric-v1",),
+        equivalence_version="equivalence-v1",
+        valid=True,
+        exclusion_reasons=(),
+        policy_update_status=PolicyUpdateStatus.AUTHORIZED_DELAYED,
+        measurement_version="independence-measurement-v1",
+        calculated_at=NOW,
+    )
+    measurement_store = SqlAlchemyPhase3MeasurementStore(db)
+    measurement_store.add_authoritative_input(authoritative)
+    measurement_store.add(result)
+    link = RewardLink(
+        reward_link_id=uuid4(),
+        decision_id=DECISION_ID,
+        measurement_id=result.measurement_id,
+        raw_independence_gain=Decimal("0.5"),
+        formula_version="raw-independence-gain-v1",
+        link_version="model2-raw-ig-reward-link-v1",
+        linked_at=NOW,
+    )
+    assert store.add_reward_link(link) == link
+    assert store.add_reward_link(link) == link
+    assert db.query(Model2RewardLinkV5Model).count() == 1
+    with pytest.raises(Model2Error, match="REWARD_LINK_IDEMPOTENCY_CONFLICT"):
+        store.add_reward_link(replace(link, raw_independence_gain=Decimal("0.4")))
+    with pytest.raises(Model2Error, match="REWARD_LINK_IDEMPOTENCY_CONFLICT"):
+        store.add_reward_link(replace(link, reward_link_id=uuid4()))
+    db.rollback()
+    assert db.get(Model2ScaffoldDecisionV5Model, DECISION_ID) is None
+
+
 def test_phase3_migration_upgrades_shared_learner_head_downgrades_and_reupgrades(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -386,16 +651,30 @@ def test_phase3_migration_upgrades_shared_learner_head_downgrades_and_reupgrades
     command.upgrade(config, "gamification@head")
     migrated_engine = sqlite_engine(database_url)
     assert PHASE3_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert PHASE3_MEASUREMENT_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert PHASE4_MODEL1_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert PHASE5_MODEL2_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert PHASE6_ORCHESTRATION_TABLES <= set(inspect(migrated_engine).get_table_names())
     migrated_engine.dispose()
 
     command.downgrade(config, "20261007_01")
     downgraded_engine = sqlite_engine(database_url)
     assert PHASE3_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert PHASE3_MEASUREMENT_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert PHASE4_MODEL1_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert PHASE5_MODEL2_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert PHASE6_ORCHESTRATION_TABLES.isdisjoint(
+        inspect(downgraded_engine).get_table_names()
+    )
     downgraded_engine.dispose()
 
     command.upgrade(config, "gamification@head")
     reupgraded_engine = sqlite_engine(database_url)
     assert PHASE3_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert PHASE3_MEASUREMENT_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert PHASE4_MODEL1_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert PHASE5_MODEL2_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert PHASE6_ORCHESTRATION_TABLES <= set(inspect(reupgraded_engine).get_table_names())
     reupgraded_engine.dispose()
     get_settings.cache_clear()
 
@@ -406,8 +685,8 @@ def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (gamification_head,) = script.get_revisions("gamification@head")
-    assert gamification_head.revision == "20261014_04"
-    assert gamification_head.down_revision == "20261014_03"
+    assert gamification_head.revision == "20261015_06"
+    assert gamification_head.down_revision == "20261015_05"
     assert gamification_head.revision in script.get_heads()
     for head in set(script.get_heads()) - {gamification_head.revision}:
         ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}
@@ -423,4 +702,3 @@ def test_indexed_history_query_returns_expected_session(db: Session) -> None:
         .order_by(GameSessionModel.started_at.desc())
     ).all()
     assert [row.id for row in rows] == [SESSION_ID]
-

@@ -1,19 +1,23 @@
 """Composition for the pilot shell. The stores are process-local and not for production."""
 
+from app.gamification.application.delivery import AuthoringDesk
+from app.gamification.application.episode_use_cases import wire_episode_use_cases
+from app.gamification.application.evaluation_protocol import load_frozen_protocol
+from app.gamification.application.experiment_assignment import AssignmentBook
+from app.gamification.application.monitoring import EvaluationMonitor
 from app.gamification.application.session_play import SessionPlay
 from app.gamification.application.template_selection import TemplateCompatibilityTable
 from app.gamification.content.catalog import PilotContentCatalog
 from app.gamification.content.loader import load_pilot_content_package
 from app.gamification.domain.types import CatalogueVersion
 from app.gamification.infrastructure.episode_memory import InMemoryUnitOfWork
+from app.gamification.infrastructure.memory import InMemoryAuditOutput
 from app.gamification.modeling.independence_gain.calculator import RawIndependenceGainCalculator
 from app.gamification.modeling.misconception_inference.probabilistic_model import (
     ProbabilisticMisconceptionModel,
 )
 from app.gamification.modeling.support_selection.learned_policy import LinUCBPolicy
 from app.gamification.modeling.support_selection.reference_policy import SafeSupportPolicy
-
-from app.gamification.application.episode_use_cases import wire_episode_use_cases
 
 NOT_FOR_PRODUCTION = "NOT_FOR_PRODUCTION"
 PILOT_SKILL = "G5-MAT-C03-L01-O01"
@@ -55,4 +59,11 @@ def build_session_play() -> SessionPlay:
         episodes=unit.episodes,
         catalog=catalog,
         taxonomy_version=str(package.versions["skill_taxonomy_version"]),
+        assignments=AssignmentBook(),
+        protocol=load_frozen_protocol(),
+        monitor=EvaluationMonitor(),
     )
+
+
+def build_authoring_desk() -> AuthoringDesk:
+    return AuthoringDesk(audit=InMemoryAuditOutput())

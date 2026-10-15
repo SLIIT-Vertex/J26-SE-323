@@ -25,7 +25,6 @@ MASTERY_MODEL_VERSION = "knowledge-tracing-mastery-v1"
 class NullMasteryEvidenceGateway:
     def get_mastery(self, *, learner_id: UUID, skill_id: SkillId) -> None:
         del learner_id, skill_id
-        return None
 
 
 class KnowledgeTracingMasteryGateway:
@@ -58,7 +57,7 @@ class KnowledgeTracingMasteryGateway:
             result = self._provider.get_mastery(
                 MasteryRetrievalRequest(learner_id=learner_id, skill_id=universal)
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # a provider failure is a recorded absence
             self._audit_missing("MASTERY_PROVIDER_EXCEPTION", skill_id)
             return None
         if result.status is not MasteryStatus.AVAILABLE or result.mastery is None:

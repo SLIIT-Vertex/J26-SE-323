@@ -1,8 +1,8 @@
 """Provisional pre-decision struggle rules. Thresholds are assumptions, not calibrated cutoffs."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Mapping
 
 from app.gamification.modeling.shared.feature_building import reject_future_evidence
 

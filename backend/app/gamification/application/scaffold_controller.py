@@ -73,17 +73,18 @@ class ScaffoldController:
         return "completed_over_budget" if over_budget else "completed"
 
     def deliver(self, episode: AdaptiveEpisode, *, at: datetime) -> AdaptiveEpisode:
-        return episode.transition_to(EpisodePhase.SUPPORT_DELIVERED, at=at)
+        return episode.transition_to(EpisodePhase.SUPPORT_ACTIVE, at=at)
 
     def withdraw(self, episode: AdaptiveEpisode, *, at: datetime) -> AdaptiveEpisode:
-        return episode.transition_to(EpisodePhase.SUPPORT_WITHDRAWN, at=at)
+        completed = episode.transition_to(EpisodePhase.SUPPORTED_PRACTICE_COMPLETE, at=at)
+        return completed.transition_to(EpisodePhase.SUPPORT_WITHDRAWN, at=at)
 
     def assert_withdrawn(self, withdrawn_at: datetime | None) -> None:
         if withdrawn_at is None:
             raise EpisodeFlowError("SUPPORT_NOT_WITHDRAWN")
 
     def schedule(self, episode: AdaptiveEpisode, *, at: datetime) -> AdaptiveEpisode:
-        return episode.transition_to(EpisodePhase.VERIFICATION_SCHEDULED, at=at)
+        return episode.transition_to(EpisodePhase.INDEPENDENT_CHECK_ACTIVE, at=at)
 
     def choose_verification_item(
         self,

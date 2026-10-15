@@ -1,8 +1,8 @@
 """Authoring retrieval over the shared curriculum contract.
 
 Gamification skill IDs are translated to Universal IDs before the request leaves
-this component. A missing crosswalk raises because this path is authoring, not
-an adaptive episode.
+this component. The request purpose is CONTENT_AUTHORING. A missing crosswalk
+raises because this path is authoring, not an adaptive episode.
 """
 
 from collections.abc import Mapping
@@ -39,6 +39,7 @@ class SharedCurriculumAdapter:
                 skill_id=universal,
                 grade=grade,  # type: ignore[arg-type]
                 requested_language=requested_language,
-                limit=limit,
+                purpose="CONTENT_AUTHORING",
+                limit=limit,  # type: ignore[arg-type]
             )
         )

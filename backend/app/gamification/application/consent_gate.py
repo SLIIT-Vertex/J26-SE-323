@@ -21,6 +21,4 @@ def research_consent_granted(store: ConsentStore, learner_id: UUID, at: datetime
         return False
     if not decision.granted:
         return False
-    if decision.expires_at is not None and decision.expires_at <= at:
-        return False
-    return True
+    return decision.expires_at is None or decision.expires_at > at

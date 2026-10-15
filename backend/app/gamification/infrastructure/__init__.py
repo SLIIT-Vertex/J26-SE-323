@@ -3,23 +3,23 @@
 from app.gamification.infrastructure.memory import (
     FixedClock,
     InMemoryAuditOutput,
+    InMemoryConsentStore,
     InMemoryFeatureSnapshotStore,
+    InMemoryLearningRecordStore,
     InMemoryModelRegistry,
     InMemoryPolicyDecisionStore,
-    InMemoryConsentStore,
-    InMemoryLearningRecordStore,
-    StubLearnerStateGateway,
     InMemorySupportAssetProvider,
+    StubLearnerStateGateway,
 )
 
 __all__ = [
     "FixedClock",
     "InMemoryAuditOutput",
+    "InMemoryConsentStore",
     "InMemoryFeatureSnapshotStore",
+    "InMemoryLearningRecordStore",
     "InMemoryModelRegistry",
     "InMemoryPolicyDecisionStore",
-    "InMemoryConsentStore",
-    "InMemoryLearningRecordStore",
-    "StubLearnerStateGateway",
     "InMemorySupportAssetProvider",
+    "StubLearnerStateGateway",
 ]

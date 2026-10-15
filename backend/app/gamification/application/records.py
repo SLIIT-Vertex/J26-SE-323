@@ -1,7 +1,7 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from types import MappingProxyType
-from typing import Mapping
 from uuid import UUID
 
 from app.gamification.domain.episode import AdaptiveEpisode
@@ -272,6 +272,7 @@ class IndependenceOutcomeEvidence:
     invalid_reason: str | None
     formula_version: str
     calculated_at: datetime
+    misconception_resolution: float | None = None
 
 
 @dataclass(frozen=True, slots=True)

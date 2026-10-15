@@ -300,6 +300,7 @@ def test_curriculum_adapter_sends_the_universal_skill_id() -> None:
     assert adapter.retrieve(learner_question="fractions", skill_id=FINE, grade=5) == "recorded"
     assert retriever.request is not None
     assert retriever.request.skill_id == PARENT
+    assert retriever.request.purpose == "CONTENT_AUTHORING"
     with pytest.raises(ValueError, match="universal skill"):
         adapter.retrieve(learner_question="fractions", skill_id="missing", grade=5)
 

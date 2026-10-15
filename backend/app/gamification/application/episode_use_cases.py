@@ -3,12 +3,11 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
-from typing import TypeVar
 from uuid import UUID, uuid5
 
+from app.gamification.application.consent_gate import research_consent_granted
 from app.gamification.application.episode_state import EpisodeState, SupportExposureRecord
 from app.gamification.application.errors import EpisodeFlowError
-from app.gamification.application.consent_gate import research_consent_granted
 from app.gamification.application.ports import (
     AuditOutput,
     ConsentStore,
@@ -21,6 +20,7 @@ from app.gamification.application.ports import (
 )
 from app.gamification.application.records import (
     AuditEvent,
+    FeatureSnapshotRecord,
     GamificationAttempt,
     IndependenceOutcomeEvidence,
     ItemResponseEvidence,
@@ -28,12 +28,12 @@ from app.gamification.application.records import (
     SupportExposureEvidence,
     VerificationPairEvidence,
 )
-from app.gamification.application.skill_summary import UpdateLearnerSkillSummary
 from app.gamification.application.scaffold_controller import (
     ScaffoldController,
     answer_overlap,
     exposure_counts_as_completed,
 )
+from app.gamification.application.skill_summary import UpdateLearnerSkillSummary
 from app.gamification.application.struggle_trigger import StruggleEvidence, StruggleTrigger
 from app.gamification.application.template_selection import (
     TemplateCompatibilityTable,
@@ -49,6 +49,7 @@ from app.gamification.domain.types import (
     EpisodeId,
     EpisodePhase,
     EvidenceSupportState,
+    FeatureSnapshotId,
     ItemId,
     OutcomeValidity,
     ProtocolVersion,
@@ -60,8 +61,13 @@ from app.gamification.modeling.independence_gain.contracts import (
     IndependenceGainCalculator,
     IndependenceGainInput,
 )
+from app.gamification.modeling.independence_gain.resolution import misconception_resolution
 from app.gamification.modeling.misconception_inference.contracts import MisconceptionPredictor
-from app.gamification.modeling.shared.feature_building import DecisionFeatureInput, FeatureBuilder
+from app.gamification.modeling.shared.feature_building import (
+    FEATURE_DEFINITION_VERSION,
+    DecisionFeatureInput,
+    FeatureBuilder,
+)
 from app.gamification.modeling.support_selection.context import (
     BanditContextBuilder,
     FixedMasteryGateway,
@@ -74,8 +80,6 @@ from app.gamification.modeling.support_selection.contracts import SupportSelecto
 _NAMESPACE = UUID("6f0e0c3a-7b1d-4e5f-9a2c-1d8e4b7c0a11")
 _ATTEMPT_CONTRACT = ContractVersion("gamification-attempt-v1")
 _FEATURE_PROTOCOL = "gamification-decision-v1"
-T = TypeVar("T")
-
 
 @dataclass(frozen=True, slots=True)
 class OpenAdaptiveEpisodeCommand:
@@ -175,7 +179,7 @@ class EpisodeRepository:
         raise NotImplementedError
 
 
-def run_unit(uow: UnitOfWork, work: Callable[[], T]) -> T:
+def run_unit[T](uow: UnitOfWork, work: Callable[[], T]) -> T:
     uow.begin()
     try:
         result = work()
@@ -345,7 +349,7 @@ class _EpisodeCommand:
                     payload=payload,
                 )
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # a publisher failure is withheld evidence, not an episode crash
             _audit(
                 self._uow.audit,
                 event_type="learner_evidence_withheld",
@@ -395,8 +399,9 @@ class OpenAdaptiveEpisode(_EpisodeCommand):
             created_at=command.submitted_at,
             protocol_version=ADAPTIVE_EPISODE_PROTOCOL,
         )
-        episode = episode.transition_to(EpisodePhase.BASELINE_STARTED, at=command.submitted_at)
-        episode = episode.transition_to(EpisodePhase.BASELINE_RECORDED, at=command.submitted_at)
+        episode = episode.transition_to(EpisodePhase.BASELINE_RESERVED, at=command.submitted_at)
+        episode = episode.transition_to(EpisodePhase.BASELINE_ACTIVE, at=command.submitted_at)
+        episode = episode.transition_to(EpisodePhase.BASELINE_SCORED, at=command.submitted_at)
         state = EpisodeState(
             episode=episode,
             session_id=command.session_id,
@@ -469,7 +474,8 @@ class AssessStruggle(_EpisodeCommand):
         evidence = self._support_evidence(state, command)
         decision = self._trigger.evaluate(evidence)
         if decision.fired:
-            episode = state.episode.transition_to(EpisodePhase.STRUGGLE_ASSESSED, at=command.at)
+            episode = state.episode.transition_to(EpisodePhase.GAMEPLAY_ACTIVE, at=command.at)
+            episode = episode.transition_to(EpisodePhase.DIFFICULTY_DETECTED, at=command.at)
             event_type = "struggle_detected"
         else:
             episode = state.episode.transition_to(
@@ -520,7 +526,7 @@ class AssessStruggle(_EpisodeCommand):
                 skill_id=state.episode.skill_id,
                 observed_no_earlier_than=cutoff,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # a missing learner-state signal is a recorded absence
             looked_up = None
             _audit(
                 self._uow.audit,
@@ -601,7 +607,7 @@ class InferMisconceptionBeliefs(_EpisodeCommand):
             )
         )
         belief = self._predictor.predict(snapshot)
-        episode = state.episode.transition_to(EpisodePhase.MISCONCEPTION_RECORDED, at=command.at)
+        episode = state.episode.transition_to(EpisodePhase.MISCONCEPTION_ESTIMATED, at=command.at)
         _audit(
             self._uow.audit,
             event_type="misconception_recorded",
@@ -637,7 +643,7 @@ class InferMisconceptionBeliefs(_EpisodeCommand):
             found = self._mastery.get_mastery(
                 learner_id=state.episode.learner_id, skill_id=state.episode.skill_id
             )
-        except Exception:
+        except Exception:  # noqa: BLE001  # a missing mastery signal is a recorded absence
             found = None
             _audit(
                 self._uow.audit,
@@ -1036,8 +1042,7 @@ class RecordVerificationResponse(_EpisodeCommand):
         self._record_attempt(
             state, response, response_time_ms=command.response_time_ms, support_exposure="none"
         )
-        episode = state.episode.transition_to(EpisodePhase.VERIFICATION_STARTED, at=command.at)
-        episode = episode.transition_to(EpisodePhase.VERIFICATION_RECORDED, at=command.at)
+        episode = state.episode.transition_to(EpisodePhase.INDEPENDENT_CHECK_SCORED, at=command.at)
         _audit(
             self._uow.audit,
             event_type="verification_recorded",
@@ -1059,10 +1064,12 @@ class CalculateIndependenceOutcome(_EpisodeCommand):
         controller: ScaffoldController,
         calculator: IndependenceGainCalculator,
         allow_draft: bool,
+        predictor: MisconceptionPredictor | None = None,
     ) -> None:
         super().__init__(uow=uow, episodes=episodes, catalog=catalog, controller=controller)
         self._calculator = calculator
         self._allow_draft = allow_draft
+        self._predictor = predictor
 
     def execute(self, command: CalculateIndependenceOutcomeCommand) -> EpisodeState:
         return self._run(lambda: self._calculate(command))
@@ -1129,8 +1136,9 @@ class CalculateIndependenceOutcome(_EpisodeCommand):
             invalid_reason=",".join(result.invalid_reasons) or None,
             formula_version=result.formula_version,
             calculated_at=command.at,
+            misconception_resolution=self._resolution(state, command.at),
         )
-        episode = state.episode.transition_to(EpisodePhase.OUTCOME_RECORDED, at=command.at)
+        episode = state.episode.transition_to(EpisodePhase.REWARD_VALIDATED, at=command.at)
         episode = episode.transition_to(EpisodePhase.COMPLETED, at=command.at)
         _audit(
             self._uow.audit,
@@ -1181,6 +1189,39 @@ class CalculateIndependenceOutcome(_EpisodeCommand):
         )
         return self._save(replace(completed, closed_at=command.at))
 
+    def _resolution(self, state: EpisodeState, at: datetime) -> float | None:
+        """Infer again from the verification item. The snapshot is an outcome, not a feature."""
+
+        if self._predictor is None or state.belief is None or state.verification_response is None:
+            return None
+        response = state.verification_response
+        item = self._catalog.item(str(response.item_id))
+        option = item.option(str(response.answer["option_id"]))
+        measured = FeatureSnapshotRecord(
+            snapshot_id=FeatureSnapshotId(
+                uuid5(_NAMESPACE, f"{state.episode.episode_id}:outcome-measurement")
+            ),
+            learner_id=state.episode.learner_id,
+            skill_id=state.episode.skill_id,
+            captured_at=at,
+            protocol_version=ProtocolVersion("outcome-measurement-v1"),
+            taxonomy_version=TaxonomyVersion(state.taxonomy_version),
+            feature_definition_version=FEATURE_DEFINITION_VERSION,
+            values={
+                "misconception_catalogue_version": self._catalog.misconception_catalogue_version(),
+                "structured_error_code": None if response.is_correct else option.misconception_code,
+                "current_score": response.score,
+            },
+            source_as_of={"verification_response": response.submitted_at.isoformat()},
+            purpose="outcome_measurement",
+        )
+        if measured.purpose in {"model_decision", "policy_context"}:
+            return None
+        if "misconception_resolution" in measured.values:
+            return None
+        posterior = self._predictor.predict(measured)
+        return misconception_resolution(state.belief.probabilities, posterior.probabilities)
+
 
 @dataclass(frozen=True, slots=True)
 class EpisodeUseCases:
@@ -1228,7 +1269,7 @@ def wire_episode_use_cases(
         schedule_verification=ScheduleUnsupportedVerification(**shared),
         record_verification=RecordVerificationResponse(**shared),
         calculate_outcome=CalculateIndependenceOutcome(
-            calculator=calculator, allow_draft=allow_draft, **shared
+            calculator=calculator, allow_draft=allow_draft, predictor=predictor, **shared
         ),
     )
     for command in (
