@@ -218,13 +218,13 @@ def test_trigger_reason_migration_upgrades_and_downgrades(tmp_path: Path, monkey
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     command.stamp(config, "20261007_01")
-    command.upgrade(config, "20261013_02")
+    command.upgrade(config, "gam_20261013_02")
     upgraded = sqlite_engine(database_url)
     columns = {column["name"] for column in inspect(upgraded).get_columns("adaptive_episodes")}
     assert "trigger_reasons_json" not in columns
     upgraded.dispose()
 
-    command.upgrade(config, "20261014_02")
+    command.upgrade(config, "gam_20261014_02")
     head = sqlite_engine(database_url)
     columns = {column["name"] for column in inspect(head).get_columns("adaptive_episodes")}
     exposure_columns = {column["name"] for column in inspect(head).get_columns("support_exposures")}
@@ -237,7 +237,7 @@ def test_trigger_reason_migration_upgrades_and_downgrades(tmp_path: Path, monkey
     assert "completed_over_budget" in checks
     head.dispose()
 
-    command.downgrade(config, "20261013_02")
+    command.downgrade(config, "gam_20261013_02")
     restored = sqlite_engine(database_url)
     columns = {column["name"] for column in inspect(restored).get_columns("adaptive_episodes")}
     checks = " ".join(
@@ -262,7 +262,7 @@ def test_decision_mode_migration_adds_the_authored_reference_mode(tmp_path: Path
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     command.stamp(config, "20261007_01")
-    command.upgrade(config, "20261014_03")
+    command.upgrade(config, "gam_20261014_03")
     upgraded = sqlite_engine(database_url)
     checks = " ".join(
         check["sqltext"] for check in inspect(upgraded).get_check_constraints("support_decisions")
@@ -270,7 +270,7 @@ def test_decision_mode_migration_adds_the_authored_reference_mode(tmp_path: Path
     assert "performance_triggered_fixed" in checks
     upgraded.dispose()
 
-    command.downgrade(config, "20261014_02")
+    command.downgrade(config, "gam_20261014_02")
     restored = sqlite_engine(database_url)
     checks = " ".join(
         check["sqltext"] for check in inspect(restored).get_check_constraints("support_decisions")
@@ -294,7 +294,7 @@ def test_reward_loop_migration_upgrades_and_downgrades(tmp_path: Path, monkeypat
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     command.stamp(config, "20261007_01")
-    command.upgrade(config, "20261014_04")
+    command.upgrade(config, "gam_20261014_04")
     upgraded = sqlite_engine(database_url)
     tables = set(inspect(upgraded).get_table_names())
     assert {
@@ -304,7 +304,7 @@ def test_reward_loop_migration_upgrades_and_downgrades(tmp_path: Path, monkeypat
     } <= tables
     upgraded.dispose()
 
-    command.downgrade(config, "20261014_03")
+    command.downgrade(config, "gam_20261014_03")
     restored = sqlite_engine(database_url)
     restored_tables = set(inspect(restored).get_table_names())
     assert "policy_update_cursors" not in restored_tables

@@ -22,7 +22,7 @@ def test_curriculum_branch_is_independent_of_the_gamification_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (curriculum_head,) = script.get_revisions("curriculum@head")
-    assert curriculum_head.revision == "20261015_01"
+    assert curriculum_head.revision == "curr_20261015_01"
     assert curriculum_head.down_revision == "20261007_01"
     assert set(curriculum_head.branch_labels or ()) == {"curriculum"}
     assert curriculum_head.revision in script.get_heads()

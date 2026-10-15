@@ -523,7 +523,7 @@ def test_delivery_migration_claims_and_rolls_back(
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     command.stamp(config, "20261007_01")
-    command.upgrade(config, "20261015_02")
+    command.upgrade(config, "gam_20261015_02")
     upgraded = sqlite_engine(database_url)
     assert {
         "delivery_jobs",
@@ -548,7 +548,7 @@ def test_delivery_migration_claims_and_rolls_back(
         assert again.claim_token == "worker-2"
         session.commit()
     upgraded.dispose()
-    command.downgrade(config, "20261014_05")
+    command.downgrade(config, "gam_20261014_05")
     restored = sqlite_engine(database_url)
     assert "delivery_jobs" not in inspect(restored).get_table_names()
     restored.dispose()

@@ -1,9 +1,8 @@
+import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
-
-import numpy as np
-import xgboost as xgb
+from typing import Any, Final
 
 MODEL_DIRECTORY: Final = Path(__file__).resolve().parent / "models"
 
@@ -59,19 +58,80 @@ DISENGAGEMENT_BEHAVIOR_FEATURES: Final = (
 )
 
 
+@dataclass(frozen=True)
+class _Tree:
+    left_children: tuple[int, ...]
+    right_children: tuple[int, ...]
+    split_indices: tuple[int, ...]
+    split_conditions: tuple[float, ...]
+    default_left: tuple[bool, ...]
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "_Tree":
+        tree = cls(
+            left_children=tuple(data["left_children"]),
+            right_children=tuple(data["right_children"]),
+            split_indices=tuple(data["split_indices"]),
+            split_conditions=tuple(data["split_conditions"]),
+            default_left=tuple(bool(value) for value in data["default_left"]),
+        )
+        node_count = len(tree.left_children)
+        if not node_count or any(
+            len(values) != node_count
+            for values in (
+                tree.right_children,
+                tree.split_indices,
+                tree.split_conditions,
+                tree.default_left,
+            )
+        ):
+            raise RuntimeError("Invalid tree arrays in learner-state model")
+        return tree
+
+    def predict_margin(self, values: tuple[float, ...]) -> float:
+        node = 0
+        while self.left_children[node] != -1:
+            feature_value = values[self.split_indices[node]]
+            go_left = (
+                self.default_left[node]
+                if math.isnan(feature_value)
+                else feature_value < self.split_conditions[node]
+            )
+            node = self.left_children[node] if go_left else self.right_children[node]
+        return self.split_conditions[node]
+
+
+@dataclass(frozen=True)
+class _JsonTreeModel:
+    feature_names: tuple[str, ...]
+    base_margin: float
+    trees: tuple[_Tree, ...]
+
+    def predict_probability(self, values: tuple[float, ...]) -> float:
+        margin = self.base_margin + sum(tree.predict_margin(values) for tree in self.trees)
+        if margin >= 0:
+            return 1.0 / (1.0 + math.exp(-margin))
+        exp_margin = math.exp(margin)
+        return exp_margin / (1.0 + exp_margin)
+
+
 def _load_model(
     filename: str,
     expected_features: tuple[str, ...],
-) -> xgb.Booster:
+) -> _JsonTreeModel:
     path = MODEL_DIRECTORY / filename
 
     if not path.exists():
         raise FileNotFoundError(f"Model file not found: {path}")
 
-    model = xgb.Booster()
-    model.load_model(path)
-
-    actual_features = tuple(model.feature_names or ())
+    try:
+        learner = json.loads(path.read_text())["learner"]
+        actual_features = tuple(learner["feature_names"])
+        booster = learner["gradient_booster"]
+        objective = learner["objective"]["name"]
+        base_score_text = learner["learner_model_param"]["base_score"]
+    except (KeyError, TypeError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"Invalid learner-state model file: {filename}") from error
 
     if actual_features != expected_features:
         raise RuntimeError(
@@ -79,11 +139,33 @@ def _load_model(
             f"Expected {expected_features}, got {actual_features}."
         )
 
-    return model
+    if booster.get("name") != "gbtree" or objective != "binary:logistic":
+        raise RuntimeError(
+            f"Unsupported learner-state model format in {filename}: "
+            f"booster={booster.get('name')!r}, objective={objective!r}"
+        )
+
+    try:
+        base_probability = float(base_score_text.strip("[]"))
+        if not 0.0 < base_probability < 1.0:
+            raise ValueError
+        base_margin = math.log(base_probability / (1.0 - base_probability))
+        trees = tuple(
+            _Tree.from_json(tree)
+            for tree in booster["model"]["trees"]
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise RuntimeError(f"Invalid learner-state model data: {filename}") from error
+
+    return _JsonTreeModel(
+        feature_names=actual_features,
+        base_margin=base_margin,
+        trees=trees,
+    )
 
 
 def _predict_probability(
-    model: xgb.Booster,
+    model: _JsonTreeModel,
     features: dict[str, float | None],
     feature_order: tuple[str, ...],
 ) -> float:
@@ -98,28 +180,22 @@ def _predict_probability(
             f"Missing required model features: {missing_features}"
         )
 
-    values = [
-        np.nan if features[name] is None else float(features[name])
+    values = tuple(
+        math.nan if features[name] is None else float(features[name])
         for name in feature_order
-    ]
-
-    matrix = xgb.DMatrix(
-        np.asarray([values], dtype=np.float32),
-        feature_names=list(feature_order),
-        missing=np.nan,
     )
 
-    probability = float(model.predict(matrix)[0])
+    probability = model.predict_probability(values)
 
     return max(0.0, min(1.0, probability))
 
 
 @dataclass
 class LearnerStateModels:
-    confusion_behavior: xgb.Booster
-    confusion_visual: xgb.Booster
-    disengagement_behavior: xgb.Booster
-    disengagement_visual: xgb.Booster
+    confusion_behavior: _JsonTreeModel
+    confusion_visual: _JsonTreeModel
+    disengagement_behavior: _JsonTreeModel
+    disengagement_visual: _JsonTreeModel
 
     @classmethod
     def load_default(cls) -> "LearnerStateModels":

@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "20261015_01"
+revision: str = "curr_20261015_01"
 down_revision: str | None = "20261007_01"
 branch_labels: str | Sequence[str] | None = ("curriculum",)
 depends_on: str | Sequence[str] | None = None

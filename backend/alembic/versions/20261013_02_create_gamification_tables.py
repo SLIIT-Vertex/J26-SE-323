@@ -7,7 +7,7 @@ from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
-revision: str = "20261013_02"
+revision: str = "gam_20261013_02"
 down_revision: str | None = "20261007_01"
 branch_labels: str | Sequence[str] | None = ("gamification",)
 depends_on: str | Sequence[str] | None = None

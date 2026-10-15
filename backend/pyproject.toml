@@ -25,7 +25,6 @@ dependencies = [
   "sqlalchemy>=2.0,<3",
   "torch>=2.4,<3",
   "uvicorn[standard]>=0.34,<1",
-  "xgboost>=2.1,<4",
 ]
 
 [project.optional-dependencies]

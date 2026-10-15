@@ -78,17 +78,18 @@ Hooks can be bypassed with `--no-verify`, so GitHub rules are the authoritative 
 Research modules branch their Alembic migrations independently from the shared learner migration
 `20261007_01`, so the repository intentionally has more than one head:
 
-- gamification: `20261013_02` (branch label `gamification`)
-- learner state: `20261014_01`, on top of knowledge tracing `20261013_01`
+- gamification: `gam_20261015_06` (branch label `gamification`)
+- curriculum: `curr_20261015_01` (branch label `curriculum`)
+- knowledge tracing and learner state: `20261015_02`
 
-A future shared curriculum migration will add another branch. `alembic upgrade head` (singular)
-fails when there are several heads. Use one of:
+`alembic upgrade head` (singular) fails when there are several heads. Use one of:
 
 ```bash
 cd backend
 alembic heads
 alembic upgrade heads
 alembic upgrade gamification@head
+alembic upgrade curriculum@head
 ```
 
 Use `alembic upgrade heads` to upgrade every module, or `gamification@head` for one labelled

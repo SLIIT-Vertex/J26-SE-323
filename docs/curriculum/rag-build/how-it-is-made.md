@@ -102,7 +102,7 @@ cite only the teacher guide `SRC-G5-ENV-TG-01`.
 | Contracts and trust checks | `backend/app/curriculum/application/retrieval.py` |
 | Chunking | `backend/app/curriculum/application/chunking.py` |
 | Tables | `backend/app/curriculum/infrastructure/models.py` |
-| Migration `20261015_01`, branch `curriculum`, parent `20261007_01` | `backend/alembic/versions/20261015_01_create_curriculum_tables.py` |
+| Migration `curr_20261015_01`, branch `curriculum`, parent `20261007_01` | `backend/alembic/versions/20261015_01_create_curriculum_tables.py` |
 | Index | `backend/app/curriculum/infrastructure/pgvector_index.py` |
 | Hybrid retriever | `backend/app/curriculum/infrastructure/hybrid_retriever.py` |
 | Load one skill into a database | `backend/app/curriculum/infrastructure/skill_index.py` |
