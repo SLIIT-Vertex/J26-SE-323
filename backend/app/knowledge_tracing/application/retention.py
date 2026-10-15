@@ -34,8 +34,10 @@ def aware(moment: datetime) -> datetime:
     return moment if moment.tzinfo else moment.replace(tzinfo=UTC)
 
 
-def photos_expire_at(submission: Submission) -> datetime:
-    deadline = aware(submission.uploaded_at) + KEEP_AFTER_UPLOAD
+def photos_expire_at(
+    submission: Submission, keep_after_upload: timedelta = KEEP_AFTER_UPLOAD
+) -> datetime:
+    deadline = aware(submission.uploaded_at) + keep_after_upload
     if submission.report_viewed_at is not None:
         deadline = min(deadline, aware(submission.report_viewed_at) + KEEP_AFTER_VIEW)
     return deadline
@@ -61,14 +63,20 @@ class RetentionService:
         submissions: SqlAlchemySubmissionRepository,
         storage: StorageBackend,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        keep_after_upload: timedelta = KEEP_AFTER_UPLOAD,
     ) -> None:
         self.submissions = submissions
         self.storage = storage
         self.now = now
+        self.keep_after_upload = keep_after_upload
 
     def due(self) -> list[Submission]:
         now = self.now()
-        return [s for s in self.submissions.with_files() if now >= photos_expire_at(s)]
+        return [
+            s
+            for s in self.submissions.with_files()
+            if now >= photos_expire_at(s, self.keep_after_upload)
+        ]
 
     def sweep(self, *, dry_run: bool = False) -> SweepResult:
         """Delete the photo and crops of every page whose time is up."""

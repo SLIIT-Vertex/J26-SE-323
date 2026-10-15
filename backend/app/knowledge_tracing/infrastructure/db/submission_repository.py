@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.knowledge_tracing.domain.submission import GradedPart, Submission
@@ -123,6 +123,32 @@ class SqlAlchemySubmissionRepository:
         self.session.commit()
         return (result.rowcount or 0) == 1
 
+    def reset_stuck_grading(self, uploaded_before: datetime) -> list[UUID]:
+        """Move pages that have been "grading" since before the cutoff back to "uploaded".
+
+        Marking runs inside the server process, so a page still "grading" after a restart will
+        never finish by itself. Returns the ids that were reset.
+        """
+        ids = list(
+            self.session.scalars(
+                select(PaperSubmissionModel.id).where(
+                    PaperSubmissionModel.status == "grading",
+                    PaperSubmissionModel.uploaded_at < uploaded_before,
+                )
+            )
+        )
+        if ids:
+            self.session.execute(
+                update(PaperSubmissionModel)
+                .where(
+                    PaperSubmissionModel.id.in_(ids),
+                    PaperSubmissionModel.status == "grading",
+                )
+                .values(status="uploaded")
+            )
+            self.session.commit()
+        return ids
+
     def set_status(
         self,
         submission_id: UUID,
@@ -184,6 +210,14 @@ class SqlAlchemySubmissionRepository:
     # ---- graded parts ----------------------------------------------------------------------
 
     def save_parts(self, parts: list[GradedPart], confirmed_at: datetime | None = None) -> None:
+        # Marking a page again (after an interrupted run) replaces what was read before.
+        for submission_id, item_id in {(p.submission_id, p.paper_item_id) for p in parts}:
+            self.session.execute(
+                delete(GradedAnswerModel).where(
+                    GradedAnswerModel.submission_id == submission_id,
+                    GradedAnswerModel.paper_item_id == item_id,
+                )
+            )
         for part in parts:
             self.session.add(
                 GradedAnswerModel(

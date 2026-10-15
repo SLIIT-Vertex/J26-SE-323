@@ -50,6 +50,15 @@ class CorrectAnswerRead(BaseModel):
     answer: str
 
 
+class ReportItemRead(BaseModel):
+    position: int
+    question_id: str
+    skill_code: str
+    result: Literal["correct", "wrong", "blank", "under_review", "not_uploaded"]
+    # Set only for "wrong" and "blank". Null for correct items and for items under review.
+    correct_answer_text: str | None
+
+
 class AnswerListEntryRead(BaseModel):
     position: int
     answers: list[CorrectAnswerRead]
@@ -84,6 +93,7 @@ class ReportRead(BaseModel):
     complete: bool
     summary: SummaryRead
     skills: list[SkillResultRead]
+    items: list[ReportItemRead]
     mistakes: list[MistakeRead]
     # The correct answers, by question number, as a separate list (never next to the question).
     answer_list: list[AnswerListEntryRead]
@@ -93,7 +103,9 @@ class ReportRead(BaseModel):
 
 def get_report_service(session: Annotated[Session, Depends(get_db)]) -> ReportService:
     def skill_names() -> dict[str, tuple[str, str | None]]:
-        rows = session.execute(select(SkillModel.code, SkillModel.name_en, SkillModel.name_si)).all()
+        rows = session.execute(
+            select(SkillModel.code, SkillModel.name_en, SkillModel.name_si)
+        ).all()
         return {code: (en, si) for code, en, si in rows}
 
     return ReportService(
@@ -125,10 +137,24 @@ def _to_read(report: Report) -> ReportRead:
         ),
         skills=[
             SkillResultRead(
-                skill_code=s.skill_code, name=s.name, name_si=s.name_si,
-                correct=s.correct, wrong=s.wrong, blank=s.blank,
+                skill_code=s.skill_code,
+                name=s.name,
+                name_si=s.name_si,
+                correct=s.correct,
+                wrong=s.wrong,
+                blank=s.blank,
             )
             for s in report.skills
+        ],
+        items=[
+            ReportItemRead(
+                position=i.position,
+                question_id=i.question_id,
+                skill_code=i.skill_code,
+                result=i.result,  # type: ignore[arg-type]
+                correct_answer_text=i.correct_answer_text,
+            )
+            for i in report.items
         ],
         mistakes=[
             MistakeRead(
@@ -138,7 +164,9 @@ def _to_read(report: Report) -> ReportRead:
                 skill_name=m.skill_name,
                 skill_name_si=m.skill_name_si,
                 result=m.result,  # type: ignore[arg-type]
-                written=[WrittenRead(part_no=w.part_no, label=w.label, text=w.text) for w in m.written],
+                written=[
+                    WrittenRead(part_no=w.part_no, label=w.label, text=w.text) for w in m.written
+                ],
                 picture_available=m.picture_available,
                 picture_url=(
                     f"{prefix}/submissions/{m.submission_id}/crops/{m.paper_item_id}"

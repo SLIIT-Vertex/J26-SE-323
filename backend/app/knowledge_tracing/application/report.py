@@ -64,6 +64,17 @@ class AnswerListEntry:
 
 
 @dataclass(frozen=True, slots=True)
+class ItemResult:
+    """Where one printed question stands. The correct answer is given only for wrong or blank."""
+
+    position: int
+    question_id: str
+    skill_code: str
+    result: str  # correct | wrong | blank | under_review | not_uploaded
+    correct_answer_text: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class SkillResult:
     skill_code: str
     name: str
@@ -92,6 +103,7 @@ class Report:
     complete: bool
     summary: ReportSummary
     skills: tuple[SkillResult, ...]
+    items: tuple[ItemResult, ...]
     mistakes: tuple[Mistake, ...]
     answer_list: tuple[AnswerListEntry, ...]
     next_paper: date
@@ -140,6 +152,7 @@ class ReportService:
         per_skill: dict[str, list[int]] = {}
         mistakes: list[Mistake] = []
         answer_list: list[AnswerListEntry] = []
+        item_results: list[ItemResult] = []
         now = self.now()
 
         for item in sorted(items, key=lambda i: i.position):
@@ -147,11 +160,21 @@ class ReportService:
             if item.page not in final or not parts:
                 if item.page not in final:
                     not_uploaded += 1
+                    state = "not_uploaded"
                 else:
                     waiting += 1
+                    state = "under_review"
+                item_results.append(
+                    ItemResult(item.position, item.question_id, item.skill_code, state, None)
+                )
                 continue
             if any(not p.is_final for p in parts):
                 waiting += 1
+                item_results.append(
+                    ItemResult(
+                        item.position, item.question_id, item.skill_code, "under_review", None
+                    )
+                )
                 continue
 
             statuses = [p.final_status for p in parts]
@@ -165,6 +188,9 @@ class ReportService:
             if result == "correct":
                 correct += 1
                 counts[0] += 1
+                item_results.append(
+                    ItemResult(item.position, item.question_id, item.skill_code, "correct", None)
+                )
                 continue
             if result == "wrong":
                 wrong += 1
@@ -190,20 +216,33 @@ class ReportService:
                         WrittenPart(
                             p.part_no,
                             key_by_no[p.part_no].label if p.part_no in key_by_no else None,
-                            (p.read_selected or p.read_text or None) if p.final_status != "blank" else None,
+                            (p.read_selected or p.read_text or None)
+                            if p.final_status != "blank"
+                            else None,
                         )
                         for p in sorted(parts, key=lambda p: p.part_no)
                     ),
                     picture_available=photos_available(submission, now),
                 )
             )
+            shown = [
+                (k, text)
+                for k in sorted(key_by_no.values(), key=lambda k: k.part_no)
+                if (text := _show(k)) is not None
+            ]
             answer_list.append(
                 AnswerListEntry(
                     item.position,
-                    tuple(
-                        CorrectAnswer(k.part_no, k.label, _show(k))
-                        for k in sorted(key_by_no.values(), key=lambda k: k.part_no)
-                    ),
+                    tuple(CorrectAnswer(k.part_no, k.label, text) for k, text in shown),
+                )
+            )
+            item_results.append(
+                ItemResult(
+                    item.position,
+                    item.question_id,
+                    item.skill_code,
+                    result,
+                    _answer_text(shown),
                 )
             )
 
@@ -218,7 +257,9 @@ class ReportService:
                 code,
                 names.get(code, (code, None))[0],
                 names.get(code, (code, None))[1],
-                c, w, b,
+                c,
+                w,
+                b,
             )
             for code, (c, w, b) in sorted(per_skill.items())
         )
@@ -238,6 +279,7 @@ class ReportService:
             ),
             summary=ReportSummary(len(items), marked, correct, wrong, blank, waiting, not_uploaded),
             skills=skills,
+            items=tuple(item_results),
             mistakes=tuple(mistakes),
             answer_list=tuple(answer_list),
             next_paper=next_paper_date(paper.week_start),
@@ -245,8 +287,19 @@ class ReportService:
         )
 
 
-def _show(key: KeyPart) -> str:
-    """One correct answer as text. A part judged only by an instruction shows the task."""
-    if key.alternatives:
-        return " / ".join(key.alternatives)
-    return key.instruction or ""
+def _show(key: KeyPart) -> str | None:
+    """One correct answer as text, or None when the part has no written answer.
+
+    Only the accepted answers are shown. A part judged by an instruction ("colour three boxes")
+    has no answer to show, and the instruction text is never given out.
+    """
+    return " / ".join(key.alternatives) if key.alternatives else None
+
+
+def _answer_text(shown: list[tuple[KeyPart, str]]) -> str | None:
+    """The display form of a question's answers: "ii: 12 / 12.0; iii: 7", or the plain text."""
+    if not shown:
+        return None
+    if len(shown) == 1 and shown[0][0].label is None:
+        return shown[0][1]
+    return "; ".join(f"{key.label or key.part_no}: {text}" for key, text in shown)

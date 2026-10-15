@@ -37,9 +37,9 @@ from app.shared.learner.model import LearnerModel
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true", help="list learners, make nothing")
-    parser.add_argument("--questions", type=int, default=15)
-    parser.add_argument("--minutes", type=int, default=25)
-    parser.add_argument("--pages", type=int, default=3)
+    parser.add_argument("--questions", type=int, default=20)
+    parser.add_argument("--minutes", type=int, default=35)
+    parser.add_argument("--pages", type=int, default=4)
     args = parser.parse_args()
 
     now = datetime.now(UTC)

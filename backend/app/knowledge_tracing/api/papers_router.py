@@ -52,9 +52,9 @@ class PaperCreate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    max_questions: int = Field(default=15, ge=1, le=40)
-    max_minutes: int = Field(default=25, ge=1, le=120)
-    max_pages: int = Field(default=3, ge=1, le=6)
+    max_questions: int = Field(default=20, ge=1, le=40)
+    max_minutes: int = Field(default=35, ge=1, le=120)
+    max_pages: int = Field(default=4, ge=1, le=6)
     mode: Literal["auto", "practice", "diagnostic"] = "auto"
     focus_skills: list[str] = Field(default_factory=list, max_length=10)
     language: Literal["si", "ta"] | None = None

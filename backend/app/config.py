@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     # some play history to build it from. 0 turns the rule off (useful when testing).
     paper_min_days_after_joining: int = 7
 
+    # Photos of answered pages (and the question crops) are deleted this many days after upload
+    # by scripts/delete_old_photos.py. A page's photos go sooner (7 days) once the parent has
+    # opened its report.
+    photo_retention_days: int = 30
+
     # Knowledge tracing: model and feature spec.
     model_weights_path: str = (
         "app/knowledge_tracing/infrastructure/ml/weights/mindbridge_dkt_v2_best.pt"
