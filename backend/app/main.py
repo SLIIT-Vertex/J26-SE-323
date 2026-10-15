@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.knowledge_tracing.api.attempts_router import router as attempts_router
 from app.knowledge_tracing.api.mastery_router import router as mastery_router
+from app.knowledge_tracing.api.papers_router import router as papers_router
+from app.knowledge_tracing.api.photo_check_router import router as photo_check_router
 from app.knowledge_tracing.infrastructure.ml.service import get_knowledge_model
 from app.learner_state.api.router import router as learner_state_router
 from app.shared.learner.router import router as learner_router
@@ -47,3 +49,5 @@ app.include_router(learner_router, prefix=settings.api_v1_prefix)
 app.include_router(learner_state_router, prefix=settings.api_v1_prefix)
 app.include_router(attempts_router, prefix=settings.api_v1_prefix)
 app.include_router(mastery_router, prefix=settings.api_v1_prefix)
+app.include_router(papers_router, prefix=settings.api_v1_prefix)
+app.include_router(photo_check_router, prefix=settings.api_v1_prefix)

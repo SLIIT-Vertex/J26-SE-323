@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 from sqlalchemy import (
@@ -6,6 +6,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -15,6 +16,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
     func,
     text,
@@ -189,3 +191,81 @@ class MasterySnapshotModel(Base):
     n_attempts: Mapped[int] = mapped_column(Integer)  # the learner's total attempts at that time
     # [{"code": "MAT-FRC", "mastery": 0.62, "attempts": 14}, ...] in model skill order
     skills: Mapped[list[dict]] = mapped_column(JsonType)
+
+
+PAPER_STATUSES = ("generated", "partially_uploaded", "graded", "needs_review", "confirmed", "cancelled")
+
+
+class PaperModel(Base):
+    """One generated practice paper (a PDF of 1 to 3 pages) for one learner and one week."""
+
+    __tablename__ = "papers"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('generated', 'partially_uploaded', 'graded', 'needs_review', "
+            "'confirmed', 'cancelled')",
+            name="ck_papers_status",
+        ),
+        CheckConstraint("mode IN ('practice', 'diagnostic')", name="ck_papers_mode"),
+        CheckConstraint("language IN ('si', 'ta')", name="ck_papers_language"),
+        CheckConstraint("page_count BETWEEN 1 AND 6", name="ck_papers_page_count"),
+        Index("ix_papers_learner", "learner_id", "week_start"),
+        # One live paper per learner per week; a cancelled paper frees the week again.
+        Index(
+            "uq_papers_learner_week",
+            "learner_id",
+            "week_start",
+            unique=True,
+            postgresql_where=text("status <> 'cancelled'"),
+            sqlite_where=text("status <> 'cancelled'"),
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"))
+    # Opaque code printed on every page (12 base32 characters); carries nothing about the child.
+    qr_token: Mapped[str] = mapped_column(String(16), unique=True)
+    week_start: Mapped[date] = mapped_column(Date)  # the Monday of the paper's week
+    status: Mapped[str] = mapped_column(String(20), server_default="generated")
+    mode: Mapped[str] = mapped_column(String(10))
+    language: Mapped[str] = mapped_column(String(2))
+    params: Mapped[dict] = mapped_column(JsonType)  # request, selection summary, dropped questions
+    mastery_snapshot_id: Mapped[int | None] = mapped_column(ForeignKey("mastery_snapshots.id"))
+    model_version: Mapped[str] = mapped_column(String(40))
+    page_count: Mapped[int] = mapped_column(SmallInteger)
+    pdf_key: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class PaperItemModel(Base):
+    """One question at one position on a paper, with where it sits on the page."""
+
+    __tablename__ = "paper_items"
+    __table_args__ = (
+        UniqueConstraint("paper_id", "position", name="uq_paper_items_position"),
+        CheckConstraint("page >= 1", name="ck_paper_items_page"),
+        CheckConstraint(
+            "block_x BETWEEN 0 AND 1 AND block_y BETWEEN 0 AND 1 "
+            "AND block_w > 0 AND block_h > 0",
+            name="ck_paper_items_block",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    paper_id: Mapped[UUID] = mapped_column(ForeignKey("papers.id", ondelete="CASCADE"))
+    position: Mapped[int] = mapped_column(SmallInteger)  # the printed question number, 1-based
+    question_id: Mapped[str] = mapped_column(ForeignKey("questions.id"))
+    language: Mapped[str] = mapped_column(String(2))
+    page: Mapped[int] = mapped_column(SmallInteger)  # 1-based
+    # The whole question block as fractions (0..1) of the frame between the 4 marker centres.
+    block_x: Mapped[float] = mapped_column(Float)
+    block_y: Mapped[float] = mapped_column(Float)
+    block_w: Mapped[float] = mapped_column(Float)
+    block_h: Mapped[float] = mapped_column(Float)
+    # Optional extra answer boxes; null when the question image already holds its answer space.
+    answer_boxes: Mapped[list[dict] | None] = mapped_column(JsonType)
+    shown_difficulty: Mapped[str] = mapped_column(String(10))
+    role: Mapped[str] = mapped_column(String(12))  # weak | strong | verify | unknown | diagnostic
+    predicted_p: Mapped[float | None] = mapped_column(Float)  # model's P(correct) when selected
