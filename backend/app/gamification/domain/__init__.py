@@ -6,20 +6,26 @@ from app.gamification.domain.exceptions import (
     EpisodeTransitionError,
 )
 from app.gamification.domain.types import (
+    AssistanceState,
     DecisionMode,
     EpisodePhase,
     EvidenceSupportState,
+    ExperimentMode,
+    MeasurementRole,
     OutcomeValidity,
     SupportActionType,
 )
 
 __all__ = [
     "AdaptiveEpisode",
+    "AssistanceState",
     "DecisionMode",
     "DomainValidationError",
     "EpisodePhase",
     "EpisodeTransitionError",
     "EvidenceSupportState",
+    "ExperimentMode",
+    "MeasurementRole",
     "OutcomeValidity",
     "SupportActionType",
 ]

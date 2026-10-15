@@ -2,11 +2,11 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import UUID
 
-from alembic import command
 from alembic.config import Config
 from sqlalchemy import inspect, select
 from sqlalchemy.orm import Session
 
+from alembic import command
 from app.gamification.application.episode_use_cases import (
     AssessStruggleCommand,
     CalculateIndependenceOutcomeCommand,
@@ -30,8 +30,11 @@ from app.gamification.domain.types import (
     SkillId,
 )
 from app.gamification.infrastructure.db.episode_store import SqlAlchemyUnitOfWork
-from app.gamification.infrastructure.db.models import AdaptiveEpisodeModel, ItemResponseModel
-from app.gamification.infrastructure.db.models import GameSessionModel
+from app.gamification.infrastructure.db.models import (
+    AdaptiveEpisodeModel,
+    GameSessionModel,
+    ItemResponseModel,
+)
 from app.gamification.infrastructure.db.repositories import reconstruct_episode_evidence
 from app.gamification.modeling.independence_gain.calculator import RawIndependenceGainCalculator
 from app.gamification.modeling.misconception_inference.probabilistic_model import (
@@ -40,6 +43,7 @@ from app.gamification.modeling.misconception_inference.probabilistic_model impor
 from app.gamification.modeling.support_selection.reference_policy import SafeSupportPolicy
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+
 from .test_persistence import BACKEND_ROOT, sqlite_engine
 
 AT = datetime(2026, 10, 14, 9, 0, tzinfo=UTC)

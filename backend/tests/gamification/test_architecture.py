@@ -135,6 +135,31 @@ def test_domain_does_not_depend_on_application_api_or_infrastructure() -> None:
     assert violations == []
 
 
+def test_application_does_not_depend_on_api_transport_layer() -> None:
+    violations: list[str] = []
+    for path in (GAMIFICATION_ROOT / "application").rglob("*.py"):
+        for module in imported_modules(path):
+            if module.startswith("app.gamification.api"):
+                violations.append(f"{path.relative_to(GAMIFICATION_ROOT)} -> {module}")
+
+    assert violations == []
+
+
+def test_phase1_ownership_ports_are_explicit() -> None:
+    source = (GAMIFICATION_ROOT / "application" / "ownership_ports.py").read_text()
+    required = {
+        "AuthenticationProfilePort",
+        "SharedCurriculumIdPort",
+        "KnowledgeTracingPort",
+        "MultimodalLearnerStatePort",
+        "VerifiedTutoringPort",
+        "ProbeReservationPort",
+        "ConsentEligibilityPort",
+        "ResearchAuditPort",
+    }
+    assert {name for name in required if f"class {name}(Protocol)" not in source} == set()
+
+
 def test_gamification_data_is_not_stored_inside_runtime_packages() -> None:
     misplaced = [
         path.relative_to(GAMIFICATION_ROOT)

@@ -1,7 +1,8 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime
 from types import MappingProxyType
-from typing import Final, Mapping
+from typing import Final
 from uuid import UUID
 
 from app.gamification.domain.exceptions import (
@@ -14,18 +15,20 @@ ADAPTIVE_EPISODE_PROTOCOL: Final = ProtocolVersion("adaptive-episode-v1")
 
 _NEXT_PHASE: Mapping[EpisodePhase, EpisodePhase] = MappingProxyType(
     {
-        EpisodePhase.CREATED: EpisodePhase.BASELINE_STARTED,
-        EpisodePhase.BASELINE_STARTED: EpisodePhase.BASELINE_RECORDED,
-        EpisodePhase.BASELINE_RECORDED: EpisodePhase.STRUGGLE_ASSESSED,
-        EpisodePhase.STRUGGLE_ASSESSED: EpisodePhase.MISCONCEPTION_RECORDED,
-        EpisodePhase.MISCONCEPTION_RECORDED: EpisodePhase.SUPPORT_DECIDED,
-        EpisodePhase.SUPPORT_DECIDED: EpisodePhase.SUPPORT_DELIVERED,
-        EpisodePhase.SUPPORT_DELIVERED: EpisodePhase.SUPPORT_WITHDRAWN,
-        EpisodePhase.SUPPORT_WITHDRAWN: EpisodePhase.VERIFICATION_SCHEDULED,
-        EpisodePhase.VERIFICATION_SCHEDULED: EpisodePhase.VERIFICATION_STARTED,
-        EpisodePhase.VERIFICATION_STARTED: EpisodePhase.VERIFICATION_RECORDED,
-        EpisodePhase.VERIFICATION_RECORDED: EpisodePhase.OUTCOME_RECORDED,
-        EpisodePhase.OUTCOME_RECORDED: EpisodePhase.COMPLETED,
+        EpisodePhase.CREATED: EpisodePhase.BASELINE_RESERVED,
+        EpisodePhase.BASELINE_RESERVED: EpisodePhase.BASELINE_ACTIVE,
+        EpisodePhase.BASELINE_ACTIVE: EpisodePhase.BASELINE_SCORED,
+        EpisodePhase.BASELINE_SCORED: EpisodePhase.GAMEPLAY_ACTIVE,
+        EpisodePhase.GAMEPLAY_ACTIVE: EpisodePhase.DIFFICULTY_DETECTED,
+        EpisodePhase.DIFFICULTY_DETECTED: EpisodePhase.MISCONCEPTION_ESTIMATED,
+        EpisodePhase.MISCONCEPTION_ESTIMATED: EpisodePhase.SUPPORT_DECIDED,
+        EpisodePhase.SUPPORT_DECIDED: EpisodePhase.SUPPORT_ACTIVE,
+        EpisodePhase.SUPPORT_ACTIVE: EpisodePhase.SUPPORTED_PRACTICE_COMPLETE,
+        EpisodePhase.SUPPORTED_PRACTICE_COMPLETE: EpisodePhase.SUPPORT_WITHDRAWN,
+        EpisodePhase.SUPPORT_WITHDRAWN: EpisodePhase.INDEPENDENT_CHECK_ACTIVE,
+        EpisodePhase.INDEPENDENT_CHECK_ACTIVE: EpisodePhase.INDEPENDENT_CHECK_SCORED,
+        EpisodePhase.INDEPENDENT_CHECK_SCORED: EpisodePhase.REWARD_VALIDATED,
+        EpisodePhase.POLICY_UPDATED: EpisodePhase.COMPLETED,
     }
 )
 
@@ -90,9 +93,20 @@ class AdaptiveEpisode:
         if self.phase.is_terminal:
             raise EpisodeTransitionError(f"terminal phase {self.phase} cannot transition")
 
-        terminal_early = target in {EpisodePhase.ABANDONED, EpisodePhase.INVALIDATED}
+        terminal_early = target in {EpisodePhase.ABORTED, EpisodePhase.INVALIDATED}
         expected = _NEXT_PHASE.get(self.phase)
-        if target != expected and not terminal_early:
+        reward_can_finish_without_an_update = (
+            self.phase is EpisodePhase.REWARD_VALIDATED and target is EpisodePhase.COMPLETED
+        )
+        reward_can_authorize_an_update = (
+            self.phase is EpisodePhase.REWARD_VALIDATED and target is EpisodePhase.POLICY_UPDATED
+        )
+        if (
+            target != expected
+            and not terminal_early
+            and not reward_can_finish_without_an_update
+            and not reward_can_authorize_an_update
+        ):
             raise EpisodeTransitionError(
                 f"illegal adaptive episode transition: {self.phase} -> {target}"
             )
@@ -101,7 +115,7 @@ class AdaptiveEpisode:
         if terminal_early and not normalized_reason:
             raise DomainValidationError(f"{target} requires a stable reason code")
         if not terminal_early and reason is not None:
-            raise DomainValidationError("reason is only valid for abandoned or invalidated phases")
+            raise DomainValidationError("reason is only valid for aborted or invalidated phases")
 
         return replace(
             self,

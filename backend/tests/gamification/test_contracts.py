@@ -10,9 +10,9 @@ from app.gamification.api.contracts import (
     EpisodeStateContract,
     FeatureSnapshotContract,
     IndependenceOutcomeContract,
-    SkillMasterySnapshot,
     PolicyCandidateContract,
     PolicyDecisionContract,
+    SkillMasterySnapshot,
     SupportAssetRequestContract,
 )
 
