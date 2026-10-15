@@ -113,11 +113,12 @@ def write_outputs(
         source_document_sha256=document_hashes,
     )
     output_dir.mkdir(parents=True, exist_ok=True)
-    (output_dir / "chunks.jsonl").write_text(chunks_text, encoding="utf-8")
-    (output_dir / "quarantine.jsonl").write_text(quarantine_text, encoding="utf-8")
+    (output_dir / "chunks.jsonl").write_text(chunks_text, encoding="utf-8", newline="\n")
+    (output_dir / "quarantine.jsonl").write_text(quarantine_text, encoding="utf-8", newline="\n")
     (output_dir / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     return manifest
 

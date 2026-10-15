@@ -16,7 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[4]
 
 
 def read_jsonl(path: Path) -> list[dict[str, object]]:
-    return [json.loads(line) for line in path.read_text().splitlines() if line]
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
 def test_catalogue_is_an_identity_mapping_of_component_owned_candidates() -> None:
@@ -57,7 +57,9 @@ def test_approved_skill_requires_review_metadata() -> None:
 
 
 def test_manifest_hashes_candidates_taxonomy_and_pinned_phase5_bindings() -> None:
-    manifest = json.loads((SKILL_REVIEW_DATA_DIRECTORY / "manifest.json").read_text())
+    manifest = json.loads(
+        (SKILL_REVIEW_DATA_DIRECTORY / "manifest.json").read_text(encoding="utf-8")
+    )
 
     assert manifest["ownership"] == "gamification"
     assert manifest["component_owner"] == "hareeshagunasekara"
@@ -88,5 +90,5 @@ def test_catalogue_has_no_other_component_dependency_names() -> None:
     package = PROJECT_ROOT / "backend/app/gamification/skill_catalogue"
     forbidden = ("knowledge_tracing", "adaptive_tutor")
     for path in package.glob("*.py"):
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         assert not any(name in text for name in forbidden)

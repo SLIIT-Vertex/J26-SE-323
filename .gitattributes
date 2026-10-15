@@ -4,6 +4,21 @@
 # Shell scripts must use LF to run correctly on macOS and Linux.
 *.sh text eol=lf
 
+# Source code, configuration, and generated text assets are UTF-8/LF on every platform.
+*.py text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.csv text eol=lf
+*.txt text eol=lf
+
 # Windows command scripts require CRLF.
 *.bat text eol=crlf
 *.cmd text eol=crlf

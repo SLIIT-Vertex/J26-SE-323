@@ -125,7 +125,7 @@ def _load_model(
         raise FileNotFoundError(f"Model file not found: {path}")
 
     try:
-        learner = json.loads(path.read_text())["learner"]
+        learner = json.loads(path.read_text(encoding="utf-8"))["learner"]
         actual_features = tuple(learner["feature_names"])
         booster = learner["gradient_booster"]
         objective = learner["objective"]["name"]

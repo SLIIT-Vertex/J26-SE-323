@@ -23,7 +23,7 @@ EXPERT_REVIEW_SIMULATION_MANIFEST = (
 def load_dataset_rows(path: Path) -> list[DatasetRow]:
     if path.resolve() == EXPERT_REVIEW_SIMULATION.resolve():
         return load_synthetic_expert_review_rows()
-    payload = json.loads(path.read_text())
+    payload = json.loads(path.read_text(encoding="utf-8"))
     records = payload.get("records") if isinstance(payload, dict) else payload
     if not isinstance(records, list):
         raise TypeError("dataset must be a list or an object containing a records list")
@@ -39,7 +39,7 @@ def load_default_prototype_rows() -> list[DatasetRow]:
 def load_synthetic_expert_review_simulation() -> dict[str, object]:
     """Load and validate the realistic synthetic expert-review fallback."""
 
-    payload = json.loads(EXPERT_REVIEW_SIMULATION.read_text())
+    payload = json.loads(EXPERT_REVIEW_SIMULATION.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise TypeError("synthetic expert-review simulation must be an object")
     if (

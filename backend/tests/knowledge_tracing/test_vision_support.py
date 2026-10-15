@@ -268,7 +268,7 @@ def test_labels_are_read_with_keys_blanks_and_references(tmp_path: Path) -> None
         ]
     }
     path = tmp_path / "labels.json"
-    path.write_text(json.dumps(labels, ensure_ascii=False), encoding="utf-8")
+    path.write_text(json.dumps(labels, ensure_ascii=False), encoding="utf-8", newline="\n")
 
     [loaded] = load_labels(path)
 

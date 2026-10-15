@@ -69,13 +69,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             split_seed=args.seed,
             synthetic=args.synthetic,
         )
-        args.output.write_text(json.dumps(asdict(manifest), indent=2, sort_keys=True) + "\n")
+        args.output.write_text(
+            json.dumps(asdict(manifest), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     elif args.command == "evaluate-classification":
-        records = json.loads(args.predictions.read_text())
+        records = json.loads(args.predictions.read_text(encoding="utf-8"))
         report = evaluate_classification(
             records, slice_field=args.slice_field, ece_bins=args.ece_bins, top_k=args.top_k
         )
-        args.output.write_text(json.dumps(asdict(report), indent=2, sort_keys=True) + "\n")
+        args.output.write_text(
+            json.dumps(asdict(report), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     elif args.command == "train-candidate":
         rows = load_dataset_rows(args.dataset)
         manifest = DatasetManifest.build(
@@ -93,8 +101,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             feature_definition_version=args.feature_version,
             seed=args.seed,
         )
-        args.artifact.write_text(json.dumps(asdict(artifact), indent=2, sort_keys=True) + "\n")
-        args.model_card.write_text(model_card(artifact, manifest) + "\n")
+        args.artifact.write_text(
+            json.dumps(asdict(artifact), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        args.model_card.write_text(
+            model_card(artifact, manifest) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     elif args.command == "train-bayesian":
         rows = load_dataset_rows(args.dataset)
         manifest = DatasetManifest.build(
@@ -116,8 +132,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             skill_codes=skill_codes,
             skill_families=skill_families,
         )
-        args.artifact.write_text(json.dumps(asdict(artifact), indent=2, sort_keys=True) + "\n")
-        args.model_card.write_text(model_card(artifact, manifest) + "\n")
+        args.artifact.write_text(
+            json.dumps(asdict(artifact), indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        args.model_card.write_text(
+            model_card(artifact, manifest) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     return 0
 
 

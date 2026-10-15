@@ -194,7 +194,7 @@ def write_template(folder: Path, out: Path) -> int:
     template = {
         "items": [
             {
-                "image": str(p.relative_to(out.parent)) if p.is_relative_to(out.parent) else str(p),
+                "image": p.relative_to(out.parent).as_posix() if p.is_relative_to(out.parent) else p.as_posix(),
                 "question_id": "FILL-IN",
                 "language": "si",
                 "parts": [{"text": "FILL-IN what the child wrote, or leave empty and set blank"}],
@@ -202,7 +202,7 @@ def write_template(folder: Path, out: Path) -> int:
             for p in images
         ]
     }
-    out.write_text(json.dumps(template, indent=2, ensure_ascii=False), encoding="utf-8")
+    out.write_text(json.dumps(template, indent=2, ensure_ascii=False), encoding="utf-8", newline="\n")
     return len(images)
 
 
@@ -398,7 +398,9 @@ def main() -> int:
         print(f"WARNING {warning}")
     if args.out:
         args.out.write_text(
-            json.dumps({**report.summary(), "verdict": report.verdict()}, indent=2), encoding="utf-8"
+            json.dumps({**report.summary(), "verdict": report.verdict()}, indent=2),
+            encoding="utf-8",
+            newline="\n",
         )
         print(f"report written: {args.out}")
     return 0

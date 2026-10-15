@@ -33,7 +33,7 @@ def main() -> int:
     rendered = json.dumps(build(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.check:
         return 0 if OUTPUT.exists() and OUTPUT.read_text(encoding="utf-8") == rendered else 1
-    OUTPUT.write_text(rendered, encoding="utf-8")
+    OUTPUT.write_text(rendered, encoding="utf-8", newline="\n")
     return 0
 
 

@@ -113,6 +113,7 @@ def test_fixture_recall_matches_the_known_relevant_ids(tmp_path: Path) -> None:
             )
         ),
         encoding="utf-8",
+        newline="\n",
     )
     queries = load_evaluation_queries(path, expected_purpose="CONTENT_AUTHORING")
     retriever = MapRetriever(
@@ -149,7 +150,11 @@ def test_fixture_recall_matches_the_known_relevant_ids(tmp_path: Path) -> None:
 def test_wrong_grade_passage_fails_the_filter_check(tmp_path: Path) -> None:
     question = "Which fixture chunk is the wrong grade?"
     path = tmp_path / "queries.jsonl"
-    path.write_text(json.dumps(_query("q-grade", question, ("chunk-a",))) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(_query("q-grade", question, ("chunk-a",))) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     queries = load_evaluation_queries(path)
     retriever = MapRetriever({question: _found("chunk-a", grade=4)})
 
@@ -170,7 +175,11 @@ def test_wrong_grade_passage_fails_the_filter_check(tmp_path: Path) -> None:
 def test_found_result_fails_insufficient_evidence_for_a_no_passage_query(tmp_path: Path) -> None:
     question = "This reviewer expects no passage."
     path = tmp_path / "queries.jsonl"
-    path.write_text(json.dumps(_query("q-none", question, ())) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(_query("q-none", question, ())) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     queries = load_evaluation_queries(path)
     retriever = MapRetriever({question: _found("chunk-a")})
 
@@ -194,7 +203,7 @@ def test_a_query_file_without_a_reviewer_still_loads(tmp_path: Path) -> None:
     del row["reviewer"]
     del row["reviewed_at"]
     path = tmp_path / "queries.jsonl"
-    path.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(row) + "\n", encoding="utf-8", newline="\n")
 
     queries = load_evaluation_queries(path)
 

@@ -76,7 +76,7 @@ def main() -> int:
         # Full loader verification includes manifest integrity and server/public key consistency.
         load_phase2_server_answer_keys(args.package_dir)
         return 0
-    manifest_path.write_text(rendered, encoding="utf-8")
+    manifest_path.write_text(rendered, encoding="utf-8", newline="\n")
     return 0
 
 

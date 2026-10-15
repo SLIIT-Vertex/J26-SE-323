@@ -14,7 +14,7 @@ SCENARIO_FILE = (
 
 
 def test_reference_scenarios_conform_to_input_contract() -> None:
-    document = json.loads(SCENARIO_FILE.read_text())
+    document = json.loads(SCENARIO_FILE.read_text(encoding="utf-8"))
     scenarios = document["scenarios"]
 
     assert document["policy_version"] == "reference-policy-v1"
@@ -38,7 +38,7 @@ def test_reference_scenarios_conform_to_input_contract() -> None:
 
 
 def test_reference_scenarios_cover_every_assistance_level() -> None:
-    document = json.loads(SCENARIO_FILE.read_text())
+    document = json.loads(SCENARIO_FILE.read_text(encoding="utf-8"))
     represented_levels = {
         scenario["expected_assistance_level"] for scenario in document["scenarios"]
     }
@@ -48,7 +48,7 @@ def test_reference_scenarios_cover_every_assistance_level() -> None:
 
 def test_controller_conforms_to_reference_policy_v1_scenarios() -> None:
     """Regression test for design-defined policy labels, not learner-outcome validation."""
-    document = json.loads(SCENARIO_FILE.read_text())
+    document = json.loads(SCENARIO_FILE.read_text(encoding="utf-8"))
     context_fields = set(TutoringContext.model_fields)
     controller = ScaffoldingController()
 

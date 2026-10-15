@@ -67,6 +67,8 @@ def test_curriculum_migration_upgrades_and_downgrades(
 
 
 def test_postgres_embedding_column_is_pgvector() -> None:
-    source = (BACKEND_ROOT / "alembic/versions/20261015_01_create_curriculum_tables.py").read_text()
+    source = (
+        BACKEND_ROOT / "alembic/versions/20261015_01_create_curriculum_tables.py"
+    ).read_text(encoding="utf-8")
     assert "vector(384)" in source
     assert 'branch_labels: str | Sequence[str] | None = ("curriculum",)' in source

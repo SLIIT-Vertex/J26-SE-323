@@ -130,7 +130,7 @@ def main() -> int:
         return 0
     args.output_dir.mkdir(parents=True, exist_ok=True)
     for name in OUTPUT_FILES:
-        (args.output_dir / name).write_text(outputs[name], encoding="utf-8")
+        (args.output_dir / name).write_text(outputs[name], encoding="utf-8", newline="\n")
     return 0
 
 

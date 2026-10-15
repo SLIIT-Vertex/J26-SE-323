@@ -93,7 +93,7 @@ def model_dependency_graph() -> dict[str, set[str]]:
             if path.name == "__init__.py"
             else ".".join(path.relative_to(MODELING_ROOT).with_suffix("").parts)
         )
-        for imported in imported_modules_from_source(path.read_text()):
+        for imported in imported_modules_from_source(path.read_text(encoding="utf-8")):
             if imported.startswith(prefix):
                 dependency = imported.removeprefix(prefix)
                 if dependency in nodes and dependency != node:
@@ -105,9 +105,10 @@ def test_model_package_dependency_rules() -> None:
     violations: list[str] = []
     for owner in (*MODEL_PACKAGES, "shared", "orchestration"):
         for path in (MODELING_ROOT / owner).rglob("*.py"):
-            modules = imported_modules_from_source(path.read_text())
+            modules = imported_modules_from_source(path.read_text(encoding="utf-8"))
             for module in architecture_violations(owner, modules):
-                violations.append(f"{path.relative_to(MODELING_ROOT)} -> {module}")
+                relative_path = path.relative_to(MODELING_ROOT).as_posix()
+                violations.append(f"{relative_path} -> {module}")
     assert violations == []
 
 
@@ -122,7 +123,7 @@ def test_support_selection_does_not_name_other_model_classes() -> None:
         f"{path.name}:{name}"
         for path in root.rglob("*.py")
         for name in banned
-        if name in path.read_text()
+        if name in path.read_text(encoding="utf-8")
     ]
     assert offenders == []
 

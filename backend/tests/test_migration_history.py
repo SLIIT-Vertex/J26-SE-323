@@ -18,7 +18,11 @@ VERSIONS = BACKEND / "alembic" / "versions"
 def test_every_revision_id_is_unique() -> None:
     ids: dict[str, list[str]] = {}
     for path in VERSIONS.glob("*.py"):
-        match = re.search(r'^revision\s*:?[^=]*=\s*"([^"]+)"', path.read_text(), re.MULTILINE)
+        match = re.search(
+            r'^revision\s*:?[^=]*=\s*"([^"]+)"',
+            path.read_text(encoding="utf-8"),
+            re.MULTILINE,
+        )
         assert match, f"{path.name} has no revision id"
         ids.setdefault(match.group(1), []).append(path.name)
 

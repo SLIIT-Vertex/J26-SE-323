@@ -21,7 +21,7 @@ UNIVERSAL_SKILL_CROSSWALK = SKILL_REVIEW_DATA_DIRECTORY / "universal-skill-cross
 
 
 def _read_jsonl(path: Path) -> list[dict[str, object]]:
-    return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
 def load_skill_reviews(path: Path = DEVELOPMENT_SKILL_REVIEWS) -> list[SkillReview]:
