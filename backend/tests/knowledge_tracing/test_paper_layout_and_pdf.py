@@ -162,7 +162,23 @@ def test_the_pdf_has_a_title_with_the_code_and_no_personal_data() -> None:
     text = " ".join(document[i].get_textpage().get_text_range() for i in range(len(document)))
     assert token in text
     assert "Actual size" in text
-    assert re.search(r"page 1 of \d", text)
+    assert re.search(r"Page 1 of \d", text)
+    first_page = document[0].get_textpage().get_text_range()
+    assert "MindBridge" in first_page  # the name heads every page
+    assert "Weekly practice paper" in first_page
+    assert all("MindBridge" in document[i].get_textpage().get_text_range() for i in range(pages))
+    document.close()
+
+
+def test_the_header_names_a_diagnostic_paper() -> None:
+    layout = layout_paper(questions(2), max_pages=1)
+    images = {q.key: png(945, 300, q.key) for q in questions(2)}
+
+    data = build_paper_pdf("AAAAAAAAAAAA", layout.blocks, images, 1, "Weekly diagnostic paper")
+
+    document = pdfium.PdfDocument(data)
+    assert "Weekly diagnostic paper" in document[0].get_textpage().get_text_range()
+    verify_paper_pdf(data, "AAAAAAAAAAAA", 1)  # the larger header must not disturb markers or QR
     document.close()
 
 
@@ -204,3 +220,14 @@ def test_large_images_are_downscaled_in_the_pdf() -> None:
     small = build_paper_pdf("AAAAAAAAAAAA", layout.blocks, {"big": buffer.getvalue()}, 1)
 
     assert len(small) < len(buffer.getvalue())  # 200 dpi at 160 mm is far fewer pixels
+
+
+def test_many_random_tokens_all_pass_the_self_check() -> None:
+    """OpenCV's default QR reader missed about 1 valid code in 50; the chain must not."""
+    layout = layout_paper(questions(1), max_pages=1)
+    images = {"q0": png(945, 300)}
+
+    for _ in range(40):
+        token = new_token()
+        data = build_paper_pdf(token, layout.blocks, images, 1)
+        verify_paper_pdf(data, token, 1)

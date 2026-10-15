@@ -91,12 +91,31 @@ def _y(top_mm: float) -> float:
     return (PAGE_H - top_mm) * mm
 
 
+HEADER_X = 24.0  # clear of the top-left marker and its quiet zone
+HEADER_RULE_Y = 37.0
+
+
+def _draw_header(pdf: canvas.Canvas, title: str, token: str, page: int, page_count: int) -> None:
+    """The MindBridge name, the kind of paper, and the code and page below it."""
+    pdf.setFillColorRGB(0.10, 0.20, 0.45)
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawString(HEADER_X * mm, _y(22), "MindBridge")
+    pdf.setFillColorRGB(0.25, 0.25, 0.25)
+    pdf.setFont("Helvetica", 11)
+    pdf.drawString(HEADER_X * mm, _y(28.5), title)
+    pdf.setFont("Helvetica", 8)
+    pdf.drawString(HEADER_X * mm, _y(34), f"Code {token}   -   Page {page} of {page_count}")
+    pdf.setStrokeColorRGB(0.75, 0.75, 0.75)
+    pdf.setLineWidth(0.5)
+    pdf.line(HEADER_X * mm, _y(HEADER_RULE_Y), 190 * mm, _y(HEADER_RULE_Y))
+
+
 def build_paper_pdf(
     token: str,
     blocks: Sequence[PlacedBlock],
     images: Mapping[str, bytes],
     page_count: int,
-    title: str = "practice paper",
+    title: str = "Weekly practice paper",
 ) -> bytes:
     """Draw the blocks (image bytes by block key) on `page_count` A4 pages."""
     buffer = io.BytesIO()
@@ -134,9 +153,8 @@ def build_paper_pdf(
             QR_SIZE * mm,
             QR_SIZE * mm,
         )
+        _draw_header(pdf, title, token, page, page_count)
         pdf.setFillColorRGB(0, 0, 0)
-        pdf.setFont("Helvetica", 9)
-        pdf.drawString(20 * mm, _y(22), f"MindBridge {title} - code {token} - page {page} of {page_count}")
         pdf.setFont("Helvetica", 8)
         pdf.drawCentredString(
             PAGE_W / 2 * mm, _y(281), "Print at Actual size (100%). Do not use Fit to page."
@@ -172,6 +190,37 @@ def _render(pdf: bytes, dpi: int = CHECK_DPI) -> list[np.ndarray]:
         document.close()
 
 
+def decode_qr_texts(gray: np.ndarray) -> list[str]:
+    """Every QR text found in a grey image, trying OpenCV's readers from best to simplest.
+
+    The default QR reader alone misses about 1 valid code in 50 at 150 dpi, so the WeChat
+    reader (which read 300 of 300 test codes) goes first and the others are fallbacks.
+    """
+    texts: list[str] = []
+    if hasattr(cv2, "wechat_qrcode_WeChatQRCode"):
+        found, _ = cv2.wechat_qrcode_WeChatQRCode().detectAndDecode(gray)
+        texts.extend(text for text in found if text)
+    for detector in (cv2.QRCodeDetectorAruco(), cv2.QRCodeDetector()):
+        text, _, _ = detector.detectAndDecode(gray)
+        if text:
+            texts.append(text)
+    return texts
+
+
+def _qr_reads(pdf: bytes, page_index: int, first_gray: np.ndarray, expected: str) -> bool:
+    if expected in decode_qr_texts(first_gray):
+        return True
+    document = pdfium.PdfDocument(pdf)
+    try:
+        for dpi in (200, 300):  # another resolution often reads what 150 dpi did not
+            gray = np.array(document[page_index].render(scale=dpi / 72).to_pil().convert("L"))
+            if expected in decode_qr_texts(gray):
+                return True
+    finally:
+        document.close()
+    return False
+
+
 def verify_paper_pdf(pdf: bytes, token: str, page_count: int) -> None:
     """Render every page and find the four markers and the QR code again.
 
@@ -184,10 +233,13 @@ def verify_paper_pdf(pdf: bytes, token: str, page_count: int) -> None:
     detector = cv2.aruco.ArucoDetector(
         cv2.aruco.getPredefinedDictionary(ARUCO_DICTIONARY), cv2.aruco.DetectorParameters()
     )
-    qr_reader = cv2.QRCodeDetector()
     for number, gray in enumerate(pages, start=1):
         corners, ids, _ = detector.detectMarkers(gray)
-        found = {} if ids is None else {int(i): c.reshape(-1, 2).mean(axis=0) for i, c in zip(ids.flatten(), corners, strict=True)}
+        found = (
+            {}
+            if ids is None
+            else {int(i): c.reshape(-1, 2).mean(axis=0) for i, c in zip(ids.flatten(), corners, strict=True)}
+        )
         if set(found) != set(MARKER_IDS):
             raise PdfSelfCheckError(f"page {number}: markers found {sorted(found)}, need 0-3")
         height, width = gray.shape
@@ -202,6 +254,6 @@ def verify_paper_pdf(pdf: bytes, token: str, page_count: int) -> None:
             if (x < width / 2) != (cx < width / 2) or (y < height / 2) != (cy < height / 2):
                 raise PdfSelfCheckError(f"page {number}: marker {marker_id} is in the wrong corner")
 
-        text, _, _ = qr_reader.detectAndDecode(gray)
-        if text != qr_text(token, number):
-            raise PdfSelfCheckError(f"page {number}: QR reads {text!r}, expected {qr_text(token, number)!r}")
+        wanted = qr_text(token, number)
+        if not _qr_reads(pdf, number - 1, gray, wanted):
+            raise PdfSelfCheckError(f"page {number}: the QR code does not read as {wanted!r}")

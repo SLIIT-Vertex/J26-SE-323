@@ -158,7 +158,8 @@ class PaperService:
 
         token = self._unique_token()
         paper_id = uuid4()
-        pdf = build_paper_pdf(token, layout.blocks, images, layout.page_count)
+        title = "Weekly diagnostic paper" if selection.mode == "diagnostic" else "Weekly practice paper"
+        pdf = build_paper_pdf(token, layout.blocks, images, layout.page_count, title)
         verify_paper_pdf(pdf, token, layout.page_count)  # never store an unreadable paper
 
         kept = [by_id[b.key] for b in layout.blocks]
