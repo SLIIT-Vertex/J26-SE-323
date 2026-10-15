@@ -193,8 +193,6 @@ class ReviewPolicy:
     def strict(cls) -> "ReviewPolicy":
         """Every doubt goes to the parent (the rule table exactly as specified)."""
         return cls(actions={}, instruction_needs_second_reader=True)
-
-
 @dataclass(frozen=True, slots=True)
 class GradingConfig:
     confidence_min: float = 0.60  # below this a reading goes to the parent
