@@ -5,6 +5,8 @@
 - Plan version: `shared-curriculum-rag-plan-v1`
 - Related: [shared-curriculum-rag-architecture.md](shared-curriculum-rag-architecture.md),
   [pdf-extraction.md](pdf-extraction.md)
+- How it is made: [rag-build/how-it-is-made.md](rag-build/how-it-is-made.md).
+  Terminal checks: [rag-build/check-from-the-terminal.md](rag-build/check-from-the-terminal.md).
 
 This is the single maintained plan for the curriculum RAG used by both components. Update it here,
 with a dated entry in the change log at the end, rather than in component-specific folders.
@@ -16,15 +18,17 @@ depend on them.
 1. **One RAG.** The contracts, source registry, chunking, index, and retriever all live in the
    shared `app.curriculum` module. Neither component keeps its own copy of the source, chunk, or
    retrieval contracts.
-2. **Roles.** Runtime curriculum retrieval for a child belongs to Adaptive Tutor. Gamification
-   uses a reviewed, versioned question bank for child-facing play. It uses the shared retriever
-   only for authoring support (writing items, scaffolds, and misconception rationales) and for
-   teacher-facing source citations.
+2. **Roles.** Curriculum details for both Adaptive Tutor and Gamification come from this shared
+   retriever over `data/curriculum`. Gamification does not keep a runtime question bank. Until
+   the retriever exists, it cannot present curriculum questions. Game mechanics stay in
+   gamification; question text does not.
 3. **Shared skill key.** Chunks are tagged with Universal Skill Node IDs from
    `docs/skill_nodes.xlsx`. Gamification maps each of its fine-grained skills to exactly one
    Universal parent (for example `MAT-FRC`) before calling the retriever.
-4. **Trust rules apply equally.** Approval, usage-rights, and review statuses gate retrieval for
-   both consumers. Generated or machine-transcribed text is never approved automatically.
+4. **Trust rules apply equally.** On 2026-10-15 the Gamification owner removed the requirement
+   that a source be verified, ingested, approved, and permitted before retrieval. Pending and
+   unknown rows can be returned. Rejected chunks and restricted sources stay out. Rows are not
+   relabeled as approved or permitted. The Adaptive Tutor owner has not signed this change.
 5. **Additive changes only.** Contract changes are optional, backwards-compatible fields, so
    existing Adaptive Tutor code keeps working.
 
@@ -72,9 +76,10 @@ Gamification contributions, moved in R0 to the shared trace package
 One copy of each curriculum fact. The gamification manifest pins the trace version and manifest
 hash, so a change to the shared trace is visible as a gamification package change.
 
-Not built yet: chunking, a pgvector index, a retriever
-implementation, hybrid keyword+vector search, a retrieval evaluation set, and legacy-font
-conversion.
+Not built yet: a reviewer-signed retrieval query set and legacy-font conversion. The
+evaluation runner is in place and has been run on the four `MAT-FRC` chunks with `k` set to 4.
+Chunking, the curriculum pgvector branch, and the hybrid retriever are in place. No row has
+been relabeled approved or permitted.
 
 ## 4. Target design
 
@@ -91,12 +96,18 @@ conversion.
    │  infrastructure/ hybrid_retriever.py (R4)             │
    └───────────────▲──────────────────────────▲───────────┘
                    │ CurriculumRetriever       │ CurriculumRetriever
-   adaptive_tutor/infrastructure        gamification/infrastructure
-   (answers learner questions)          curriculum_adapter.py (authoring and
-                                        teacher-facing citations only)
+   adaptive_tutor/                 gamification/infrastructure
+   calls the same retriever later      curriculum_adapter.py calls it for
+   (not built in rag-build/)           curriculum details; question text
+                                       is retrieved, not owned here
 ```
 
 ## 5. Phases
+
+R0 and R2 are done. How the retriever is put together, and how to check it from the
+terminal, is in [rag-build/how-it-is-made.md](rag-build/how-it-is-made.md) and
+[rag-build/check-from-the-terminal.md](rag-build/check-from-the-terminal.md). Those files
+do not replace this agreement.
 
 ### R0 — Shared trace package and source registry (Gamification leads) — implemented
 
@@ -166,8 +177,10 @@ conversion.
 
 - pgvector table and migration owned by `app.curriculum` as its own Alembic branch.
 - Hybrid retrieval: keyword (BM25) plus vector, metadata pre-filtering (grade, subject, language,
-  skill, unit, approved and permitted only), deterministic tie-breaks.
-- Embedding model and version recorded. Gemini embeddings are already wired.
+  skill, unit), deterministic tie-breaks. Rejected chunks and restricted sources stay out.
+- Embedding model and version recorded on each vector. The embedder lives in `app.curriculum`.
+  This work does not modify `app/adaptive_tutor/`. See
+  [rag-build/how-it-is-made.md](rag-build/how-it-is-made.md).
 
 ### R5 — Shared retrieval evaluation (joint)
 
@@ -180,22 +193,23 @@ conversion.
 
 | Area | Owner | Reviewer |
 | --- | --- | --- |
-| Contracts, validators, index, retriever | Adaptive Tutor | Gamification |
+| Contracts, validators, index, retriever in `app.curriculum` | Shared. Built for both consumers; this build does not edit the Tutor component | Both |
 | Source registry seed and transcription import | Gamification | Adaptive Tutor |
 | Chunking and evaluation set | Joint | Both |
 | Tutor answer generation and verification | Adaptive Tutor | — |
-| Game question bank, misconceptions, scaffolds | Gamification | — |
+| Game mechanics: templates, misconceptions, scaffolds | Gamification | — |
+| Curriculum question text served to either component | Shared retriever | Both |
 
 ## 7. Progress
 
-| Phase | Status | Notes |
+| Step | Status | Notes |
 | --- | --- | --- |
 | R0 | Done | Shared trace package, registry port, JSONL adapter, registry builder, tests, local PDFs placed |
-| R1 | Not started | |
-| R2 | Not started | |
-| R3 | Not started | |
-| R4 | Not started | |
-| R5 | Not started | |
+| R1 | Done | 2026-10-15. Optional filters, `purpose`, chunk hierarchy fields, and `retriever_version` (`curriculum-retriever-contract-v1.1`). |
+| R2 | Done | 2026-10-14. Gamification's duplicate retriever is gone. `SharedCurriculumAdapter` calls the shared retriever with the Universal skill id. |
+| R3 | Done | 2026-10-15. `chunking-v1` manifest at `data/curriculum/chunks/v1/manifest.json`. 189 `REVIEW_PENDING` outcome statements written from the draft Universal-skill crosswalk. 1815 quarantined (133 unresolved parents, 1208 `conversion_unavailable` pages, 443 pages with no covering outcome, 31 pages with no usable text). All 17 placed PDFs remain `NOT_INGESTED`. No row is approved. |
+| R4 | Done | 2026-10-15. Curriculum Alembic branch `20261015_01` from `20261007_01` (`branch_labels = curriculum`). Hybrid retriever. `retriever_version` names `chunking-v1`, embedding revision `d829207ab28e6a5fb3aafb5d4c44111b8146db32`, and `reciprocal-rank-fusion-k60`. Pending chunks can be returned. Rejected and restricted rows stay out. |
+| R5 | Run | 2026-10-15. Report `data/curriculum/evaluation/v1/reports/retrieval-evaluation.json`. Chunk manifest sha256 `593769f283f9faa2dfea02ae8d666e3c439a38d7e087f5e11f91390e611f99bb`. `k` is 4, the number of `MAT-FRC` chunks. `MAT-FRC-PILOT` is unsigned. `CONTENT_AUTHORING` recall is 1.0 because those four chunk ids came back. Filter-violation rate is 0. `reviewed` is false. `tutor-queries.jsonl` is absent. This is not an effectiveness claim. |
 
 ## Change log
 
@@ -206,3 +220,31 @@ conversion.
   source registry, port and adapter added; data layout section added.
 - 2026-10-14: source PDFs placed under `data/curriculum/raw/grade5/<subject>/`; registry
   `source_location` values updated to match.
+- 2026-10-15: execution detail for R1 and R3–R5 was added under `rag-build/`. This file
+  stays the agreement.
+- 2026-10-15: the `rag-build/` step files were replaced by
+  [how-it-is-made.md](rag-build/how-it-is-made.md) and
+  [check-from-the-terminal.md](rag-build/check-from-the-terminal.md).
+- 2026-10-15: build plans keep Tutor needs and Gamification needs apart. The shared RAG is the
+  only work in that folder. `app/adaptive_tutor/` is not part of the build.
+- 2026-10-15: R1 contract v1.1 implemented in `app.curriculum.application.retrieval`. No tutor
+  package edits.
+- 2026-10-15: R3 `chunking-v1` writes `data/curriculum/chunks/v1/`. The Grade 5 trace has no
+  Universal skill ids on learning outcomes, so no chunk was written. Quarantine counts are in
+  the manifest. Sources stay `NOT_INGESTED`. No tutor package edits.
+- 2026-10-15: R4 adds the curriculum migration branch and `HybridCurriculumRetriever`. The
+  approved-fixture tests pass. No real source was marked approved or ingested. No tutor package
+  edits.
+- 2026-10-15: R5 runner writes `data/curriculum/evaluation/v1/reports/retrieval-evaluation.json`.
+  Chunk manifest sha256 `593769f283f9faa2dfea02ae8d666e3c439a38d7e087f5e11f91390e611f99bb`.
+  No reviewer-signed `MAT-FRC` queries, so recall is not computed and no effectiveness claim
+  is made. `tutor-queries.jsonl` was not invented. Owner sign-off of this report is still open.
+- 2026-10-15: draft Universal skill ids for all 306 Grade 5 learning outcomes were copied from
+  `universal-skill-crosswalk.jsonl` into `data/curriculum/skill-links/v1/`. No reviewer signed
+  them. 189 resolved outcomes became `REVIEW_PENDING` chunks. 117 outcomes stay quarantined
+  because their parent does not resolve.
+- 2026-10-15: the Gamification owner removed the approval gate on retrieval. Pending and unknown
+  rows can be returned. Rejected and restricted rows stay out. Nothing was stamped approved or
+  permitted. The fractions pilot loads the four `MAT-FRC` chunks and sets `k` to 4. The unsigned
+  query `MAT-FRC-PILOT` returned all four. Recall is 1.0 for that check only. The Adaptive Tutor
+  owner has not signed this change.

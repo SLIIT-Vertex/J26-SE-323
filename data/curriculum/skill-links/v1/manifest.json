@@ -1,0 +1,15 @@
+{
+  "confidence_counts": {
+    "high": 98,
+    "low": 117,
+    "medium": 91
+  },
+  "learning_outcome_rows": 306,
+  "note": "Copied from the draft crosswalk. No reviewer has signed these ids.",
+  "reviewer_id": null,
+  "source": "data/gamification/skill-catalogue-review/v1/universal-skill-crosswalk.jsonl",
+  "status": "draft",
+  "status_counts": {
+    "draft": 306
+  }
+}

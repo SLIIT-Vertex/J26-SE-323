@@ -12,6 +12,7 @@ from app.adaptive_tutor.domain import LearningIntent, SkillMappingStatus
 from app.adaptive_tutor.infrastructure import XlsxSkillTaxonomyCatalog
 from app.curriculum import application as shared_curriculum
 from app.curriculum.application import (
+    RETRIEVER_CONTRACT_VERSION,
     CurriculumChunk,
     CurriculumRetrievalRequest,
     CurriculumRetrievalResult,
@@ -224,19 +225,26 @@ def test_retrieved_passage_requires_matching_source_reference() -> None:
         source_record(metadata_status=MetadataStatus.PROVISIONAL),
         source_record(review_status=CurriculumReviewStatus.REVIEW_PENDING),
         source_record(usage_rights_status=UsageRightsStatus.UNKNOWN),
-        source_record(ingestion_status=IngestionStatus.READY),
+        source_record(ingestion_status=IngestionStatus.NOT_INGESTED),
     ],
 )
-def test_retrieved_passage_requires_trusted_source(source: CurriculumSourceRecord) -> None:
-    with pytest.raises(ValidationError):
-        retrieved_passage(source=source)
+def test_pending_source_can_be_retrieved(source: CurriculumSourceRecord) -> None:
+    assert retrieved_passage(source=source).source == source
 
 
-def test_retrieved_passage_requires_approved_chunk() -> None:
-    with pytest.raises(ValidationError, match="chunk must be approved"):
-        retrieved_passage(
-            chunk=curriculum_chunk(review_status=CurriculumReviewStatus.REVIEW_PENDING)
-        )
+def test_rejected_or_restricted_source_cannot_be_retrieved() -> None:
+    with pytest.raises(ValidationError, match="must not be rejected"):
+        retrieved_passage(source=source_record(review_status=CurriculumReviewStatus.REJECTED))
+    with pytest.raises(ValidationError, match="must not be restricted"):
+        retrieved_passage(source=source_record(usage_rights_status=UsageRightsStatus.RESTRICTED))
+
+
+def test_pending_chunk_can_be_retrieved() -> None:
+    passage = retrieved_passage(
+        chunk=curriculum_chunk(review_status=CurriculumReviewStatus.REVIEW_PENDING)
+    )
+
+    assert passage.chunk.review_status is CurriculumReviewStatus.REVIEW_PENDING
 
 
 @pytest.mark.parametrize("score", [float("nan"), float("inf"), float("-inf")])
@@ -448,9 +456,7 @@ def test_shared_curriculum_module_has_no_consumer_dependencies() -> None:
     for path in curriculum_package.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         imported_modules = [
-            node.module or ""
-            for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom)
+            node.module or "" for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
         ]
         imported_modules.extend(
             alias.name
@@ -458,6 +464,94 @@ def test_shared_curriculum_module_has_no_consumer_dependencies() -> None:
             if isinstance(node, ast.Import)
             for alias in node.names
         )
-        assert not any(
-            module.startswith(forbidden) for module in imported_modules
-        ), path
+        assert not any(module.startswith(forbidden) for module in imported_modules), path
+
+
+def test_request_omitting_v1_1_fields_still_validates() -> None:
+    request = CurriculumRetrievalRequest(
+        learner_question="Explain fractions",
+        skill_id="MAT-FRC",
+        grade=4,
+    )
+    chunk = curriculum_chunk()
+
+    assert request.subject is None
+    assert request.required_language is None
+    assert request.unit_id is None
+    assert request.purpose == "TUTOR_ANSWER"
+    assert chunk.unit_id is None
+    assert chunk.learning_outcome_id is None
+    validate_retrieval_result_for_request(
+        request,
+        CurriculumRetrievalResult(
+            status=CurriculumRetrievalStatus.FOUND,
+            passages=[retrieved_passage(chunk=chunk)],
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("request_fields", "chunk_fields", "message"),
+    [
+        ({"subject": "Mathematics"}, {"subject": "Science"}, "subject does not match"),
+        ({"required_language": "si"}, {"language": "en"}, "language does not match"),
+        ({"unit_id": "G5-MAT-C03"}, {"unit_id": "G5-MAT-C01"}, "unit does not match"),
+    ],
+)
+def test_set_filters_reject_a_mismatched_passage(
+    request_fields: dict[str, str],
+    chunk_fields: dict[str, str],
+    message: str,
+) -> None:
+    request = CurriculumRetrievalRequest(
+        learner_question="Explain fractions",
+        skill_id="MAT-FRC",
+        grade=4,
+        **request_fields,
+    )
+    with pytest.raises(ValueError, match=message):
+        validate_retrieval_result_for_request(
+            request,
+            CurriculumRetrievalResult(
+                status=CurriculumRetrievalStatus.FOUND,
+                passages=[retrieved_passage(chunk=curriculum_chunk(**chunk_fields))],
+            ),
+        )
+
+
+def test_purpose_accepts_only_the_two_literals() -> None:
+    authored = CurriculumRetrievalRequest(
+        learner_question="Explain fractions",
+        skill_id="MAT-FRC",
+        grade=5,
+        purpose="CONTENT_AUTHORING",
+    )
+    assert authored.purpose == "CONTENT_AUTHORING"
+    with pytest.raises(ValidationError):
+        CurriculumRetrievalRequest(
+            learner_question="Explain fractions",
+            skill_id="MAT-FRC",
+            grade=5,
+            purpose="GAME_ITEM",  # type: ignore[arg-type]
+        )
+
+
+def test_retriever_version_is_present_on_found_and_empty_results() -> None:
+    found = CurriculumRetrievalResult(
+        status=CurriculumRetrievalStatus.FOUND,
+        passages=[retrieved_passage()],
+    )
+    empty = CurriculumRetrievalResult(status=CurriculumRetrievalStatus.NO_RELEVANT_PASSAGES)
+
+    assert found.retriever_version == RETRIEVER_CONTRACT_VERSION
+    assert empty.retriever_version == RETRIEVER_CONTRACT_VERSION
+
+
+def test_v1_1_contracts_still_reject_extra_fields() -> None:
+    with pytest.raises(ValidationError):
+        CurriculumRetrievalRequest(
+            learner_question="Explain fractions",
+            skill_id="MAT-FRC",
+            grade=5,
+            answer_key="hidden",  # type: ignore[call-arg]
+        )

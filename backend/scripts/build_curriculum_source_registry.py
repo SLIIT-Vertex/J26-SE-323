@@ -19,7 +19,7 @@ REPOSITORY_ROOT = BACKEND_ROOT.parent
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from app.curriculum.application.retrieval import (  # noqa: E402
+from app.curriculum.application.retrieval import (
     CurriculumReviewStatus,
     CurriculumSourceRecord,
     IngestionStatus,
