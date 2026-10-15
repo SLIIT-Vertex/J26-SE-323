@@ -22,7 +22,7 @@ input to this directory's runtime or generated packages.
   predictions, and their frozen manifest. `synthetic-misconception-catalogue.json`
   (`synthetic-misconceptions-v1`) lists every synthetic label so fixtures cannot be mistaken for
   the pilot catalogue. It must never be treated as learner evidence or expert validation.
-- `skill-catalogue-review/v1/` — Phase 5A inventory, draft reviews, identity bindings, and the
+- `skill-catalogue-review/v1/` — skill inventory, draft reviews, identity bindings, and the
   Universal Skill Node crosswalk (ADR-0010), generated from the component-owned Grade 5 skill
   candidates. Draft records are development-only and do not open the RAG or child-facing gates.
 

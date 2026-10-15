@@ -1,6 +1,6 @@
 """Build the gamification Grade 5 skill catalogue and its Universal Skill Node crosswalk.
 
-The crosswalk (ADR-0010) restores the Phase 5 bindings from a pinned commit, renaming
+The crosswalk (ADR-0010) restores the skill bindings from a pinned commit, renaming
 `knowledge_tracing_skill_id` to `universal_skill_id`, and validates every parent against the
 team taxonomy in `docs/skill_nodes.xlsx`.
 """
@@ -57,10 +57,10 @@ def build_crosswalk(
 ) -> list[dict[str, object]]:
     by_candidate = {str(row["skill_candidate_id"]): row for row in phase5_bindings}
     if len(by_candidate) != len(phase5_bindings):
-        raise ValueError("Phase 5 bindings contain duplicate skill candidates")
+        raise ValueError("skill bindings contain duplicate skill candidates")
     candidate_ids = [str(candidate["skill_candidate_id"]) for candidate in candidates]
     if set(candidate_ids) != set(by_candidate):
-        raise ValueError("Phase 5 bindings do not cover exactly the current skill candidates")
+        raise ValueError("skill bindings do not cover exactly the current skill candidates")
     crosswalk: list[dict[str, object]] = []
     for skill_id in candidate_ids:
         binding = by_candidate[skill_id]
@@ -70,7 +70,7 @@ def build_crosswalk(
         if len(universal_skill_id) > UNIVERSAL_SKILL_ID_MAX_LENGTH:
             raise ValueError(f"{skill_id}: universal skill ID exceeds the Learner State limit")
         if binding["mapping_version"] != PHASE5_MAPPING_VERSION:
-            raise ValueError(f"{skill_id}: unexpected Phase 5 mapping version")
+            raise ValueError(f"{skill_id}: unexpected skill-binding mapping version")
         crosswalk.append({
             "gamification_skill_id": skill_id,
             "universal_skill_id": universal_skill_id,

@@ -2,7 +2,7 @@ import hashlib
 import json
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any
 
 from app.gamification.content.records import (
     AnswerOption,
@@ -30,8 +30,6 @@ from app.gamification.skill_catalogue.contracts import ReviewStatus, SkillReview
 
 PILOT_CONTENT_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "grade5-pilot-slice" / "v1"
 PACKAGE_NAME = "grade5-pilot-slice"
-Record = TypeVar("Record")
-
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
@@ -50,7 +48,9 @@ def _verify_manifest(path: Path) -> dict[str, Any]:
     return manifest
 
 
-def _index(records: Iterable[Record], key: Callable[[Record], str], kind: str) -> dict[str, Record]:
+def _index[Record](
+    records: Iterable[Record], key: Callable[[Record], str], kind: str
+) -> dict[str, Record]:
     indexed: dict[str, Record] = {}
     for record in records:
         identifier = key(record)
