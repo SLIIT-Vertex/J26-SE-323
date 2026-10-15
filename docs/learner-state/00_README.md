@@ -83,6 +83,7 @@ The fusion weights, reliability rules and temporal thresholds are design decisio
 | [`07_EVALUATION_AND_LIMITATIONS.md`](07_EVALUATION_AND_LIMITATIONS.md) | What has and has not been evaluated, limitations, privacy and ethics |
 | [`08_IMPLEMENTATION_AND_TESTING.md`](08_IMPLEMENTATION_AND_TESTING.md) | Build order, module interaction, tests, developer commands |
 | [`09_TUTOR_HANDOFF.md`](09_TUTOR_HANDOFF.md) | Skill-specific `support_need` contract for the AI Tutor, stored skill state, open questions |
+| [`10_FRONTEND_INTEGRATION.md`](10_FRONTEND_INTEGRATION.md) | On-device visual features in the browser: camera, MediaPipe, privacy, permissions, equivalence-test plan |
 | [`11_GAME_INTEGRATION.md`](11_GAME_INTEGRATION.md) | Option B game integration: integration point, data and identifier flow, behavioural-field compatibility gaps, consumption of the result |
 
 ## 6. Code map

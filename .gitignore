@@ -20,6 +20,9 @@ dist/
 frontend/android/
 frontend/ios/
 
+# Learner-state local equivalence test frames (developer's own face; never commit or upload)
+**/local-test-frames/
+
 # Editors and operating systems
 .DS_Store
 .idea/
