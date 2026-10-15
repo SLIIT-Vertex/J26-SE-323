@@ -101,7 +101,7 @@ backend/app/learner_state/
 │   └── temporal.py               # temporal state decisions
 └── infrastructure/
     ├── feature_builder.py        # behavioural + learner-history features
-    ├── model_loader.py           # XGBoost loading, feature-order validation, prediction
+    ├── model_loader.py           # reads XGBoost JSON models, feature-order checks, prediction
     ├── reliability.py            # visual and behavioural reliability
     ├── db/                       # learner_skill_states table + SQLAlchemy repository
     └── models/                   # four trained XGBoost JSON model files
