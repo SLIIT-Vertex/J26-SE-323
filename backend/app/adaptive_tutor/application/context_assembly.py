@@ -1,6 +1,6 @@
 from collections.abc import Collection
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol, Self, TypeVar
+from typing import Annotated, Literal, Protocol, Self
 from uuid import UUID
 
 from pydantic import (
@@ -34,7 +34,6 @@ NormalizedValue = Annotated[
     Field(strict=True, ge=0.0, le=1.0, allow_inf_nan=False),
 ]
 AttemptCount = Annotated[int, Field(strict=True, ge=0)]
-ModelT = TypeVar("ModelT", bound=BaseModel)
 
 
 class EvidenceStatus(StrEnum):
@@ -677,7 +676,7 @@ def _append_provider_provenance(
     )
 
 
-def _revalidate(model_type: type[ModelT], result: object) -> ModelT:
+def _revalidate[ModelT: BaseModel](model_type: type[ModelT], result: object) -> ModelT:
     data = result.model_dump() if isinstance(result, BaseModel) else result
     return model_type.model_validate(data, from_attributes=True)
 

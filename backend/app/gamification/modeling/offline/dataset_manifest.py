@@ -1,5 +1,5 @@
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
-from typing import Mapping, Sequence
 
 from app.gamification.modeling.offline.dataset_splitting import create_learner_splits
 from app.gamification.modeling.shared.artifact_registry import sha256_digest

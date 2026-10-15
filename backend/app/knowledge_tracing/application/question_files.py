@@ -8,11 +8,9 @@
 
 import re
 from dataclasses import dataclass, field
-from typing import Generic, TypeVar
 
 ID = r"\d+\.\d+"
 SKILL_CODE = r"[A-Z]{3}-[A-Z]{3}"
-T = TypeVar("T")
 AREAS = {"APT", "MAT", "LAN", "ENV"}
 DIFFICULTIES = {"easy", "medium", "hard"}
 
@@ -64,7 +62,7 @@ class SkillNode:
 
 
 @dataclass
-class Parsed(Generic[T]):
+class Parsed[T]:
     entries: dict[str, T] = field(default_factory=dict)
     issues: list[FileIssue] = field(default_factory=list)
 

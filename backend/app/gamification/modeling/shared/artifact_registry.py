@@ -1,8 +1,9 @@
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Mapping, Protocol
+from typing import Protocol
 
 
 class ManifestReference(Protocol):

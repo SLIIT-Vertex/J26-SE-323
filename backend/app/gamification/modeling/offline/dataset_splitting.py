@@ -1,6 +1,6 @@
 import hashlib
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
 
 def create_learner_splits(

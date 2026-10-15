@@ -42,7 +42,7 @@ docker-compose.yml            # Local PostgreSQL only
 
 ## Local setup
 
-Prerequisites: Python 3.11+, Node.js 20+, npm, and Docker.
+Prerequisites: Python 3.12+, Node.js 20+, npm, and Docker.
 
 Install the repository hooks once after cloning:
 

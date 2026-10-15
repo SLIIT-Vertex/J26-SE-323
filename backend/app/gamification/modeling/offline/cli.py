@@ -1,8 +1,8 @@
 import argparse
 import json
+from collections.abc import Sequence
 from dataclasses import asdict
 from pathlib import Path
-from typing import Sequence
 
 from app.gamification.modeling.misconception_inference.evaluation import (
     evaluate_classification,

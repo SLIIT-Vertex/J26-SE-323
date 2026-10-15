@@ -72,7 +72,7 @@ cannot authorize research claims or child-facing model activation.
 
 ## Skill review package
 
-`skills/build_skill_review_package.py` builds the Phase 5A development package from the
+`skills/build_skill_review_package.py` builds the development skill-review package from the
 gamification-owned Grade 5 skill candidates. It creates a stable inventory, draft reviews,
 identity bindings, the Universal Skill Node crosswalk, schema, and content-addressed manifest:
 
@@ -80,7 +80,7 @@ identity bindings, the Universal Skill Node crosswalk, schema, and content-addre
 PYTHONPATH=backend python3 tools/gamification/skills/build_skill_review_package.py
 ```
 
-The crosswalk is restored with `git show` from the Phase 5 bindings pinned at commit `7033835`
+The crosswalk is restored with `git show` from the skill bindings pinned at commit `7033835`
 and validated against the shared taxonomy in `docs/skill_nodes.xlsx` (ADR-0010), so the builder
 needs the repository history and `openpyxl`. It reads no other component's question bank or
 datasets and never upgrades a draft record to approved.
