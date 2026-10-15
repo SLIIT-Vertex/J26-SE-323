@@ -40,6 +40,7 @@ from app.knowledge_tracing.application.submissions import (
     PageInProgressError,
     PageNotFoundError,
     PaperCancelledError,
+    PhotosExpiredError,
     PhotoTooLargeError,
     SubmissionNotFoundError,
     SubmissionService,
@@ -332,6 +333,8 @@ def get_crop(submission_id: UUID, paper_item_id: UUID, service: ServiceDep) -> R
     """The picture of one question as photographed (for the review screen)."""
     try:
         data = service.crop(submission_id, paper_item_id)
+    except PhotosExpiredError as error:
+        raise _error(410, "photos_removed", "This picture is no longer kept") from error
     except (SubmissionNotFoundError, StorageKeyNotFound) as error:
         raise _error(404, "not_found", "No such picture") from error
     return Response(data, media_type="image/png", headers={"Cache-Control": "private, max-age=300"})
@@ -356,6 +359,10 @@ def confirm_submission(
         view = service.confirm(submission_id, decisions, parent_id or "parent")
     except SubmissionNotFoundError as error:
         raise _error(404, "not_found", "Submission not found") from error
+    except PhotosExpiredError as error:
+        raise _error(
+            410, "photos_removed", "The photos of this page are no longer kept, so it cannot be decided"
+        ) from error
     except IncompleteDecisionsError as error:
         raise _error(
             422,

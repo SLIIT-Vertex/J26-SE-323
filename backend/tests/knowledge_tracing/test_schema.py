@@ -32,6 +32,7 @@ MIGRATIONS = [
     VERSIONS / "20261015_02_create_papers.py",
     VERSIONS / "20261016_01_create_vision_calls.py",
     VERSIONS / "20261017_01_create_submissions.py",
+    VERSIONS / "20261018_01_add_report_retention.py",
 ]
 KT_TABLES = {
     "skills",

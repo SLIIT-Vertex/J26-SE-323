@@ -50,6 +50,7 @@ from app.knowledge_tracing.application.paper_generation import PaperNotFoundErro
 from app.knowledge_tracing.application.photo_alignment import AlignmentFailure
 from app.knowledge_tracing.application.photo_check import check_page_photo
 from app.knowledge_tracing.application.photo_crops import encode_png
+from app.knowledge_tracing.application.retention import photos_available
 from app.knowledge_tracing.domain.feature_spec import FeatureSpec
 from app.knowledge_tracing.domain.paper import Paper, PaperItem
 from app.knowledge_tracing.domain.penalty import PAPER, compute_penalty
@@ -79,6 +80,10 @@ class SubmissionNotFoundError(Exception):
 
 class PageNotFoundError(Exception):
     pass
+
+
+class PhotosExpiredError(Exception):
+    """The photos of this page were removed (or their time is up)."""
 
 
 class PaperCancelledError(Exception):
@@ -559,6 +564,11 @@ class SubmissionService:
         return ItemResult(item.id, item.position, item.question_id, result, detail)
 
     def crop(self, submission_id: UUID, paper_item_id: UUID) -> bytes:
+        submission = self.submissions.get_submission(submission_id)
+        if submission is None:
+            raise SubmissionNotFoundError(submission_id)
+        if not photos_available(submission, self.now()):
+            raise PhotosExpiredError(submission_id)
         parts = [p for p in self.submissions.parts(submission_id) if p.paper_item_id == paper_item_id]
         if not parts or not parts[0].crop_key:
             raise SubmissionNotFoundError(paper_item_id)
@@ -579,6 +589,8 @@ class SubmissionService:
         waiting = {(p.paper_item_id, p.part_no): p for p in parts if not p.is_final}
         if not waiting:  # already decided: asking again changes nothing
             return self.view(submission_id)
+        if not photos_available(submission, self.now()):
+            raise PhotosExpiredError(submission_id)  # the pictures to decide from are gone
         if submission.status not in ("needs_review", "confirmed"):
             raise BadDecisionError("this page is not waiting for a decision")
 

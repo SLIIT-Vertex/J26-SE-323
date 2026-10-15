@@ -349,6 +349,10 @@ class PaperSubmissionModel(Base):
     )
     graded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # The first time the parent saw this page in a result report: its photos then have 7 days.
+    report_viewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # When the photo and the crops were removed from storage (retention).
+    files_deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class GradedAnswerModel(Base):

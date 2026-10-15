@@ -10,6 +10,7 @@ from app.knowledge_tracing.api.attempts_router import router as attempts_router
 from app.knowledge_tracing.api.mastery_router import router as mastery_router
 from app.knowledge_tracing.api.papers_router import router as papers_router
 from app.knowledge_tracing.api.photo_check_router import router as photo_check_router
+from app.knowledge_tracing.api.report_router import router as report_router
 from app.knowledge_tracing.api.submissions_router import router as submissions_router
 from app.knowledge_tracing.api.vision_router import router as vision_router
 from app.knowledge_tracing.infrastructure.ml.service import get_knowledge_model
@@ -55,3 +56,4 @@ app.include_router(papers_router, prefix=settings.api_v1_prefix)
 app.include_router(photo_check_router, prefix=settings.api_v1_prefix)
 app.include_router(vision_router, prefix=settings.api_v1_prefix)
 app.include_router(submissions_router, prefix=settings.api_v1_prefix)
+app.include_router(report_router, prefix=settings.api_v1_prefix)

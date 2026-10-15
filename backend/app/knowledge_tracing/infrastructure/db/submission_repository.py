@@ -23,6 +23,8 @@ def _submission(model: PaperSubmissionModel) -> Submission:
         alignment_info=model.alignment_info,
         is_current=model.is_current,
         uploaded_at=model.uploaded_at,
+        report_viewed_at=model.report_viewed_at,
+        files_deleted_at=model.files_deleted_at,
     )
 
 
@@ -142,6 +144,41 @@ class SqlAlchemySubmissionRepository:
             model.graded_at = graded_at
         if confirmed_at is not None:
             model.confirmed_at = confirmed_at
+        self.session.commit()
+
+    def mark_report_viewed(self, submission_ids: list[UUID], viewed_at: datetime) -> None:
+        """Remember the first time each page was seen in a report (it is never moved)."""
+        if not submission_ids:
+            return
+        self.session.execute(
+            update(PaperSubmissionModel)
+            .where(
+                PaperSubmissionModel.id.in_(submission_ids),
+                PaperSubmissionModel.report_viewed_at.is_(None),
+            )
+            .values(report_viewed_at=viewed_at)
+        )
+        self.session.commit()
+
+    def with_files(self) -> list[Submission]:
+        """Every submission whose photo and crops are still in storage."""
+        models = self.session.scalars(
+            select(PaperSubmissionModel).where(PaperSubmissionModel.files_deleted_at.is_(None))
+        ).all()
+        return [_submission(m) for m in models]
+
+    def mark_files_deleted(self, submission_id: UUID, deleted_at: datetime) -> None:
+        """Record that the files are gone and forget where the crops were."""
+        self.session.execute(
+            update(GradedAnswerModel)
+            .where(GradedAnswerModel.submission_id == submission_id)
+            .values(crop_key=None)
+        )
+        self.session.execute(
+            update(PaperSubmissionModel)
+            .where(PaperSubmissionModel.id == submission_id)
+            .values(files_deleted_at=deleted_at)
+        )
         self.session.commit()
 
     # ---- graded parts ----------------------------------------------------------------------

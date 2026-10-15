@@ -19,6 +19,8 @@ class Submission:
     alignment_info: dict | None
     is_current: bool
     uploaded_at: datetime
+    report_viewed_at: datetime | None = None
+    files_deleted_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
