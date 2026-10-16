@@ -344,7 +344,7 @@ def main() -> int:
 
     run = sub.add_parser("run", help="measure the reader on labelled pictures")
     run.add_argument("labels", type=Path)
-    run.add_argument("--provider", help="mock | gemini (default: VISION_PROVIDER)")
+    run.add_argument("--provider", help="mock | gemini | openai (default: VISION_PROVIDER)")
     run.add_argument("--second-provider", help="optional second opinion")
     run.add_argument("--workers", type=int, default=3)
     run.add_argument("--limit", type=int)
