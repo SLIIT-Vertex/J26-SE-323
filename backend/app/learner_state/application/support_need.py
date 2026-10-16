@@ -8,10 +8,15 @@ one skill. Learner State stores the latest evaluated state per
 Only confusion contributes to this value. Disengagement is about
 attention rather than a skill gap and is handled separately through
 `request_reengagement_support`.
+
+Confusion and disengagement are moment-to-moment states. A consumer can ask
+for a state from the current learning session only and set a maximum age;
+older or other-session states are reported as STALE without a value.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Annotated, Protocol, Self
 from uuid import UUID
@@ -36,11 +41,16 @@ SupportNeedValue = Annotated[
     Field(strict=True, ge=0.0, le=1.0, allow_inf_nan=False),
 ]
 
+# Provisional recommendation for consumers: a learner state older than this, or from
+# another session, should not be used for a moment-to-moment decision. To be calibrated.
+RECOMMENDED_MAX_STATE_AGE_MS = 60_000
+
 
 class SupportNeedStatus(StrEnum):
     AVAILABLE = "AVAILABLE"
     UNCERTAIN = "UNCERTAIN"
     NOT_FOUND = "NOT_FOUND"
+    STALE = "STALE"
 
 
 class SupportNeedRequest(BaseModel):
@@ -48,6 +58,9 @@ class SupportNeedRequest(BaseModel):
 
     learner_id: UUID
     skill_id: SkillId
+    # Optional freshness rules. Without them every stored state is returned, as before.
+    session_id: Annotated[str, StringConstraints(min_length=1, max_length=100)] | None = None
+    max_age_ms: Annotated[int, Field(strict=True, ge=0)] | None = None
 
 
 class SupportNeedResult(BaseModel):
@@ -58,6 +71,8 @@ class SupportNeedResult(BaseModel):
     status: SupportNeedStatus
     support_need: SupportNeedValue | None = None
     observed_at: datetime | None = None
+    # Learning session that produced the stored state.
+    session_id: str | None = None
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
@@ -65,8 +80,10 @@ class SupportNeedResult(BaseModel):
             raise ValueError("AVAILABLE requires support_need")
         if self.status is not SupportNeedStatus.AVAILABLE and self.support_need is not None:
             raise ValueError("only AVAILABLE may contain support_need")
-        if self.status is SupportNeedStatus.NOT_FOUND and self.observed_at is not None:
-            raise ValueError("NOT_FOUND cannot contain observed_at")
+        if self.status is SupportNeedStatus.NOT_FOUND and (
+            self.observed_at is not None or self.session_id is not None
+        ):
+            raise ValueError("NOT_FOUND cannot contain observed_at or session_id")
         if self.status is not SupportNeedStatus.NOT_FOUND and self.observed_at is None:
             raise ValueError("a stored state requires observed_at")
         return self
@@ -138,11 +155,22 @@ def skill_state_from_evaluation(
     )
 
 
+def _as_utc(moment: datetime) -> datetime:
+    """Some databases (SQLite) return naive datetimes; stored times are UTC."""
+    return moment if moment.tzinfo is not None else moment.replace(tzinfo=UTC)
+
+
 class StoredSupportNeedProvider:
     """`SupportNeedProvider` backed by the stored latest skill states."""
 
-    def __init__(self, repository: LearnerSkillStateRepository) -> None:
+    def __init__(
+        self,
+        repository: LearnerSkillStateRepository,
+        *,
+        now: Callable[[], datetime] = lambda: datetime.now(UTC),
+    ) -> None:
         self._repository = repository
+        self._now = now
 
     def get_support_need(self, request: SupportNeedRequest) -> SupportNeedResult:
         state = self._repository.get(request.learner_id, request.skill_id)
@@ -154,18 +182,29 @@ class StoredSupportNeedProvider:
                 status=SupportNeedStatus.NOT_FOUND,
             )
 
+        stored = {
+            "learner_id": request.learner_id,
+            "skill_id": request.skill_id,
+            "observed_at": state.observed_at,
+            "session_id": state.session_id,
+        }
+
+        if self._is_stale(state, request):
+            return SupportNeedResult(status=SupportNeedStatus.STALE, **stored)
+
         if state.support_need is None:
-            return SupportNeedResult(
-                learner_id=request.learner_id,
-                skill_id=request.skill_id,
-                status=SupportNeedStatus.UNCERTAIN,
-                observed_at=state.observed_at,
-            )
+            return SupportNeedResult(status=SupportNeedStatus.UNCERTAIN, **stored)
 
         return SupportNeedResult(
-            learner_id=request.learner_id,
-            skill_id=request.skill_id,
             status=SupportNeedStatus.AVAILABLE,
             support_need=state.support_need,
-            observed_at=state.observed_at,
+            **stored,
         )
+
+    def _is_stale(self, state: LearnerSkillState, request: SupportNeedRequest) -> bool:
+        if request.session_id is not None and state.session_id != request.session_id:
+            return True
+        if request.max_age_ms is None:
+            return False
+        age = self._now() - _as_utc(state.observed_at)
+        return age > timedelta(milliseconds=request.max_age_ms)

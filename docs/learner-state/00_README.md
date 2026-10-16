@@ -83,6 +83,7 @@ The fusion weights, reliability rules and temporal thresholds are design decisio
 | [`07_EVALUATION_AND_LIMITATIONS.md`](07_EVALUATION_AND_LIMITATIONS.md) | What has and has not been evaluated, limitations, privacy and ethics |
 | [`08_IMPLEMENTATION_AND_TESTING.md`](08_IMPLEMENTATION_AND_TESTING.md) | Build order, module interaction, tests, developer commands |
 | [`09_TUTOR_HANDOFF.md`](09_TUTOR_HANDOFF.md) | Skill-specific `support_need` contract for the AI Tutor, stored skill state, open questions |
+| [`11_GAME_INTEGRATION.md`](11_GAME_INTEGRATION.md) | Option B game integration: integration point, data and identifier flow, behavioural-field compatibility gaps, consumption of the result |
 
 ## 6. Code map
 
@@ -93,6 +94,7 @@ backend/app/learner_state/
 │   └── schemas.py                # Pydantic request/response models
 ├── application/
 │   ├── service.py                # LearnerStateService: orchestration + in-memory session history
+│   ├── recording.py              # recording use case shared by HTTP and in-process callers
 │   └── support_need.py           # skill-specific support-need contract for the AI Tutor
 ├── domain/
 │   ├── confusion.py              # confusion pipeline for one window

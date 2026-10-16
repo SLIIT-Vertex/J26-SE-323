@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -13,6 +13,7 @@ from app.learner_state.application.service import (
     SignalEvaluation,
 )
 from app.learner_state.application.support_need import (
+    RECOMMENDED_MAX_STATE_AGE_MS,
     LearnerSkillState,
     StoredSupportNeedProvider,
     SupportNeedRequest,
@@ -212,3 +213,105 @@ def test_repository_keeps_latest_state_per_learner_and_skill(session: Session) -
     assert latest.confusion_state == "uncertain"
     assert repository.get(learner_id, "LAN-CMP") == replace(first, skill_id="LAN-CMP")
     assert repository.get(learner_id, "ENV-PLT") is None
+
+
+# --- Freshness: moment-to-moment states must come from the current session and be recent ---
+
+AWARE_OBSERVED_AT = datetime(2026, 10, 16, 9, 30, tzinfo=UTC)
+
+
+def stored_provider(
+    confusion_state: str = "intervention_worthy_confusion",
+    *,
+    observed_at: datetime = AWARE_OBSERVED_AT,
+    seconds_later: float = 30,
+) -> tuple[StoredSupportNeedProvider, UUID]:
+    learner_id = uuid4()
+    repository = InMemoryRepository()
+    repository.save(
+        skill_state_from_evaluation(
+            evaluation(learner_id, confusion_state),
+            skill_id="MAT-FRC",
+            observed_at=observed_at,
+        )
+    )
+    now = observed_at.replace(tzinfo=observed_at.tzinfo or UTC) + timedelta(seconds=seconds_later)
+    return StoredSupportNeedProvider(repository, now=lambda: now), learner_id
+
+
+def request(learner_id: UUID, **freshness: object) -> SupportNeedRequest:
+    return SupportNeedRequest(learner_id=learner_id, skill_id="MAT-FRC", **freshness)
+
+
+def test_result_reports_the_session_that_produced_the_state() -> None:
+    provider, learner_id = stored_provider()
+    result = provider.get_support_need(request(learner_id))
+    assert result.status is SupportNeedStatus.AVAILABLE
+    assert result.session_id == "session-1"
+
+
+def test_state_from_the_same_session_within_max_age_is_available() -> None:
+    provider, learner_id = stored_provider(seconds_later=30)
+    result = provider.get_support_need(
+        request(learner_id, session_id="session-1", max_age_ms=RECOMMENDED_MAX_STATE_AGE_MS)
+    )
+    assert result.status is SupportNeedStatus.AVAILABLE
+    assert result.support_need == 0.7
+
+
+def test_state_from_another_session_is_stale() -> None:
+    provider, learner_id = stored_provider()
+    result = provider.get_support_need(request(learner_id, session_id="session-2"))
+    assert result.status is SupportNeedStatus.STALE
+    assert result.support_need is None
+    assert result.session_id == "session-1"
+    assert result.observed_at == AWARE_OBSERVED_AT
+
+
+def test_state_older_than_max_age_is_stale() -> None:
+    provider, learner_id = stored_provider(seconds_later=61)
+    result = provider.get_support_need(request(learner_id, max_age_ms=60_000))
+    assert result.status is SupportNeedStatus.STALE
+    assert result.support_need is None
+
+
+def test_stale_takes_precedence_over_uncertain() -> None:
+    provider, learner_id = stored_provider("uncertain", seconds_later=120)
+    assert provider.get_support_need(request(learner_id, max_age_ms=60_000)).status is (
+        SupportNeedStatus.STALE
+    )
+
+
+def test_fresh_uncertain_state_is_uncertain() -> None:
+    provider, learner_id = stored_provider("uncertain", seconds_later=5)
+    assert provider.get_support_need(request(learner_id, max_age_ms=60_000)).status is (
+        SupportNeedStatus.UNCERTAIN
+    )
+
+
+def test_naive_database_times_are_treated_as_utc() -> None:
+    provider, learner_id = stored_provider(observed_at=OBSERVED_AT, seconds_later=30)
+    assert provider.get_support_need(request(learner_id, max_age_ms=60_000)).status is (
+        SupportNeedStatus.AVAILABLE
+    )
+
+
+def test_without_freshness_rules_old_states_are_still_returned() -> None:
+    provider, learner_id = stored_provider(seconds_later=7 * 24 * 3600)
+    assert provider.get_support_need(request(learner_id)).status is SupportNeedStatus.AVAILABLE
+
+
+@pytest.mark.parametrize(
+    "freshness",
+    [{"max_age_ms": -1}, {"session_id": ""}, {"session_id": "s" * 101}, {"max_age_ms": 1.5}],
+)
+def test_freshness_request_validation(freshness: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        request(uuid4(), **freshness)
+
+
+def test_not_found_cannot_carry_a_session() -> None:
+    with pytest.raises(ValidationError):
+        SupportNeedResult(
+            learner_id=uuid4(), skill_id="MAT-FRC", status="NOT_FOUND", session_id="session-1"
+        )

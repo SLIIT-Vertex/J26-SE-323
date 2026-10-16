@@ -40,7 +40,7 @@ flowchart TB
 | Layer | Files | Responsibility |
 | --- | --- | --- |
 | **API** | `api/router.py`, `api/schemas.py` | Validates the HTTP request with Pydantic, converts it to application objects, calls the service, converts the result to the response model, maps service `ValueError` to HTTP 409. |
-| **Application** | `application/service.py` | `LearnerStateService` coordinates one window end to end and keeps per-session history in memory. Chooses the final `recommended_action`. |
+| **Application** | `application/service.py`, `application/recording.py`, `application/support_need.py` | `LearnerStateService` coordinates one window end to end and keeps per-session history in memory, and chooses the final `recommended_action`. `LearnerStateRecorder` is the use case shared by HTTP and in-process callers. `support_need.py` publishes the support-need contract. |
 | **Domain** | `domain/fusion.py`, `domain/temporal.py`, `domain/confusion.py`, `domain/disengagement.py` | Pure functions with no I/O and no stored state: threshold-centred evidence, reliability-aware fusion, temporal state rules. Previous history is passed in as arguments. |
 | **Infrastructure** | `infrastructure/feature_builder.py`, `infrastructure/model_loader.py`, `infrastructure/reliability.py`, `infrastructure/models/` | Builds model feature dictionaries, loads XGBoost models and runs prediction, computes modality reliability from data-quality constants. |
 
@@ -120,10 +120,26 @@ class LearnerStateService:
 - `clear_session` removes one session's history. It is available in the service but is **not**
   exposed through an API endpoint.
 
-The router creates the service once with `@lru_cache` on `get_service()`. This keeps one instance
-alive for the lifetime of the process, which is required for temporal history to survive between
-requests. Because of this, the models are loaded on the **first** learner-state request, not at
-application start-up.
+`get_learner_state_service()` (`application/recording.py`) creates the service once with
+`@lru_cache`. This keeps one instance alive for the lifetime of the process, which is required for
+temporal history to survive between requests. Because of this, the models are loaded on the
+**first** learner-state request, not at application start-up.
+
+### 4.1 Recording use case
+
+`LearnerStateRecorder.record(window, skill_id=...)` (`application/recording.py`) is the
+application use case that both the HTTP route and in-process callers use:
+
+1. validates the Universal Skill ID (1–16 characters);
+2. checks that the learner exists (`UnknownLearnerError` otherwise), before evaluation, so an
+   unknown learner never changes session history;
+3. evaluates the window with the shared `LearnerStateService` (`WindowOrderError`, a
+   `ValueError`, for a duplicate or older `window_id`);
+4. saves the latest state for (`learner_id`, `skill_id`) and returns the full evaluation.
+
+Because every caller uses the same service instance, a window sent over HTTP and a window recorded
+in process for the same session share one history and one `window_id` sequence. The HTTP route
+maps `UnknownLearnerError` to 404 and `WindowOrderError` to 409.
 
 ## 5. Session state (in memory)
 

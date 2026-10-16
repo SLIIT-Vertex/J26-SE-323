@@ -21,6 +21,10 @@ from app.learner_state.infrastructure.reliability import (
 TEMPORAL_HISTORY_SIZE = 3
 
 
+class WindowOrderError(ValueError):
+    """A window_id was not greater than the last accepted one for its session."""
+
+
 @dataclass(frozen=True)
 class VisualObservation:
     mean_eye_openness: float
@@ -405,7 +409,7 @@ class LearnerStateService:
             state.last_window_id is not None
             and window_id <= state.last_window_id
         ):
-            raise ValueError(
+            raise WindowOrderError(
                 "window_id must increase within a learner session"
             )
 
