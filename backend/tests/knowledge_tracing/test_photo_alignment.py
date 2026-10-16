@@ -73,7 +73,7 @@ def textured(seed: int, width: int = 945, height: int = 420) -> bytes:
 class Paper:
     def __init__(self, seed: int, questions: int = 9) -> None:
         qs = [LayoutQuestion(f"q{i}", 945, 420) for i in range(questions)]
-        self.layout = layout_paper(qs, max_pages=3)
+        self.layout = layout_paper(qs, max_pages=4)
         self.token = new_token()
         images = {q.key: textured(seed * 100 + i) for i, q in enumerate(qs)}
         self.pdf = build_paper_pdf(self.token, self.layout.blocks, images, self.layout.page_count)

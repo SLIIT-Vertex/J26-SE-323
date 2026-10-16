@@ -26,6 +26,36 @@ logger = logging.getLogger("mindbridge")
 settings = get_settings()
 
 
+def _regrade_interrupted_pages() -> None:
+    """Pages left in "grading" by a restart are put back to "uploaded" and marked again."""
+    try:
+        from threading import Thread
+
+        from app.knowledge_tracing.api.submissions_router import make_submission_service
+        from app.knowledge_tracing.application.recovery import AT_STARTUP, recover_stuck_grading
+        from app.knowledge_tracing.infrastructure.db.submission_repository import (
+            SqlAlchemySubmissionRepository,
+        )
+        from app.knowledge_tracing.infrastructure.storage import create_paper_storage
+        from app.shared.database.session import SessionLocal
+
+        storage = create_paper_storage(get_settings())
+        with SessionLocal() as session:
+            ids = recover_stuck_grading(
+                SqlAlchemySubmissionRepository(session), stuck_after=AT_STARTUP
+            )
+
+        def regrade() -> None:
+            for submission_id in ids:
+                with SessionLocal() as session:
+                    make_submission_service(session, storage).grade(submission_id)
+
+        if ids:
+            Thread(target=regrade, name="regrade-interrupted", daemon=True).start()
+    except Exception:
+        logger.warning("could not recover interrupted marking", exc_info=True)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     # Load the trained knowledge model once, at startup. A missing file must not stop the
@@ -38,6 +68,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
             "knowledge model not loaded; mastery endpoints will return 503",
             exc_info=True,
         )
+    _regrade_interrupted_pages()
     yield
 
 

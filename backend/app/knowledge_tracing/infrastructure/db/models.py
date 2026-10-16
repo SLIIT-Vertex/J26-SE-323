@@ -197,7 +197,7 @@ PAPER_STATUSES = ("generated", "partially_uploaded", "graded", "needs_review", "
 
 
 class PaperModel(Base):
-    """One generated practice paper (a PDF of 1 to 3 pages) for one learner and one week."""
+    """One generated practice paper (a PDF of 1 to 4 pages) for one learner and one week."""
 
     __tablename__ = "papers"
     __table_args__ = (

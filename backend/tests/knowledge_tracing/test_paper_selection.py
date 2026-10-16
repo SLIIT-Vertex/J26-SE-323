@@ -42,7 +42,7 @@ def make_states(
 
 
 def make_candidates(
-    codes: list[str] | None = None, per_skill: int = 6, seconds: int = 80, height: float = 45.0
+    codes: list[str] | None = None, per_skill: int = 6, seconds: int = 80, height: float = 40.0
 ) -> list[Candidate]:
     out: list[Candidate] = []
     for code in codes or SKILLS:
@@ -215,13 +215,13 @@ def test_wide_images_are_scaled_to_the_page_and_tall_ones_capped() -> None:
 
 def test_a_paper_respects_every_limit() -> None:
     states, _ = mixed_learner()
-    params = PaperParams(max_questions=15, max_minutes=25, max_pages=3, seed=7)
+    params = PaperParams(max_questions=20, max_minutes=35, max_pages=4, seed=7)
 
     result = select_questions(states, probs_from(states), make_candidates(), params)
 
     assert result.mode == "practice"
     assert result.method == "cp_sat"
-    assert 0 < len(result.questions) <= 15
+    assert 0 < len(result.questions) <= 20
     check_limits(result, params)
 
 
@@ -233,9 +233,9 @@ def test_most_of_the_paper_goes_to_weak_skills() -> None:
     roles = Counter(q.role for q in result.questions)
     weak_side = roles["weak"] + roles["unknown"]
     strong_side = roles["strong"] + roles["verify"]
-    assert weak_side >= 10
-    assert strong_side <= 5
-    assert roles["unknown"] <= 3  # at most 25% of 15
+    assert weak_side >= 14
+    assert strong_side <= 6
+    assert roles["unknown"] <= 5  # at most 25% of 20
 
 
 def test_the_strong_part_is_spent_on_verification_first() -> None:
@@ -262,7 +262,7 @@ def test_verification_is_spread_over_several_skills() -> None:
     counts = Counter(q.skill_code for q in result.questions if q.role == "verify")
     assert counts
     assert max(counts.values()) <= DEFAULT_CONFIG.verify_per_skill_cap
-    assert sum(counts.values()) == 5  # the whole strong share (30% of 15, rounded)
+    assert sum(counts.values()) == 6  # the whole strong share (30% of 20)
     assert len(counts) >= 3
 
 
@@ -482,17 +482,17 @@ def test_the_solver_matches_brute_force_and_never_loses_to_greedy() -> None:
 
 def test_a_new_learner_gets_a_diagnostic_paper() -> None:
     states = make_states()  # nothing known
-    params = PaperParams(max_questions=15, seed=1)
+    params = PaperParams(max_questions=20, seed=1)
 
     result = select_questions(states, None, make_candidates(), params)
 
     assert result.mode == "diagnostic"
     assert result.method == "diagnostic"
-    # two questions (one easy, one medium) for each of the first 7 skills
+    # two questions (one easy, one medium) for each of the first 10 skills
     per_skill = Counter(q.skill_code for q in result.questions)
     assert set(per_skill.values()) == {2}
-    assert len(result.diagnostic_skills) == 7
-    assert result.diagnostic_skills == tuple(SKILLS[:7])  # APT first, in index order
+    assert len(result.diagnostic_skills) == 10
+    assert result.diagnostic_skills == tuple(SKILLS[:10])  # APT first, in index order
     assert all(q.role == "diagnostic" for q in result.questions)
     check_limits(result, params)
     for code in result.diagnostic_skills:
@@ -558,3 +558,56 @@ def test_a_diagnostic_paper_that_cannot_hold_one_skill_is_an_error() -> None:
 
     with pytest.raises(NotEnoughQuestions):
         select_questions(states, None, pool, PaperParams(max_minutes=5, seed=1))
+
+
+def test_three_default_diagnostic_papers_cover_all_30_skills() -> None:
+    """With the default 20 questions (one easy + one medium per skill) 3 papers cover 30 skills."""
+    states = make_states()
+    covered: list[str] = []
+    for _ in range(3):
+        params = PaperParams(seed=1, covered_diagnostic_skills=tuple(covered))
+        result = select_questions(states, None, make_candidates(), params)
+        assert len(result.questions) == 20
+        covered.extend(result.diagnostic_skills)
+    assert sorted(covered) == sorted(SKILLS)
+
+
+def test_the_better_of_solver_and_greedy_is_returned(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The solver works on rounded integer scores, so on a rare student greedy is a hair better
+    on the true value. The selector must then return the greedy paper (found: seed 44, student 4,
+    solver 6.5564 against greedy 6.5568)."""
+    import app.knowledge_tracing.application.paper_selection as module
+
+    states, _ = mixed_learner()
+    params = PaperParams(seed=3, mode="practice")
+    greedy = select_questions(
+        states, probs_from(states), make_candidates(), params, solver="greedy"
+    )
+    original = module._solve_cp_sat
+
+    def worse_solver(items, *args, **kwargs):
+        chosen, method = original(items, *args, **kwargs)
+        # drop the most valuable chosen question: a valid but clearly worse paper
+        chosen = sorted(chosen, key=lambda i: i.value)[:-1]
+        return chosen, method
+
+    monkeypatch.setattr(module, "_solve_cp_sat", worse_solver)
+
+    result = select_questions(states, probs_from(states), make_candidates(), params)
+
+    assert result.total_value >= greedy.total_value - 1e-9
+    assert result.method == "greedy"
+    assert any("higher total value" in note for note in result.notes)
+
+
+def test_the_solver_result_is_kept_when_it_is_at_least_as_good() -> None:
+    states, _ = mixed_learner()
+    params = PaperParams(seed=3, mode="practice")
+
+    solver = select_questions(states, probs_from(states), make_candidates(), params)
+    greedy = select_questions(
+        states, probs_from(states), make_candidates(), params, solver="greedy"
+    )
+
+    assert solver.total_value >= greedy.total_value - 1e-9
+    assert solver.method == "cp_sat" or solver.total_value == greedy.total_value

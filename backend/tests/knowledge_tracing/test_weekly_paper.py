@@ -198,7 +198,7 @@ def test_a_new_learner_gets_a_diagnostic_paper_that_is_a_valid_pdf(world: dict) 
     assert paper.status == "generated"
     assert len(paper.token) == 12
     assert paper.week_start.isoformat() == "2026-10-17"
-    assert 1 <= paper.page_count <= 3
+    assert 1 <= paper.page_count <= 4
     assert paper.pdf_key == f"papers/{paper.id}.pdf"
 
     data = world["papers"].get(paper.pdf_key)
@@ -287,6 +287,7 @@ def test_the_requested_size_is_respected(world: dict) -> None:
     assert len(result.items) <= 6
     assert result.paper.page_count == 1
     assert result.paper.estimated_minutes <= 12
+    assert "dropped_questions" in result.paper.params  # layout drops are always recorded
 
 
 def test_a_missing_question_image_stops_the_paper_and_stores_nothing(world: dict) -> None:

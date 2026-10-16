@@ -73,9 +73,9 @@ class VariantImage:
 
 @dataclass(frozen=True, slots=True)
 class PaperRequest:
-    max_questions: int = 15
-    max_minutes: int = 25
-    max_pages: int = 3
+    max_questions: int = 20
+    max_minutes: int = 35
+    max_pages: int = 4
     mode: str = "auto"
     focus_skills: tuple[str, ...] = ()
     language: str | None = None

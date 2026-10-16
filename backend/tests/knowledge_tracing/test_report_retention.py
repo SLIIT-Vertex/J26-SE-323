@@ -32,8 +32,12 @@ DAY = timedelta(days=1)
 T0 = datetime(2026, 11, 1, 9, 0, tzinfo=UTC)
 
 
-def submission_at(uploaded: datetime, viewed: datetime | None = None, deleted: datetime | None = None):
-    return Submission(uuid4(), uuid4(), 1, "k", "graded", None, None, True, uploaded, viewed, deleted)
+def submission_at(
+    uploaded: datetime, viewed: datetime | None = None, deleted: datetime | None = None
+):
+    return Submission(
+        uuid4(), uuid4(), 1, "k", "graded", None, None, True, uploaded, viewed, deleted
+    )
 
 
 # ---- the rule ---------------------------------------------------------------------------------
@@ -118,7 +122,9 @@ def test_questions_the_child_got_right_are_not_in_the_report_lists(env: ts.Env) 
 
     body = report(env)
 
-    positions = {m["position"] for m in body["mistakes"]} | {a["position"] for a in body["answer_list"]}
+    positions = {m["position"] for m in body["mistakes"]} | {
+        a["position"] for a in body["answer_list"]
+    }
     assert positions == {1, 2}  # nothing else, and no answers for what was right
     assert sum(s["correct"] for s in body["skills"]) == len(on_page) - 2
     assert sum(s["wrong"] + s["blank"] for s in body["skills"]) == 2
@@ -176,7 +182,8 @@ def test_the_report_after_a_parents_decision_uses_what_the_parent_said(env: ts.E
     sub = ts.upload(env, 1).json()["submission_id"]
     waiting = ts.submission(env, sub)["review_items"]
     decisions = [
-        {"paper_item_id": r["paper_item_id"], "part_no": r["part_no"], "selected": "2"} for r in waiting
+        {"paper_item_id": r["paper_item_id"], "part_no": r["part_no"], "selected": "2"}
+        for r in waiting
     ]
     env.client.post(f"/api/v1/submissions/{sub}/confirm", json={"decisions": decisions})
 
@@ -224,7 +231,9 @@ def test_opening_the_report_starts_the_seven_day_timer_but_peeking_does_not(env:
     assert row.report_viewed_at is not None
     assert body["photos_kept_until"] is not None
     kept_until = datetime.fromisoformat(body["photos_kept_until"])
-    assert kept_until.replace(tzinfo=UTC) - row.report_viewed_at.replace(tzinfo=UTC) == KEEP_AFTER_VIEW
+    assert (
+        kept_until.replace(tzinfo=UTC) - row.report_viewed_at.replace(tzinfo=UTC) == KEEP_AFTER_VIEW
+    )
 
 
 def test_the_first_view_is_never_moved(env: ts.Env) -> None:
@@ -287,7 +296,8 @@ def test_an_answer_cannot_be_decided_once_its_photos_are_gone(env: ts.Env) -> No
         session.commit()
 
     decisions = [
-        {"paper_item_id": r["paper_item_id"], "part_no": r["part_no"], "selected": "1"} for r in waiting
+        {"paper_item_id": r["paper_item_id"], "part_no": r["part_no"], "selected": "1"}
+        for r in waiting
     ]
     response = env.client.post(f"/api/v1/submissions/{sub}/confirm", json={"decisions": decisions})
 
@@ -405,3 +415,265 @@ def test_files_that_cannot_be_deleted_are_tried_again_next_time(
     monkeypatch.setattr(storage, "delete", original)
     second = sweep(env, datetime.now(UTC) + 31 * DAY)
     assert second.submissions == 1
+
+
+# ---- decision D11: the correct answer appears in the report only, for wrong or blank --------
+
+
+def test_correct_answer_text_is_null_for_correct_items_and_items_under_review(env: ts.Env) -> None:
+    ts.start(env)
+    on_page = ts.keys_on_page(env, 1)
+    readings = ts.answers_for(
+        env, 1, lambda position: {1: "wrong", 2: "blank"}.get(position, "right")
+    )
+    readings[2] = reading(*[("3", 0.2)] * len(on_page[2][2]))  # question 3: the reader is unsure
+    env.provider_ref[0] = MockProvider(*readings)
+    ts.upload(env, 1)
+
+    items = {i["position"]: i for i in report(env)["items"]}
+
+    assert items[1]["result"] == "wrong" and items[1]["correct_answer_text"]
+    assert items[2]["result"] == "blank" and items[2]["correct_answer_text"]
+    assert items[3]["result"] == "under_review" and items[3]["correct_answer_text"] is None
+    for item in items.values():
+        if item["result"] in ("correct", "under_review", "not_uploaded"):
+            assert item["correct_answer_text"] is None, item
+
+
+def test_only_the_report_item_carries_correct_answer_text() -> None:
+    from app.main import app
+    from tests.knowledge_tracing.test_no_answer_key_leak import FORBIDDEN, property_names
+
+    schemas = app.openapi()["components"]["schemas"]
+    carriers = {
+        name
+        for name, schema in schemas.items()
+        if "correct_answer_text" in schema.get("properties", {})
+    }
+    assert carriers == {"ReportItemRead"}  # exactly one field of one report model
+
+    # nothing else is exempted: the forbidden names stay forbidden everywhere
+    assert not property_names(app.openapi()) & FORBIDDEN
+    for name in carriers:
+        assert not set(schemas[name]["properties"]) & FORBIDDEN
+
+    # and that model is reachable only from the report response
+    reachable_from = {
+        name
+        for name, schema in schemas.items()
+        if "ReportItemRead" in str(schema) and name != "ReportItemRead"
+    }
+    assert reachable_from == {"ReportRead"}
+
+
+def test_the_report_text_never_contains_the_instruction(env: ts.Env) -> None:
+    mixed_page(env)
+    with Session(env.engine) as session:
+        from app.knowledge_tracing.infrastructure.db.models import QuestionModel, QuestionPartModel
+
+        session.execute(
+            update(QuestionPartModel)
+            .where(QuestionPartModel.question_id.in_(select(QuestionModel.id)))
+            .values(instruction="SECRET-INSTRUCTION-5521")
+        )
+        session.commit()
+
+    text = str(report(env, peek="true")).upper()
+
+    assert "SECRET-INSTRUCTION-5521" not in text
+
+
+def test_no_vision_prompt_contains_an_accepted_answer_or_the_correct_option(env: ts.Env) -> None:
+    from app.knowledge_tracing.infrastructure.db.models import QuestionPartModel
+
+    ts.start(env)
+    on_page = ts.keys_on_page(env, 1)
+    with Session(env.engine) as session:
+        # give every short part a distinctive accepted answer, so a leak cannot hide in a digit
+        for number, (_, _, parts) in enumerate(on_page):
+            for part in parts:
+                row = session.scalars(
+                    select(QuestionPartModel).where(
+                        QuestionPartModel.question_id == part.question_id,
+                        QuestionPartModel.part_no == part.part_no,
+                    )
+                ).first()
+                if row is not None and number % 2 == 0:  # every other question becomes a short one
+                    row.part_type = "short"
+                    row.answer_kind = "text"
+                    row.option_labels = None
+                    row.correct_option = None
+                    row.accepted_answers = [f"ZXQ-ANSWER-{number}{part.part_no}"]
+        session.commit()
+    on_page = ts.keys_on_page(env, 1)
+    provider = MockProvider(*ts.answers_for(env, 1, lambda _: "right"))
+    env.provider_ref[0] = provider
+    ts.upload(env, 1)
+
+    assert provider.calls, "the reader was never called"
+    # (choice answers such as "1" are also option labels printed on the image, so only the
+    # distinctive text answers are searched for)
+    secrets = {
+        a
+        for _, _, parts in on_page
+        for p in parts
+        for a in (p.accepted_answers or [])
+        if len(a) > 3
+    }
+    assert any(s.startswith("ZXQ-ANSWER") for s in secrets)
+    for call in provider.calls:
+        for secret in secrets:
+            assert secret not in call.prompt
+        # the part descriptions given to the reader have no field that could hold the answer
+        for spec in call.parts:
+            assert not {"correct_option", "accepted_answers", "answer", "alternatives"} & set(
+                spec.model_dump()
+            )
+
+
+# ---- reliability: pages stuck in "grading" after a restart, and the daily photo cleanup --------
+
+
+def _set_page(env: ts.Env, submission_id: str, **values) -> None:
+    with Session(env.engine) as session:
+        session.execute(
+            update(PaperSubmissionModel)
+            .where(PaperSubmissionModel.id == UUID(submission_id))
+            .values(**values)
+        )
+        session.commit()
+
+
+def _status(env: ts.Env, submission_id: str) -> str:
+    return ts.submission(env, submission_id)["status"]
+
+
+def test_at_startup_a_page_uploaded_one_minute_ago_is_reset_too(env: ts.Env) -> None:
+    from app.knowledge_tracing.application.recovery import AT_STARTUP, recover_stuck_grading
+
+    ts.start(env)
+    env.provider_ref[0] = MockProvider(*ts.answers_for(env, 1, lambda _: "right"))
+    submission_id = ts.upload(env, 1).json()["submission_id"]
+    _set_page(
+        env, submission_id, status="grading", uploaded_at=datetime.now(UTC) - timedelta(minutes=1)
+    )
+
+    with Session(env.engine) as session:
+        recovered = recover_stuck_grading(SqlAlchemySubmissionRepository(session), stuck_after=AT_STARTUP)
+
+    assert recovered == [UUID(submission_id)]
+    assert _status(env, submission_id) == "uploaded"
+
+
+def test_the_startup_hook_resets_every_grading_page(env: ts.Env, monkeypatch) -> None:
+    """The real hook (app.main) passes AT_STARTUP, so a one-minute-old page is not skipped."""
+    from app import main
+    from app.knowledge_tracing.application import recovery
+
+    seen: dict = {}
+    original = recovery.recover_stuck_grading
+
+    def spy(submissions, *args, **kwargs):
+        seen.update(kwargs)
+        return original(submissions, *args, **kwargs)
+
+    monkeypatch.setattr(recovery, "recover_stuck_grading", spy)
+    from app.shared.database import session as db_session
+
+    monkeypatch.setattr(db_session, "SessionLocal", lambda: Session(env.engine))
+    ts.start(env)
+    env.provider_ref[0] = MockProvider()
+    submission_id = ts.upload(env, 1).json()["submission_id"]
+    _set_page(env, submission_id, status="grading", uploaded_at=datetime.now(UTC) - timedelta(minutes=1))
+
+    main._regrade_interrupted_pages()
+
+    assert seen["stuck_after"] == recovery.AT_STARTUP
+    assert _status(env, submission_id) in ("uploaded", "grading", "failed_alignment", "error", "graded")
+
+
+def test_pages_stuck_in_grading_for_over_five_minutes_are_set_back_and_marked_again(
+    env: ts.Env,
+) -> None:
+    from app.knowledge_tracing.api.submissions_router import get_grading_launcher
+    from app.knowledge_tracing.application.recovery import recover_stuck_grading
+    from app.main import app
+
+    ts.start(env)
+    env.provider_ref[0] = MockProvider(*ts.answers_for(env, 1, lambda _: "right"))
+    submission_id = ts.upload(env, 1).json()["submission_id"]
+    assert _status(env, submission_id) == "graded"
+    old = datetime.now(UTC) - timedelta(minutes=6)
+    _set_page(env, submission_id, status="grading", uploaded_at=old)
+
+    with Session(env.engine) as session:
+        recovered = recover_stuck_grading(SqlAlchemySubmissionRepository(session))
+
+    assert recovered == [UUID(submission_id)]
+    assert _status(env, submission_id) == "uploaded"
+
+    # marked again, exactly as after an upload
+    env.provider_ref[0] = MockProvider(*ts.answers_for(env, 1, lambda _: "right"))
+    app.dependency_overrides[get_grading_launcher](None)(UUID(submission_id))
+    assert _status(env, submission_id) == "graded"
+
+
+def test_a_page_that_started_grading_a_moment_ago_is_left_alone(env: ts.Env) -> None:
+    from app.knowledge_tracing.application.recovery import recover_stuck_grading
+
+    ts.start(env)
+    env.provider_ref[0] = MockProvider(*ts.answers_for(env, 1, lambda _: "right"))
+    submission_id = ts.upload(env, 1).json()["submission_id"]
+    _set_page(
+        env, submission_id, status="grading", uploaded_at=datetime.now(UTC) - timedelta(minutes=2)
+    )
+
+    with Session(env.engine) as session:
+        recovered = recover_stuck_grading(SqlAlchemySubmissionRepository(session))
+
+    assert recovered == []
+    assert _status(env, submission_id) == "grading"
+
+
+def test_delete_old_photos_uses_the_retention_days_and_counts_what_it_deleted(
+    env: ts.Env,
+) -> None:
+    ts.start(env)
+    env.provider_ref[0] = MockProvider(*ts.answers_for(env, 1, lambda _: "right"))
+    submission_id = ts.upload(env, 1).json()["submission_id"]
+    papers = env.world["papers"]
+    prefix = f"submissions/{submission_id}/"
+    assert papers.list(prefix)
+    _set_page(env, submission_id, uploaded_at=datetime.now(UTC) - timedelta(days=10))
+
+    with Session(env.engine) as session:
+        repo = SqlAlchemySubmissionRepository(session)
+        kept = RetentionService(repo, papers, keep_after_upload=timedelta(days=30)).sweep()
+        assert kept.files == 0 and papers.list(prefix)  # 10 days old, kept for 30
+
+        short = RetentionService(repo, papers, keep_after_upload=timedelta(days=7)).sweep()
+
+    assert short.submissions == 1 and short.files > 0
+    assert papers.list(prefix) == []
+
+
+def test_answer_list_only_holds_answers_of_wrong_or_blank_items_that_are_final(env: ts.Env) -> None:
+    ts.start(env)
+    on_page = ts.keys_on_page(env, 1)
+    readings = ts.answers_for(env, 1, lambda position: {1: "wrong", 2: "blank"}.get(position, "right"))
+    readings[2] = reading(*[("3", 0.2)] * len(on_page[2][2]))  # question 3 goes to the parent
+    env.provider_ref[0] = MockProvider(*readings)
+    ts.upload(env, 1)
+
+    body = report(env, peek="true")
+    by_position = {i["position"]: i for i in body["items"]}
+    listed = {a["position"] for a in body["answer_list"]}
+
+    assert listed == {1, 2}
+    for position in listed:
+        assert by_position[position]["result"] in ("wrong", "blank")
+        assert by_position[position]["correct_answer_text"]
+    for position, item in by_position.items():
+        if item["result"] in ("correct", "under_review", "not_uploaded"):
+            assert position not in listed
+            assert item["correct_answer_text"] is None

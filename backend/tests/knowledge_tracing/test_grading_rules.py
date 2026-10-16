@@ -21,8 +21,6 @@ STRICT = GradingConfig(review_policy=ReviewPolicy.strict())
 def compare_part(read, key, config=STRICT, **kwargs):
     return _compare_part(read, key, config, **kwargs)
 
-
-
 def read(
     answer: str = "",
     *,

@@ -79,9 +79,9 @@ DEFAULT_CONFIG = SelectionConfig()
 
 @dataclass(frozen=True, slots=True)
 class PaperParams:
-    max_questions: int = 15
-    max_minutes: int = 25
-    max_pages: int = 3
+    max_questions: int = 20
+    max_minutes: int = 35
+    max_pages: int = 4
     seed: int = 0
     mode: Literal["auto", "practice", "diagnostic"] = "auto"
     focus_skills: tuple[str, ...] = ()
@@ -407,6 +407,17 @@ def _select_practice(
         )
         method = "greedy"
         notes.append("the solver found no solution in time; greedy fallback used")
+    if solver == "cp_sat" and chosen:
+        # The solver maximises integer scores (value rounded to 3 decimals plus a seeded
+        # tie-break), so on a rare student greedy can come out a hair better on the true value.
+        # Greedy takes about 2 ms, so the better of the two is returned.
+        rival = _solve_greedy(
+            items, n, seconds_limit, height_limit, strong_cap, unknown_cap, coverage,
+            verify_min, config,
+        )
+        if rival and sum(i.value for i in rival) > sum(i.value for i in chosen) + 1e-9:
+            chosen, method = rival, "greedy"
+            notes.append("the greedy paper had a higher total value than the solver's, so it is used")
     solve_ms = _now_ms() - started
 
     if not chosen:

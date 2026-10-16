@@ -128,7 +128,7 @@ def _paginate(questions: Sequence[LayoutQuestion], dpi: float) -> list[PlacedBlo
 
 
 def layout_paper(
-    questions: Sequence[LayoutQuestion], max_pages: int = 3, dpi: float = DEFAULT_DPI
+    questions: Sequence[LayoutQuestion], max_pages: int = 4, dpi: float = DEFAULT_DPI
 ) -> PaperLayout:
     """Place the questions in the order given. Too long for `max_pages`: drop the lowest-value
     question and try again, recording what was dropped."""
