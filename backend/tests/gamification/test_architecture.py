@@ -30,7 +30,7 @@ DATA_FILE_SUFFIXES = {".csv", ".json", ".jsonl", ".xlsx"}
 
 
 def imported_modules(path: Path) -> set[str]:
-    tree = ast.parse(path.read_text(), filename=str(path))
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=path.as_posix())
     modules: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -46,7 +46,8 @@ def test_domain_and_application_do_not_cross_framework_or_private_boundaries() -
         for path in layer.rglob("*.py"):
             for module in imported_modules(path):
                 if module.startswith(FORBIDDEN_PREFIXES):
-                    violations.append(f"{path.relative_to(GAMIFICATION_ROOT)} -> {module}")
+                    relative_path = path.relative_to(GAMIFICATION_ROOT).as_posix()
+                    violations.append(f"{relative_path} -> {module}")
 
     assert violations == []
 
@@ -65,7 +66,7 @@ def component_import_violations(relative_path: Path, modules: set[str]) -> list[
             _is_within(module, contract) for contract in PUBLISHED_CONTRACT_MODULES
         )
         if not (in_adapter_layer and is_published_contract):
-            violations.append(f"{relative_path} -> {module}")
+            violations.append(f"{relative_path.as_posix()} -> {module}")
     return violations
 
 
@@ -114,7 +115,9 @@ def test_other_component_internals_are_forbidden_even_in_adapters() -> None:
 
 
 def test_persistence_only_references_shared_learner_table() -> None:
-    persistence = (GAMIFICATION_ROOT / "infrastructure" / "db" / "models.py").read_text()
+    persistence = (GAMIFICATION_ROOT / "infrastructure" / "db" / "models.py").read_text(
+        encoding="utf-8"
+    )
     forbidden_tables = ('"skills.', '"questions.', '"attempts.')
     assert [table for table in forbidden_tables if table in persistence] == []
 
@@ -130,7 +133,8 @@ def test_domain_does_not_depend_on_application_api_or_infrastructure() -> None:
                     "app.gamification.infrastructure",
                 )
             ):
-                violations.append(f"{path.relative_to(GAMIFICATION_ROOT)} -> {module}")
+                relative_path = path.relative_to(GAMIFICATION_ROOT).as_posix()
+                violations.append(f"{relative_path} -> {module}")
 
     assert violations == []
 
@@ -140,13 +144,16 @@ def test_application_does_not_depend_on_api_transport_layer() -> None:
     for path in (GAMIFICATION_ROOT / "application").rglob("*.py"):
         for module in imported_modules(path):
             if module.startswith("app.gamification.api"):
-                violations.append(f"{path.relative_to(GAMIFICATION_ROOT)} -> {module}")
+                relative_path = path.relative_to(GAMIFICATION_ROOT).as_posix()
+                violations.append(f"{relative_path} -> {module}")
 
     assert violations == []
 
 
 def test_phase1_ownership_ports_are_explicit() -> None:
-    source = (GAMIFICATION_ROOT / "application" / "ownership_ports.py").read_text()
+    source = (GAMIFICATION_ROOT / "application" / "ownership_ports.py").read_text(
+        encoding="utf-8"
+    )
     required = {
         "AuthenticationProfilePort",
         "SharedCurriculumIdPort",

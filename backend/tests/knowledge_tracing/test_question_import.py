@@ -173,13 +173,13 @@ def test_missing_feature_spec_is_a_warning_not_an_error() -> None:
 
 
 def test_load_files_prefers_md_and_finds_both_languages(tmp_path: Path) -> None:
-    (tmp_path / "answers-1.md").write_text("1.1 - 3\n", encoding="utf-8")
-    (tmp_path / "answers-1.txt").write_text("1.1 - 9\n", encoding="utf-8")
-    (tmp_path / "answers-1-T.txt").write_text("1.1 - 3\n", encoding="utf-8")
-    (tmp_path / "skillMap-1.md").write_text("1.1 - APT-AAA\n", encoding="utf-8")
-    (tmp_path / "difficult-time-1.md").write_text("1.1 - APT-AAA: Easy | 1.0 min", encoding="utf-8")
-    (tmp_path / "skill_nodes.md").write_text(NODES, encoding="utf-8")
-    (tmp_path / "notes.md").write_text("ignore me", encoding="utf-8")
+    (tmp_path / "answers-1.md").write_text("1.1 - 3\n", encoding="utf-8", newline="\n")
+    (tmp_path / "answers-1.txt").write_text("1.1 - 9\n", encoding="utf-8", newline="\n")
+    (tmp_path / "answers-1-T.txt").write_text("1.1 - 3\n", encoding="utf-8", newline="\n")
+    (tmp_path / "skillMap-1.md").write_text("1.1 - APT-AAA\n", encoding="utf-8", newline="\n")
+    (tmp_path / "difficult-time-1.md").write_text("1.1 - APT-AAA: Easy | 1.0 min", encoding="utf-8", newline="\n")
+    (tmp_path / "skill_nodes.md").write_text(NODES, encoding="utf-8", newline="\n")
+    (tmp_path / "notes.md").write_text("ignore me", encoding="utf-8", newline="\n")
 
     files = load_files(tmp_path)
 

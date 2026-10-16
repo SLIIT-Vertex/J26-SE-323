@@ -78,7 +78,9 @@ def test_crosswalk_restores_the_pinned_phase5_bindings() -> None:
         bindings, blob_sha256 = BUILDER.read_phase5_bindings()
     except (OSError, subprocess.CalledProcessError):
         pytest.skip("Git history for the pinned skill-binding commit is not available")
-    manifest = json.loads((SKILL_REVIEW_DATA_DIRECTORY / "manifest.json").read_text())
+    manifest = json.loads(
+        (SKILL_REVIEW_DATA_DIRECTORY / "manifest.json").read_text(encoding="utf-8")
+    )
     source_key = f"git:{BUILDER.PHASE5_BINDINGS_COMMIT}:{BUILDER.PHASE5_BINDINGS_PATH}"
 
     assert manifest["sources"][source_key]["sha256"] == blob_sha256

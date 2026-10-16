@@ -98,6 +98,7 @@ def test_loader_rejects_files_that_do_not_match_the_manifest(tmp_path: Path) -> 
     items.write_text(
         items.read_text(encoding="utf-8").replace("G5-MAT-FRC-I001", "G5-MAT-FRC-I999", 1),
         encoding="utf-8",
+        newline="\n",
     )
 
     with pytest.raises(ValueError, match="items.jsonl does not match"):

@@ -208,7 +208,9 @@ def test_synthetic_expert_review_rows_are_model_ready_and_reference_catalogue_it
     )
     catalogue_items = {
         item["item_id"]: item
-        for item in (json.loads(line) for line in item_path.read_text().splitlines())
+        for item in (
+            json.loads(line) for line in item_path.read_text(encoding="utf-8").splitlines()
+        )
     }
     assert {case["item_id"] for case in payload["cases"]} <= set(catalogue_items)
     for case in payload["cases"]:
@@ -243,9 +245,9 @@ def test_synthetic_expert_review_rows_are_model_ready_and_reference_catalogue_it
 
 
 def test_synthetic_research_package_is_frozen_and_development_ready() -> None:
-    protocol = json.loads(DEVELOPMENT_RESEARCH_PROTOCOL.read_text())
-    predictions = json.loads(CLASSIFICATION_EVALUATION_EXAMPLE.read_text())
-    manifest = json.loads(EXPERT_REVIEW_SIMULATION_MANIFEST.read_text())
+    protocol = json.loads(DEVELOPMENT_RESEARCH_PROTOCOL.read_text(encoding="utf-8"))
+    predictions = json.loads(CLASSIFICATION_EVALUATION_EXAMPLE.read_text(encoding="utf-8"))
+    manifest = json.loads(EXPERT_REVIEW_SIMULATION_MANIFEST.read_text(encoding="utf-8"))
 
     assert protocol["synthetic"] is True
     assert protocol["contains_human_data"] is False

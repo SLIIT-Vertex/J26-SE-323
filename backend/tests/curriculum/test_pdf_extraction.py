@@ -150,7 +150,7 @@ def test_page_numbers_and_empty_pages_are_preserved(tmp_path: Path) -> None:
     _make_two_page_pdf(pdf_path)
 
     report = extract_pdf(pdf_path, output_path)
-    records = [json.loads(line) for line in output_path.read_text().splitlines()]
+    records = [json.loads(line) for line in output_path.read_text(encoding="utf-8").splitlines()]
 
     assert [record["page_number"] for record in records] == [1, 2]
     assert records[1]["conversion_status"] == "empty"
@@ -169,7 +169,7 @@ def test_repeated_run_requires_force_and_never_appends(tmp_path: Path) -> None:
         extract_pdf(pdf_path, output_path)
 
     extract_pdf(pdf_path, output_path, force=True)
-    assert len(output_path.read_text().splitlines()) == 2
+    assert len(output_path.read_text(encoding="utf-8").splitlines()) == 2
 
 
 def test_hashing_is_streamed_without_path_read_bytes(

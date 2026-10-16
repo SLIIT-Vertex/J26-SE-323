@@ -99,7 +99,7 @@ def derive_parent_from_id(node_id, node_type):
 
 
 def jsonl_write(path, rows):
-    with path.open("w", encoding="utf-8") as handle:
+    with path.open("w", encoding="utf-8", newline="\n") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
@@ -1870,7 +1870,11 @@ def file_descriptions(directory, filenames):
 
 
 def write_json(path, payload):
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
 
 
 def write_curriculum_trace_package(datasets, source_workbooks, curriculum_output_dir):
@@ -1878,7 +1882,9 @@ def write_curriculum_trace_package(datasets, source_workbooks, curriculum_output
     for filename in CURRICULUM_TRACE_FILES:
         jsonl_write(curriculum_output_dir / filename, datasets[filename])
     write_json(curriculum_output_dir / "schema.json", curriculum_trace_schema(datasets))
-    (curriculum_output_dir / "README.md").write_text(curriculum_trace_readme(), encoding="utf-8")
+    (curriculum_output_dir / "README.md").write_text(
+        curriculum_trace_readme(), encoding="utf-8", newline="\n"
+    )
     manifest = {
         "package": CURRICULUM_TRACE_PACKAGE,
         "version": CURRICULUM_TRACE_VERSION,
@@ -1899,7 +1905,9 @@ def write_curriculum_trace_package(datasets, source_workbooks, curriculum_output
         ),
     }
     manifest_path = curriculum_output_dir / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     return hashlib.sha256(manifest_path.read_bytes()).hexdigest()
 
 
@@ -1921,7 +1929,9 @@ def write_packages(
     write_json(output_dir / "schema.json", schema_definition(datasets))
     write_json(output_dir / "validation_report.json", validation_report)
     write_json(output_dir / "readiness_report.json", readiness_report)
-    (output_dir / "README.md").write_text(package_readme(), encoding="utf-8")
+    (output_dir / "README.md").write_text(
+        package_readme(), encoding="utf-8", newline="\n"
+    )
 
     manifest = {
         "package": "grade5-curriculum-game-dataset",
@@ -1954,7 +1964,7 @@ def write_packages(
         ),
     }
     (output_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
     return manifest
 

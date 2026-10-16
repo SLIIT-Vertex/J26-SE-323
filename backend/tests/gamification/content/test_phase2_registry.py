@@ -204,7 +204,9 @@ def test_manifest_hashes_reject_unreviewed_file_mutation(tmp_path: Path) -> None
     for source in PHASE2_CONTENT_DIRECTORY.iterdir():
         (package_dir / source.name).write_bytes(source.read_bytes())
     content = package_dir / "public_content.json"
-    content.write_text(content.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    content.write_text(
+        content.read_text(encoding="utf-8") + "\n", encoding="utf-8", newline="\n"
+    )
 
     with pytest.raises(ValueError, match="immutable manifest"):
         load_phase2_public_package(package_dir, allow_draft=True)

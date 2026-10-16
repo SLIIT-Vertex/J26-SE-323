@@ -97,7 +97,7 @@ def test_registry_record_rejects_unmapped_values(field: str, value: str) -> None
 def test_registry_rejects_duplicate_source_ids(tmp_path: Path) -> None:
     line = DEFAULT_SOURCE_REGISTRY_PATH.read_text(encoding="utf-8").splitlines()[0]
     duplicate = tmp_path / "sources.jsonl"
-    duplicate.write_text(f"{line}\n{line}\n", encoding="utf-8")
+    duplicate.write_text(f"{line}\n{line}\n", encoding="utf-8", newline="\n")
 
     with pytest.raises(ValueError, match="duplicate source_id"):
         JsonlCurriculumSourceRegistry(duplicate)

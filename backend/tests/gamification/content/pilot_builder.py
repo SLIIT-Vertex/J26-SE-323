@@ -32,7 +32,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
 
 
 def write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
-    path.write_text(BUILDER.render_jsonl(rows), encoding="utf-8")
+    path.write_text(BUILDER.render_jsonl(rows), encoding="utf-8", newline="\n")
 
 
 def copy_package(destination: Path) -> Path:
@@ -43,4 +43,4 @@ def copy_package(destination: Path) -> Path:
 
 def rebuild(package_dir: Path) -> None:
     for name, text in BUILDER.build_outputs(package_dir, BUILDER.load_context()).items():
-        (package_dir / name).write_text(text, encoding="utf-8")
+        (package_dir / name).write_text(text, encoding="utf-8", newline="\n")

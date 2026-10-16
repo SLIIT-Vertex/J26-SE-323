@@ -278,6 +278,7 @@ def write_evaluation_report(path: Path, report: EvaluationReport) -> None:
     path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 

@@ -191,7 +191,7 @@ def test_enrichment_catalog_rejects_unknown_and_duplicate_records(
     message: str,
 ) -> None:
     path = tmp_path / "enrichment.json"
-    path.write_text(json.dumps({"records": records}), encoding="utf-8")
+    path.write_text(json.dumps({"records": records}), encoding="utf-8", newline="\n")
 
     with pytest.raises(ValueError, match=message):
         JsonSkillTaxonomyEnrichmentCatalog(path).load({"MAT-FRC"})

@@ -1140,7 +1140,7 @@ def build_outputs(package_dir: Path, context: Mapping[str, Any]) -> dict[str, st
         name: text.encode("utf-8") for name, text in outputs.items()
     }
     sources = {
-        str(path.relative_to(PROJECT_ROOT)): {"sha256": sha256_bytes(path.read_bytes())}
+        path.relative_to(PROJECT_ROOT).as_posix(): {"sha256": sha256_bytes(path.read_bytes())}
         for path in (
             REGISTRY_PATH,
             TRACE_DIR / "manifest.json",
@@ -1224,7 +1224,7 @@ def main() -> int:
             return 1
         return 0
     for name, text in outputs.items():
-        (args.package_dir / name).write_text(text, encoding="utf-8")
+        (args.package_dir / name).write_text(text, encoding="utf-8", newline="\n")
     print(json.dumps(json.loads(outputs["manifest.json"])["counts"]))
     return 0
 

@@ -74,6 +74,7 @@ def write_links(path: Path, links: list[dict[str, object]], status_counts: dict[
             for row in links
         ),
         encoding="utf-8",
+        newline="\n",
     )
     manifest = {
         "confidence_counts": dict(Counter(str(row["confidence"]) for row in links)),
@@ -87,6 +88,7 @@ def write_links(path: Path, links: list[dict[str, object]], status_counts: dict[
     path.with_name("manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
 
 

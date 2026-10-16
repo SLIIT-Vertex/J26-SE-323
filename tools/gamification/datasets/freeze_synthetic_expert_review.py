@@ -26,7 +26,7 @@ DEFAULT_OUTPUT = EXPERT_REVIEW_SIMULATION.with_name("expert-review-simulation-ma
 
 
 def _read_json(path: Path) -> Any:
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _file_sha256(path: Path) -> str:
@@ -127,7 +127,7 @@ def build_manifest(*, project_root: Path) -> dict[str, object]:
         "source_commit": _source_commit(project_root),
         "source_worktree_dirty": _source_worktree_dirty(project_root),
         "source_files": {
-            str(path.relative_to(project_root)): {"sha256": _file_sha256(path)}
+            path.relative_to(project_root).as_posix(): {"sha256": _file_sha256(path)}
             for path in (
                 DEVELOPMENT_RESEARCH_PROTOCOL,
                 EXPERT_REVIEW_SIMULATION,
@@ -163,7 +163,11 @@ def main() -> int:
     args = parser.parse_args()
     project_root = Path(__file__).resolve().parents[3]
     manifest = build_manifest(project_root=project_root)
-    args.output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+    args.output.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     return 0 if manifest["development_gate"] == "pass" else 1
 
 

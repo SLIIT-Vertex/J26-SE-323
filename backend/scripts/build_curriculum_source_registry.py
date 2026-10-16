@@ -123,7 +123,7 @@ def main() -> int:
             return 1
         return 0
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(rendered, encoding="utf-8")
+    args.output.write_text(rendered, encoding="utf-8", newline="\n")
     print(f"wrote {rendered.count(chr(10))} source records to {args.output}")
     return 0
 

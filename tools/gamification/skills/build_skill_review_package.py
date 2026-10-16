@@ -91,6 +91,7 @@ def write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
     path.write_text(
         "".join(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n" for record in records),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -193,7 +194,9 @@ def build() -> None:
         "crosswalk_key": "universal_skill_id",
         "crosswalk_version": CROSSWALK_VERSION,
     }
-    (OUTPUT_DIRECTORY / "schema.json").write_text(json.dumps(schema, indent=2) + "\n", encoding="utf-8")
+    (OUTPUT_DIRECTORY / "schema.json").write_text(
+        json.dumps(schema, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     files = (*generated, "schema.json")
     manifest = {
         "package": "gamification-skill-catalogue",
@@ -208,8 +211,10 @@ def build() -> None:
             "approved": 0,
         },
         "sources": {
-            str(SOURCE.relative_to(PROJECT_ROOT)): {"sha256": digest(SOURCE)},
-            str(TAXONOMY_WORKBOOK.relative_to(PROJECT_ROOT)): {"sha256": digest(TAXONOMY_WORKBOOK)},
+            SOURCE.relative_to(PROJECT_ROOT).as_posix(): {"sha256": digest(SOURCE)},
+            TAXONOMY_WORKBOOK.relative_to(PROJECT_ROOT).as_posix(): {
+                "sha256": digest(TAXONOMY_WORKBOOK)
+            },
             f"git:{PHASE5_BINDINGS_COMMIT}:{PHASE5_BINDINGS_PATH}": {"sha256": phase5_sha256},
         },
         "files": {
@@ -218,7 +223,9 @@ def build() -> None:
         },
         "gates": {"development": "pass", "child_facing": "blocked_pending_review"},
     }
-    (OUTPUT_DIRECTORY / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (OUTPUT_DIRECTORY / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 if __name__ == "__main__":

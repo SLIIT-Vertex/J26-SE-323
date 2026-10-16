@@ -120,7 +120,9 @@ def synthetic_export(report: dict[str, object]) -> dict[str, object]:
 def main() -> None:
     report = build_report()
     destination = ROOT / "tmp-synthetic-policy-comparison.json"
-    destination.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    destination.write_text(
+        json.dumps(report, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     print(render_markdown(report))
 
 
