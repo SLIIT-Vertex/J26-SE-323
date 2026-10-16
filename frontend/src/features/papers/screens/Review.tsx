@@ -8,9 +8,22 @@ import {
   pictureUrl,
 } from "../api";
 import { useAsync } from "../hooks";
-import { type Choice, buildDecisions, decidedCount, isInstruction, isReadyToSubmit, itemKey, readingText } from "../reviewLogic";
+import {
+  type Choice,
+  type QuestionGroup,
+  blankCount,
+  buildDecisions,
+  decidedCount,
+  groupByQuestion,
+  isInstruction,
+  isReadyToSubmit,
+  itemKey,
+  partTitle,
+  readingText,
+  toggleBlank,
+} from "../reviewLogic";
 import { go, hrefFor } from "../router";
-import { Chip, ErrorBox, Loading, ScreenHeader, Tick } from "../ui";
+import { ErrorBox, Loading, ScreenHeader, Tick } from "../ui";
 
 // This screen never says whether an answer is right. The parent only says what the child wrote.
 // (The server also never sends the answer key or the reason a reading was doubtful, because
@@ -107,7 +120,7 @@ function Decide({
         id={`text-${itemKey(item)}`}
         className="mb-input"
         type="text"
-        value={choice?.blank ? "" : (choice?.text ?? "")}
+        value={choice?.text ?? ""}
         disabled={choice?.blank === true}
         onChange={(event) => onChange({ text: event.target.value })}
         autoComplete="off"
@@ -115,7 +128,11 @@ function Decide({
       />
       <div className="mb-actions">
         {reading ? (
-          <button type="button" className="mb-btn mb-btn--ghost mb-btn--small" onClick={() => onChange({ text: reading })}>
+          <button
+            type="button"
+            className="mb-btn mb-btn--ghost mb-btn--small"
+            onClick={() => onChange({ text: reading })}
+          >
             Same as we read
           </button>
         ) : null}
@@ -123,7 +140,7 @@ function Decide({
           type="button"
           className="mb-choice"
           aria-pressed={choice?.blank === true}
-          onClick={() => onChange(choice?.blank ? { text: "" } : { blank: true, text: "" })}
+          onClick={() => onChange(toggleBlank(choice))}
         >
           No answer
         </button>
@@ -132,31 +149,63 @@ function Decide({
   );
 }
 
-function ItemCard({
+function PartFields({
   item,
-  parts,
+  many,
   choice,
   onChange,
 }: {
   item: ReviewItem;
-  parts: number;
+  many: boolean;
   choice: Choice | undefined;
   onChange: (next: Choice) => void;
 }) {
   const reading = readingText(item);
   return (
-    <li className="mb-card mb-review">
-      <div className="mb-row">
-        <h3 className="mb-h3">Question {item.position}</h3>
-        {parts > 1 ? <Chip tone="sky">Answer {item.part_no}</Chip> : null}
-      </div>
-      <Crop item={item} />
+    <div className={many ? "mb-part" : undefined}>
+      {many ? <h4 className="mb-part__title">{partTitle(item)}</h4> : null}
       {!isInstruction(item) ? (
         <p className="mb-read">
           We read: <strong>{reading ?? "nothing clear"}</strong>
         </p>
       ) : null}
       <Decide item={item} choice={choice} onChange={onChange} />
+    </div>
+  );
+}
+
+// One card per question, with one picture and one labelled box for each answer it needs.
+function QuestionCard({
+  group,
+  choices,
+  onChange,
+}: {
+  group: QuestionGroup;
+  choices: Record<string, Choice>;
+  onChange: (key: string, next: Choice) => void;
+}) {
+  const many = group.partCount > 1;
+  const first = group.items[0];
+  return (
+    <li className="mb-card mb-review">
+      <h3 className="mb-h3">Question {group.position}</h3>
+      <Crop item={first} />
+      {many ? (
+        <p className="mb-fineprint">
+          This question has {group.partCount} answers. Fill in each one in the order it is printed: top to
+          bottom, then left to right.
+          {group.items.length < group.partCount ? " The others were read clearly." : ""}
+        </p>
+      ) : null}
+      {group.items.map((item) => (
+        <PartFields
+          key={itemKey(item)}
+          item={item}
+          many={many}
+          choice={choices[itemKey(item)]}
+          onChange={(next) => onChange(itemKey(item), next)}
+        />
+      ))}
     </li>
   );
 }
@@ -165,18 +214,29 @@ export function Review({ submissionId }: { submissionId: string }) {
   const { state, reload } = useAsync(() => getSubmission(submissionId), `submission:${submissionId}`);
   const [choices, setChoices] = useState<Record<string, Choice>>({});
   const [saving, setSaving] = useState(false);
+  const [confirmBlanks, setConfirmBlanks] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submission = state.status === "ready" ? state.data : null;
   const items = submission?.review_items ?? [];
+  const groups = groupByQuestion(items);
   const back = submission
     ? { href: hrefFor({ name: "paper", id: submission.paper_id }), label: "Back to the paper" }
     : { href: hrefFor({ name: "papers" }), label: "Papers" };
-  const partsAt = (position: number) => items.filter((i) => i.position === position).length;
   const ready = isReadyToSubmit(items, choices);
+  const blanks = blankCount(items, choices);
+
+  function change(key: string, next: Choice) {
+    setChoices((now) => ({ ...now, [key]: next }));
+    setConfirmBlanks(false);
+  }
 
   async function save() {
     if (!submission) return;
+    if (blanks > 0 && !confirmBlanks) {
+      setConfirmBlanks(true); // answers marked "No answer" are checked once before they are saved
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -211,14 +271,8 @@ export function Review({ submissionId }: { submissionId: string }) {
               decide.
             </p>
             <ul className="mb-list mb-list--loose">
-              {items.map((item) => (
-                <ItemCard
-                  key={itemKey(item)}
-                  item={item}
-                  parts={partsAt(item.position)}
-                  choice={choices[itemKey(item)]}
-                  onChange={(next) => setChoices((now) => ({ ...now, [itemKey(item)]: next }))}
-                />
+              {groups.map((group) => (
+                <QuestionCard key={group.paperItemId} group={group} choices={choices} onChange={change} />
               ))}
             </ul>
           </>
@@ -228,7 +282,9 @@ export function Review({ submissionId }: { submissionId: string }) {
       {items.length > 0 ? (
         <div className="mb-savebar">
           <div className="mb-savebar__text" aria-live="polite">
-            {ready ? (
+            {confirmBlanks ? (
+              `${blanks} ${blanks === 1 ? "answer" : "answers"} will be saved as “No answer”. Is that right?`
+            ) : ready ? (
               <>
                 <Tick className="mb-savebar__tick" /> All decided
               </>
@@ -237,9 +293,20 @@ export function Review({ submissionId }: { submissionId: string }) {
             )}
             {error ? <span className="mb-savebar__error"> · {error}</span> : null}
           </div>
-          <button type="button" className="mb-btn" disabled={!ready || saving} onClick={save}>
-            {saving ? "Saving…" : "Save answers"}
-          </button>
+          <div className="mb-savebar__buttons">
+            {confirmBlanks ? (
+              <button
+                type="button"
+                className="mb-btn mb-btn--ghost mb-btn--small"
+                onClick={() => setConfirmBlanks(false)}
+              >
+                Go back
+              </button>
+            ) : null}
+            <button type="button" className="mb-btn" disabled={!ready || saving} onClick={save}>
+              {saving ? "Saving…" : confirmBlanks ? "Save anyway" : "Save answers"}
+            </button>
+          </div>
         </div>
       ) : null}
     </>

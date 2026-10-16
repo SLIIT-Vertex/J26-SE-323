@@ -47,3 +47,54 @@ export function readingText(item: ReviewItem): string | null {
   const text = (item.reading.text ?? "").trim();
   return text === "" ? null : text;
 }
+
+// ---- one card per question --------------------------------------------------------------------
+
+export type QuestionGroup = {
+  paperItemId: string;
+  position: number;
+  partCount: number;
+  items: ReviewItem[];
+};
+
+/** The unclear answers grouped by question (in printed order), and each question's parts in order. */
+export function groupByQuestion(items: ReviewItem[]): QuestionGroup[] {
+  const groups = new Map<string, QuestionGroup>();
+  for (const item of items) {
+    const group = groups.get(item.paper_item_id) ?? {
+      paperItemId: item.paper_item_id,
+      position: item.position,
+      partCount: item.part_count,
+      items: [],
+    };
+    group.items.push(item);
+    groups.set(item.paper_item_id, group);
+  }
+  return [...groups.values()]
+    .map((group) => ({ ...group, items: [...group.items].sort((a, b) => a.part_no - b.part_no) }))
+    .sort((a, b) => a.position - b.position);
+}
+
+/** "Answer 2 of 5", with the printed label first when the question has one. */
+export function partTitle(item: ReviewItem): string {
+  const label = item.label ? `(${item.label}) ` : "";
+  return `${label}Answer ${item.part_no} of ${item.part_count}`;
+}
+
+/** Decisions made on purpose as "No answer". Saving these deserves one more look. */
+export function blankCount(items: ReviewItem[], choices: Record<string, Choice>): number {
+  return items.filter((item) => {
+    const choice = choices[itemKey(item)];
+    if (!choice || isInstruction(item)) return false;
+    return item.part_type === "mcq" ? choice.selected === null : choice.blank === true;
+  }).length;
+}
+
+/**
+ * "No answer" on a text box. What was typed is kept, so tapping it by accident, or tapping it again,
+ * brings the text back instead of losing it.
+ */
+export function toggleBlank(choice: Choice | undefined): Choice {
+  const text = choice?.text ?? "";
+  return choice?.blank ? { text } : { blank: true, text };
+}

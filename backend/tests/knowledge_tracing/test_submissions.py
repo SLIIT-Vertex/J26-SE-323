@@ -334,6 +334,9 @@ def test_an_unsure_reading_waits_for_the_parent_and_hides_its_result(env: Env) -
     assert item["reading"] == {"selected": "1"}
     assert item["part_type"] == "mcq"
     assert item["options"]
+    # the screen needs to know how many answers the whole question has, to name each box
+    assert all(r["part_count"] == first_parts for r in body["review_items"])
+    assert "label" in item
     assert body["results"][0]["result"] == "pending_review"  # hidden until decided
     # the settled questions already count; the waiting one does not
     assert len(attempts(env)) == len(on_page) - 1

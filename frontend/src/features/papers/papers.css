@@ -882,22 +882,37 @@ body.mb-body {
   margin: 0;
 }
 
+.mb-part {
+  padding-top: 0.9rem;
+  border-top: 1.5px dashed var(--sand);
+}
+.mb-part__title {
+  margin: 0 0 0.3rem;
+  font: 600 1rem var(--display);
+}
+
 .mb-savebar {
   position: sticky;
   bottom: var(--tabs-h);
   z-index: 3;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.6rem 1rem;
   padding: 0.8rem 1.25rem;
   border-top: 1.5px solid var(--sand);
   background: var(--paper);
   box-shadow: 0 -0.7rem 1.2rem -1rem rgba(35, 44, 87, 0.4);
 }
 .mb-savebar__text {
+  flex: 1;
   font-size: 0.9rem;
   font-weight: 800;
+}
+.mb-savebar__buttons {
+  display: flex;
+  gap: 0.5rem;
 }
 .mb-savebar__tick {
   width: 1rem;

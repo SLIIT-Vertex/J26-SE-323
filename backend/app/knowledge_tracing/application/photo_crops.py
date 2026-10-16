@@ -5,9 +5,11 @@ multiplying with the canonical size. Two rules came out of the grading experimen
 
 * The crop runs to the RIGHT EDGE of the frame. Children write past the end of the printed
   dotted line, and a crop that stops at the printed image width cuts their answer off.
-* Padding is SMALL (8 pt above, 10 pt below). The photo and homography are never perfect, but a
-  large margin pulls the neighbouring question into the crop. The 12 mm gap between blocks keeps
-  a padded crop clear of its neighbours.
+* Padding is small above (8 pt) and larger below (8 mm). Children underline or circle their answer
+  BELOW the printed options, a few millimetres under the block (found on a real paper: the line
+  was 6 mm below the block and fell outside a 3.5 mm margin, so the question was read as blank).
+  The layout leaves a 12 mm gap between blocks, so 8 mm below plus 8 pt above the next block
+  still keeps neighbouring crops apart (a test checks this).
 """
 
 from dataclasses import dataclass
@@ -15,11 +17,13 @@ from dataclasses import dataclass
 import cv2
 import numpy as np
 
+from app.knowledge_tracing.application.paper_layout import GAP as BLOCK_GAP_MM
 from app.knowledge_tracing.application.photo_alignment import CANONICAL_H, CANONICAL_W, PX_PER_MM
 
 PT_TO_MM = 25.4 / 72
 PAD_ABOVE_MM = 8 * PT_TO_MM
-PAD_BELOW_MM = 10 * PT_TO_MM
+# 8 mm, but never so much that it meets the next question's own top padding (1 mm to spare)
+PAD_BELOW_MM = min(8.0, BLOCK_GAP_MM - PAD_ABOVE_MM - 1.0)
 
 
 @dataclass(frozen=True, slots=True)

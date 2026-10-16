@@ -14,7 +14,17 @@ import {
 } from "./api";
 import { dayLabel } from "./format";
 import { parseRoute } from "./router";
-import { type Choice, buildDecisions, decidedCount, isReadyToSubmit, itemKey } from "./reviewLogic";
+import {
+  type Choice,
+  blankCount,
+  buildDecisions,
+  decidedCount,
+  groupByQuestion,
+  isReadyToSubmit,
+  itemKey,
+  partTitle,
+  toggleBlank,
+} from "./reviewLogic";
 import { MasteryScreen, skillLine } from "./screens/MasteryScreen";
 import { Review } from "./screens/Review";
 
@@ -126,6 +136,8 @@ const mcq = (id: string, position: number): ReviewItem => ({
   reason: "near_miss",
   options: ["1", "2", "3", "4"],
   ask: null,
+  label: null,
+  part_count: 1,
 });
 
 const short = (id: string, position: number): ReviewItem => ({
@@ -175,6 +187,53 @@ describe("review decisions", () => {
     ]);
     const blank: Record<string, Choice> = { [itemKey(items[1])]: { blank: true, text: "ignored" } };
     expect(buildDecisions([items[1]], blank)).toEqual([{ paper_item_id: ID_B, part_no: 1, text: "" }]);
+  });
+});
+
+// ---- one card per question, one labelled box per answer -----------------------------------------
+
+describe("questions with several answers", () => {
+  const part = (n: number, count: number, label: string | null = null): ReviewItem => ({
+    ...short(ID_B, 9),
+    part_no: n,
+    part_count: count,
+    label,
+    reading: { text: "" },
+  });
+
+  it("puts the five answers of question 9 on one card, in order", () => {
+    const five = [part(3, 5), part(1, 5), part(5, 5), part(2, 5), part(4, 5)];
+    const groups = groupByQuestion([...five, mcq(ID_A, 4)]);
+
+    expect(groups.map((g) => g.position)).toEqual([4, 9]);
+    const nine = groups[1];
+    expect(nine.partCount).toBe(5);
+    expect(nine.items.map((i) => i.part_no)).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it("names each box, with the printed label when there is one", () => {
+    expect(partTitle(part(2, 5))).toBe("Answer 2 of 5");
+    expect(partTitle(part(2, 2, "ii"))).toBe("(ii) Answer 2 of 2");
+  });
+
+  it("keeps what was typed when 'No answer' is tapped, and again when it is tapped back", () => {
+    const typed: Choice = { text: "උතුර" };
+    const blank = toggleBlank(typed);
+    expect(blank).toEqual({ blank: true, text: "උතුර" });
+    expect(toggleBlank(blank)).toEqual({ text: "උතුර" });
+    expect(toggleBlank(undefined)).toEqual({ blank: true, text: "" });
+  });
+
+  it("counts the answers that were left as 'No answer' on purpose", () => {
+    const a = part(1, 2);
+    const b = part(2, 2);
+    const m = mcq(ID_A, 4);
+    const choices: Record<string, Choice> = {
+      [itemKey(a)]: { blank: true, text: "" },
+      [itemKey(b)]: { text: "දකුණ" },
+      [itemKey(m)]: { selected: null },
+    };
+    expect(blankCount([a, b, m], choices)).toBe(2);
   });
 });
 
@@ -274,5 +333,40 @@ describe("mastery screen", () => {
     expect(text).not.toContain("50%");
     expect(text).not.toMatch(/(^|[^0-9])0%/);
     expect(text).toContain("1 of 2");
+  });
+});
+
+describe("review screen with a question that has several answers", () => {
+  it("shows one picture and one labelled box per answer, and asks before saving blanks", async () => {
+    const part = (n: number): ReviewItem => ({
+      ...short(ID_B, 3),
+      part_no: n,
+      part_count: 2,
+      label: n === 1 ? "i" : "ii",
+      reading: { text: "" },
+    });
+    answerWith({
+      submission_id: "s1",
+      paper_id: ID_A,
+      page: 1,
+      status: "needs_review",
+      in_progress: false,
+      failure_reason: null,
+      message: null,
+      uploaded_at: "2026-10-17T10:00:00Z",
+      summary: { items: 1, auto_final: 0, needs_review: 1 },
+      review_items: [part(1), part(2)],
+      results: [],
+    });
+
+    await show(<Review submissionId="s1" />);
+
+    expect(host.querySelectorAll("li.mb-review").length).toBe(1); // one card for the question
+    expect(host.querySelectorAll("img").length).toBe(1); // one picture
+    expect(host.querySelectorAll("input[type=text]").length).toBe(2); // one box per answer
+    const text = host.textContent ?? "";
+    expect(text).toContain("(i) Answer 1 of 2");
+    expect(text).toContain("(ii) Answer 2 of 2");
+    expect(text).toContain("This question has 2 answers");
   });
 });

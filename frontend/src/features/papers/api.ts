@@ -59,6 +59,8 @@ export type ReviewItem = {
   reason: string | null;
   options: string[] | null;
   ask: string | null;
+  label: string | null; // printed beside this answer ("i", "ii"), when the question has labels
+  part_count: number; // how many answers the whole question has
 };
 
 export type Submission = {
