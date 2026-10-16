@@ -8,9 +8,12 @@ The component uses four binary XGBoost classifiers, stored as XGBoost JSON files
 | Detector | Modality | File | Input features |
 | --- | --- | --- | --- |
 | Confusion | Visual | `mindbridge_visual_model.json` | 11 `VISUAL_FEATURES` |
-| Confusion | Behavioural | `mindbridge_behavior_model.json` | 10 `CONFUSION_BEHAVIOR_FEATURES` |
+| Confusion | Behavioural | `mindbridge_behavior_model_v2.json` | 8 `CONFUSION_BEHAVIOR_FEATURES` |
 | Disengagement | Visual | `mindbridge_disengagement_visual_model.json` | 11 `VISUAL_FEATURES` |
-| Disengagement | Behavioural | `mindbridge_disengagement_behavior_model_v2.json` | 20 `DISENGAGEMENT_BEHAVIOR_FEATURES` |
+| Disengagement | Behavioural | `mindbridge_disengagement_behavior_model_v3.json` | 18 `DISENGAGEMENT_BEHAVIOR_FEATURES` |
+
+The two behaviour models were retrained without the ASSISTments-only fields `position` and `first_action`
+(`research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py`); the visual models are unchanged.
 
 Facts readable from the model files:
 
@@ -90,7 +93,7 @@ validation-selected thresholds.
 | Model | Threshold | Parameter |
 | --- | --- | --- |
 | Confusion visual | **0.50** | `evaluate_confusion_window(visual_threshold=0.50)` |
-| Confusion behaviour | **0.79** | `evaluate_confusion_window(behavior_threshold=0.79)` |
+| Confusion behaviour | **0.78** | `evaluate_confusion_window(behavior_threshold=0.78)` |
 | Disengagement visual | **0.54** | `evaluate_disengagement_window(visual_threshold=0.54)` |
 | Disengagement behaviour | **0.53** | `evaluate_disengagement_window(behavior_threshold=0.53)` |
 
@@ -116,15 +119,15 @@ Properties:
 - After the mapping, "evidence ≥ 0.5" means "this model's own threshold was reached", for every
   model.
 
-Example — confusion behaviour model, threshold 0.79:
+Example — confusion behaviour model, threshold 0.78:
 
 | Probability | Evidence |
 | --- | --- |
-| 0.19 | 0.5 × 0.19 / 0.79 ≈ 0.12 |
-| 0.79 | 0.50 |
-| 0.895 | 0.5 + 0.5 × 0.105 / 0.21 = 0.75 |
+| 0.19 | 0.5 × 0.19 / 0.78 ≈ 0.12 |
+| 0.78 | 0.50 |
+| 0.89 | 0.5 + 0.5 × 0.11 / 0.22 = 0.75 |
 
-Without this step, a behaviour probability of 0.70 (below its 0.79 threshold) would be treated as
+Without this step, a behaviour probability of 0.70 (below its 0.78 threshold) would be treated as
 stronger confusion evidence than a visual probability of 0.55 (above its 0.50 threshold), which
 would be wrong.
 

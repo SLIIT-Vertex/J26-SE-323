@@ -7,8 +7,9 @@ They are reference material only and are not run by the backend.
 | Notebook | Produces | Data |
 | --- | --- | --- |
 | `notebooks/mindbridge-visual-model-01.ipynb` | `mindbridge_visual_model.json` (confusion, visual) and the visual feature extraction (MediaPipe Face Landmarker) | DAiSEE |
-| `notebooks/mindbridge-behaviour-model-01.ipynb` | `mindbridge_behavior_model.json` (confusion, behaviour) and learner-baseline ablations | ASSISTments 2012–13 with affect predictions |
-| `notebooks/mindbridge-disengagement-model-01.ipynb` | `mindbridge_disengagement_visual_model.json` and `mindbridge_disengagement_behavior_model_v2.json`, reliability constants | DAiSEE, ASSISTments 2012–13 |
+| `notebooks/mindbridge-behaviour-model-01.ipynb` | the original confusion behaviour model (since replaced, see below) and learner-baseline ablations | ASSISTments 2012–13 with affect predictions |
+| `notebooks/mindbridge-disengagement-model-01.ipynb` | `mindbridge_disengagement_visual_model.json`, the original disengagement behaviour model (since replaced), reliability constants | DAiSEE, ASSISTments 2012–13 |
+| `notebooks/kaggle_behaviour_ablation_cells.py` | `mindbridge_behavior_model_v2.json` and `mindbridge_disengagement_behavior_model_v3.json`: the behaviour models retrained without `position` and `first_action`; results in `behaviour_ablation_results.json` and the `*_info.json` files | ASSISTments 2012–13 with affect predictions |
 | `notebooks/mindbridge-fusion-model-01.ipynb` | Prototype of reliability, fusion and temporal logic on **synthetic** example windows; synchronized pilot-data template | Model outputs only; no cross-dataset pairing |
 
 The results are summarised in

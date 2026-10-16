@@ -42,7 +42,7 @@ def evaluate_confusion_window(
     previous_task_progress: Sequence[float | None] = (),
     task_progress: float | None = None,
     visual_threshold: float = 0.50,
-    behavior_threshold: float = 0.79,
+    behavior_threshold: float = 0.78,
     temporal_window_size: int = 3,
     confusion_threshold: float = 0.50,
     intervention_threshold: float = 0.60,

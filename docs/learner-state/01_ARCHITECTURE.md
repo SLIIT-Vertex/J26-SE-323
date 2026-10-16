@@ -82,8 +82,8 @@ Step by step:
    service that `learner_id` exists, and builds a `LearnerStateWindow` containing a
    `VisualObservation` and a `BehaviorObservation`. The learner check happens before evaluation, so
    an unknown learner never changes session history.
-2. **Feature construction** — the service passes visual features unchanged; it builds 10 confusion
-   behaviour features and 20 disengagement behaviour features (the latter using the session's
+2. **Feature construction** — the service passes visual features unchanged; it builds 8 confusion
+   behaviour features and 18 disengagement behaviour features (the latter using the session's
    behaviour history).
 3. **Model inference** — four XGBoost models return four probabilities.
 4. **Reliability calculation** — one visual reliability and one behavioural reliability value are

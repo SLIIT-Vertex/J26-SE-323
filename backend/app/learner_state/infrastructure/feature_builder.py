@@ -21,8 +21,6 @@ class BehaviorObservation:
     attempt_count: float
     ms_first_response: float
     overlap_time: float
-    first_action: float
-    position: float
     original: float
 
 
@@ -47,8 +45,6 @@ def build_confusion_behavior_features(
         "attempt_count": observation.attempt_count,
         "ms_first_response": observation.ms_first_response,
         "overlap_time": observation.overlap_time,
-        "first_action": observation.first_action,
-        "position": observation.position,
         "original": observation.original,
         "bottom_hint_missing": bottom_hint_missing,
     }

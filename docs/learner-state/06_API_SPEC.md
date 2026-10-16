@@ -66,9 +66,11 @@ All fields are required numbers.
 | `attempt_count` | number | ≥ 0 | Attempts made |
 | `ms_first_response` | number | — | Time to first response (ms) |
 | `overlap_time` | number | — | Time spent on the item (ms) |
-| `first_action` | number | — | Behavioural model input field retained from the training data |
-| `position` | number | — | Behavioural model input field retained from the training data |
-| `original` | number | — | Behavioural model input field retained from the training data |
+| `original` | number | — | 1 = main problem, 0 = scaffolding problem (ASSISTments definition) |
+
+Unknown fields in `behaviour` are rejected with HTTP 422. In particular, the ASSISTments-only fields
+`first_action` and `position` are no longer accepted: the behaviour models were retrained without
+them because MindBridge cannot produce them truthfully.
 
 Feature meanings and how they feed the models are described in
 [`02_DATA_AND_FEATURES.md`](02_DATA_AND_FEATURES.md).
@@ -161,8 +163,6 @@ learner must already exist (`POST /api/v1/learners` returns a new `id` to use he
     "attempt_count": 4.0,
     "ms_first_response": 15000.0,
     "overlap_time": 25000.0,
-    "first_action": 0.0,
-    "position": 1.0,
     "original": 1.0
   },
   "task_progress": 0.3
@@ -182,36 +182,36 @@ session. Values are rounded to 4 decimal places here; the API returns full float
   "skill_id": "MAT-FRC",
   "confusion": {
     "visual_probability": 0.5224,
-    "behavior_probability": 0.1293,
+    "behavior_probability": 0.1041,
     "visual_reliability": 0.95,
     "behavior_reliability": 0.9,
-    "fused_evidence": 0.3081,
-    "confidence": 0.5587,
-    "temporal_score": 0.3081,
-    "average_confidence": 0.5587,
+    "fused_evidence": 0.3007,
+    "confidence": 0.5461,
+    "temporal_score": 0.3007,
+    "average_confidence": 0.5461,
     "persistent_count": 0,
     "state": "no_confusion",
     "support_need": "none"
   },
   "disengagement": {
     "visual_probability": 0.7368,
-    "behavior_probability": 0.1522,
+    "behavior_probability": 0.2319,
     "visual_reliability": 0.95,
     "behavior_reliability": 0.63,
-    "fused_evidence": 0.4865,
-    "confidence": 0.5269,
-    "temporal_score": 0.4865,
-    "average_confidence": 0.5269,
-    "persistent_count": 0,
-    "state": "engaged",
-    "support_need": "none"
+    "fused_evidence": 0.5165,
+    "confidence": 0.5659,
+    "temporal_score": 0.5165,
+    "average_confidence": 0.5659,
+    "persistent_count": 1,
+    "state": "transient_disengagement",
+    "support_need": "monitor"
   },
-  "recommended_action": "none"
+  "recommended_action": "monitor"
 }
 ```
 
-Sending the same features as windows 2, 3 and 4 moves disengagement to
-`transient_disengagement` and then `persistent_disengagement`, with
+Sending the same features as windows 2 and 3 keeps disengagement at `transient_disengagement`;
+window 4 reaches `persistent_disengagement`, with
 `recommended_action = "request_reengagement_support"` at window 4 (see the illustrative runtime
 walkthrough in [`05`](05_TEMPORAL_DECISION_ENGINE.md#6-illustrative-runtime-walkthrough)). These
 example values come from the current committed model artifacts and are not evaluation results.

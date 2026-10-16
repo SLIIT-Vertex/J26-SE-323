@@ -87,8 +87,6 @@ def evaluate_learner_state(
                 request.behaviour.ms_first_response
             ),
             overlap_time=request.behaviour.overlap_time,
-            first_action=request.behaviour.first_action,
-            position=request.behaviour.position,
             original=request.behaviour.original,
         ),
         task_progress=request.task_progress,

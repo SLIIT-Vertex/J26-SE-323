@@ -25,9 +25,9 @@ results are on the separate **test** split, which was not used for training or t
 | Model | Notebook | Data and proxy label | Test set (positive rate) | Threshold | ROC-AUC | PR-AUC | Macro-F1 | Positive-class precision / recall |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Confusion visual | `mindbridge-visual-model-01` | DAiSEE clips; `Confusion ≥ 1` | 1,784 clips (32.7%) | 0.50 | 0.576 | 0.388 | 0.543 | 0.383 / 0.579 |
-| Confusion behaviour | `mindbridge-behaviour-model-01` | ASSISTments 2012–13; `Average_confidence(CONFUSED) ≥ 0.5` | 935,093 interactions, 7,002 learners (4.2%) | 0.79 | 0.760 | 0.144 | 0.592 | 0.182 / 0.317 |
+| Confusion behaviour (v2, deployed) | `kaggle_behaviour_ablation_cells` | ASSISTments 2012–13; `Average_confidence(CONFUSED) ≥ 0.5` | 935,093 interactions, 7,002 learners (4.2%) | 0.78 | 0.760 | 0.142 | 0.593 | 0.182 / 0.323 |
 | Disengagement visual | `mindbridge-disengagement-model-01` | DAiSEE clips; `Engagement ≤ 1` | 1,784 clips (4.9%) | 0.54 | 0.687 | 0.139 | 0.550 | 0.128 / 0.432 |
-| Disengagement behaviour (v2) | `mindbridge-disengagement-model-01` | ASSISTments 2012–13; `Average_confidence(BORED) ≥ 0.5` | 935,093 interactions (15.7%) | 0.53 | 0.536 | 0.173 | 0.516 | 0.183 / 0.195 |
+| Disengagement behaviour (v3, deployed) | `kaggle_behaviour_ablation_cells` | ASSISTments 2012–13; `Average_confidence(BORED) ≥ 0.5` | 935,093 interactions (15.7%) | 0.53 | 0.534 | 0.172 | 0.515 | 0.183 / 0.177 |
 
 ROC-AUC 0.5 is chance level and 1.0 is perfect. PR-AUC should be compared with the positive rate,
 which is its chance level.
@@ -35,7 +35,7 @@ which is its chance level.
 How to read these results:
 
 - Only the **confusion behaviour** model separates its classes moderately well (ROC-AUC 0.76).
-  The **disengagement behaviour** (0.54) and **confusion visual** (0.58) models are close to chance,
+  The **disengagement behaviour** (0.53) and **confusion visual** (0.58) models are close to chance,
   and the **disengagement visual** model is weak (0.69).
 - The ASSISTments split is **learner-wise** (70/15/15 by `user_id`; no learner appears in two
   splits). The DAiSEE results use the dataset's provided train/validation/test label files.
@@ -44,8 +44,29 @@ How to read these results:
   and 0.7520 with them), so the deployed confusion behaviour model uses no history features. For
   disengagement, the recent-baseline v2 model was only marginally better than v1 (validation
   ROC-AUC 0.536 vs 0.529).
-- On the test data, 7.3% of interactions reach the confusion behaviour threshold of 0.79
-  (68,457 of 935,093, derived from the notebook's test confusion matrix).
+- On the test data, 7.5% of interactions reach the confusion behaviour threshold of 0.78
+  (69,707 of 935,093, derived from the ablation run's test confusion matrix).
+
+### 2.1 Ablation without ASSISTments-only fields
+
+The deployed behaviour models do not use `position` and `first_action`, which MindBridge cannot
+produce truthfully (see [`11`](11_GAME_INTEGRATION.md#5-behavioural-fields)). They were retrained
+with exactly the original settings (same learner split, labels, parameters and validation
+threshold search) by `research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py`; results
+are in `behaviour_ablation_results.json`. The "all features" run first reproduced the original
+models (confusion: identical; disengagement: ROC-AUC 0.5363 vs 0.5362).
+
+| Model | Variant | Threshold | Validation macro-F1 | Test ROC-AUC | Test macro-F1 |
+| --- | --- | --- | --- | --- | --- |
+| Confusion behaviour | all features (original) | 0.79 | 0.5918 | 0.7604 | 0.5922 |
+| | without `position` | 0.80 | 0.5920 | 0.7602 | 0.5923 |
+| | **without `position` and `first_action` (deployed)** | **0.78** | **0.5919** | **0.7601** | **0.5926** |
+| Disengagement behaviour | all features (original) | 0.53 | 0.5152 | 0.5363 | 0.5155 |
+| | without `position` | 0.53 | 0.5138 | 0.5336 | 0.5145 |
+| | **without `position` and `first_action` (deployed)** | **0.53** | **0.5139** | **0.5337** | **0.5153** |
+
+The variant was chosen because every input becomes producible by MindBridge, not because of its
+test score; the validation scores show the same negligible difference.
 
 These are **unimodal results on public datasets** with **proxy labels** (§4.1). They are not
 results for MindBridge learners and say nothing about the multimodal pipeline.
@@ -55,7 +76,7 @@ Other facts that can be verified from the repository:
 | Item | Value | Source |
 | --- | --- | --- |
 | Model type | XGBoost, `binary:logistic`, 300 trees each | model JSON files, notebooks |
-| Feature counts | 11 visual, 10 confusion behaviour, 20 disengagement behaviour | `model_loader.py`, checked against model files at load time |
+| Feature counts | 11 visual, 8 confusion behaviour, 18 disengagement behaviour | `model_loader.py`, checked against model files at load time |
 | End-to-end API behaviour | 200, 404, 409 and 422 responses | `backend/tests/test_learner_state.py` |
 
 ## 3. Required multimodal validation (future work)
@@ -87,10 +108,9 @@ Final validation of the research contribution needs a **synchronized MindBridge 
   more attempts, more hints, accuracy drop) was *inversely* related to the confusion proxy
   (validation ROC-AUC 0.39), so intuitive signs of struggle do not match this label. A model can
   only be as valid as the proxy it learned.
-- **Behavioural-model compatibility gap.** The behaviour models use ASSISTments fields that
-  MindBridge cannot yet produce truthfully. `position` ("assignment position on the class
-  assignments page") has no game equivalent, and the numeric coding of `first_action` is not
-  documented. These fields are not filled with invented constants; see
+- **Behavioural field compatibility.** The ASSISTments-only fields `position` and
+  `first_action` were removed by retraining (§2.1). The remaining fields still need agreed game
+  equivalents for `overlap_time`, `original` and `hint_count` on verification answers; see
   [`11_GAME_INTEGRATION.md`](11_GAME_INTEGRATION.md#5-behavioural-fields).
 - **Training history is lifetime, serving history is per session.** In training, learner-history
   features used each learner's previous ASSISTments interactions across the whole 2012–13 dataset
@@ -109,8 +129,8 @@ Final validation of the research contribution needs a **synchronized MindBridge 
   synchronized pilot data.
 - **Windows are counted, not timed.** The `timestamp` is not used; "persistent" means "across
   recent windows", whatever their duration.
-- **Confusion detection is conservative when the models disagree.** The 0.79 threshold was
-  selected on validation data, and 7.3% of test interactions reach it (§2). When the visual model
+- **Confusion detection is conservative when the models disagree.** The 0.78 threshold was
+  selected on validation data, and 7.5% of test interactions reach it (§2). When the visual model
   indicates confusion but the behaviour model does not, the fused evidence usually stays below the
   0.60 intervention level, so the system monitors instead of requesting tutor support. Whether this
   is the right behaviour can only be judged with synchronized pilot data.

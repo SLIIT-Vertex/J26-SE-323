@@ -101,8 +101,6 @@ def behaviour_rows(names: list[str], disengagement: bool, count: int, rng: rando
                 attempt_count=float(rng.choice([1, 1, 2, 3])),
                 ms_first_response=rng.uniform(1500, 60000),
                 overlap_time=rng.uniform(2000, 90000),
-                first_action=float(rng.choice([0, 1])),
-                position=float(rng.randint(1, 40)),
                 original=1.0,
             )
             features = (

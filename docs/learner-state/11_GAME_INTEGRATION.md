@@ -74,15 +74,13 @@ Definitions are quoted from the official ASSISTments 2012–13 dataset documenta
 | `overlap_time` | "The time in milliseconds for the student's overlap time." | `response_time_ms` for a single response | **to confirm**: the official definition is not specific |
 | `hint_count` | "Number of hints on this problem." | 0 for baseline answers (no help exists before answering) | equivalent for baseline; **differs** for verification answers (support was shown by the system, not requested) |
 | `bottom_hint` | "Whether or not the student asks for all hints." | not applicable → `null` | honest: sent as missing, handled as in training |
-| `first_action` | "The type of first action: attempt or ask for a hint." | conceptually always an attempt (no help button) | **gap**: the numeric code for "attempt" is not documented; the data contains three values (0/1/2) while the definition names two |
 | `original` | "1 = Main problem", "0 = Scaffolding problem" | answered game items are main problems | **to agree**: likely 1, but verification items must be confirmed as main problems |
-| `position` | "Assignment position on the class assignments page." | no equivalent | **behavioural-model compatibility gap** |
 
-No field is filled with an invented constant. Until the gaps are resolved, the behaviour models
-cannot be given truthful values for `position` and `first_action`, and the integration must not
-claim otherwise. The research options are: verify the `first_action` coding on the dataset, and
-retrain the behaviour models without fields that MindBridge cannot produce (see
-[`07`](07_EVALUATION_AND_LIMITATIONS.md)).
+No field is filled with an invented constant. Two further ASSISTments fields had no truthful game
+equivalent and are **no longer used**: `position` ("Assignment position on the class assignments
+page") and `first_action` ("The type of first action: attempt or ask for a hint", with an
+undocumented numeric coding). Both behaviour models were retrained without them at almost no cost
+(see [`07`](07_EVALUATION_AND_LIMITATIONS.md#21-ablation-without-assistments-only-fields)).
 
 `task_progress` is not available in the game yet and is sent as `null`, so
 `productive_confusion` cannot occur.
@@ -126,5 +124,3 @@ The game's current 7-day maximum age is not suitable for moment-to-moment states
 3. Using `recommended_action` instead of the 0.70 support-need rule, and the 60-second / same-session
    freshness for lookups.
 4. The values for `overlap_time`, `hint_count` on verification answers and `original`.
-5. How to handle the `position` and `first_action` gaps (a research decision of the learner-state
-   owner, see §5).

@@ -160,14 +160,14 @@ Disengagement detector (values rounded):
 
 | Window | Fused evidence | Confidence | Recent windows positive & trusted | `temporal_score` | State | Action |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 0.486 | 0.527 | 0 | 0.486 | `engaged` | `none` |
-| 2 | 0.618 | 0.700 | 1 | ≈ 0.561 | `transient_disengagement` | `monitor` |
-| 3 | 0.617 | 0.701 | 2 | ≈ 0.582 | `transient_disengagement` | `monitor` |
-| 4 | 0.623 | 0.712 | 3 | ≈ 0.619 | `persistent_disengagement` | `request_reengagement_support` |
+| 1 | 0.516 | 0.566 | 1 | 0.516 | `transient_disengagement` | `monitor` |
+| 2 | 0.625 | 0.709 | 2 | ≈ 0.577 | `transient_disengagement` | `monitor` |
+| 3 | 0.621 | 0.706 | 3 | ≈ 0.593 | `transient_disengagement` | `monitor` |
+| 4 | 0.626 | 0.716 | 3 | ≈ 0.624 | `persistent_disengagement` | `request_reengagement_support` |
 
-At window 3 there are already two positive, trusted windows, but the confidence-weighted score is
-still below 0.60 because window 1 is in the summary. At window 4, window 1 has dropped out of the
-3-window history and support is requested. The confusion detector stays `no_confusion` in all four
+From window 2 there are at least two positive, trusted windows, but the confidence-weighted score
+stays below 0.60 while window 1 (evidence 0.516) is in the summary. At window 4, window 1 has
+dropped out of the 3-window history and support is requested. The confusion detector stays `no_confusion` in all four
 windows for this input.
 
 ## 7. Design status

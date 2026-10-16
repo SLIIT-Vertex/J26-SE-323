@@ -20,6 +20,7 @@ one depended on it. The order follows the repository history.
 | 11 | `Feature/game dev (#20)` (by a teammate) | Model loader rewritten to evaluate the XGBoost JSON trees directly, removing the `xgboost` dependency | `infrastructure/model_loader.py`, `tests/learner_state/test_model_loader.py` |
 | 12 | `fix: match XGBoost float32 comparisons in the learner-state model loader` | Inputs and split thresholds rounded to float32 as in XGBoost; reference predictions from real XGBoost | `infrastructure/model_loader.py`, `tests/learner_state/test_model_reference_predictions.py`, `research/learner-state/tools/generate_model_reference_predictions.py` |
 | 13 | `feat: prepare learner-state for in-process game integration` | `LearnerStateRecorder` use case and shared service instance; `WindowOrderError`, `UnknownLearnerError`; `session_id`, `STALE` and freshness rules on the support-need contract; Option B integration design | `application/recording.py`, `application/service.py`, `application/support_need.py`, `api/router.py`, docs 01, 07, 09, 11 |
+| 14 | `feat: retrain behaviour models without ASSISTments-only fields` | Behaviour models retrained without `position` and `first_action` (ablation on Kaggle); confusion behaviour threshold 0.78; both fields removed from the API, which now rejects unknown behaviour fields | `infrastructure/models/`, `infrastructure/model_loader.py`, `infrastructure/feature_builder.py`, `domain/confusion.py`, `api/`, `research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py`, docs 01–07, 11 |
 
 ## 2. How the modules interact
 
@@ -80,7 +81,7 @@ Learner-state tests live in two places:
 | `tests/learner_state/test_recording.py` | Unit + API | Recording use case: stores the latest skill state, rejects an unknown learner or invalid Universal Skill ID without changing history, `WindowOrderError`; HTTP and in-process windows share one session history |
 | `tests/learner_state/test_support_need.py` | Unit + repository | Support need = confusion `temporal_score`, none when `uncertain`; provider statuses `AVAILABLE` / `UNCERTAIN` / `NOT_FOUND`; request and result validation; repository keeps the latest row per learner and skill; freshness: same session, maximum age, `STALE` before `UNCERTAIN`, naive database times |
 | `tests/learner_state/test_migration.py` | Migration | Migration `20261014_01` creates exactly the `learner_skill_states` table the model describes, and its downgrade removes it |
-| `tests/test_learner_state.py` | API | 200 response with all fields including `skill_id` and the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field or missing `skill_id`; 404 for an unknown learner; latest state stored and readable per skill |
+| `tests/test_learner_state.py` | API | 200 response with all fields including `skill_id` and the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field or missing `skill_id`; 404 for an unknown learner; 422 for the removed ASSISTments-only fields; latest state stored and readable per skill |
 
 The service tests use a small fake model object that returns fixed probabilities. This checks the
 decision logic independently of what the trained models output. The API tests use the real model
@@ -102,7 +103,7 @@ module added a table.
 ### 3.3 Full repository suite
 
 As of 2026-10-16, the learner-state tests (`tests/learner_state` and `tests/test_learner_state.py`)
-report 134 passed. The full repository suite also passed locally on Windows on the same date.
+report 135 passed. The full repository suite also passed locally on Windows on the same date.
 
 Rerun `pytest` (see §4.3) to get the current result, because the count can change as the
 repository evolves.
