@@ -3,9 +3,13 @@ import { GameHost } from "./features/gamification/GameHost";
 import { EpisodeInspector } from "./features/gamification/inspector/EpisodeInspector";
 import { BuildPreview } from "./features/gamification/phaser/templates/build-manipulate/BuildPreview";
 import { useHashRoute } from "./features/gamification/session/useHashRoute";
+import { PapersApp } from "./features/papers/PapersApp";
+import { usePapersRoute } from "./features/papers/router";
 
 export default function App() {
   const route = useHashRoute();
+  const papersRoute = usePapersRoute();
+  if (papersRoute) return <PapersApp route={papersRoute} />;
   return (
     <main className={route === "home" ? undefined : "shell"}>
       <p className="eyebrow">Shared foundation</p>
@@ -16,6 +20,7 @@ export default function App() {
         <a href="#/play">Play</a>
         <a href="#/inspector">Inspector</a>
         <a href="#/build">Fraction bar</a>
+        <a href="#/papers">Papers &amp; progress</a>
       </nav>
       {route === "play" ? <GameHost /> : null}
       {route === "inspector" ? <EpisodeInspector /> : null}
