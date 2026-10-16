@@ -52,7 +52,9 @@ the mastery retrieval contract on the AI Tutor teammate's skill-mapper branch.
 | Field | Type | Rule |
 | --- | --- | --- |
 | `learner_id` | UUID | Shared learner identity |
-| `skill_id` | string | 1–16 characters after trimming spaces |
+| `skill_id` | string | Universal Skill ID, 1–16 characters after trimming spaces |
+| `session_id` | string, optional | Only accept a state produced in this learning session |
+| `max_age_ms` | integer ≥ 0, optional | Only accept a state observed at most this long ago |
 
 Extra fields and wrong types are rejected. Whether `skill_id` belongs to the skill taxonomy is
 checked by the caller, as in the mastery contract.
@@ -65,12 +67,26 @@ checked by the caller, as in the mastery contract.
 | `status` | See below |
 | `support_need` | 0–1, present only when `status` is `AVAILABLE` |
 | `observed_at` | `timestamp` of the window that produced the stored state; absent for `NOT_FOUND` |
+| `session_id` | Learning session that produced the stored state; absent for `NOT_FOUND` |
 
 | Status | Meaning | `support_need` |
 | --- | --- | --- |
-| `AVAILABLE` | A trusted value exists for this learner and skill | Required |
-| `UNCERTAIN` | A state exists, but the latest confusion state was `uncertain` (low confidence) | Absent |
+| `AVAILABLE` | A trusted, fresh-enough value exists for this learner and skill | Required |
+| `UNCERTAIN` | A fresh-enough state exists, but the latest confusion state was `uncertain` | Absent |
+| `STALE` | A state exists but is from another session or older than `max_age_ms` | Absent |
 | `NOT_FOUND` | No window has been evaluated for this learner and skill | Absent |
+
+`STALE` is checked before `UNCERTAIN`. Without `session_id` and `max_age_ms`, every stored state
+is returned regardless of age, as before.
+
+### 3.2.1 Freshness
+
+Confusion and disengagement are moment-to-moment states, so a value from an earlier session or
+from several minutes ago should not drive a decision now. Consumers should pass the current
+`session_id` and `max_age_ms = RECOMMENDED_MAX_STATE_AGE_MS` (60,000 ms). The 60-second value is
+provisional and configurable; it must be calibrated on pilot data. When the consumer evaluates a
+window itself (see [`11_GAME_INTEGRATION.md`](11_GAME_INTEGRATION.md)), it uses that fresh result
+directly and does not need this lookup.
 
 A missing value is never replaced by `0`, `0.5` or another made-up number.
 
@@ -87,7 +103,14 @@ application is wired together (for example in a FastAPI dependency):
 
 ```python
 provider = StoredSupportNeedProvider(SqlAlchemyLearnerSkillStateRepository(session))
-result = provider.get_support_need(SupportNeedRequest(learner_id=learner_id, skill_id="MAT-FRC"))
+result = provider.get_support_need(
+    SupportNeedRequest(
+        learner_id=learner_id,
+        skill_id="MAT-FRC",
+        session_id=current_session_id,
+        max_age_ms=RECOMMENDED_MAX_STATE_AGE_MS,
+    )
+)
 
 if result.status is SupportNeedStatus.AVAILABLE:
     support_need = result.support_need
@@ -138,8 +161,9 @@ Only derived states and scores are stored; no visual features, behaviour feature
 - **Skill switches inside a session.** The temporal history is kept per session, not per skill. If
   a learner moves to a new skill, the first windows of the new skill still include up to two
   windows from the previous skill.
-- **Staleness.** The stored value is the latest one, however old. `observed_at` is returned so the
-  caller can decide whether it is still recent enough; no expiry policy exists yet.
+- **Staleness.** The stored value is the latest one, however old. Consumers that pass
+  `session_id` and `max_age_ms` receive `STALE` for values that are too old or from another
+  session; the 60-second recommendation is provisional.
 - **No taxonomy check.** `skill_id` is stored as sent by the client.
 
 ## 7. Open questions for the AI Tutor teammate

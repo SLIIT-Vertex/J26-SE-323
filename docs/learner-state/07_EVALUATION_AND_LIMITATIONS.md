@@ -87,6 +87,11 @@ Final validation of the research contribution needs a **synchronized MindBridge 
   more attempts, more hints, accuracy drop) was *inversely* related to the confusion proxy
   (validation ROC-AUC 0.39), so intuitive signs of struggle do not match this label. A model can
   only be as valid as the proxy it learned.
+- **Behavioural-model compatibility gap.** The behaviour models use ASSISTments fields that
+  MindBridge cannot yet produce truthfully. `position` ("assignment position on the class
+  assignments page") has no game equivalent, and the numeric coding of `first_action` is not
+  documented. These fields are not filled with invented constants; see
+  [`11_GAME_INTEGRATION.md`](11_GAME_INTEGRATION.md#5-behavioural-fields).
 - **Training history is lifetime, serving history is per session.** In training, learner-history
   features used each learner's previous ASSISTments interactions across the whole 2012–13 dataset
   (median 140 previous interactions). At runtime, history starts empty in every session.

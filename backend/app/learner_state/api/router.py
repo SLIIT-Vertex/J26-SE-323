@@ -1,4 +1,3 @@
-from functools import lru_cache
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,14 +9,15 @@ from app.learner_state.api.schemas import (
     LearnerStateRequest,
     LearnerStateResponse,
 )
+from app.learner_state.application.recording import (
+    LearnerStateRecorder,
+    UnknownLearnerError,
+    get_learner_state_service,
+)
 from app.learner_state.application.service import (
-    LearnerStateService,
     LearnerStateWindow,
     VisualObservation,
-)
-from app.learner_state.application.support_need import (
-    LearnerSkillStateRepository,
-    skill_state_from_evaluation,
+    WindowOrderError,
 )
 from app.learner_state.infrastructure.db.repository import (
     SqlAlchemyLearnerSkillStateRepository,
@@ -27,7 +27,6 @@ from app.learner_state.infrastructure.feature_builder import (
 )
 from app.shared.database.session import get_db
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
-from app.shared.learner.service import LearnerNotFoundError, LearnerService
 
 router = APIRouter(
     prefix="/learner-state",
@@ -35,25 +34,16 @@ router = APIRouter(
 )
 
 
-@lru_cache
-def get_service() -> LearnerStateService:
-    """
-    Keep one learner-state service instance alive so that
-    in-memory temporal/session history is preserved across requests.
-    """
-    return LearnerStateService()
-
-
-def get_learner_service(
+def get_recorder(
     session: Annotated[Session, Depends(get_db)],
-) -> LearnerService:
-    return LearnerService(SqlAlchemyLearnerRepository(session))
-
-
-def get_skill_state_repository(
-    session: Annotated[Session, Depends(get_db)],
-) -> LearnerSkillStateRepository:
-    return SqlAlchemyLearnerSkillStateRepository(session)
+) -> LearnerStateRecorder:
+    learners = SqlAlchemyLearnerRepository(session)
+    return LearnerStateRecorder(
+        # Shared with in-process callers so that session history is kept in one place.
+        service=get_learner_state_service(),
+        learner_exists=lambda learner_id: learners.get(learner_id) is not None,
+        skill_states=SqlAlchemyLearnerSkillStateRepository(session),
+    )
 
 
 @router.post(
@@ -63,29 +53,11 @@ def get_skill_state_repository(
 )
 def evaluate_learner_state(
     request: LearnerStateRequest,
-    service: Annotated[
-        LearnerStateService,
-        Depends(get_service),
-    ],
-    learners: Annotated[
-        LearnerService,
-        Depends(get_learner_service),
-    ],
-    skill_states: Annotated[
-        LearnerSkillStateRepository,
-        Depends(get_skill_state_repository),
+    recorder: Annotated[
+        LearnerStateRecorder,
+        Depends(get_recorder),
     ],
 ) -> LearnerStateResponse:
-    # Check the learner before evaluation so that an unknown learner
-    # never changes the in-memory session history.
-    try:
-        learners.get(request.learner_id)
-    except LearnerNotFoundError as error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Learner not found",
-        ) from error
-
     window = LearnerStateWindow(
         session_id=request.session_id,
         learner_id=request.learner_id,
@@ -123,20 +95,17 @@ def evaluate_learner_state(
     )
 
     try:
-        result = service.evaluate(window)
-    except ValueError as error:
+        result = recorder.record(window, skill_id=request.skill_id)
+    except UnknownLearnerError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Learner not found",
+        ) from error
+    except WindowOrderError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(error),
         ) from error
-
-    skill_states.save(
-        skill_state_from_evaluation(
-            result,
-            skill_id=request.skill_id,
-            observed_at=request.timestamp,
-        )
-    )
 
     return LearnerStateResponse(
         session_id=result.session_id,
