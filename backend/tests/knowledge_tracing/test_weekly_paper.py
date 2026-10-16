@@ -389,7 +389,9 @@ def test_api_serves_the_pdf(world: dict, client: TestClient) -> None:
 
 def test_api_lists_and_reads_papers(world: dict, client: TestClient) -> None:
     learner_id = api_learner(world)
-    created = client.post(f"/api/v1/learners/{learner_id}/papers").json()
+    response = client.post(f"/api/v1/learners/{learner_id}/papers")
+    assert response.status_code == 201, response.text  # say why, if a paper cannot be made
+    created = response.json()
 
     listed = client.get(f"/api/v1/learners/{learner_id}/papers").json()
     single = client.get(f"/api/v1/papers/{created['paper_id']}").json()
@@ -723,3 +725,51 @@ def test_after_all_skills_are_covered_the_walk_starts_again(world: dict) -> None
 
     assert again.paper.mode == "diagnostic"
     assert again.paper.params["diagnostic_skills"]  # the walk began again, not an error
+
+
+# ---- a code that cannot be read back is replaced, not reported as an error --------------------
+
+
+def test_a_paper_code_that_fails_the_self_check_is_replaced_by_another(
+    world: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import app.knowledge_tracing.application.paper_generation as module
+    from app.knowledge_tracing.infrastructure.pdf.paper_pdf import PdfSelfCheckError
+
+    real = module.verify_paper_pdf
+    tried: list[str] = []
+
+    def unlucky_once(pdf: bytes, token: str, pages: int) -> None:
+        tried.append(token)
+        if len(tried) == 1:
+            raise PdfSelfCheckError("the printed code could not be read back")
+        real(pdf, token, pages)
+
+    monkeypatch.setattr(module, "verify_paper_pdf", unlucky_once)
+
+    made = service(world).generate_weekly(learner(world))
+
+    assert made.created
+    assert len(tried) == 2 and tried[0] != tried[1]  # a second code was used
+    assert made.paper.token == tried[1]  # and it is the one that was stored
+
+
+def test_a_paper_is_still_refused_when_no_code_can_be_read_back(
+    world: dict, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import app.knowledge_tracing.application.paper_generation as module
+    from app.knowledge_tracing.infrastructure.pdf.paper_pdf import PdfSelfCheckError
+
+    calls: list[str] = []
+
+    def never(pdf: bytes, token: str, pages: int) -> None:
+        calls.append(token)
+        raise PdfSelfCheckError("unreadable")
+
+    monkeypatch.setattr(module, "verify_paper_pdf", never)
+
+    with pytest.raises(PdfSelfCheckError):
+        service(world).generate_weekly(learner(world))
+
+    assert len(calls) == module.SELF_CHECK_TRIES  # three tries, then it is reported
+    assert world["db"].scalar(select(func.count()).select_from(PaperModel)) == 0  # nothing stored
