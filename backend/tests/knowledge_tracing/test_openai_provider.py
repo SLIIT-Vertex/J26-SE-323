@@ -491,9 +491,9 @@ def test_the_factory_builds_openai_from_settings() -> None:
 
 def test_the_factory_refuses_openai_without_a_key_or_a_model() -> None:
     with pytest.raises(VisionNotConfigured, match="OPENAI_API_KEY"):
-        create_vision_provider(settings(vision_provider="openai", openai_model="m"))
+        create_vision_provider(settings(vision_provider="openai", openai_api_key="", openai_model="m"))
     with pytest.raises(VisionNotConfigured, match="OPENAI_MODEL"):
-        create_vision_provider(settings(vision_provider="openai", openai_api_key="sk-abc"))
+        create_vision_provider(settings(vision_provider="openai", openai_api_key="sk-abc", openai_model=""))
     with pytest.raises(VisionNotConfigured, match="OPENAI_TEMPERATURE"):
         create_vision_provider(
             settings(vision_provider="openai", openai_api_key="sk-abc", openai_model="m", openai_temperature="hot")

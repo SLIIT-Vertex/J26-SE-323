@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     # reader_unsure: the parent only sees what the reader could not make sense of.
     # strict: every doubt of the rules also goes to the parent.
     grading_review_policy: str = "reader_unsure"
+    # Read a question again when a part came back blank, so one missed pencil mark is not marked
+    # as "left blank". Costs one more reader call per blank question.
+    grading_recheck_blanks: bool = True
     vision_confidence_min: float = 0.60
     vision_concurrency: int = 3
     vision_timeout_seconds: int = 90

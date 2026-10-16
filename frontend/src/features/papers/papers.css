@@ -656,6 +656,11 @@ body.mb-body {
   border-radius: 99px;
   font-weight: 800;
 }
+.mb-seg--filter span {
+  min-height: 2.6rem;
+  padding: 0 0.9rem;
+  font-size: 0.88rem;
+}
 .mb-seg input:checked + span {
   background: var(--navy);
   color: #fff;
@@ -1013,6 +1018,33 @@ body.mb-body {
   border: 2px solid var(--sand);
   border-radius: 0.9rem;
 }
+.mb-seg--filter {
+  margin-bottom: 0.9rem;
+}
+.mb-photo summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--navy);
+  font-weight: 800;
+  cursor: pointer;
+}
+.mb-photo img {
+  margin-top: 0.4rem;
+}
+.mb-score {
+  font-size: 1.05rem;
+}
+.mb-split--wide {
+  width: 100%;
+  height: 1rem;
+}
+.mb-past .mb-kicker {
+  margin-bottom: 0.15rem;
+}
+.mb-all {
+  margin-top: 0.8rem;
+}
 .mb-answers dl {
   margin: 0;
 }
@@ -1153,7 +1185,7 @@ body.mb-body {
   bottom: 0;
   z-index: 4;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   min-height: var(--tabs-h);
   padding-bottom: env(safe-area-inset-bottom);
   border-top: 1.5px solid var(--sand);

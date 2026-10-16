@@ -194,7 +194,9 @@ def make_submission_service(
         second_provider=second_provider,
         mastery=mastery,
         config=GradingConfig(
-            confidence_min=settings.vision_confidence_min, review_policy=_review_policy()
+            confidence_min=settings.vision_confidence_min,
+            review_policy=_review_policy(),
+            recheck_blanks=settings.grading_recheck_blanks,
         ),
         workers=settings.vision_concurrency if workers is None else workers,
     )

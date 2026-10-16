@@ -101,15 +101,21 @@ export type Mastery = {
   skills: SkillMastery[];
 };
 
+export type Written = { part_no: number; label: string | null; text: string | null };
+
 export type ReportItem = {
   position: number;
   question_id: string;
   skill_code: string;
   result: "correct" | "wrong" | "blank" | "under_review" | "not_uploaded";
+  // Only for "wrong" and "blank": the right answer is never given for a question that was right.
   correct_answer_text: string | null;
+  // For every question with a final result, the right ones too
+  skill_name: string | null;
+  skill_name_si: string | null;
+  written: Written[];
+  picture_url: string | null;
 };
-
-export type Written = { part_no: number; label: string | null; text: string | null };
 
 export type Mistake = {
   position: number;
@@ -156,6 +162,21 @@ export type Report = {
   }[];
   next_paper_date: string;
   photos_kept_until: string | null;
+};
+
+export type ResultTotals = {
+  questions: number;
+  marked: number;
+  correct: number;
+  wrong: number;
+  blank: number;
+  waiting_for_parent: number;
+  not_uploaded: number;
+};
+
+export type PaperHistory = Paper & {
+  results: ResultTotals | null; // null while no page has a final mark
+  results_complete: boolean;
 };
 
 // ---- errors ------------------------------------------------------------------------------------
@@ -292,6 +313,9 @@ export const createWeeklyPaper = (learnerId: string) =>
 
 export const listPapers = (learnerId: string) =>
   request<Paper[]>(`/learners/${learnerId}/papers?limit=20`);
+
+export const getHistory = (learnerId: string) =>
+  request<PaperHistory[]>(`/learners/${learnerId}/papers/history`);
 
 export const getPaper = (paperId: string) => request<Paper>(`/papers/${paperId}`);
 

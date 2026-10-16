@@ -1,8 +1,10 @@
-import { getPaper, getReport, pictureUrl, type Report } from "../api";
-import { dayLabel, shortDate } from "../format";
+import { useState } from "react";
+
+import { type Report, type ReportItem, getPaper, getReport, pictureUrl } from "../api";
+import { dayLabel, resultLabel, shortDate } from "../format";
 import { useAsync } from "../hooks";
 import { hrefFor } from "../router";
-import { Chip, ErrorBox, Loading, ScreenHeader } from "../ui";
+import { Chip, ErrorBox, Loading, ScreenHeader, Tick } from "../ui";
 
 function Tile({ tone, count, label }: { tone: "mint" | "rose" | "sun"; count: number; label: string }) {
   return (
@@ -69,53 +71,104 @@ function Skills({ report }: { report: Report }) {
   );
 }
 
-function Mistakes({ report }: { report: Report }) {
-  if (report.mistakes.length === 0) {
-    return report.summary.marked > 0 ? (
-      <div className="mb-note mb-note--mint">
-        <p>No mistakes on the pages marked so far. Well done!</p>
-      </div>
-    ) : null;
-  }
+type Filter = "all" | "right" | "practise";
+
+const isRight = (item: ReportItem) => item.result === "correct";
+const needsPractice = (item: ReportItem) => item.result === "wrong" || item.result === "blank";
+const isMarked = (item: ReportItem) => isRight(item) || needsPractice(item);
+
+function visibleIn(items: ReportItem[], filter: Filter): ReportItem[] {
+  const marked = items.filter(isMarked);
+  if (filter === "right") return marked.filter(isRight);
+  if (filter === "practise") return marked.filter(needsPractice);
+  return marked;
+}
+
+function QuestionRow({ item }: { item: ReportItem }) {
+  const right = isRight(item);
+  const tone = right ? "mint" : item.result === "blank" ? "sun" : "rose";
+  const photo = item.picture_url ? (
+    <img
+      className="mb-mistake__picture"
+      src={pictureUrl(item.picture_url)}
+      alt={`Question ${item.position} with your child's writing`}
+    />
+  ) : (
+    <p className="mb-fineprint">The photo has been removed.</p>
+  );
   return (
-    <section aria-labelledby="mistakes-title">
-      <h2 id="mistakes-title" className="mb-h2 mb-h2--spaced">
-        Worth another look
+    <li className={`mb-card mb-mistake mb-q--${item.result}`}>
+      <div className="mb-row">
+        <h3 className="mb-h3">Question {item.position}</h3>
+        <Chip tone={tone} icon={right ? <Tick className="mb-chip__tick" /> : undefined}>
+          {resultLabel(item.result)}
+        </Chip>
+      </div>
+      <p className="mb-muted">
+        {item.skill_name ?? item.skill_code}
+        {item.skill_name_si ? (
+          <>
+            {" · "}
+            <span lang="si">{item.skill_name_si}</span>
+          </>
+        ) : null}
+      </p>
+      {right ? (
+        <details className="mb-photo">
+          <summary>See the photo</summary>
+          {photo}
+        </details>
+      ) : (
+        photo
+      )}
+      <p className="mb-read">
+        Written:{" "}
+        <strong>{item.written.map((part) => part.text ?? "nothing").join(" · ") || "nothing"}</strong>
+      </p>
+    </li>
+  );
+}
+
+// Every question that has a final result, in printed order: the right ones and the ones to practise.
+function Questions({ report }: { report: Report }) {
+  const [filter, setFilter] = useState<Filter>("all");
+  const marked = report.items.filter(isMarked);
+  if (marked.length === 0) return null;
+  const right = marked.filter(isRight).length;
+  const practise = marked.length - right;
+  const shown = visibleIn(report.items, filter);
+  const options: { value: Filter; label: string }[] = [
+    { value: "all", label: `All (${marked.length})` },
+    { value: "right", label: `Correct (${right})` },
+    { value: "practise", label: `To practise (${practise})` },
+  ];
+  return (
+    <section aria-labelledby="questions-title">
+      <h2 id="questions-title" className="mb-h2 mb-h2--spaced">
+        Question by question
       </h2>
+      {practise === 0 ? (
+        <div className="mb-note mb-note--mint">
+          <p>No mistakes on the pages marked so far. Well done!</p>
+        </div>
+      ) : null}
+      <fieldset className="mb-seg mb-seg--filter">
+        <legend className="mb-visually-hidden">Show</legend>
+        {options.map((option) => (
+          <label key={option.value}>
+            <input
+              type="radio"
+              name="question-filter"
+              checked={filter === option.value}
+              onChange={() => setFilter(option.value)}
+            />
+            <span>{option.label}</span>
+          </label>
+        ))}
+      </fieldset>
       <ul className="mb-list mb-list--loose">
-        {report.mistakes.map((mistake) => (
-          <li key={mistake.question_id} className="mb-card mb-mistake">
-            <div className="mb-row">
-              <h3 className="mb-h3">Question {mistake.position}</h3>
-              <Chip tone={mistake.result === "blank" ? "sun" : "rose"}>
-                {mistake.result === "blank" ? "Left blank" : "Not correct"}
-              </Chip>
-            </div>
-            <p className="mb-muted">
-              {mistake.skill_name}
-              {mistake.skill_name_si ? (
-                <>
-                  {" · "}
-                  <span lang="si">{mistake.skill_name_si}</span>
-                </>
-              ) : null}
-            </p>
-            {mistake.picture_url ? (
-              <img
-                className="mb-mistake__picture"
-                src={pictureUrl(mistake.picture_url)}
-                alt={`Question ${mistake.position} with your child's writing`}
-              />
-            ) : (
-              <p className="mb-fineprint">The photo has been removed.</p>
-            )}
-            <p className="mb-read">
-              Written:{" "}
-              <strong>
-                {mistake.written.map((part) => part.text ?? "nothing").join(" · ") || "nothing"}
-              </strong>
-            </p>
-          </li>
+        {shown.map((item) => (
+          <QuestionRow key={item.question_id + item.position} item={item} />
         ))}
       </ul>
     </section>
@@ -191,7 +244,7 @@ export function ReportScreen({ paperId }: { paperId: string }) {
 
             {data.summary.marked > 0 ? <Summary report={data} /> : <p className="mb-muted">Nothing is marked yet.</p>}
             <Skills report={data} />
-            <Mistakes report={data} />
+            <Questions report={data} />
             <AnswerList report={data} />
 
             <p className="mb-fineprint">

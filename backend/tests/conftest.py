@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 os.environ.setdefault("DATABASE_URL", "sqlite://")
+# Tests feed the reader scripted readings in order; the blank re-check (on in the app) would use up
+# the next one, so it is off here and tested on its own.
+os.environ.setdefault("GRADING_RECHECK_BLANKS", "false")
 
 from app.main import app
 from app.shared.database.base import Base

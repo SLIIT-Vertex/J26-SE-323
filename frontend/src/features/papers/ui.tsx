@@ -185,3 +185,12 @@ export function GrowthIcon() {
     </svg>
   );
 }
+
+export function HistoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M5 7.5h14M7 4h10M4.5 11h15v8.5h-15z" />
+      <path d="M9.5 15h5" />
+    </svg>
+  );
+}

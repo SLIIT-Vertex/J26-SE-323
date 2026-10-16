@@ -13,8 +13,9 @@ import { PaperDetail } from "./screens/PaperDetail";
 import { PapersHome } from "./screens/PapersHome";
 import { Review } from "./screens/Review";
 import { ReportScreen } from "./screens/ReportScreen";
+import { HistoryScreen } from "./screens/HistoryScreen";
 import { WhoIsLearning } from "./screens/WhoIsLearning";
-import { ArchMark, GrowthIcon, PaperIcon, Wordmark } from "./ui";
+import { ArchMark, GrowthIcon, HistoryIcon, PaperIcon, Wordmark } from "./ui";
 
 function TopBar({ learner }: { learner: Learner | null }) {
   return (
@@ -39,6 +40,7 @@ function TopBar({ learner }: { learner: Learner | null }) {
 
 function TabBar({ route }: { route: Route }) {
   const papers = route.name === "papers" || route.name === "paper" || route.name === "report" || route.name === "review";
+  const history = route.name === "history";
   const progress = route.name === "mastery";
   return (
     <nav className="mb-tabs" aria-label="Main">
@@ -47,6 +49,12 @@ function TabBar({ route }: { route: Route }) {
           <PaperIcon />
         </span>
         Papers
+      </a>
+      <a className="mb-tab" href={hrefFor({ name: "history" })} aria-current={history ? "page" : undefined}>
+        <span className="mb-tab__icon">
+          <HistoryIcon />
+        </span>
+        Past papers
       </a>
       <a className="mb-tab" href={hrefFor({ name: "mastery" })} aria-current={progress ? "page" : undefined}>
         <span className="mb-tab__icon">
@@ -68,6 +76,8 @@ function Screen({ route, learnerId }: { route: Route; learnerId: string }) {
       return <ReportScreen paperId={route.id} />;
     case "review":
       return <Review submissionId={route.id} />;
+    case "history":
+      return <HistoryScreen learnerId={learnerId} />;
     case "mastery":
       return <MasteryScreen learnerId={learnerId} />;
     case "who":

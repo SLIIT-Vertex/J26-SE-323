@@ -122,13 +122,14 @@ function ThisWeek({ paper }: { paper: Paper }) {
 
 function EarlierPapers({ papers }: { papers: Paper[] }) {
   if (papers.length === 0) return null;
+  const latest = papers.slice(0, 3);
   return (
     <section aria-labelledby="earlier-title">
       <h2 id="earlier-title" className="mb-h2 mb-h2--spaced">
         Earlier papers
       </h2>
       <ul className="mb-list">
-        {papers.map((paper) => (
+        {latest.map((paper) => (
           <li key={paper.paper_id}>
             <a className="mb-paper-row" href={hrefFor({ name: "paper", id: paper.paper_id })}>
               <span className="mb-paper-row__date">
@@ -141,6 +142,9 @@ function EarlierPapers({ papers }: { papers: Paper[] }) {
           </li>
         ))}
       </ul>
+      <a className="mb-btn mb-btn--ghost mb-btn--wide mb-all" href={hrefFor({ name: "history" })}>
+        See all past papers and their results
+      </a>
     </section>
   );
 }

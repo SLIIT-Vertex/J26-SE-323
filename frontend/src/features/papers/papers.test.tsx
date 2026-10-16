@@ -12,7 +12,7 @@ import {
   pageState,
   toApiError,
 } from "./api";
-import { dayLabel } from "./format";
+import { dayLabel, scoreText } from "./format";
 import { parseRoute } from "./router";
 import {
   type Choice,
@@ -25,7 +25,9 @@ import {
   partTitle,
   toggleBlank,
 } from "./reviewLogic";
+import { HistoryScreen } from "./screens/HistoryScreen";
 import { MasteryScreen, skillLine } from "./screens/MasteryScreen";
+import { ReportScreen } from "./screens/ReportScreen";
 import { Review } from "./screens/Review";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -114,6 +116,7 @@ describe("routes", () => {
     expect(parseRoute(`#/papers/${ID_A}/report`)).toEqual({ name: "report", id: ID_A });
     expect(parseRoute(`#/review/${ID_B}`)).toEqual({ name: "review", id: ID_B });
     expect(parseRoute("#/mastery")).toEqual({ name: "mastery" });
+    expect(parseRoute("#/history")).toEqual({ name: "history" });
     expect(parseRoute("#/play")).toBeNull();
     expect(parseRoute("")).toBeNull();
   });
@@ -368,5 +371,123 @@ describe("review screen with a question that has several answers", () => {
     expect(text).toContain("(i) Answer 1 of 2");
     expect(text).toContain("(ii) Answer 2 of 2");
     expect(text).toContain("This question has 2 answers");
+  });
+});
+
+// ---- the results list shows every marked question, and past papers have their own list -------
+
+const reportItem = (position: number, result: string, extra: object = {}) => ({
+  position,
+  question_id: `q${position}`,
+  skill_code: "MAT-FRC",
+  result,
+  correct_answer_text: result === "wrong" || result === "blank" ? "1" : null,
+  skill_name: "Fractions",
+  skill_name_si: null,
+  written: [{ part_no: 1, label: null, text: result === "blank" ? null : "2" }],
+  picture_url: `/api/v1/submissions/s1/crops/i${position}`,
+  ...extra,
+});
+
+const reportBody = {
+  paper_id: ID_A,
+  code: "ABC",
+  week_start: "2026-10-17",
+  language: "si",
+  pages_total: 1,
+  pages_marked: 1,
+  complete: true,
+  summary: { questions: 4, marked: 3, correct: 1, wrong: 1, blank: 1, waiting_for_parent: 1, not_uploaded: 0 },
+  skills: [],
+  items: [reportItem(1, "correct"), reportItem(2, "wrong"), reportItem(3, "blank"), reportItem(4, "under_review", { picture_url: null })],
+  mistakes: [],
+  answer_list: [{ position: 2, answers: [{ part_no: 1, label: null, answer: "1" }] }],
+  next_paper_date: "2026-10-24",
+  photos_kept_until: null,
+};
+
+describe("results screen", () => {
+  it("lists the right questions together with the wrong ones, and leaves out those still waiting", async () => {
+    answerWith(reportBody);
+
+    await show(<ReportScreen paperId={ID_A} />);
+
+    const cards = [...host.querySelectorAll("li.mb-mistake")].map((c) => c.textContent ?? "");
+    expect(cards.length).toBe(3);
+    expect(cards[0]).toContain("Question 1");
+    expect(cards[0]).toContain("Correct");
+    expect(cards[1]).toContain("Not correct");
+    expect(cards[2]).toContain("Left blank");
+    expect(host.textContent).not.toContain("Question 4"); // under review: not shown yet
+    expect(host.textContent).toContain("All (3)");
+    expect(host.textContent).toContain("Correct (1)");
+    expect(host.textContent).toContain("To practise (2)");
+  });
+
+  it("the filter shows only the right questions, or only the ones to practise", async () => {
+    answerWith(reportBody);
+    await show(<ReportScreen paperId={ID_A} />);
+    const pick = async (label: string) => {
+      const radio = [...host.querySelectorAll("label")].find((l) => l.textContent?.startsWith(label));
+      await act(async () => {
+        radio?.querySelector("input")?.click();
+      });
+    };
+
+    await pick("Correct");
+    expect([...host.querySelectorAll("li.mb-mistake h3")].map((h) => h.textContent)).toEqual(["Question 1"]);
+
+    await pick("To practise");
+    expect([...host.querySelectorAll("li.mb-mistake h3")].map((h) => h.textContent)).toEqual([
+      "Question 2",
+      "Question 3",
+    ]);
+  });
+
+  it("gives the answer list only for the questions that were not right", async () => {
+    answerWith(reportBody);
+    await show(<ReportScreen paperId={ID_A} />);
+
+    const list = host.querySelector(".mb-answers")?.textContent ?? "";
+    expect(list).toContain("Q2");
+    expect(list).not.toContain("Q1");
+  });
+});
+
+describe("past papers screen", () => {
+  const paper = (id: string, status: string, results: object | null, complete: boolean) => ({
+    paper_id: id,
+    code: "C",
+    status,
+    mode: "practice",
+    language: "si",
+    week_start: "2026-10-10",
+    next_paper_date: "2026-10-17",
+    page_count: 2,
+    question_count: 20,
+    estimated_minutes: 30,
+    pdf_url: "/x",
+    created_at: null,
+    skipped_skills: [],
+    results,
+    results_complete: complete,
+  });
+
+  it("shows how each paper went, and links to its results", async () => {
+    answerWith([
+      paper(ID_A, "confirmed", { questions: 11, marked: 11, correct: 7, wrong: 3, blank: 1, waiting_for_parent: 0, not_uploaded: 0 }, true),
+      paper(ID_B, "generated", null, false),
+    ]);
+
+    await show(<HistoryScreen learnerId={ID_C} />);
+
+    const text = host.textContent ?? "";
+    expect(text).toContain("7 of 11 correct");
+    expect(text).toContain("Complete");
+    expect(text).toContain("No pages have been marked yet.");
+    const links = [...host.querySelectorAll("a")].map((a) => a.getAttribute("href"));
+    expect(links).toContain(`#/papers/${ID_A}/report`);
+    expect(links).not.toContain(`#/papers/${ID_B}/report`); // nothing to see yet for that one
+    expect(scoreText({ correct: 7, marked: 11 })).toBe("7 of 11 correct");
   });
 });

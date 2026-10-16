@@ -68,3 +68,18 @@ export function paperStatusLabel(status: string): string {
 export function paperTitle(mode: string): string {
   return mode === "diagnostic" ? "First check-up paper" : "Practice paper";
 }
+
+/** "7 of 11 correct": how a paper went, among the questions that have a final mark. */
+export function scoreText(totals: { correct: number; marked: number }): string {
+  return `${totals.correct} of ${totals.marked} correct`;
+}
+
+const RESULT_LABEL: Record<string, string> = {
+  correct: "Correct",
+  wrong: "Not correct",
+  blank: "Left blank",
+};
+
+export function resultLabel(result: string): string {
+  return RESULT_LABEL[result] ?? result;
+}

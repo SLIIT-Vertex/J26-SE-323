@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export type Route =
   | { name: "who" }
   | { name: "papers" }
+  | { name: "history" }
   | { name: "paper"; id: string }
   | { name: "report"; id: string }
   | { name: "review"; id: string }
@@ -17,6 +18,7 @@ export function parseRoute(hash: string): Route | null {
   const path = hash.replace(/^#/, "").split("?")[0].replace(/\/+$/, "");
   if (path === "/papers") return { name: "papers" };
   if (path === "/mastery") return { name: "mastery" };
+  if (path === "/history") return { name: "history" };
   if (path === "/who") return { name: "who" };
   const report = new RegExp(`^/papers/${ID}/report$`).exec(path);
   if (report) return { name: "report", id: report[1] };
@@ -33,6 +35,8 @@ export function hrefFor(route: Route): string {
       return "#/who";
     case "papers":
       return "#/papers";
+    case "history":
+      return "#/history";
     case "mastery":
       return "#/mastery";
     case "paper":
