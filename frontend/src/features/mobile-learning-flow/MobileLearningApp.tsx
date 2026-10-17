@@ -1,0 +1,1583 @@
+// biome-ignore-all lint/a11y/useButtonType: this application contains no HTML forms; all buttons are application actions.
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Capacitor } from "@capacitor/core";
+import type {
+	ChildEpisodeResponse,
+	DraftMissionRecord,
+	DraftTemplateId,
+	ExperimentCondition,
+	PresentationManifest,
+	SupportView,
+} from "./api/generated";
+import {
+	createDraftMissionCatalogClient,
+	createLearningFlowClient,
+	LearningFlowApiError,
+	type DraftMissionCatalogClient,
+	type LearningFlowClient,
+} from "./api/learningFlowClient";
+import type { HalfSetManifest, SceneDomainEvent } from "./bridge/contracts";
+import { HalfSetGame } from "./game/HalfSetGame";
+import {
+	EncryptedEventQueue,
+	IndexedDbNonExtractableKeyProvider,
+	MemoryEncryptedStore,
+	WebCryptoLocalStore,
+} from "./offline/EncryptedEventQueue";
+import { PapersApp } from "../papers/PapersApp";
+import { go, usePapersRoute } from "../papers/router";
+import { learningAreaName } from "./learningAreas";
+
+type Screen =
+	| "splash"
+	| "onboarding"
+	| "language"
+	| "profile-setup"
+	| "home"
+	| "learn"
+	| "practice"
+	| "mindy"
+	| "rewards"
+	| "account"
+	| "mission"
+	| "overview"
+	| "baseline"
+	| "difficulty"
+	| "support"
+	| "withdrawal"
+	| "after"
+	| "result"
+	| "reward"
+	| "summary"
+	| "progress"
+	| "settings"
+	| "failure"
+	| "draft-player";
+type SyncState = "synced" | "pending" | "offline" | "conflict";
+
+export interface MobileLearningService
+	extends Pick<
+		LearningFlowClient,
+		| "open"
+		| "answerBefore"
+		| "completeSupport"
+		| "withdrawSupport"
+		| "presentAfter"
+		| "answerAfter"
+		| "telemetry"
+	> {}
+
+const DEV_LEARNER = "00000000-0000-4000-8000-000000000721";
+const HALF_SET_AREA_ID = "G5-AREA-MAT-05";
+const BLOCKED_AREA_IDS = new Set(["G5-AREA-SIN-11", "G5-AREA-SIN-12"]);
+const MEDIUM_CONFIDENCE_CAVEAT =
+	"Medium-confidence trace. This sentence is not an approved question.";
+const DRAFT_TEMPLATE_LABELS = {
+	market_mission: "Market Mission",
+	pattern_temple: "Pattern Temple",
+	parcel_workshop: "Parcel Workshop",
+	word_workshop: "Word Workshop",
+	story_studio: "Story Studio",
+	eco_explorer: "Eco Explorer",
+} as const;
+const labels: Record<SyncState, string> = {
+	synced: "සමමුහුර්තයි",
+	pending: "සමමුහුර්ත වෙමින්",
+	offline: "අන්තර්ජාලය නොමැත",
+	conflict: "නැවත සම්බන්ධ කිරීම අවශ්‍යයි",
+};
+
+export function MobileLearningApp({
+	service,
+	enableOnboarding = false,
+	developmentDraftEnabled = import.meta.env.VITE_ENABLE_MOBILE_LEARNING_DRAFT === "true",
+	learnerId = import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEV_LEARNER,
+	engineeringCondition = import.meta.env.VITE_MOBILE_LEARNING_CONDITION === "proposed"
+		? "proposed"
+		: "baseline",
+	catalog,
+}: {
+	service?: MobileLearningService;
+	enableOnboarding?: boolean;
+	developmentDraftEnabled?: boolean;
+	learnerId?: string;
+	engineeringCondition?: ExperimentCondition;
+	catalog?: Pick<DraftMissionCatalogClient, "listDraftMissions">;
+}) {
+	const [screen, setScreen] = useState<Screen>("splash");
+	const papersRoute = usePapersRoute();
+	const [learnerName, setLearnerName] = useState("කවිඳු");
+	const [episode, setEpisode] = useState<ChildEpisodeResponse | null>(null);
+	const [manifest, setManifest] = useState<PresentationManifest | null>(null);
+	const [support, setSupport] = useState<SupportView | null>(null);
+	const [selected, setSelected] = useState<string | null>(null);
+	const [completionProof, setCompletionProof] = useState<{
+		manifestRevisionId: string;
+		groupedCount: number;
+		groupSizes: [number, number];
+	} | null>(null);
+	const [withdrawing, setWithdrawing] = useState(false);
+	const [withdrawalRequest, setWithdrawalRequest] = useState<{
+		requestId: string;
+		supportRevisionId: string;
+	} | null>(null);
+	const [busy, setBusy] = useState(false);
+	const [failure, setFailure] = useState("BACKEND_UNAVAILABLE");
+	const [syncState, setSyncState] = useState<SyncState>(
+		navigator.onLine ? "synced" : "offline",
+	);
+	const [reducedMotion, setReducedMotion] = useState(
+		() =>
+			globalThis.matchMedia?.("(prefers-reduced-motion: reduce)").matches ??
+			false,
+	);
+	const sessionId = useRef(crypto.randomUUID());
+	const handledWithdrawal = useRef<string | null>(null);
+	const apiTail = useRef<Promise<void>>(Promise.resolve());
+	const syncConflict = useRef(false);
+	const [queueReady, setQueueReady] = useState(false);
+	const [syncTick, setSyncTick] = useState(0);
+	const [draftMissions, setDraftMissions] = useState<DraftMissionRecord[]>([]);
+	const [draftCatalogStatus, setDraftCatalogStatus] = useState<
+		"idle" | "loading" | "ready" | "error"
+	>("idle");
+	const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+	const [openSubject, setOpenSubject] = useState<SubjectCode | null>(null);
+	const [draftAnswerSent, setDraftAnswerSent] = useState(false);
+	const draftCatalog = useMemo(
+		() =>
+			developmentDraftEnabled
+				? (catalog ?? createDraftMissionCatalogClient({ allowDraft: true }))
+				: null,
+		[catalog, developmentDraftEnabled],
+	);
+	const api = useMemo(
+		() => service ?? createLearningFlowClient({ learnerId }),
+		[learnerId, service],
+	);
+	const runApi = useCallback(<T,>(operation: () => Promise<T>): Promise<T> => {
+		const result = apiTail.current.then(operation, operation);
+		apiTail.current = result.then(
+			() => undefined,
+			() => undefined,
+		);
+		return result;
+	}, []);
+	const queue = useMemo(
+		() =>
+			new EncryptedEventQueue(
+				!Capacitor.isNativePlatform() &&
+				globalThis.crypto?.subtle &&
+				globalThis.localStorage &&
+				globalThis.indexedDB
+					? new WebCryptoLocalStore(
+							"mindbridge.mobile-learning.queue.v1",
+							new IndexedDbNonExtractableKeyProvider(),
+						)
+					: new MemoryEncryptedStore(),
+			),
+		[],
+	);
+
+	useEffect(() => {
+		if (!draftCatalog) return;
+		let cancelled = false;
+		setDraftCatalogStatus("loading");
+		void draftCatalog.listDraftMissions().then(
+			(loaded) => {
+				if (cancelled) return;
+				setDraftMissions(loaded.missions);
+				setDraftCatalogStatus("ready");
+			},
+			() => {
+				if (cancelled) return;
+				setDraftMissions([]);
+				setDraftCatalogStatus("error");
+			},
+		);
+		return () => {
+			cancelled = true;
+		};
+	}, [draftCatalog]);
+	useEffect(() => {
+		if (papersRoute) {
+			setScreen((current) =>
+				isSetupScreen(current) ? current : "practice",
+			);
+			return;
+		}
+		const path =
+			window.location.hash.replace(/^#/, "").split("?")[0].replace(/\/+$/, "") ||
+			"/";
+		if (path === "/" || path === "") {
+			setScreen((current) => (current === "practice" ? "home" : current));
+		}
+	}, [papersRoute]);
+	useEffect(() => {
+		void queue
+			.initialize()
+			.then(() => {
+				setQueueReady(true);
+				if (queue.pendingCount)
+					setSyncState(navigator.onLine ? "pending" : "offline");
+			})
+			.catch(() => setSyncState("conflict"));
+	}, [queue]);
+	useEffect(() => {
+		const online = () => {
+			syncConflict.current = false;
+			setSyncState(
+				episode && queue.pendingCountFor(episode.episode_id)
+					? "pending"
+					: "synced",
+			);
+			setSyncTick((value) => value + 1);
+		};
+		const offline = () => setSyncState("offline");
+		window.addEventListener("online", online);
+		window.addEventListener("offline", offline);
+		return () => {
+			window.removeEventListener("online", online);
+			window.removeEventListener("offline", offline);
+		};
+	}, [episode, queue]);
+
+	const safeFailure = useCallback((error: unknown) => {
+		const code =
+			error instanceof LearningFlowApiError || error instanceof Error
+				? error.message
+				: "BACKEND_UNAVAILABLE";
+		setFailure(code);
+		setScreen("failure");
+		setBusy(false);
+	}, []);
+
+	const record = useCallback(
+		async (event: SceneDomainEvent, critical = false) => {
+			if (!episode) return;
+			const payload: Record<string, string | number | boolean> = {
+				event_type: event.type,
+			};
+			if ("groupedCount" in event) payload.grouped_count = event.groupedCount;
+			if ("group" in event) payload.group = event.group;
+			if ("step" in event) payload.step = event.step;
+			await queue.enqueue(episode.episode_id, payload, critical);
+			setSyncState(navigator.onLine ? "pending" : "offline");
+		},
+		[episode, queue],
+	);
+
+	const chooseMission = (areaId: string) => {
+		if (!developmentDraftEnabled || BLOCKED_AREA_IDS.has(areaId)) return;
+		setDraftAnswerSent(false);
+		if (areaId === HALF_SET_AREA_ID) {
+			setScreen("overview");
+			return;
+		}
+		const mission = draftMissions.find((item) => item.area_id === areaId);
+		if (!mission || mission.template_id === "half_set") return;
+		setSelectedAreaId(areaId);
+		setScreen("draft-player");
+	};
+
+	const submitDraftAnswer = async () => {
+		const mission = draftMissions.find((item) => item.area_id === selectedAreaId);
+		if (
+			!developmentDraftEnabled ||
+			!mission ||
+			mission.template_id === "half_set" ||
+			draftAnswerSent
+		) {
+			return;
+		}
+		setBusy(true);
+		try {
+			const opened = await runApi(() =>
+				api.open(
+					{
+						learner_id: learnerId,
+						session_id: sessionId.current,
+						grade: 5,
+						medium: "si",
+						condition: engineeringCondition,
+						environment: "development",
+						allow_draft: true,
+					},
+					crypto.randomUUID(),
+				),
+			);
+			const optionId = opened.manifest?.options[0]?.option_id;
+			if (!optionId) throw new LearningFlowApiError("DRAFT_ANSWER_UNAVAILABLE", 0);
+			await runApi(() =>
+				api.answerBefore(
+					opened.episode_id,
+					{ option_id: optionId },
+					crypto.randomUUID(),
+				),
+			);
+			setDraftAnswerSent(true);
+			setBusy(false);
+		} catch (error) {
+			safeFailure(error);
+		}
+	};
+
+	const begin = async () => {
+		if (!developmentDraftEnabled) {
+			setFailure("CONTENT_NOT_APPROVED");
+			setScreen("failure");
+			return;
+		}
+		setBusy(true);
+		try {
+			const opened = await runApi(() => api.open(
+				{
+					learner_id: learnerId,
+					session_id: sessionId.current,
+					grade: 5,
+					medium: "si",
+					condition: engineeringCondition,
+					environment: "development",
+					allow_draft: true,
+				},
+				crypto.randomUUID(),
+			));
+			setEpisode(opened);
+			setManifest(opened.manifest);
+			setScreen("baseline");
+			setBusy(false);
+		} catch (error) {
+			safeFailure(error);
+		}
+	};
+
+	const submitBefore = async () => {
+		if (!episode || !selected) return;
+		setBusy(true);
+		await record({ type: "answer_submitted", groupedCount: 0 }, true);
+		try {
+			const response = await runApi(() => api.answerBefore(
+				episode.episode_id,
+				{ option_id: selected },
+				crypto.randomUUID(),
+			));
+			setEpisode(response);
+			setSelected(null);
+			if (response.status === "support_active" && response.support) {
+				setSupport(response.support);
+				setScreen("difficulty");
+			} else setScreen("result");
+			setBusy(false);
+		} catch (error) {
+			safeFailure(error);
+		}
+	};
+
+	const onGameEvent = useCallback(
+		(event: SceneDomainEvent) => {
+			if (event.type !== "withdrawal_acknowledged") {
+				void record(event, event.type === "answer_submitted").catch(() =>
+					setSyncState("conflict"),
+				);
+			}
+			if (event.type === "support_interaction_completed") {
+				setCompletionProof(event);
+			}
+			if (
+				event.type === "withdrawal_acknowledged" &&
+				episode &&
+				support &&
+				withdrawalRequest &&
+				event.requestId === withdrawalRequest.requestId &&
+				event.supportRevisionId === support.revision_id &&
+				event.manifestRevisionId === support.game_manifest.revision_id &&
+				handledWithdrawal.current !== event.requestId
+			) {
+				handledWithdrawal.current = event.requestId;
+				void (async () => {
+					try {
+						setBusy(true);
+						await record(event, true);
+						const response = await runApi(() => api.withdrawSupport(
+							episode.episode_id,
+							{
+								request_id: event.requestId,
+								support_revision_id: event.supportRevisionId,
+								manifest_revision_id: event.manifestRevisionId,
+								all_support_removed: event.allSupportRemoved,
+								answer_revealing_state_cleared:
+									event.answerRevealingStateCleared,
+								input_handlers_cleared: event.inputHandlersCleared,
+							},
+							crypto.randomUUID(),
+						));
+						setEpisode(response);
+						setSupport(null);
+						setWithdrawing(false);
+						setScreen("withdrawal");
+						setBusy(false);
+					} catch (error) {
+						safeFailure(error);
+					}
+				})();
+			}
+		},
+		[api, episode, record, runApi, safeFailure, support, withdrawalRequest],
+	);
+
+	const finishSupport = async () => {
+		if (!episode || !support || !completionProof) return;
+		setBusy(true);
+		try {
+			const response = await runApi(() => api.completeSupport(
+				episode.episode_id,
+				{
+					duration_ms: 1_200,
+					steps_viewed: Math.min(support.maximum_steps, support.body_si.length),
+					manifest_revision_id: completionProof.manifestRevisionId,
+					grouped_count: completionProof.groupedCount,
+					group_sizes: completionProof.groupSizes,
+				},
+				crypto.randomUUID(),
+			));
+			setEpisode(response);
+			setWithdrawing(true);
+			setWithdrawalRequest({
+				requestId: crypto.randomUUID(),
+				supportRevisionId: support.revision_id,
+			});
+			setBusy(false);
+		} catch (error) {
+			safeFailure(error);
+		}
+	};
+
+	const presentAfter = async () => {
+		if (!episode) return;
+		setBusy(true);
+		try {
+			const response = await runApi(() => api.presentAfter(
+				episode.episode_id,
+				crypto.randomUUID(),
+			));
+			if (response.status === "invalidated") {
+				setFailure("INTERRUPTED_OR_CONTAMINATED");
+				setScreen("failure");
+			} else {
+				setEpisode(response);
+				setManifest(response.manifest);
+				setScreen("after");
+			}
+			setBusy(false);
+		} catch (error) {
+			safeFailure(error);
+		}
+	};
+
+	const submitAfter = async () => {
+		if (!episode || !selected) return;
+		setBusy(true);
+		await record({ type: "answer_submitted", groupedCount: 0 }, true);
+		try {
+			const response = await runApi(() => api.answerAfter(
+				episode.episode_id,
+				{ option_id: selected },
+				crypto.randomUUID(),
+			));
+			setEpisode(response);
+			setSelected(null);
+			setScreen("result");
+			setBusy(false);
+		} catch (error) {
+			safeFailure(error);
+		}
+	};
+
+	const sync = useCallback(async () => {
+		if (busy) return false;
+		if (!episode || !navigator.onLine) {
+			setSyncState("offline");
+			return false;
+		}
+		const batch = queue.takeBatch(episode.episode_id);
+		if (!batch) {
+			setSyncState("synced");
+			return true;
+		}
+		setSyncState("pending");
+		try {
+			const ack = await runApi(() => api.telemetry(
+				episode.episode_id,
+				batch,
+				batch.batch_id,
+			));
+			await queue.acknowledge(episode.episode_id, ack.next_sequence);
+			setSyncState(
+				queue.pendingCountFor(episode.episode_id) ? "pending" : "synced",
+			);
+			return true;
+		} catch (error) {
+			if (
+				error instanceof LearningFlowApiError &&
+				error.code.includes("SEQUENCE") &&
+				error.expectedSequence !== undefined
+			) {
+				try {
+					await queue.reconcileExpectedSequence(
+						episode.episode_id,
+						error.expectedSequence,
+					);
+					setSyncState(
+						queue.pendingCountFor(episode.episode_id) ? "pending" : "synced",
+					);
+				} catch {
+					syncConflict.current = true;
+					setSyncState("conflict");
+				}
+			} else {
+				setSyncState("offline");
+			}
+			return false;
+		}
+	}, [api, busy, episode, queue, runApi]);
+
+	useEffect(() => {
+		void syncTick;
+		if (
+			!queueReady ||
+			!episode ||
+			busy ||
+			!navigator.onLine ||
+			queue.pendingCountFor(episode.episode_id) === 0 ||
+			syncConflict.current
+		)
+			return;
+		let cancelled = false;
+		let timer = 0;
+		const attempt = async () => {
+			if (cancelled || !navigator.onLine || syncConflict.current) return;
+			const complete = await sync();
+			if (!complete && !cancelled && navigator.onLine && !syncConflict.current) {
+				timer = window.setTimeout(attempt, queue.nextBackoffMs());
+			}
+		};
+		timer = window.setTimeout(attempt, 0);
+		return () => {
+			cancelled = true;
+			window.clearTimeout(timer);
+		};
+	}, [busy, episode, queue, queueReady, sync, syncTick]);
+
+	const selectedDraftMission = draftMissions.find((item) => item.area_id === selectedAreaId);
+	const sharedDraftMission = isSharedDraftMission(selectedDraftMission)
+		? selectedDraftMission
+		: null;
+
+	if (!developmentDraftEnabled && screen === "splash" && !enableOnboarding) {
+		return <BlockedProduction onSettings={() => setScreen("settings")} />;
+	}
+
+	return (
+		<main className="mobile-shell" lang="si" data-screen={screen}>
+			{!["splash", "onboarding", "language", "profile-setup"].includes(screen) && (
+				<div className="development-ribbon" role="status">
+					<span aria-hidden="true">◆</span> සංවර්ධන පෙරදසුන
+				</div>
+			)}
+			{screen === "splash" && (
+				<Splash
+					onContinue={() =>
+						setScreen(
+							enableOnboarding
+								? "onboarding"
+								: papersRoute
+									? "practice"
+									: "home",
+						)
+					}
+				/>
+			)}
+			{screen === "onboarding" && (
+				<Onboarding onContinue={() => setScreen("language")} />
+			)}
+			{screen === "language" && (
+				<LanguageSetup
+					onContinue={() => setScreen("profile-setup")}
+				/>
+			)}
+			{screen === "profile-setup" && (
+				<ProfileSetup
+					name={learnerName}
+					onNameChange={setLearnerName}
+					onContinue={() => setScreen(papersRoute ? "practice" : "home")}
+				/>
+			)}
+			{screen === "home" && <PlannedPage title="මුල් පිටුව" />}
+			{screen === "learn" && (
+				<GamesHome
+					onPlay={() => setScreen("mission")}
+					missions={developmentDraftEnabled ? draftMissions : []}
+					catalogStatus={developmentDraftEnabled ? draftCatalogStatus : "idle"}
+					onChoose={chooseMission}
+					openSubject={openSubject}
+					onOpenSubject={setOpenSubject}
+				/>
+			)}
+			{screen === "practice" && (
+				<div className="papers-tab">
+					<PapersApp embedded route={papersRoute ?? { name: "papers" }} />
+				</div>
+			)}
+			{screen === "mindy" && <PlannedPage title="Mindy" />}
+			{screen === "rewards" && <RewardsHub />}
+			{screen === "account" && (
+				<Account
+					name={learnerName}
+					onSettings={() => setScreen("settings")}
+					onOnboarding={() => setScreen("onboarding")}
+				/>
+			)}
+			{screen === "mission" && (
+				<Mission
+					onContinue={() => setScreen("overview")}
+					onBack={() => setScreen("learn")}
+				/>
+			)}
+			{screen === "overview" && (
+				<Overview
+					busy={busy}
+					onStart={begin}
+					onBack={() => setScreen("mission")}
+				/>
+			)}
+			{screen === "baseline" && manifest && (
+				<ChoiceActivity
+					title="ඔබම උත්සාහ කරන්න"
+					manifest={manifest}
+					selected={selected}
+					busy={busy}
+					onSelect={setSelected}
+					onSubmit={submitBefore}
+				/>
+			)}
+			{screen === "difficulty" && (
+				<Transition
+					title="වෙනත් ක්‍රමයකින් උත්සාහ කරමු"
+					body="අපි කුඩා ක්‍රීඩාවකින් සමාන කාණ්ඩ දෙකක් සාදමු."
+					onContinue={() => setScreen("support")}
+				/>
+			)}
+			{screen === "support" && support && (
+				<SupportPractice
+					support={support}
+					done={Boolean(completionProof)}
+					withdrawing={withdrawing}
+					withdrawalRequest={withdrawalRequest}
+					busy={busy}
+					reducedMotion={reducedMotion}
+					onEvent={onGameEvent}
+					onFinish={finishSupport}
+				/>
+			)}
+			{screen === "withdrawal" && (
+				<Transition
+					title="දැන් අලුත් එකක් ඔබම උත්සාහ කරන්න"
+					body="උදව් අවසන්. අලුත් ප්‍රශ්නයේදී ඔබට ඉඟි නොපෙන්වයි."
+					onContinue={presentAfter}
+					busy={busy}
+				/>
+			)}
+			{screen === "after" && manifest && (
+				<ChoiceActivity
+					title="අලුත් එක ඔබම උත්සාහ කරන්න"
+					manifest={manifest}
+					selected={selected}
+					busy={busy}
+					onSelect={setSelected}
+					onSubmit={submitAfter}
+				/>
+			)}
+			{screen === "result" && (
+				<Result
+					hasReward={Boolean(episode?.reward?.points)}
+					onContinue={() => setScreen("reward")}
+				/>
+			)}
+			{screen === "reward" && (
+				<Reward
+					points={episode?.reward?.points ?? 0}
+					onContinue={() => setScreen("summary")}
+				/>
+			)}
+			{screen === "summary" && (
+				<Summary
+					supported={Boolean(support || completionProof)}
+					onProgress={() => setScreen("progress")}
+					onHome={() => setScreen("home")}
+				/>
+			)}
+			{screen === "progress" && <PlannedPage title="ප්‍රගතිය" />}
+			{screen === "settings" && (
+				<Settings
+					syncState={syncState}
+					onSync={sync}
+					reducedMotion={reducedMotion}
+					setReducedMotion={setReducedMotion}
+					onBack={() => setScreen("home")}
+				/>
+			)}
+			{screen === "failure" && (
+				<Failure code={failure} onSafePractice={() => setScreen("home")} />
+			)}
+			{developmentDraftEnabled && screen === "draft-player" && sharedDraftMission && (
+				<DraftTemplatePlayer
+					mission={sharedDraftMission}
+					busy={busy}
+					submitted={draftAnswerSent}
+					onSubmit={submitDraftAnswer}
+					onBack={() => setScreen("learn")}
+				/>
+			)}
+			{[
+				"home",
+				"learn",
+				"mission",
+				"practice",
+				"mindy",
+				"progress",
+			].includes(screen) && (
+				<BottomNavigation
+					active={screen === "mission" ? "learn" : screen}
+					onNavigate={(destination) => {
+						if (destination === "practice") {
+							go({ name: "papers" });
+							setScreen("practice");
+							return;
+						}
+						if (papersRoute) {
+							window.location.hash = "#/";
+						}
+						setScreen(destination);
+					}}
+				/>
+			)}
+		</main>
+	);
+}
+
+function isSetupScreen(screen: Screen): boolean {
+	return ["splash", "onboarding", "language", "profile-setup"].includes(screen);
+}
+
+function isSharedDraftMission(
+	mission: DraftMissionRecord | undefined,
+): mission is DraftMissionRecord & { template_id: Exclude<DraftTemplateId, "half_set"> } {
+	return mission !== undefined && mission.template_id !== "half_set";
+}
+
+function DraftTemplatePlayer({
+	mission,
+	busy,
+	submitted,
+	onSubmit,
+	onBack,
+}: {
+	mission: DraftMissionRecord & { template_id: Exclude<DraftTemplateId, "half_set"> };
+	busy: boolean;
+	submitted: boolean;
+	onSubmit(): void;
+	onBack(): void;
+}) {
+	const draftItems = [...mission.outcome_slots, ...mission.draft_item_slots];
+	return (
+		<section
+			className="draft-player"
+			data-draft-player={mission.template_id}
+			data-template-id={mission.template_id}
+		>
+			<Back onClick={onBack} />
+			<p className="eyebrow">{DRAFT_TEMPLATE_LABELS[mission.template_id]}</p>
+			<h1>{learningAreaName(mission.area_id)}</h1>
+			<p data-template-id={mission.template_id}>{mission.template_id}</p>
+			{draftItems.map((slot) => (
+				<p className="draft-item" key={slot.node_id}>
+					{slot.confidence === "medium" &&
+					!slot.item_text.includes(MEDIUM_CONFIDENCE_CAVEAT)
+						? `${slot.item_text} ${MEDIUM_CONFIDENCE_CAVEAT}`
+						: slot.item_text}
+				</p>
+			))}
+			{mission.held_slots.length > 0 && (
+				<p className="held-slots" data-held-count={mission.held_slots.length}>
+					රඳවා ඇති සටහන් ප්‍රශ්නයක් නොවේ.
+				</p>
+			)}
+			{submitted && <p role="status">කෙටුම්පත් පිළිතුර ලැබුණි.</p>}
+			<button
+				className="primary-action"
+				disabled={busy || submitted}
+				onClick={onSubmit}
+			>
+				කෙටුම්පත් පිළිතුර යවන්න
+			</button>
+		</section>
+	);
+}
+
+function Splash({ onContinue }: { onContinue(): void }) {
+	return (
+		<section className="center-screen splash-screen">
+			<div className="splash-orbit splash-orbit--one" />
+			<div className="splash-orbit splash-orbit--two" />
+			<BrandMark variant="primary" className="brand-mark--hero" />
+			<h1>ඉගෙන ගමු. ක්‍රීඩා කරමු. දියුණු වෙමු.</h1>
+			<p>ඔබට ගැළපෙන සතුටුදායක ඉගෙනුම් ගමනක්.</p>
+			<button className="primary-action" onClick={onContinue}>
+				මගේ පැතිකඩට යන්න
+			</button>
+		</section>
+	);
+}
+
+const onboardingSlides = [
+	{
+		icon: "book" as const,
+		kicker: "ඔබට ගැළපෙන ඉගෙනීම",
+		title: "කුඩා පියවර, ලොකු දියුණුව",
+		body: "ඔබගේ වේගයට ගැළපෙන කෙටි පාඩම් සහ සරල පැහැදිලි කිරීම්.",
+		tone: "violet",
+	},
+	{
+		icon: "game" as const,
+		kicker: "ක්‍රීඩාවෙන් පුහුණුව",
+		title: "සෙල්ලම් කරන අතරතුර ඉගෙන ගන්න",
+		body: "අභියෝග සම්පූර්ණ කර XP, කාසි සහ නව ලාංඡන දිනා ගන්න.",
+		tone: "orange",
+	},
+	{
+		icon: "sparkle" as const,
+		kicker: "අවශ්‍ය විට සහාය",
+		title: "Mindy හැම පියවරකම ඔබ සමඟයි",
+		body: "පිළිතුර නොදී, ඔබටම සොයා ගන්නට උපකාරී වන කුඩා ඉඟි.",
+		tone: "teal",
+	},
+];
+
+function Onboarding({ onContinue }: { onContinue(): void }) {
+	const [index, setIndex] = useState(0);
+	const slide = onboardingSlides[index];
+	return (
+		<section className="onboarding-screen">
+			<header className="onboarding-brand">
+				<BrandMark variant="submark" />
+				<span>MindBridge</span>
+			</header>
+			<div className={`onboarding-art onboarding-art--${slide.tone}`}>
+				<div className="onboarding-art__ring" />
+				<AppIcon name={slide.icon} size={72} />
+				<span className="art-star art-star--one">✦</span>
+				<span className="art-star art-star--two">✦</span>
+			</div>
+			<div className="onboarding-copy" aria-live="polite">
+				<p className="eyebrow">{slide.kicker}</p>
+				<h1>{slide.title}</h1>
+				<p>{slide.body}</p>
+			</div>
+			<nav className="pager" aria-label={`${index + 1} / ${onboardingSlides.length}`}>
+				{onboardingSlides.map((item, itemIndex) => (
+					<button
+						key={item.title}
+						className={itemIndex === index ? "pager-dot pager-dot--active" : "pager-dot"}
+						aria-label={`${itemIndex + 1} වන පිටුව`}
+						onClick={() => setIndex(itemIndex)}
+					/>
+				))}
+			</nav>
+			<div className="onboarding-actions">
+				<button className="text-action" onClick={onContinue}>මඟ හරින්න</button>
+				<button
+					className="primary-action"
+					onClick={() => index === onboardingSlides.length - 1 ? onContinue() : setIndex(index + 1)}
+				>
+					{index === onboardingSlides.length - 1 ? "ආරම්භ කරමු" : "ඊළඟට"} <span aria-hidden="true">→</span>
+				</button>
+			</div>
+		</section>
+	);
+}
+
+function LanguageSetup({ onContinue }: { onContinue(): void }) {
+	return (
+		<section className="setup-screen">
+			<div className="setup-icon"><AppIcon name="globe" size={34} /></div>
+			<p className="eyebrow">ඉගෙනුම් භාෂාව</p>
+			<h1>සිංහල මාධ්‍ය ඉගෙනීම</h1>
+			<p className="quiet">මෙම ඉගෙනුම් ගමන 5 ශ්‍රේණිය සඳහා සිංහලෙන් සකස් කර ඇත.</p>
+			<div className="language-list">
+				<div className="language-card language-card--selected">
+					<span className="language-sample">ආයුබෝවන්</span>
+					<span><strong>සිංහල</strong><small>Sinhala</small></span>
+					<span className="selection-check" aria-hidden="true">✓</span>
+				</div>
+			</div>
+			<button className="primary-action setup-continue" onClick={onContinue}>ඉදිරියට යමු</button>
+		</section>
+	);
+}
+
+function ProfileSetup({ name, onNameChange, onContinue }: {
+	name: string;
+	onNameChange(value: string): void;
+	onContinue(): void;
+}) {
+	return (
+		<section className="setup-screen profile-setup">
+			<p className="eyebrow">අවසන් පියවර</p>
+			<h1>ඔබව හඳුනා ගනිමු</h1>
+			<p className="quiet">ඔබගේ ඉගෙනුම් ගමන පුද්ගලීකරණය කිරීමට මෙය උපකාරී වේ.</p>
+			<div className="avatar-picker">
+				<LearnerAvatar />
+				<button className="avatar-edit" aria-label="අවතාරය වෙනස් කරන්න">✎</button>
+			</div>
+			<label className="field-card">
+				<span>ඔබේ නම</span>
+				<input value={name} onChange={(event) => onNameChange(event.target.value)} placeholder="උදා: කවිඳු" />
+			</label>
+			<fieldset className="field-card grade-field">
+				<legend>ශ්‍රේණිය</legend>
+				<div>
+					<span className="grade-pill grade-pill--selected">5 ශ්‍රේණිය</span>
+				</div>
+			</fieldset>
+			<div className="privacy-note"><AppIcon name="shield" size={20} /><span>ඔබගේ තොරතුරු ආරක්ෂිතව තබා ගනී.</span></div>
+			<button className="primary-action setup-continue" disabled={!name.trim()} onClick={onContinue}>මගේ ගමන අරඹන්න</button>
+		</section>
+	);
+}
+
+function PlannedPage({ title }: { title: string }) {
+	return (
+		<section className="tab-screen planned-page" data-planned-page={title}>
+			<h1>{title}</h1>
+			<p className="planned-mark">To be implemented</p>
+		</section>
+	);
+}
+
+type SubjectCode = "MAT" | "SIN" | "ENV" | "ENG";
+
+const GAME_SUBJECTS: Array<{
+	code: SubjectCode;
+	title: string;
+	description: string;
+	image: string;
+	tone: "math" | "sinhala" | "env" | "english";
+}> = [
+	{
+		code: "MAT",
+		title: "ගණිතය",
+		description: "සංඛ්‍යා, භාග, මිනුම් සහ ගැටලු විසඳීම.",
+		image: "/curriculum/math.svg",
+		tone: "math",
+	},
+	{
+		code: "SIN",
+		title: "සිංහල",
+		description: "අක්ෂර, වචන, ව්‍යාකරණ සහ වාක්‍ය රටා.",
+		image: "/curriculum/sinhala.svg",
+		tone: "sinhala",
+	},
+	{
+		code: "ENV",
+		title: "පරිසර අධ්‍යයනය",
+		description: "යහපැවැත්ම, සතුන්, ආහාර සහ අප අවට පරිසරය.",
+		image: "/curriculum/environmental-studies.svg",
+		tone: "env",
+	},
+	{
+		code: "ENG",
+		title: "ඉංග්‍රීසි",
+		description: "කියවීම, ලිවීම සහ ඉංග්‍රීසි භාෂා කුසලතා.",
+		image: "/curriculum/english.svg",
+		tone: "english",
+	},
+];
+
+function missionsForSubject(subject: SubjectCode, missions: DraftMissionRecord[]) {
+	return missions
+		.filter(
+			(mission) =>
+				mission.area_id.includes(`-${subject}-`) &&
+				!BLOCKED_AREA_IDS.has(mission.area_id),
+		)
+		.slice()
+		.sort((left, right) => left.area_id.localeCompare(right.area_id));
+}
+
+function GamesHome({
+	onPlay,
+	missions = [],
+	catalogStatus = "idle",
+	onChoose,
+	openSubject = null,
+	onOpenSubject,
+}: {
+	onPlay(): void;
+	missions?: DraftMissionRecord[];
+	catalogStatus?: "idle" | "loading" | "ready" | "error";
+	onChoose?(areaId: string): void;
+	openSubject?: SubjectCode | null;
+	onOpenSubject?(subject: SubjectCode | null): void;
+}) {
+	const subject = GAME_SUBJECTS.find((item) => item.code === openSubject);
+	const subjectMissions = subject ? missionsForSubject(subject.code, missions) : [];
+	return (
+		<section className="tab-screen games-screen">
+			{subject ? (
+				<section className="learning-areas" data-subject-areas={subject.code}>
+					<Back onClick={() => onOpenSubject?.(null)} />
+					<header className="learning-areas__intro">
+						<img src={subject.image} alt="" aria-hidden="true" />
+						<div>
+							<p className="eyebrow">ඉගෙනුම් ක්ෂේත්‍ර</p>
+							<h1>{subject.title}</h1>
+							<p>{subject.description}</p>
+						</div>
+					</header>
+					{subjectMissions.length > 0 ? (
+						<ul>
+							{subjectMissions.map((mission) => (
+								<li key={mission.area_id}>
+									<button
+										className="mission-choice"
+										data-area-id={mission.area_id}
+										onClick={() => onChoose?.(mission.area_id)}
+									>
+										{learningAreaName(mission.area_id)}
+									</button>
+								</li>
+							))}
+						</ul>
+					) : (
+						<p className="quiet">මෙම විෂය සඳහා ඉගෙනුම් ක්ෂේත්‍ර තවම නොමැත.</p>
+					)}
+				</section>
+			) : (
+				<>
+					<header className="games-hero">
+						<img src="/curriculum/header_adventure_decoration.svg" alt="" aria-hidden="true" className="games-landscape" />
+						<div className="games-title"><span>ක්‍රීඩා</span><strong>කරමින්</strong><em>ඉගෙන ගමු!</em></div>
+						<div className="games-avatar"><LearnerAvatar /></div>
+						<h1>5 ශ්‍රේණිය ශිෂ්‍යත්ව සූදානම</h1>
+						<p>විනෝදජනක අන්තර්ක්‍රියාකාරී මෙහෙයුම් හරහා ශිෂ්‍යත්ව කුසලතා ගොඩනඟමු.</p>
+					</header>
+					<div className="games-section-heading"><p className="eyebrow">ලබා ගත හැකි විෂය</p><h2>ඔබගේ ක්‍රීඩා ලෝකය</h2></div>
+					<div className="subject-cards">
+						{GAME_SUBJECTS.map((item) => {
+							const count = missionsForSubject(item.code, missions).length;
+							return (
+								<button
+									className={`subject-card subject-card--${item.tone}`}
+									data-subject={item.code}
+									key={item.code}
+									onClick={() => onOpenSubject?.(item.code)}
+								>
+									<span className="subject-badge">
+										<img src={item.image} alt="" aria-hidden="true" />
+									</span>
+									<span className="subject-copy">
+										<strong>{item.title}</strong>
+										<small>{item.description}</small>
+										{count > 0 && <em>{count} ඉගෙනුම් ක්ෂේත්‍ර</em>}
+									</span>
+									<span className="subject-start">ආරම්භ කරන්න <AppIcon name="arrow" size={17} /></span>
+								</button>
+							);
+						})}
+					</div>
+					{catalogStatus === "error" && (
+						<p role="status">සිංහල සහ පරිසර අධ්‍යයන මෙහෙයුම් ලබා ගත නොහැක. API සේවාව ක්‍රියාත්මක නොවේ.</p>
+					)}
+					<article className="current-game-card">
+						<span className="current-game-icon">½</span>
+						<div><p className="eyebrow">දැනට ඇති ක්‍රීඩාව</p><h2>සමාන කාණ්ඩ දෙකක්</h2><p>ද්‍රව්‍ය සමාන කාණ්ඩ දෙකකට බෙදා බාගය සොයන්න.</p></div>
+						<button className="primary-action" onClick={onPlay}>ක්‍රීඩා කරන්න <AppIcon name="play" size={17} /></button>
+					</article>
+				</>
+			)}
+		</section>
+	);
+}
+
+function Mission({
+	onContinue,
+	onBack,
+}: {
+	onContinue(): void;
+	onBack(): void;
+}) {
+	return (
+		<section>
+			<Back onClick={onBack} />
+			<p className="eyebrow">නිර්දේශිත මෙහෙයුම</p>
+			<h1>බාගය සොයමු</h1>
+			<div className="illustration" role="img" aria-label="සමාන කාණ්ඩ දෙකක ද්‍රව්‍ය">
+				● ● ●　│　● ● ●
+			</div>
+			<p>ද්‍රව්‍ය සමාන කාණ්ඩ දෙකකට වෙන් කර එක් කාණ්ඩයේ ගණන සොයමු.</p>
+			<button className="primary-action" onClick={onContinue}>
+				මෙහෙයුම බලන්න
+			</button>
+		</section>
+	);
+}
+function Overview({
+	busy,
+	onStart,
+	onBack,
+}: {
+	busy: boolean;
+	onStart(): void;
+	onBack(): void;
+}) {
+	return (
+		<section>
+			<Back onClick={onBack} />
+			<p className="eyebrow">පළමු කුසලතාව</p>
+			<h1>ද්‍රව්‍ය සමූහයක බාගය</h1>
+			<div className="info-card">
+				<p>⏱ විනාඩි 5ක් පමණ</p>
+				<p>🧠 මුලින් ප්‍රශ්නයක් ඔබම උත්සාහ කරයි.</p>
+				<p>🌱 අවශ්‍ය නම් තාවකාලික උදව් ලැබේ.</p>
+			</div>
+			<button className="primary-action" disabled={busy} onClick={onStart}>
+				ආරම්භ කරන්න
+			</button>
+		</section>
+	);
+}
+
+function ChoiceActivity({
+	title,
+	manifest,
+	selected,
+	busy,
+	onSelect,
+	onSubmit,
+}: {
+	title: string;
+	manifest: PresentationManifest;
+	selected: string | null;
+	busy: boolean;
+	onSelect(id: string): void;
+	onSubmit(): void;
+}) {
+	return (
+		<section>
+			<p className="independent-badge">🔒 ඉඟි නොමැත</p>
+			<h1>{title}</h1>
+			<p className="question">
+				<span className="sr-only">{manifest.accessibility_label_si}</span>
+				<span aria-hidden="true">{manifest.prompt_si}</span>
+			</p>
+			<div className="choice-grid">
+				{manifest.options.map((option) => (
+					<button
+						key={option.option_id}
+						className={
+							selected === option.option_id
+								? "choice choice--selected"
+								: "choice"
+						}
+						aria-pressed={selected === option.option_id}
+						onClick={() => onSelect(option.option_id)}
+					>
+						{option.text_si}
+					</button>
+				))}
+			</div>
+			<button
+				className="primary-action"
+				disabled={!selected || busy}
+				onClick={onSubmit}
+			>
+				පිළිතුර යවන්න
+			</button>
+		</section>
+	);
+}
+function Transition({
+	title,
+	body,
+	onContinue,
+	busy = false,
+}: {
+	title: string;
+	body: string;
+	onContinue(): void;
+	busy?: boolean;
+}) {
+	return (
+		<section className="center-screen">
+			<div className="mascot" aria-hidden="true">
+				☀
+			</div>
+			<h1>{title}</h1>
+			<p>{body}</p>
+			<button className="primary-action" disabled={busy} onClick={onContinue}>
+				ඉදිරියට
+			</button>
+		</section>
+	);
+}
+
+function SupportPractice({
+	support,
+	done,
+	withdrawing,
+	withdrawalRequest,
+	busy,
+	reducedMotion,
+	onEvent,
+	onFinish,
+}: {
+	support: SupportView;
+	done: boolean;
+	withdrawing: boolean;
+	withdrawalRequest: { requestId: string; supportRevisionId: string } | null;
+	busy: boolean;
+	reducedMotion: boolean;
+	onEvent(event: SceneDomainEvent): void;
+	onFinish(): void;
+}) {
+	const gameManifest: HalfSetManifest = useMemo(
+		() => ({
+			schemaVersion: support.game_manifest.schema_version,
+			activityId: support.game_manifest.activity_id,
+			revisionId: support.game_manifest.revision_id,
+			deterministicSeed: support.game_manifest.deterministic_seed,
+			totalObjects: support.game_manifest.total_objects,
+			groupCount: support.game_manifest.group_count,
+			objectLabelSi: support.game_manifest.object_label_si,
+			instructionSi: support.game_manifest.instruction_si,
+		}),
+		[support],
+	);
+	return (
+		<section>
+			<p className="support-badge">තාවකාලික උදව්</p>
+			<h1>{withdrawing ? "උදව් ඉවත් කරමින්" : support.title_si}</h1>
+			{!withdrawing && (
+				<aside className="support-panel" data-support-visible="true">
+					{support.body_si.slice(0, support.maximum_steps).map((line) => (
+						<p key={line}>{line}</p>
+					))}
+				</aside>
+			)}
+			<HalfSetGame
+				manifest={gameManifest}
+				support={
+					withdrawing
+						? null
+						: { titleSi: support.title_si, stepsSi: support.body_si }
+				}
+				withdrawalRequest={withdrawalRequest}
+				reducedMotion={reducedMotion}
+				onEvent={onEvent}
+			/>
+			<button
+				className="primary-action"
+				disabled={!done || busy || withdrawing}
+				onClick={onFinish}
+			>
+				උදව් අවසන් කරන්න
+			</button>
+		</section>
+	);
+}
+
+function Result({
+	hasReward,
+	onContinue,
+}: {
+	hasReward: boolean;
+	onContinue(): void;
+}) {
+	return (
+		<section className="center-screen">
+			<div className="success-mark" aria-hidden="true">
+				✓
+			</div>
+			<h1>හොඳ උත්සාහයක්!</h1>
+			<p>
+				{hasReward ? "ඔබ මෙහෙයුම අවසන් කළා." : "ඔබගේ උත්සාහය සුරැකිණි. ඊළඟ පියවරට යමු."}
+			</p>
+			<p className="quiet">මෙය එක් ඉගෙනුම් සාක්ෂියක් පමණි.</p>
+			<button className="primary-action" onClick={onContinue}>
+				ත්‍යාගය බලන්න
+			</button>
+		</section>
+	);
+}
+function Reward({
+	points,
+	onContinue,
+}: {
+	points: number;
+	onContinue(): void;
+}) {
+	return (
+		<section className="center-screen">
+			<div className="reward-coin" aria-hidden="true">
+				★
+			</div>
+			<h1>සහභාගීත්ව ත්‍යාගය</h1>
+			<p className="reward-value">+{points} කාසිය</p>
+			<p>මෙය ඔබ මෙහෙයුම සම්පූර්ණ කළ නිසා ලැබුණු ත්‍යාගයකි.</p>
+			<button className="primary-action" onClick={onContinue}>
+				සාරාංශය
+			</button>
+		</section>
+	);
+}
+function Summary({
+	supported,
+	onProgress,
+	onHome,
+}: {
+	supported: boolean;
+	onProgress(): void;
+	onHome(): void;
+}) {
+	return (
+		<section>
+			<p className="eyebrow">අද සාරාංශය</p>
+			<h1>ඉගෙනීම ඉදිරියට!</h1>
+			<div className="summary-grid">
+				<div>
+					<strong>1</strong>
+					<span>ක්‍රියාකාරකම</span>
+				</div>
+				<div>
+					<strong>~5</strong>
+					<span>මිනිත්තු</span>
+				</div>
+				<div>
+					<strong>{supported ? "1" : "0"}</strong>
+					<span>උදව් මොහොත</span>
+				</div>
+			</div>
+			<p>ස්වාධීන සාක්ෂිය සේවාදායකය විසින් පරීක්ෂා කර ඇත. එය ත්‍යාගයෙන් වෙන්ව තබා ඇත.</p>
+			<button className="primary-action" onClick={onProgress}>
+				ප්‍රගතිය බලන්න
+			</button>
+			<button className="text-action" onClick={onHome}>
+				මුල් පිටුව
+			</button>
+		</section>
+	);
+}
+function Settings({
+	syncState,
+	onSync,
+	reducedMotion,
+	setReducedMotion,
+	onBack,
+}: {
+	syncState: SyncState;
+	onSync(): void;
+	reducedMotion: boolean;
+	setReducedMotion(value: boolean): void;
+	onBack(): void;
+}) {
+	return (
+		<section>
+			<Back onClick={onBack} />
+			<p className="eyebrow">වැඩිහිටි සැකසුම්</p>
+			<h1>යෙදුම් තත්ත්වය</h1>
+			<div className="warning-card">
+				<strong>සංවර්ධන පරීක්ෂණය පමණි</strong>
+				<p>සිංහල අන්තර්ගතය සහ ප්‍රවේශතාව තවම මානව සමාලෝචනයට ලක්වී නොමැත.</p>
+			</div>
+			<label className="toggle">
+				<input
+					type="checkbox"
+					checked={reducedMotion}
+					onChange={(event) => setReducedMotion(event.target.checked)}
+				/>{" "}
+				චලනය අඩු කරන්න
+			</label>
+			<p role="status">
+				සමමුහුර්ත තත්ත්වය: <strong>{labels[syncState]}</strong>
+			</p>
+			<button className="secondary-action" onClick={onSync}>
+				දැන් සමමුහුර්ත කරන්න
+			</button>
+		</section>
+	);
+}
+function Failure({
+	code,
+	onSafePractice,
+}: {
+	code: string;
+	onSafePractice(): void;
+}) {
+	const copy = code.includes("AUTH")
+		? "පැතිකඩ තහවුරු කළ නොහැක."
+		: code.includes("CONTENT") || code.includes("APPROVAL")
+			? "මෙම ඉගෙනුම් අන්තර්ගතය තවම ලබා දිය නොහැක."
+			: code.includes("SEQUENCE") || code.includes("CONTAMINATED")
+				? "මෙම උත්සාහය ප්‍රගති සාක්ෂියක් ලෙස භාවිතා නොවේ."
+				: "දැන් සේවාවට සම්බන්ධ විය නොහැක.";
+	return (
+		<section className="center-screen">
+			<div className="mascot" aria-hidden="true">
+				☁
+			</div>
+			<h1>මොහොතක් රැඳී සිටිමු</h1>
+			<p>{copy}</p>
+			<p>ආරක්ෂිත පුහුණුවට ආපසු යා හැක. මෙය නිල ප්‍රගති ප්‍රතිඵලයක් නොවේ.</p>
+			<button className="primary-action" onClick={onSafePractice}>
+				මුල් පිටුවට
+			</button>
+		</section>
+	);
+}
+function BlockedProduction({ onSettings }: { onSettings(): void }) {
+	return (
+		<main className="mobile-shell blocked-shell" lang="si">
+			<section className="center-screen">
+				<div className="mascot" aria-hidden="true">
+					🔒
+				</div>
+				<h1>MindBridge</h1>
+				<p>අනුමත ඉගෙනුම් අන්තර්ගතය තවම නිකුත් කර නොමැත.</p>
+				<button className="secondary-action" onClick={onSettings}>
+					තත්ත්වය බලන්න
+				</button>
+			</section>
+		</main>
+	);
+}
+function Back({ onClick }: { onClick(): void }) {
+	return (
+		<button className="back-button" aria-label="ආපසු" onClick={onClick}>
+			<AppIcon name="back" size={19} /> ආපසු
+		</button>
+	);
+}
+
+function RewardsHub() {
+	const achievements = [
+		{ icon: "★", title: "පළමු පියවර", note: "පළමු මෙහෙයුම", tone: "violet", earned: true },
+		{ icon: "🔥", title: "දින 3 මාලාව", note: "දින තුනක් අඛණ්ඩව", tone: "orange", earned: true },
+		{ icon: "½", title: "බාග වීරයා", note: "බාග 5ක් නිවැරදිව", tone: "teal", earned: false },
+		{ icon: "◇", title: "කුතුහලය", note: "පාඩම් 10ක් උත්සාහ කරන්න", tone: "sky", earned: false },
+	];
+	return (
+		<section className="tab-screen rewards-screen">
+			<div className="page-title-row"><div><p className="eyebrow">මගේ එකතුව</p><h1>ත්‍යාග</h1></div><div className="coin-balance">● <strong>28</strong></div></div>
+			<article className="level-card">
+				<div className="level-medal"><span>2</span></div>
+				<div><small>දැනට මට්ටම</small><h2>පුංචි ගවේෂකයා</h2><p>මට්ටම 3 දක්වා තවත් XP 40යි</p></div>
+				<div className="level-progress" role="progressbar" aria-label="මට්ටමේ ප්‍රගතිය" aria-valuemin={0} aria-valuemax={100} aria-valuenow={60}><span style={{ width: "60%" }} /></div>
+			</article>
+			<div className="section-heading"><div><p className="eyebrow">ලාංඡන</p><h2>ඔබගේ ජයග්‍රහණ</h2></div><span className="earned-count">2 / 4</span></div>
+			<div className="achievement-grid">
+				{achievements.map((achievement) => (
+					<article className={`achievement-card achievement-card--${achievement.tone}${achievement.earned ? "" : " achievement-card--locked"}`} key={achievement.title}>
+						<div className="achievement-icon">{achievement.earned ? achievement.icon : "⌁"}</div>
+						<h3>{achievement.title}</h3><p>{achievement.note}</p>
+					</article>
+				))}
+			</div>
+			<article className="streak-card"><span className="streak-flame">🔥</span><div><small>මෙම සතියේ මාලාව</small><h2>දින 3ක් අඛණ්ඩව!</h2><div className="week-dots">{["ස", "අ", "බ", "බ්‍ර", "සි", "සෙ", "ඉ"].map((day, index) => <span className={index < 3 ? "week-dot week-dot--done" : "week-dot"} key={day}>{index < 3 ? "✓" : day}</span>)}</div></div></article>
+		</section>
+	);
+}
+
+function Account({ name, onSettings, onOnboarding }: { name: string; onSettings(): void; onOnboarding(): void }) {
+	return (
+		<section className="tab-screen account-screen">
+			<div className="profile-hero"><LearnerAvatar /><div><p className="eyebrow">මගේ පැතිකඩ</p><h1>{name}</h1><p>5 ශ්‍රේණිය · සිංහල</p></div></div>
+			<div className="profile-stats"><div><strong>2</strong><span>මට්ටම</span></div><div><strong>60</strong><span>මුළු XP</span></div><div><strong>2</strong><span>ලාංඡන</span></div></div>
+			<h2 className="list-title">පැතිකඩ සහ යෙදුම</h2>
+			<div className="settings-list">
+				<button onClick={onSettings}><span className="settings-icon"><AppIcon name="settings" size={21} /></span><span><strong>යෙදුම් සැකසුම්</strong><small>ප්‍රවේශතාව සහ සමමුහුර්ත කිරීම</small></span><b>›</b></button>
+				<button onClick={onOnboarding}><span className="settings-icon settings-icon--orange"><AppIcon name="sparkle" size={21} /></span><span><strong>හැඳින්වීම නැවත බලන්න</strong><small>MindBridge භාවිත කරන ආකාරය</small></span><b>›</b></button>
+				<button><span className="settings-icon settings-icon--teal"><AppIcon name="shield" size={21} /></span><span><strong>දෙමාපිය ප්‍රදේශය</strong><small>වැඩිහිටි අවසරය අවශ්‍යයි</small></span><b>›</b></button>
+			</div>
+			<div className="profile-brand">
+				<BrandMark variant="submark" />
+				<span>MindBridge</span>
+				<small>Learn · Play · Grow</small>
+			</div>
+		</section>
+	);
+}
+
+type TabDestination = "home" | "learn" | "practice" | "mindy" | "progress";
+function BottomNavigation({ active, onNavigate }: { active: string; onNavigate(destination: TabDestination): void }) {
+	const tabs: Array<{ id: TabDestination; label: string; icon: IconName }> = [
+		{ id: "home", label: "මුල් පිටුව", icon: "home" },
+		{ id: "learn", label: "ක්‍රීඩා", icon: "game" },
+		{ id: "practice", label: "පුහුණුව", icon: "document" },
+		{ id: "mindy", label: "Mindy", icon: "sparkle" },
+		{ id: "progress", label: "ප්‍රගතිය", icon: "chart" },
+	];
+	return (
+		<nav className="bottom-navigation" aria-label="ප්‍රධාන මෙනුව">
+			{tabs.map((tab) => {
+				const selected = active === tab.id;
+				return <button key={tab.id} className={selected ? "nav-item nav-item--active" : "nav-item"} aria-current={selected ? "page" : undefined} onClick={() => onNavigate(tab.id)}><span><AppIcon name={tab.icon} size={23} /></span><small>{tab.label}</small></button>;
+			})}
+		</nav>
+	);
+}
+
+function BrandMark({
+	className = "",
+	variant = "submark",
+}: {
+	className?: string;
+	variant?: "primary" | "submark";
+}) {
+	const src = variant === "primary" ? "/primary_logo.png" : "/logo_submark.png";
+	return (
+		<img
+			className={`brand-mark brand-mark--${variant} ${className}`.trim()}
+			src={src}
+			alt="MindBridge"
+		/>
+	);
+}
+
+function LearnerAvatar() {
+	return <svg className="learner-avatar" viewBox="0 0 100 100" role="img" aria-label="තෝරාගත් අවතාරය"><circle cx="50" cy="50" r="48" fill="#efecfd"/><ellipse cx="50" cy="71" rx="27" ry="20" fill="#6c5ce7"/><circle cx="50" cy="43" r="23" fill="#f2bf91"/><path d="M27 38Q50 12 73 38Q72 20 50 19Q28 21 27 38Z" fill="#342a38"/><circle cx="42" cy="43" r="2.7" fill="#2e2a45"/><circle cx="58" cy="43" r="2.7" fill="#2e2a45"/><path d="M43 52q7 7 14 0" fill="none" stroke="#2e2a45" strokeLinecap="round" strokeWidth="2.4"/><circle cx="34" cy="49" r="3" fill="#ff9f5a" opacity=".45"/><circle cx="66" cy="49" r="3" fill="#ff9f5a" opacity=".45"/></svg>;
+}
+
+type IconName = "home" | "game" | "trophy" | "chart" | "user" | "book" | "sparkle" | "globe" | "shield" | "play" | "target" | "settings" | "back" | "bell" | "fire" | "arrow" | "support" | "document";
+function AppIcon({ name, size = 24 }: { name: IconName; size?: number }) {
+	const paths: Record<IconName, ReactNode> = {
+		home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
+		game: <><path d="M8 8h8a5 5 0 0 1 4.7 6.7l-1.1 3.1a2.5 2.5 0 0 1-4.1 1l-1.3-1.2H9.8l-1.3 1.2a2.5 2.5 0 0 1-4.1-1l-1.1-3.1A5 5 0 0 1 8 8Z"/><path d="M7 12v4M5 14h4M16.5 12.5h.01M18.5 15h.01"/></>,
+		trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5v2a3 3 0 0 0 3 3M16 6h3v2a3 3 0 0 1-3 3M12 13v4M8 21h8M9 17h6v4H9z"/></>,
+		chart: <><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></>,
+		user: <><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
+		book: <><path d="M4 5a3 3 0 0 1 3-2h5v17H7a3 3 0 0 0-3 2V5ZM20 5a3 3 0 0 0-3-2h-5v17h5a3 3 0 0 1 3 2V5Z"/></>,
+		sparkle: <><path d="m12 3 1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4L12 3Z"/><path d="m19 14 .8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z"/></>,
+		globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></>,
+		shield: <><path d="M12 3 4.5 6v5.5c0 4.7 3.2 8.1 7.5 9.5 4.3-1.4 7.5-4.8 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-5"/></>,
+		play: <path d="m9 7 8 5-8 5V7Z"/>,
+		target: <><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></>,
+		settings: <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></>,
+		back: <><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></>,
+		bell: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></>,
+		fire: <path d="M12 22c4 0 7-3 7-7 0-3-1.5-5.5-4-8 .2 3-1.3 4-2 4-1-4-3-6-3-6-1 4-5 6-5 11 0 3.4 3 6 7 6Z"/>,
+		arrow: <><path d="M5 12h14M14 7l5 5-5 5"/></>,
+		support: <><path d="M8.5 5.5A4.5 4.5 0 0 0 4 10c0 4.5 8 9 8 9s8-4.5 8-9a4.5 4.5 0 0 0-8-2.8 4.5 4.5 0 0 0-3.5-1.7Z"/><path d="m9 12 2 2 4-4"/></>,
+		document: <><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></>,
+	};
+	return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+}
