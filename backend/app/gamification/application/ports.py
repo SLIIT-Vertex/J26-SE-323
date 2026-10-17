@@ -58,6 +58,7 @@ class LearnerStateGateway(Protocol):
         learner_id: UUID,
         skill_id: SkillId,
         observed_no_earlier_than: datetime,
+        session_id: UUID | None = None,
     ) -> LearnerStateEvidence | None: ...
 
 

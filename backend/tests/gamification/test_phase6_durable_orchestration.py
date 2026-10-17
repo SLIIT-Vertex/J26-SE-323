@@ -100,6 +100,17 @@ def test_proposed_episode_is_durable_replayable_and_authorizes_only_delayed_upda
     assert result["percentage_point_value"] == "100"
     assert result["policy_update_status"] == "authorized_delayed"
     assert {record["assistance_state"] for record in publisher.records} == {"none"}
+    for record in publisher.records:
+        assert record["attempt_id"]
+        assert record["correct"] in {True, False}
+        assert record["difficulty"] == "easy"
+        assert record["difficulty_source"] == "introductory"
+        assert record["response_time_ms"] is None
+        assert record["supported"] is False
+        assert record["hint_count"] == 0
+        assert record["universal_skill_id"] == "MAT-FRC"
+        assert record["environment"] in {"development", "test"}
+        assert record["model_ingestion_eligible"] is False
     reconstruction = service.reconstruct(episode_id)
     assert reconstruction["state_sha256"]
     gateways = reconstruction["state"]["external_gateways"]

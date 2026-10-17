@@ -1,4 +1,4 @@
-"""In-memory and outbox publishers for gamification-learner-evidence-v1."""
+"""In-memory and outbox publishers for versioned gamification learner evidence."""
 
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -54,7 +54,7 @@ class SqlAlchemyLearnerEvidenceOutbox:
                 skill_code=event.skill_id,
                 universal_skill_id=event.universal_skill_id,
                 payload_json=payload,
-                contract_version="gamification-learner-evidence-v1",
+                contract_version=str(payload["contract_version"]),
                 status="pending",
                 attempt_count=1,
                 created_at=datetime.now(UTC),

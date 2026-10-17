@@ -257,6 +257,7 @@ def test_state_from_the_same_session_within_max_age_is_available() -> None:
     )
     assert result.status is SupportNeedStatus.AVAILABLE
     assert result.support_need == 0.7
+    assert result.recommended_action == "request_tutor_support"
 
 
 def test_state_from_another_session_is_stale() -> None:
@@ -266,6 +267,7 @@ def test_state_from_another_session_is_stale() -> None:
     assert result.support_need is None
     assert result.session_id == "session-1"
     assert result.observed_at == AWARE_OBSERVED_AT
+    assert result.recommended_action is None
 
 
 def test_state_older_than_max_age_is_stale() -> None:

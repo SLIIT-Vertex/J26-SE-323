@@ -267,9 +267,11 @@ _BANNED_EVIDENCE_FIELDS = {
 
 
 class LearnerEvidenceContract(BoundaryModel):
-    """gamification-learner-evidence-v1. Codes and scores only; item text is rejected."""
+    """Versioned codes-and-scores evidence; item text and answers are rejected."""
 
-    contract_version: Literal["gamification-learner-evidence-v1"]
+    contract_version: Literal[
+        "gamification-learner-evidence-v1", "gamification-learner-evidence-v2"
+    ]
     event_type: Literal[
         "attempt_summary",
         "detected_difficulty",
@@ -295,6 +297,17 @@ class LearnerEvidenceContract(BoundaryModel):
             raise ValueError("learner evidence must not contain item text or answers")
         if "episode_id" not in self.evidence_reference:
             raise ValueError("evidence_reference requires episode_id")
+        if self.contract_version == "gamification-learner-evidence-v2" and self.event_type == "attempt_summary":
+            required_reference = {"attempt_id", "session_id", "presentation_id"}
+            required_payload = {
+                "correct", "difficulty", "difficulty_numeric", "difficulty_mapping_version",
+                "response_time_ms", "supported", "hint_count", "environment",
+                "model_ingestion_eligible", "measurement_role", "earned_score", "maximum_score",
+            }
+            if not required_reference.issubset(self.evidence_reference):
+                raise ValueError("v2 scored evidence requires attempt/session/presentation references")
+            if not required_payload.issubset(self.payload):
+                raise ValueError("v2 scored evidence is missing classifications")
         return self
 
 

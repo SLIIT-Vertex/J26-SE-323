@@ -99,8 +99,9 @@ This component owns game items, scaffolds, rubrics, answer keys, episodes, telem
 decisions, Independence Gain, rewards, consent, and the evidence outbox. Those game records are
 not indexed as curriculum evidence.
 
-It reads the learner id, Knowledge Tracing mastery, learner-state support need, and official
-curriculum passages through `app.curriculum`. Unapproved or rejected passages are not shown.
+It reads the learner id, Knowledge Tracing mastery, learner-state recommendation and support
+need, and official curriculum passages through `app.curriculum`. Unapproved or rejected
+passages are not shown.
 Names and guardian details stay out of these records. The only foreign product key is
 `learners.id`. Cross-component skill calls use the Universal Skill Node parent.
 
@@ -130,6 +131,9 @@ data/gamification/               draft content and synthetic development data
 Machine contracts in this folder are `phase6-mobile-contracts-v1.json` and
 `openapi-pilot-v1.json`. Development routes are `/api/v1/development/phase6`. The client flag
 `VITE_ENABLE_PHASE7_DRAFT` and the header `X-Dev-Principal` are for local composition only.
+
+The answer-time learner-state, visual-feature, consent, and learner-evidence contract is
+documented in [Learner-state integration at answer submission](learner-state-answer-integration.md).
 
 ## 7. Before a child uses it
 

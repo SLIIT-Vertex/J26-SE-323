@@ -316,15 +316,25 @@ class Phase6Orchestrator:
         return response
 
     def submit_before(
-        self, episode_id: UUID, *, option_id: str, idempotency_key: str
+        self,
+        episode_id: UUID,
+        *,
+        option_id: str,
+        response_time_ms: int | None = None,
+        idempotency_key: str,
     ) -> dict[str, object]:
         return self._mutate(
             episode_id,
             idempotency_key,
-            {"op": "submit_before", "episode_id": str(episode_id), "option_id": option_id},
+            {
+                "op": "submit_before",
+                "episode_id": str(episode_id),
+                "option_id": option_id,
+                "response_time_ms": response_time_ms,
+            },
             expected="before_presented",
             transition=lambda state, package, at: self._score_before(
-                state, package, option_id, at
+                state, package, option_id, response_time_ms, at
             ),
         )
 
@@ -376,15 +386,25 @@ class Phase6Orchestrator:
         )
 
     def submit_after(
-        self, episode_id: UUID, *, option_id: str, idempotency_key: str
+        self,
+        episode_id: UUID,
+        *,
+        option_id: str,
+        response_time_ms: int | None = None,
+        idempotency_key: str,
     ) -> dict[str, object]:
         return self._mutate(
             episode_id,
             idempotency_key,
-            {"op": "submit_after", "episode_id": str(episode_id), "option_id": option_id},
+            {
+                "op": "submit_after",
+                "episode_id": str(episode_id),
+                "option_id": option_id,
+                "response_time_ms": response_time_ms,
+            },
             expected="after_presented",
             transition=lambda state, package, at: self._score_after(
-                state, package, option_id, at
+                state, package, option_id, response_time_ms, at
             ),
         )
 
@@ -501,10 +521,13 @@ class Phase6Orchestrator:
         state: dict[str, object],
         package: PublicPhase2Package,
         option_id: str,
+        response_time_ms: int | None,
         at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
         before = _item(package, "unsupported_before")
-        scored = self._score(state, before, option_id, AssistanceState.NONE, at)
+        scored = self._score(
+            state, before, option_id, AssistanceState.NONE, response_time_ms, at
+        )
         state["attempts"].append(scored)  # type: ignore[union-attr]
         _append_event(state, "unsupported_before_scored", at, UUID(scored["presentation_id"]))
         self._publish_score(state, scored)
@@ -813,10 +836,13 @@ class Phase6Orchestrator:
         state: dict[str, object],
         package: PublicPhase2Package,
         option_id: str,
+        response_time_ms: int | None,
         at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
         after = _item(package, "unsupported_after")
-        scored = self._score(state, after, option_id, AssistanceState.NONE, at)
+        scored = self._score(
+            state, after, option_id, AssistanceState.NONE, response_time_ms, at
+        )
         state["attempts"].append(scored)  # type: ignore[union-attr]
         _append_event(state, "unsupported_after_scored", at, UUID(scored["presentation_id"]))
         self._publish_score(state, scored)
@@ -868,6 +894,7 @@ class Phase6Orchestrator:
         item: ItemRevision,
         option_id: str,
         assistance: AssistanceState,
+        response_time_ms: int | None,
         at: datetime,
     ) -> dict[str, object]:
         if option_id not in {option.option_id for option in item.options}:
@@ -904,6 +931,13 @@ class Phase6Orchestrator:
             "rubric_version": attempt.rubric_version,
             "scoring_version": attempt.scoring_version,
             "server_authoritative": True,
+            "correct": attempt.earned_score == attempt.maximum_score,
+            "response_time_ms": response_time_ms,
+            "supported": assistance is not AssistanceState.NONE,
+            "hint_count": 0,
+            "difficulty": "easy",
+            "difficulty_source": item.difficulty_band,
+            "difficulty_mapping_version": "phase6-introductory-v1",
             "scored_at": at.isoformat(),
         }
 
@@ -1014,13 +1048,25 @@ class Phase6Orchestrator:
                 "contract_version": self._publisher.version,
                 "learner_id": state["learner_id"],
                 "skill_id": state["skill_id"],
+                "universal_skill_id": "MAT-FRC",
                 "episode_id": state["episode_id"],
                 "presentation_id": attempt["presentation_id"],
+                "attempt_id": attempt["attempt_id"],
                 "measurement_role": attempt["role"],
                 "assistance_state": attempt["assistance_state"],
                 "earned_score": attempt["earned_score"],
                 "maximum_score": attempt["maximum_score"],
                 "scoring_version": attempt["scoring_version"],
+                "correct": attempt["correct"],
+                "response_time_ms": attempt["response_time_ms"],
+                "supported": attempt["supported"],
+                "hint_count": attempt["hint_count"],
+                "difficulty": attempt["difficulty"],
+                "difficulty_source": attempt["difficulty_source"],
+                "difficulty_mapping_version": attempt["difficulty_mapping_version"],
+                "environment": state["environment"],
+                "model_ingestion_eligible": False,
+                "session_id": state["session_id"],
             }
         )
 

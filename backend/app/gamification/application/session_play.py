@@ -9,6 +9,7 @@ import json
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from typing import Protocol
 from uuid import UUID, uuid4
 
 from app.gamification.application.delivery import page_slice
@@ -31,6 +32,7 @@ from app.gamification.application.experiment_assignment import (
     AssignmentBook,
 )
 from app.gamification.application.monitoring import EvaluationMonitor
+from app.gamification.application.ports import ConsentStore
 from app.gamification.application.struggle_trigger import StruggleEvidence
 from app.gamification.application.template_selection import TemplateCompatibilityTable
 from app.gamification.content.catalog import PilotContentCatalog
@@ -71,6 +73,26 @@ class PlaySession:
     device_capabilities: tuple[str, ...] = ("choice_quest", "build_manipulate")
     arm_key: str = "baseline_performance_triggered"
     skill_id: str | None = None
+    learner_state_window_id: int = 0
+
+
+class LearnerStateAnswerGateway(Protocol):
+    """Game boundary whose adapter owns consent checks, timeouts, and recording."""
+
+    def record_answer(
+        self,
+        *,
+        session_id: UUID,
+        learner_id: UUID,
+        window_id: int,
+        skill_id: str,
+        observed_at: datetime,
+        correct: bool,
+        response_time_ms: int | None,
+        supported: bool,
+        hint_count: int,
+        visual: dict[str, float],
+    ) -> str | None: ...
 
 
 class SessionPlay:
@@ -86,6 +108,8 @@ class SessionPlay:
         protocol: FrozenProtocol | None = None,
         monitor: EvaluationMonitor | None = None,
         deliver_approved_content: bool = False,
+        learner_state: LearnerStateAnswerGateway | None = None,
+        camera_consent: ConsentStore | None = None,
     ) -> None:
         self._cases = cases
         self._episodes = episodes
@@ -96,6 +120,8 @@ class SessionPlay:
         self._protocol = protocol
         self._monitor = monitor or EvaluationMonitor()
         self._deliver_approved_content = deliver_approved_content
+        self._learner_state = learner_state
+        self._camera_consent = camera_consent
         self._rewards: dict[UUID, list[dict[str, object]]] = {}
         self._skills: dict[tuple[UUID, str], dict[str, float]] = {}
         self._lock = threading.Lock()
@@ -205,6 +231,7 @@ class SessionPlay:
         selected_option_id: str,
         response_time_ms: int | None,
         idempotency_key: str,
+        visual: dict[str, float] | None = None,
     ) -> dict[str, object]:
         fingerprint = _fingerprint(
             {
@@ -212,13 +239,19 @@ class SessionPlay:
                 "episode_id": str(episode_id),
                 "selected_option_id": selected_option_id,
                 "response_time_ms": response_time_ms,
+                "visual": visual,
             }
         )
         return self._once(
             idempotency_key,
             fingerprint,
             lambda: self._respond(
-                session_id, learner_id, episode_id, selected_option_id, response_time_ms
+                session_id,
+                learner_id,
+                episode_id,
+                selected_option_id,
+                response_time_ms,
+                visual,
             ),
         )
 
@@ -430,18 +463,23 @@ class SessionPlay:
         episode_id: UUID,
         selected_option_id: str,
         response_time_ms: int | None,
+        visual: dict[str, float] | None,
     ) -> dict[str, object]:
         session = self._active(session_id, learner_id)
         if session.episode_id != episode_id:
             raise PlayError("EPISODE_STATE_CONFLICT", 409)
         if session.awaiting == "baseline":
-            return self._baseline(session, selected_option_id, response_time_ms)
+            return self._baseline(session, selected_option_id, response_time_ms, visual)
         if session.awaiting == "verification":
-            return self._verification(session, selected_option_id, response_time_ms)
+            return self._verification(session, selected_option_id, response_time_ms, visual)
         raise PlayError("EPISODE_STATE_CONFLICT", 409)
 
     def _baseline(
-        self, session: PlaySession, selected_option_id: str, response_time_ms: int | None
+        self,
+        session: PlaySession,
+        selected_option_id: str,
+        response_time_ms: int | None,
+        visual: dict[str, float] | None,
     ) -> dict[str, object]:
         assert session.episode_id is not None and session.item_id is not None
         item = self._catalog.item(session.item_id)
@@ -472,6 +510,16 @@ class SessionPlay:
                 decision_mode=session.decision_mode,
             )
         )
+        learner_state_action = self._record_learner_state(
+            session=session,
+            item=item,
+            at=at,
+            correct=correct,
+            response_time_ms=response_time_ms,
+            supported=False,
+            hint_count=0,
+            visual=visual,
+        )
         assessed = self._cases.assess_struggle.execute(
             AssessStruggleCommand(
                 episode_id=EpisodeId(session.episode_id),
@@ -482,6 +530,8 @@ class SessionPlay:
                     selected_option_is_misconception_linked=linked,
                     learner_requested_help=False,
                     source_as_of={"baseline_response": at},
+                    learner_state_recommended_action=learner_state_action,
+                    learner_state_observed_at=at if learner_state_action is not None else None,
                 ),
                 at=at + timedelta(milliseconds=1),
             )
@@ -579,7 +629,11 @@ class SessionPlay:
         return _step("present_verification", session, item, support=None)
 
     def _verification(
-        self, session: PlaySession, selected_option_id: str, response_time_ms: int | None
+        self,
+        session: PlaySession,
+        selected_option_id: str,
+        response_time_ms: int | None,
+        visual: dict[str, float] | None,
     ) -> dict[str, object]:
         assert session.episode_id is not None and session.item_id is not None
         item = self._catalog.item(session.item_id)
@@ -599,6 +653,16 @@ class SessionPlay:
                     response_time_ms=response_time_ms,
                 )
             )
+        )
+        self._record_learner_state(
+            session=session,
+            item=item,
+            at=at,
+            correct=correct,
+            response_time_ms=response_time_ms,
+            supported=False,
+            hint_count=0,
+            visual=visual,
         )
         self._guard(
             lambda: self._cases.calculate_outcome.execute(
@@ -620,6 +684,52 @@ class SessionPlay:
         session.awaiting = "done"
         self._award(session, None if finished.outcome is None else finished.outcome.validity)
         return _step("finish", session, item, support=None)
+
+    def _record_learner_state(
+        self,
+        *,
+        session: PlaySession,
+        item: ItemDefinition,
+        at: datetime,
+        correct: bool,
+        response_time_ms: int | None,
+        supported: bool,
+        hint_count: int,
+        visual: dict[str, float] | None,
+    ) -> str | None:
+        session.learner_state_window_id += 1
+        if visual is None or self._learner_state is None or self._camera_consent is None:
+            return None
+        try:
+            consent = self._camera_consent.get_consent(
+                learner_id=session.learner_id, purpose="learner_state_camera"
+            )
+        except LookupError:
+            return None
+        if (
+            not consent.granted
+            or consent.decided_at > at
+            or (consent.expires_at is not None and consent.expires_at <= at)
+        ):
+            return None
+        universal = self._catalog.universal_skill_id(item.skill_id)
+        if universal is None:
+            return None
+        try:
+            return self._learner_state.record_answer(
+                session_id=session.session_id,
+                learner_id=session.learner_id,
+                window_id=session.learner_state_window_id,
+                skill_id=universal,
+                observed_at=at,
+                correct=correct,
+                response_time_ms=response_time_ms,
+                supported=supported,
+                hint_count=hint_count,
+                visual=visual,
+            )
+        except Exception:  # noqa: BLE001 - optional evidence never fails answer storage
+            return None
 
     def assign_arm(
         self,

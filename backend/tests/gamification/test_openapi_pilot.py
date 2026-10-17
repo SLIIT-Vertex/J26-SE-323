@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.gamification.api.router import router
+from app.gamification.api.router import ResponseRequest, router
 
 CONTRACT = (
     Path(__file__).resolve().parents[3]
@@ -23,3 +23,16 @@ def pilot_openapi() -> dict[str, object]:
 
 def test_checked_in_openapi_matches_the_pilot_router() -> None:
     assert json.loads(CONTRACT.read_text(encoding="utf-8")) == pilot_openapi()
+
+
+def test_invalid_optional_visual_is_discarded_without_rejecting_answer() -> None:
+    request = ResponseRequest.model_validate(
+        {
+            "episode_id": "00000000-0000-4000-8000-000000000001",
+            "selected_option_id": "A",
+            "response_time_ms": 1200,
+            "visual": {"face_visibility_ratio": 2.0},
+        }
+    )
+
+    assert request.visual is None

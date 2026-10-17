@@ -4309,6 +4309,16 @@
               }
             ],
             "title": "Response Time Ms"
+          },
+          "visual": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VisualFeatureWindow"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false,
@@ -4905,6 +4915,72 @@
           "verification_instance_id"
         ],
         "title": "VerificationPairRequest"
+      },
+      "VisualFeatureWindow": {
+        "properties": {
+          "mean_eye_openness": {
+            "type": "number",
+            "title": "Mean Eye Openness"
+          },
+          "std_eye_openness": {
+            "type": "number",
+            "title": "Std Eye Openness"
+          },
+          "mean_gaze_ratio": {
+            "type": "number",
+            "title": "Mean Gaze Ratio"
+          },
+          "std_gaze_ratio": {
+            "type": "number",
+            "title": "Std Gaze Ratio"
+          },
+          "mean_pitch": {
+            "type": "number",
+            "title": "Mean Pitch"
+          },
+          "mean_yaw": {
+            "type": "number",
+            "title": "Mean Yaw"
+          },
+          "mean_roll": {
+            "type": "number",
+            "title": "Mean Roll"
+          },
+          "mean_abs_pitch": {
+            "type": "number",
+            "title": "Mean Abs Pitch"
+          },
+          "mean_abs_yaw": {
+            "type": "number",
+            "title": "Mean Abs Yaw"
+          },
+          "mean_abs_roll": {
+            "type": "number",
+            "title": "Mean Abs Roll"
+          },
+          "face_visibility_ratio": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Face Visibility Ratio"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "mean_eye_openness",
+          "std_eye_openness",
+          "mean_gaze_ratio",
+          "std_gaze_ratio",
+          "mean_pitch",
+          "mean_yaw",
+          "mean_roll",
+          "mean_abs_pitch",
+          "mean_abs_yaw",
+          "mean_abs_roll",
+          "face_visibility_ratio"
+        ],
+        "title": "VisualFeatureWindow"
       }
     }
   }
