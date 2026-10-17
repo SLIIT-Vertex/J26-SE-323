@@ -46,6 +46,7 @@ class OpenEpisodeRequest(Boundary):
 
 class AnswerRequest(Boundary):
     option_id: str = Field(min_length=1, max_length=32)
+    response_time_ms: int | None = Field(default=None, ge=0, le=86_400_000)
 
 
 class SupportCompleteRequest(Boundary):
@@ -219,7 +220,10 @@ def answer_before(
     _owned(orchestrator, episode_id, learner_id)
     return _call(
         lambda: orchestrator.submit_before(
-            episode_id, option_id=body.option_id, idempotency_key=key
+            episode_id,
+            option_id=body.option_id,
+            response_time_ms=body.response_time_ms,
+            idempotency_key=key,
         )
     )
 
@@ -276,7 +280,10 @@ def answer_after(
     _owned(orchestrator, episode_id, learner_id)
     return _call(
         lambda: orchestrator.submit_after(
-            episode_id, option_id=body.option_id, idempotency_key=key
+            episode_id,
+            option_id=body.option_id,
+            response_time_ms=body.response_time_ms,
+            idempotency_key=key,
         )
     )
 

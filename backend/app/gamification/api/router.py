@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.gamification.api.dependencies import (
     NOT_FOR_PRODUCTION,
@@ -54,10 +54,39 @@ class NextActivityRequest(Boundary):
     )
 
 
+class VisualFeatureWindow(Boundary):
+    mean_eye_openness: float = Field(allow_inf_nan=False)
+    std_eye_openness: float = Field(allow_inf_nan=False)
+    mean_gaze_ratio: float = Field(allow_inf_nan=False)
+    std_gaze_ratio: float = Field(allow_inf_nan=False)
+    mean_pitch: float = Field(allow_inf_nan=False)
+    mean_yaw: float = Field(allow_inf_nan=False)
+    mean_roll: float = Field(allow_inf_nan=False)
+    mean_abs_pitch: float = Field(allow_inf_nan=False)
+    mean_abs_yaw: float = Field(allow_inf_nan=False)
+    mean_abs_roll: float = Field(allow_inf_nan=False)
+    face_visibility_ratio: float = Field(ge=0.0, le=1.0, allow_inf_nan=False)
+
+
 class ResponseRequest(Boundary):
     episode_id: UUID
     selected_option_id: str = Field(min_length=1, max_length=32)
     response_time_ms: int | None = Field(default=None, ge=0, le=86_400_000)
+    visual: VisualFeatureWindow | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def discard_invalid_optional_visual(cls, value: object) -> object:
+        """Optional camera evidence can never turn a valid answer into a 422."""
+        if not isinstance(value, dict) or "visual" not in value or value["visual"] is None:
+            return value
+        try:
+            VisualFeatureWindow.model_validate(value["visual"])
+        except Exception:  # noqa: BLE001
+            cleaned = dict(value)
+            cleaned.pop("visual", None)
+            return cleaned
+        return value
 
 
 class SupportCompleteRequest(Boundary):
@@ -510,6 +539,7 @@ def submit_response(
         episode_id=body.episode_id,
         selected_option_id=body.selected_option_id,
         response_time_ms=body.response_time_ms,
+        visual=None if body.visual is None else body.visual.model_dump(),
         idempotency_key=key,
     )
     return _typed(StepView, result, response, correlation_id)

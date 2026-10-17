@@ -73,6 +73,7 @@ class SupportNeedResult(BaseModel):
     observed_at: datetime | None = None
     # Learning session that produced the stored state.
     session_id: str | None = None
+    recommended_action: str | None = None
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
@@ -81,9 +82,11 @@ class SupportNeedResult(BaseModel):
         if self.status is not SupportNeedStatus.AVAILABLE and self.support_need is not None:
             raise ValueError("only AVAILABLE may contain support_need")
         if self.status is SupportNeedStatus.NOT_FOUND and (
-            self.observed_at is not None or self.session_id is not None
+            self.observed_at is not None
+            or self.session_id is not None
+            or self.recommended_action is not None
         ):
-            raise ValueError("NOT_FOUND cannot contain observed_at or session_id")
+            raise ValueError("NOT_FOUND cannot contain stored state")
         if self.status is not SupportNeedStatus.NOT_FOUND and self.observed_at is None:
             raise ValueError("a stored state requires observed_at")
         return self
@@ -191,6 +194,8 @@ class StoredSupportNeedProvider:
 
         if self._is_stale(state, request):
             return SupportNeedResult(status=SupportNeedStatus.STALE, **stored)
+
+        stored["recommended_action"] = state.recommended_action
 
         if state.support_need is None:
             return SupportNeedResult(status=SupportNeedStatus.UNCERTAIN, **stored)

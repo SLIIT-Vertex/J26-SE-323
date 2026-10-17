@@ -66,6 +66,7 @@ class LearnerStateEvidence:
     confidence: float | None = None
     reliability: float | None = None
     uncertain: bool = False
+    recommended_action: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,6 +193,7 @@ class LearnerEvidenceEvent:
     confidence: float | None
     evidence_reference: Mapping[str, str]
     payload: Mapping[str, float | int | bool | str | None]
+    contract_version: str = "gamification-learner-evidence-v1"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "evidence_reference", MappingProxyType(dict(self.evidence_reference)))
@@ -199,11 +201,13 @@ class LearnerEvidenceEvent:
 
     @property
     def idempotency_key(self) -> str:
-        return f"{self.evidence_reference['episode_id']}:{self.event_type}"
+        attempt_id = self.evidence_reference.get("attempt_id")
+        identity = attempt_id or self.evidence_reference["episode_id"]
+        return f"{identity}:{self.event_type}"
 
     def as_contract(self) -> dict[str, object]:
         return {
-            "contract_version": "gamification-learner-evidence-v1",
+            "contract_version": self.contract_version,
             "event_type": self.event_type,
             "learner_id": self.learner_id,
             "skill_id": self.skill_id,

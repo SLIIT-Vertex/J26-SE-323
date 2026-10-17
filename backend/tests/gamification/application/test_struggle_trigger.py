@@ -111,6 +111,41 @@ def test_uncertain_learner_state_is_not_a_trigger() -> None:
     assert "learner_support_need" in decision.missing_inputs
 
 
+@pytest.mark.parametrize(
+    ("action", "expected"),
+    (
+        ("request_tutor_support", "LEARNER_STATE_TUTOR_SUPPORT"),
+        ("request_reengagement_support", "LEARNER_STATE_REENGAGEMENT_SUPPORT"),
+    ),
+)
+def test_published_recommendations_replace_the_numeric_trigger(
+    action: str, expected: str
+) -> None:
+    decision = StruggleTrigger().evaluate(
+        evidence(
+            learner_support_need=0.01,
+            learner_state_recommended_action=action,
+            learner_state_observed_at=AT,
+        )
+    )
+
+    assert expected in decision.reason_codes
+    assert "LEARNER_STATE_SUPPORT_NEED" not in decision.reason_codes
+
+
+@pytest.mark.parametrize("action", ("none", "monitor", "collect_more_evidence", "unknown"))
+def test_non_triggering_and_unknown_recommendations_do_not_fire(action: str) -> None:
+    decision = StruggleTrigger().evaluate(
+        evidence(
+            learner_support_need=1.0,
+            learner_state_recommended_action=action,
+            learner_state_observed_at=AT,
+        )
+    )
+
+    assert not decision.fired
+
+
 def test_future_evidence_is_rejected() -> None:
     with pytest.raises(ValueError, match="future evidence"):
         StruggleTrigger().evaluate(

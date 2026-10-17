@@ -31,6 +31,7 @@ class StruggleEvidence:
     learner_support_need: float | None = None
     learner_state_observed_at: datetime | None = None
     learner_state_uncertain: bool = False
+    learner_state_recommended_action: str | None = None
     source_as_of: Mapping[str, datetime] | None = None
 
 
@@ -86,7 +87,7 @@ class StruggleTrigger:
         elif evidence.learner_requested_help:
             reasons.append("LEARNER_REQUESTED_HELP")
 
-        self._apply_support_need(evidence, reasons, missing, skipped)
+        self._apply_learner_state_action(evidence, reasons, missing, skipped)
         return TriggerDecision(
             fired=bool(reasons),
             trigger_type=reasons[0] if reasons else "no_struggle",
@@ -96,22 +97,22 @@ class StruggleTrigger:
             config_version=config.trigger_version,
         )
 
-    def _apply_support_need(
+    def _apply_learner_state_action(
         self,
         evidence: StruggleEvidence,
         reasons: list[str],
         missing: list[str],
         skipped: list[str],
     ) -> None:
-        if evidence.learner_state_uncertain:
+        action = evidence.learner_state_recommended_action
+        if evidence.learner_state_uncertain and action is None:
             skipped.append("LEARNER_STATE_UNCERTAIN")
             missing.append("learner_support_need")
             return
-        if evidence.learner_support_need is None:
-            missing.append("learner_support_need")
-            return
         if evidence.learner_state_observed_at is None:
-            missing.append("learner_state_observed_at")
+            missing.append(
+                "learner_support_need" if action is None else "learner_state_observed_at"
+            )
             return
         age_ms = int(
             (evidence.captured_at - evidence.learner_state_observed_at).total_seconds() * 1000
@@ -119,5 +120,17 @@ class StruggleTrigger:
         if age_ms < 0 or age_ms > self.config.support_need_max_age_ms:
             skipped.append("LEARNER_STATE_STALE")
             return
-        if evidence.learner_support_need >= self.config.support_need_threshold:
-            reasons.append("LEARNER_STATE_SUPPORT_NEED")
+        # Compatibility for pre-v2 gateway implementations only. The published v2 adapter
+        # always supplies recommended_action and therefore never uses this numeric path.
+        if action is None:
+            if evidence.learner_support_need is None:
+                missing.append("learner_support_need")
+            elif evidence.learner_support_need >= self.config.support_need_threshold:
+                reasons.append("LEARNER_STATE_SUPPORT_NEED")
+            return
+        if action == "request_tutor_support":
+            reasons.append("LEARNER_STATE_TUTOR_SUPPORT")
+        elif action == "request_reengagement_support":
+            reasons.append("LEARNER_STATE_REENGAGEMENT_SUPPORT")
+        elif action not in {"none", "monitor", "collect_more_evidence"}:
+            skipped.append("LEARNER_STATE_UNKNOWN_RECOMMENDATION")

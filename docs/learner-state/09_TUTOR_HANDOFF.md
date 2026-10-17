@@ -68,6 +68,7 @@ checked by the caller, as in the mastery contract.
 | `support_need` | 0–1, present only when `status` is `AVAILABLE` |
 | `observed_at` | `timestamp` of the window that produced the stored state; absent for `NOT_FOUND` |
 | `session_id` | Learning session that produced the stored state; absent for `NOT_FOUND` |
+| `recommended_action` | Combined categorical action from a fresh stored evaluation; absent for `STALE` and `NOT_FOUND` |
 
 | Status | Meaning | `support_need` |
 | --- | --- | --- |
@@ -112,8 +113,8 @@ result = provider.get_support_need(
     )
 )
 
-if result.status is SupportNeedStatus.AVAILABLE:
-    support_need = result.support_need
+if result.status is not SupportNeedStatus.STALE:
+    recommended_action = result.recommended_action
 ```
 
 ## 4. How the value is calculated

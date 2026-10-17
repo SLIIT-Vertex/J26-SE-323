@@ -81,6 +81,16 @@ _NAMESPACE = UUID("6f0e0c3a-7b1d-4e5f-9a2c-1d8e4b7c0a11")
 _ATTEMPT_CONTRACT = ContractVersion("gamification-attempt-v1")
 _FEATURE_PROTOCOL = "gamification-decision-v1"
 
+
+def _difficulty_band(value: int) -> str:
+    """Versioned mapping for the pilot's documented 1..3 numeric scale."""
+    if value <= 1:
+        return "easy"
+    if value == 2:
+        return "medium"
+    return "hard"
+
+
 @dataclass(frozen=True, slots=True)
 class OpenAdaptiveEpisodeCommand:
     episode_id: EpisodeId
@@ -347,6 +357,7 @@ class _EpisodeCommand:
                     confidence=confidence,
                     evidence_reference=reference,
                     payload=payload,
+                    contract_version="gamification-learner-evidence-v2",
                 )
             )
         except Exception:  # noqa: BLE001  # a publisher failure is withheld evidence, not an episode crash
@@ -439,11 +450,27 @@ class OpenAdaptiveEpisode(_EpisodeCommand):
             at=command.submitted_at,
             model_version="gamification-attempt-v1",
             confidence=None,
-            reference={"episode_id": str(command.episode_id)},
+            reference={
+                "episode_id": str(command.episode_id),
+                "attempt_id": str(response.response_id),
+                "session_id": str(command.session_id),
+                "presentation_id": str(response.response_id),
+                "item_revision": response.item_version,
+            },
             payload={
                 "unsupported_score": response.score,
                 "response_time_ms": command.response_time_ms,
                 "supported": False,
+                "correct": response.is_correct,
+                "difficulty": _difficulty_band(item.difficulty),
+                "difficulty_numeric": item.difficulty,
+                "difficulty_mapping_version": "pilot-difficulty-v1",
+                "hint_count": 0,
+                "environment": "development",
+                "model_ingestion_eligible": False,
+                "measurement_role": "unsupported_before",
+                "earned_score": response.score,
+                "maximum_score": 1.0,
             },
         )
         return state
@@ -521,11 +548,21 @@ class AssessStruggle(_EpisodeCommand):
             return evidence
         cutoff = command.at - timedelta(milliseconds=self._trigger.config.support_need_max_age_ms)
         try:
-            looked_up = self._learner_state.get_support_evidence(
-                learner_id=state.episode.learner_id,
-                skill_id=state.episode.skill_id,
-                observed_no_earlier_than=cutoff,
-            )
+            try:
+                looked_up = self._learner_state.get_support_evidence(
+                    learner_id=state.episode.learner_id,
+                    skill_id=state.episode.skill_id,
+                    observed_no_earlier_than=cutoff,
+                    session_id=state.session_id,
+                )
+            except TypeError:
+                # Transitional compatibility for a v1 in-process adapter. Production adapters
+                # implement the session-aware call above.
+                looked_up = self._learner_state.get_support_evidence(
+                    learner_id=state.episode.learner_id,
+                    skill_id=state.episode.skill_id,
+                    observed_no_earlier_than=cutoff,
+                )
         except Exception:  # noqa: BLE001  # a missing learner-state signal is a recorded absence
             looked_up = None
             _audit(
@@ -542,12 +579,14 @@ class AssessStruggle(_EpisodeCommand):
                 learner_support_need=None,
                 learner_state_observed_at=None,
                 learner_state_uncertain=False,
+                learner_state_recommended_action=None,
             )
         return replace(
             evidence,
             learner_support_need=looked_up.support_need,
             learner_state_observed_at=looked_up.observed_at,
             learner_state_uncertain=looked_up.uncertain,
+            learner_state_recommended_action=looked_up.recommended_action,
         )
 
 
@@ -1051,7 +1090,37 @@ class RecordVerificationResponse(_EpisodeCommand):
             reason_codes=("UNSUPPORTED_VERIFICATION",),
             metadata={"template": state.baseline_template, "phase": "verification"},
         )
-        return self._save(replace(state, episode=episode, verification_response=response))
+        updated = replace(state, episode=episode, verification_response=response)
+        self._publish(
+            updated,
+            event_type="attempt_summary",
+            at=command.at,
+            model_version="gamification-attempt-v1",
+            confidence=None,
+            reference={
+                "episode_id": str(command.episode_id),
+                "attempt_id": str(response.response_id),
+                "session_id": str(state.session_id),
+                "presentation_id": str(response.response_id),
+                "item_revision": response.item_version,
+            },
+            payload={
+                "unsupported_score": response.score,
+                "response_time_ms": command.response_time_ms,
+                "supported": False,
+                "correct": response.is_correct,
+                "difficulty": _difficulty_band(item.difficulty),
+                "difficulty_numeric": item.difficulty,
+                "difficulty_mapping_version": "pilot-difficulty-v1",
+                "hint_count": 0,
+                "environment": "development",
+                "model_ingestion_eligible": False,
+                "measurement_role": "unsupported_after",
+                "earned_score": response.score,
+                "maximum_score": 1.0,
+            },
+        )
+        return self._save(updated)
 
 
 class CalculateIndependenceOutcome(_EpisodeCommand):

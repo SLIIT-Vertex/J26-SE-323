@@ -79,16 +79,13 @@ class SqlAlchemyProbeGateway:
 class SqlAlchemyPhase6EvidencePublisher:
     """Durable outbox publisher that preserves assistance and measurement role."""
 
-    version = "gamification-learner-evidence-v1"
+    version = "gamification-learner-evidence-v2"
 
     def __init__(self, session: Session) -> None:
         self._session = session
 
     def publish(self, evidence: Mapping[str, object]) -> None:
-        key = (
-            f"{evidence['episode_id']}:{evidence['presentation_id']}:"
-            f"{evidence['measurement_role']}"
-        )
+        key = f"{evidence['attempt_id']}:gamification_item_scored"
         existing = self._session.scalar(
             select(LearnerEvidenceOutboxModel).where(
                 LearnerEvidenceOutboxModel.idempotency_key == key
@@ -106,7 +103,7 @@ class SqlAlchemyPhase6EvidencePublisher:
                 event_type="gamification_item_scored",
                 learner_id=UUID(str(evidence["learner_id"])),
                 skill_code=str(evidence["skill_id"]),
-                universal_skill_id="USK-G5-MAT-HALF",
+                universal_skill_id=str(evidence["universal_skill_id"]),
                 payload_json=payload,
                 contract_version=self.version,
                 status="pending",

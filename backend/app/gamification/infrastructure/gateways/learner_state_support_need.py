@@ -12,6 +12,7 @@ from app.gamification.application.ports import AuditOutput, Clock
 from app.gamification.application.records import AuditEvent, LearnerStateEvidence
 from app.gamification.domain.types import ContractVersion, SkillId
 from app.learner_state.application.support_need import (
+    RECOMMENDED_MAX_STATE_AGE_MS,
     SupportNeedProvider,
     SupportNeedRequest,
     SupportNeedStatus,
@@ -43,6 +44,7 @@ class LearnerStateSupportNeedGateway:
         learner_id: UUID,
         skill_id: SkillId,
         observed_no_earlier_than: datetime,
+        session_id: UUID | None = None,
     ) -> LearnerStateEvidence | None:
         universal = self._crosswalk.get(str(skill_id))
         if universal is None:
@@ -54,7 +56,12 @@ class LearnerStateSupportNeedGateway:
         self.requested_skill_ids.append(universal)
         try:
             result = self._provider.get_support_need(
-                SupportNeedRequest(learner_id=learner_id, skill_id=universal)
+                SupportNeedRequest(
+                    learner_id=learner_id,
+                    skill_id=universal,
+                    session_id=None if session_id is None else str(session_id),
+                    max_age_ms=RECOMMENDED_MAX_STATE_AGE_MS,
+                )
             )
         except Exception:  # noqa: BLE001  # a provider failure is a recorded absence
             self._audit_missing("SUPPORT_NEED_PROVIDER_EXCEPTION", skill_id)
@@ -73,6 +80,7 @@ class LearnerStateSupportNeedGateway:
                 observed_at=result.observed_at,
                 contract_version=SUPPORT_NEED_CONTRACT,
                 uncertain=True,
+                recommended_action=result.recommended_action,
             )
         if result.status is not SupportNeedStatus.AVAILABLE or result.support_need is None:
             self._audit_missing(f"SUPPORT_NEED_{result.status.value}", skill_id)
@@ -84,6 +92,7 @@ class LearnerStateSupportNeedGateway:
             observed_at=result.observed_at,
             contract_version=SUPPORT_NEED_CONTRACT,
             support_need=result.support_need,
+            recommended_action=result.recommended_action,
         )
 
     def _audit_missing(self, reason: str, skill_id: SkillId) -> None:

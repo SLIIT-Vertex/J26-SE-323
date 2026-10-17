@@ -12,7 +12,6 @@ import type {
 } from "./generated";
 
 export const NOT_FOR_PRODUCTION = "NOT_FOR_PRODUCTION";
-export const DEV_LEARNER_ID = "00000000-0000-4000-8000-000000000201";
 export const PILOT_SKILL_ID = "G5-MAT-C03-L01-O01";
 
 const apiBase = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/api/v1";
