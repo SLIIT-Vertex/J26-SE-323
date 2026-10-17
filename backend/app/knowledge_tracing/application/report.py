@@ -72,6 +72,14 @@ class ItemResult:
     skill_code: str
     result: str  # correct | wrong | blank | under_review | not_uploaded
     correct_answer_text: str | None
+    # Filled for every question with a final result (right ones too), so the results list can show
+    # them all. The correct answer text above is still given only for wrong or blank questions.
+    skill_name: str | None = None
+    skill_name_si: str | None = None
+    written: tuple["WrittenPart", ...] = ()
+    picture_available: bool = False
+    submission_id: UUID | None = None
+    paper_item_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -185,11 +193,33 @@ class ReportService:
             else:
                 result = "wrong"
             counts = per_skill.setdefault(item.skill_code, [0, 0, 0])
+            submission = final[item.page]
+            english, sinhala = names.get(item.skill_code, (item.skill_code, None))
+            key_by_no = {k.part_no: k for k in keys.get(item.question_id, [])}
+            written = tuple(
+                WrittenPart(
+                    p.part_no,
+                    key_by_no[p.part_no].label if p.part_no in key_by_no else None,
+                    (p.read_selected or p.read_text or None) if p.final_status != "blank" else None,
+                )
+                for p in sorted(parts, key=lambda p: p.part_no)
+            )
+            picture = photos_available(submission, now)
+            detail = {
+                "skill_name": english,
+                "skill_name_si": sinhala,
+                "written": written,
+                "picture_available": picture,
+                "submission_id": submission.id,
+                "paper_item_id": item.id,
+            }
             if result == "correct":
                 correct += 1
                 counts[0] += 1
                 item_results.append(
-                    ItemResult(item.position, item.question_id, item.skill_code, "correct", None)
+                    ItemResult(
+                        item.position, item.question_id, item.skill_code, "correct", None, **detail
+                    )
                 )
                 continue
             if result == "wrong":
@@ -199,9 +229,6 @@ class ReportService:
                 blank += 1
                 counts[2] += 1
 
-            submission = final[item.page]
-            english, sinhala = names.get(item.skill_code, (item.skill_code, None))
-            key_by_no = {k.part_no: k for k in keys.get(item.question_id, [])}
             mistakes.append(
                 Mistake(
                     paper_item_id=item.id,
@@ -212,17 +239,8 @@ class ReportService:
                     skill_name=english,
                     skill_name_si=sinhala,
                     result=result,
-                    written=tuple(
-                        WrittenPart(
-                            p.part_no,
-                            key_by_no[p.part_no].label if p.part_no in key_by_no else None,
-                            (p.read_selected or p.read_text or None)
-                            if p.final_status != "blank"
-                            else None,
-                        )
-                        for p in sorted(parts, key=lambda p: p.part_no)
-                    ),
-                    picture_available=photos_available(submission, now),
+                    written=written,
+                    picture_available=picture,
                 )
             )
             shown = [
@@ -243,6 +261,7 @@ class ReportService:
                     item.skill_code,
                     result,
                     _answer_text(shown),
+                    **detail,
                 )
             )
 

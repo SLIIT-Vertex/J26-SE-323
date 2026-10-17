@@ -148,11 +148,16 @@ def grade_item(
             provider.prompt_version,
         )
 
+    # The second reader is the configured one, or, for a blank part only, the same reader again.
+    checker = second_provider
+    if checker is None and config.recheck_blanks and any(part.blank for part in reading.parts):
+        checker = provider
+
     second_reading: ItemRead | None = None
-    if second_provider is not None:
+    if checker is not None:
         try:
             with vision_role("second_opinion"):
-                second_reading, second_info = second_provider.read_item(
+                second_reading, second_info = checker.read_item(
                     crop, specs, language, blank_reference
                 )
             calls.append(second_info)

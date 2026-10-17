@@ -132,6 +132,8 @@ class ReviewItem:
     reason: str | None
     options: tuple[str, ...] | None = None
     ask: str | None = None  # an instruction part: the parent answers yes or no
+    label: str | None = None  # the label printed beside this answer, such as "i" or "ii"
+    part_count: int = 1  # how many answers the whole question has
 
 
 @dataclass(frozen=True, slots=True)
@@ -534,6 +536,8 @@ class SubmissionService:
                         reason=part.review_reason,
                         options=tuple(key.option_labels) if is_choice and key and key.option_labels else None,
                         ask=ASK_INSTRUCTION if kind == "instruction" else None,
+                        label=key.label if key else None,
+                        part_count=max(1, len(key_by_no)),
                     )
                 )
             results.append(self._item_result(item, item_parts, waiting))

@@ -677,3 +677,69 @@ def test_answer_list_only_holds_answers_of_wrong_or_blank_items_that_are_final(e
         if item["result"] in ("correct", "under_review", "not_uploaded"):
             assert position not in listed
             assert item["correct_answer_text"] is None
+
+
+# ---- the results list shows the right answers too, and past papers have their own list --------
+
+
+def test_the_results_list_includes_the_questions_the_child_got_right(env: ts.Env) -> None:
+    _, on_page = mixed_page(env)
+
+    body = report(env, peek="true")
+
+    items = {i["position"]: i for i in body["items"]}
+    right = [i for i in items.values() if i["result"] == "correct"]
+    assert len(right) == len(on_page) - 2
+    for item in right:
+        assert item["skill_name"]  # a name, not only a code
+        assert item["written"] and item["written"][0]["text"]  # what the child marked
+        assert item["picture_url"]  # the question as photographed
+        assert item["correct_answer_text"] is None  # the answer is given only for wrong or blank
+    assert items[1]["result"] == "wrong" and items[1]["correct_answer_text"]
+    assert items[2]["result"] == "blank" and items[2]["correct_answer_text"]
+    # the answer list is unchanged: only the two questions that were not right
+    assert {a["position"] for a in body["answer_list"]} == {1, 2}
+
+
+def test_a_question_waiting_for_the_parent_has_no_details_yet(env: ts.Env) -> None:
+    ts.start(env)
+    on_page = ts.keys_on_page(env, 1)
+    readings = ts.answers_for(env, 1, lambda _: "right")
+    readings[0] = reading(*[("3", 0.2)] * len(on_page[0][2]))
+    env.provider_ref[0] = MockProvider(*readings)
+    ts.upload(env, 1)
+
+    waiting = report(env, peek="true")["items"][0]
+
+    assert waiting["result"] == "under_review"
+    assert waiting["correct_answer_text"] is None and waiting["written"] == []
+    assert waiting["picture_url"] is None
+
+
+def test_the_past_papers_list_shows_results_without_starting_the_photo_timer(env: ts.Env) -> None:
+    submission_id, _ = mixed_page(env)
+
+    response = env.client.get(f"/api/v1/learners/{env.learner_id}/papers/history")
+
+    assert response.status_code == 200
+    [paper] = response.json()
+    assert paper["paper_id"] == env.paper["paper_id"]
+    totals = paper["results"]
+    assert (totals["wrong"], totals["blank"]) == (1, 1)
+    assert totals["correct"] == totals["marked"] - 2
+    assert paper["results_complete"] is False  # the other pages have no photo yet
+    with Session(env.engine) as session:
+        viewed = session.scalar(
+            select(PaperSubmissionModel.report_viewed_at).where(
+                PaperSubmissionModel.id == UUID(submission_id)
+            )
+        )
+    assert viewed is None  # only opening a paper's own report starts the 7-day timer
+
+
+def test_a_paper_nobody_has_marked_has_no_results_in_the_list(env: ts.Env) -> None:
+    ts.start(env)
+
+    [paper] = env.client.get(f"/api/v1/learners/{env.learner_id}/papers/history").json()
+
+    assert paper["results"] is None and paper["results_complete"] is False

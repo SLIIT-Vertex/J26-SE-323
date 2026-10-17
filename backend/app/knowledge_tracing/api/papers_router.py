@@ -111,6 +111,25 @@ class PaperRead(BaseModel):
     pages: list[PagePhotoRead] | None = None  # only on the detail view
 
 
+class ResultTotals(BaseModel):
+    """How a paper went, in numbers. Questions waiting for the parent are counted separately."""
+
+    questions: int
+    marked: int
+    correct: int
+    wrong: int
+    blank: int
+    waiting_for_parent: int
+    not_uploaded: int
+
+
+class PaperHistoryRead(PaperRead):
+    """A past paper with its results, for the "past papers" list."""
+
+    results: ResultTotals | None = None  # null while no page has a final mark
+    results_complete: bool = False  # every page photographed and every answer decided
+
+
 @lru_cache
 def get_question_storage() -> StorageBackend:
     return create_storage(get_settings())
@@ -275,6 +294,46 @@ def list_papers(
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> list[PaperRead]:
     return [_read(p, _skipped(p)) for p in service.list(learner_id, limit)]
+
+
+@router.get("/learners/{learner_id}/papers/history", response_model=list[PaperHistoryRead])
+def paper_history(
+    learner_id: UUID,
+    service: ServiceDep,
+    session: Annotated[Session, Depends(get_db)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 30,
+) -> list[PaperHistoryRead]:
+    """Past papers, newest first, each with how it went. Reading this does NOT start the photo
+    timer (only opening a paper's own result report does)."""
+    from app.knowledge_tracing.api.report_router import get_report_service
+
+    reports = get_report_service(session)
+    history: list[PaperHistoryRead] = []
+    for paper in service.list(learner_id, limit):
+        base = _read(paper, _skipped(paper))
+        try:
+            report = reports.build(paper.id, mark_viewed=False)
+        except PaperNotFoundError:
+            continue
+        s = report.summary
+        history.append(
+            PaperHistoryRead(
+                **base.model_dump(),
+                results=ResultTotals(
+                    questions=s.questions,
+                    marked=s.marked,
+                    correct=s.correct,
+                    wrong=s.wrong,
+                    blank=s.blank,
+                    waiting_for_parent=s.waiting_for_parent,
+                    not_uploaded=s.not_uploaded,
+                )
+                if s.marked
+                else None,
+                results_complete=report.complete,
+            )
+        )
+    return history
 
 
 @router.get("/papers/{paper_id}", response_model=PaperRead)

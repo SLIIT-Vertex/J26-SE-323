@@ -11,6 +11,7 @@ from app.knowledge_tracing.application.grading.call_log import (
 from app.knowledge_tracing.application.grading.types import VisionProvider
 from app.knowledge_tracing.infrastructure.vision.gemini import GeminiProvider
 from app.knowledge_tracing.infrastructure.vision.mock import MockProvider
+from app.knowledge_tracing.infrastructure.vision.openai import OpenAIProvider
 
 
 class VisionNotConfigured(Exception):
@@ -41,7 +42,31 @@ def create_vision_provider(
             cache=cache if cache is not None else InMemoryReadingCache(),
             client=client,
         )
-    raise VisionNotConfigured(f"unknown vision provider {chosen!r} (use mock or gemini)")
+    if chosen == "openai":
+        if not settings.openai_api_key.strip():
+            raise VisionNotConfigured("VISION_PROVIDER is openai but OPENAI_API_KEY is empty")
+        if not settings.openai_model.strip():
+            raise VisionNotConfigured("VISION_PROVIDER is openai but OPENAI_MODEL is empty")
+        try:
+            temperature = (
+                float(settings.openai_temperature) if settings.openai_temperature.strip() else None
+            )
+        except ValueError:
+            raise VisionNotConfigured("OPENAI_TEMPERATURE must be a number or empty") from None
+        return OpenAIProvider(
+            settings.openai_api_key.strip(),
+            settings.openai_model.strip(),
+            base_url=settings.openai_base_url,
+            timeout=float(settings.vision_timeout_seconds),
+            max_output_tokens=settings.openai_max_output_tokens,
+            image_detail=settings.openai_image_detail.strip() or "high",
+            reasoning_effort=settings.openai_reasoning_effort.strip(),
+            temperature=temperature,
+            call_log=call_log,
+            cache=cache if cache is not None else InMemoryReadingCache(),
+            client=client,
+        )
+    raise VisionNotConfigured(f"unknown vision provider {chosen!r} (use mock, gemini or openai)")
 
 
 @lru_cache

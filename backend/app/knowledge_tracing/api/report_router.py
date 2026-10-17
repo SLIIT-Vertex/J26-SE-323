@@ -57,6 +57,11 @@ class ReportItemRead(BaseModel):
     result: Literal["correct", "wrong", "blank", "under_review", "not_uploaded"]
     # Set only for "wrong" and "blank". Null for correct items and for items under review.
     correct_answer_text: str | None
+    # For every question with a final result (the right ones too), so the list can show them all.
+    skill_name: str | None = None
+    skill_name_si: str | None = None
+    written: list[WrittenRead] = []
+    picture_url: str | None = None
 
 
 class AnswerListEntryRead(BaseModel):
@@ -153,6 +158,14 @@ def _to_read(report: Report) -> ReportRead:
                 skill_code=i.skill_code,
                 result=i.result,  # type: ignore[arg-type]
                 correct_answer_text=i.correct_answer_text,
+                skill_name=i.skill_name,
+                skill_name_si=i.skill_name_si,
+                written=[WrittenRead(part_no=w.part_no, label=w.label, text=w.text) for w in i.written],
+                picture_url=(
+                    f"{prefix}/submissions/{i.submission_id}/crops/{i.paper_item_id}"
+                    if i.picture_available and i.submission_id and i.paper_item_id
+                    else None
+                ),
             )
             for i in report.items
         ],

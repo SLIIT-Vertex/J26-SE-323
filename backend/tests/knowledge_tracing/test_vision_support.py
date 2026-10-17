@@ -131,6 +131,27 @@ def test_the_status_reports_the_model_and_warnings(
     assert "vision_quota_exhausted" in body["warnings"]
 
 
+def test_the_status_names_the_openai_model_and_the_missing_pieces(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.config import Settings
+
+    monkeypatch.setattr(
+        "app.knowledge_tracing.api.vision_router.get_settings",
+        lambda: Settings(database_url="sqlite://", vision_provider="openai", openai_api_key="k"),
+    )
+    monkeypatch.setattr(
+        "app.knowledge_tracing.api.vision_router.get_vision_provider",
+        lambda: (_ for _ in ()).throw(factory.VisionNotConfigured("OPENAI_MODEL is empty")),
+    )
+
+    body = client.get("/api/v1/vision/status").json()
+
+    assert body["configured"] is False
+    assert body["provider"] == "openai"
+    assert "OPENAI_MODEL" in body["problem"]
+
+
 def test_health_is_unchanged(client: TestClient) -> None:
     assert client.get("/api/v1/health").json() == {"status": "ok"}
 

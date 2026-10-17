@@ -30,6 +30,7 @@ from app.knowledge_tracing.application.paper_planning import PaperPlanner, PlanD
 from app.knowledge_tracing.application.paper_selection import PaperParams
 from app.knowledge_tracing.domain.paper import Paper, PaperItem
 from app.knowledge_tracing.infrastructure.pdf.paper_pdf import (
+    PdfSelfCheckError,
     build_paper_pdf,
     new_token,
     verify_paper_pdf,
@@ -58,6 +59,9 @@ class NotEligibleYetError(Exception):
 
 
 AvailabilityState = Literal["not_yet_eligible", "available", "generated"]
+
+
+SELF_CHECK_TRIES = 3  # codes tried before a paper is given up on
 
 
 class PaperGenerationError(Exception):
@@ -257,11 +261,20 @@ class PaperService:
             except Exception as error:  # a missing or unreadable image must not become a paper
                 raise PaperGenerationError(f"cannot read the image of question {block.key}") from error
 
-        token = self._unique_token()
         paper_id = uuid4()
         title = "Weekly diagnostic paper" if selection.mode == "diagnostic" else "Weekly practice paper"
-        pdf = build_paper_pdf(token, layout.blocks, images, layout.page_count, title)
-        verify_paper_pdf(pdf, token, layout.page_count)  # never store an unreadable paper
+        # Never store an unreadable paper. The check reads the printed code back from the rendered
+        # PDF; a code that no reader can find (rare, but it happens by chance) is not the parent's
+        # problem, so another code is tried before giving up.
+        for attempt in range(1, SELF_CHECK_TRIES + 1):
+            token = self._unique_token()
+            pdf = build_paper_pdf(token, layout.blocks, images, layout.page_count, title)
+            try:
+                verify_paper_pdf(pdf, token, layout.page_count)
+                break
+            except PdfSelfCheckError:
+                if attempt == SELF_CHECK_TRIES:
+                    raise
 
         kept = [by_id[b.key] for b in layout.blocks]
         paper = Paper(

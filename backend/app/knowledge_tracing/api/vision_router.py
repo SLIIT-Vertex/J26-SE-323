@@ -37,7 +37,10 @@ def vision_status() -> VisionStatus:
         )
 
     warnings = sorted(getattr(provider, "warnings", set()))
-    model = getattr(provider, "model", None) or settings.gemini_model or None
+    configured_model = {"gemini": settings.gemini_model, "openai": settings.openai_model}.get(
+        settings.vision_provider.strip().lower(), ""
+    )
+    model = getattr(provider, "model", None) or configured_model or None
     if settings.vision_provider == "gemini" and not settings.gemini_model.strip():
         warnings = sorted({*warnings, "vision_model_not_pinned"})
 

@@ -196,6 +196,12 @@ class ReviewPolicy:
 @dataclass(frozen=True, slots=True)
 class GradingConfig:
     confidence_min: float = 0.60  # below this a reading goes to the parent
+    # A reading with a BLANK part is read once more. A false blank costs the child a mark and, being
+    # "confident", would never be looked at: found on a real paper, where a clear underline was read
+    # as nothing once and as the right option six times out of six afterwards. Both blank = blank;
+    # the two readings disagree = the parent decides. (Not needed when a second reader is set:
+    # it already checks every reading.) Off by default here, on in the app (GRADING_RECHECK_BLANKS).
+    recheck_blanks: bool = False
     # A wrong word at least this similar to the key goes to the parent. 0.80 catches a child's
     # typical slip on a short word ("rabite" for "rabbit" scores 0.83); 0.85 missed it.
     # A starting value to tune on real answers.

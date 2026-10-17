@@ -89,6 +89,8 @@ class ReviewItemRead(BaseModel):
     reason: str | None
     options: list[str] | None = None
     ask: str | None = None  # an instruction part: answer yes or no
+    label: str | None = None  # printed beside this answer ("i", "ii"), when the question has labels
+    part_count: int = 1  # how many answers the whole question has
 
 
 class PartResultRead(BaseModel):
@@ -192,7 +194,9 @@ def make_submission_service(
         second_provider=second_provider,
         mastery=mastery,
         config=GradingConfig(
-            confidence_min=settings.vision_confidence_min, review_policy=_review_policy()
+            confidence_min=settings.vision_confidence_min,
+            review_policy=_review_policy(),
+            recheck_blanks=settings.grading_recheck_blanks,
         ),
         workers=settings.vision_concurrency if workers is None else workers,
     )
@@ -259,6 +263,8 @@ def _read(view: SubmissionView, prefix: str) -> SubmissionRead:
                 reason=r.reason,
                 options=list(r.options) if r.options else None,
                 ask=r.ask,
+                label=r.label,
+                part_count=r.part_count,
             )
             for r in view.review_items
         ],

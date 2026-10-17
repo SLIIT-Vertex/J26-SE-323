@@ -393,3 +393,24 @@ def test_the_overlay_outlines_every_question() -> None:
     assert overlay.shape == a.canonical.shape
     assert not np.array_equal(overlay, a.canonical)
     assert encode_png(overlay).startswith(b"\x89PNG")
+
+
+def test_a_crop_includes_a_line_drawn_below_the_options() -> None:
+    """Found on a real paper: children underline their answer a few millimetres BELOW the printed
+    options, outside the block. That line must be inside the crop, or the question reads blank."""
+    p = paper()
+    block = p.layout.blocks[0]
+    x, y, w, h = block.frame_fractions()
+    box = block_crop_box(x, y, w, h)
+    px_per_mm = CANONICAL_W / FRAME_W
+    block_bottom = (y + h) * CANONICAL_H
+
+    for mm_below in (3.0, 6.0, 7.5):  # an underline drawn this far under the block
+        assert box.y1 >= block_bottom + mm_below * px_per_mm
+    assert PAD_BELOW_MM >= 7.5
+
+
+def test_the_lower_padding_leaves_a_gap_before_the_next_crop() -> None:
+    from app.knowledge_tracing.application.paper_layout import GAP
+
+    assert PAD_BELOW_MM + PAD_ABOVE_MM < GAP  # the next question's crop starts after this one ends
