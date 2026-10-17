@@ -109,16 +109,19 @@ npm run typecheck
 
 `npm run build` creates the web bundle and synchronizes every installed Capacitor platform.
 
-### Optional native projects
+### Reproducible native projects
 
-Capacitor configuration is ready, but generated native projects are not committed. With Android
-Studio or Xcode installed, generate the targets once from `frontend/`:
+Generated Capacitor projects remain ignored, but their inputs are versioned: the locked Capacitor
+packages, `capacitor.config.json`, the production bundle, and the deterministic portrait patcher.
+Regenerate and synchronize both targets from `frontend/` with:
 
 ```bash
 npm run build:web
-npx cap add ios
-npx cap add android
+npm run native:generate
 ```
+
+`npm run native:verify` fails when either generated target is absent or its required orientation
+configuration has drifted.
 
 After that, use:
 
