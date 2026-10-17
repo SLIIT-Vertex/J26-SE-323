@@ -5,6 +5,6 @@
     "model2-artifact.json": "dfacd860bf4e669440428558fe888a0e1d162d9f896463aaf42a459e54b17590",
     "synthetic-evaluation.json": "9f5534e5b2d896d6a2ea07c439521bfce185e3151e57c503c6f692d560d4a3f4"
   },
-  "package_version": "phase5-model2-evidence-v1",
+  "package_version": "support_selection-model2-evidence-v1",
   "scope": "synthetic_offline_and_shadow_engineering_evidence"
 }

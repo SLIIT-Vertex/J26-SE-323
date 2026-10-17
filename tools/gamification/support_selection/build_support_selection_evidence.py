@@ -11,17 +11,17 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 BACKEND_ROOT = PROJECT_ROOT / "backend"
-OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "gamification" / "model2-phase5" / "v1"
+OUTPUT_DIRECTORY = PROJECT_ROOT / "data" / "gamification" / "support-selection" / "v1"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from app.gamification.modeling.support_selection.phase5 import (
+from app.gamification.modeling.support_selection.selection import (
     ARTIFACT_SCHEMA_VERSION,
     BASELINE_POLICY_VERSION,
     CONTEXT_SCHEMA_VERSION,
     POLICY_VERSION,
     Model2Artifact,
-    run_phase5_simulation,
+    run_support_selection_simulation,
 )
 
 OUTPUT_FILES = ("synthetic-evaluation.json", "model2-artifact.json", "manifest.json")
@@ -44,7 +44,7 @@ def _digest(value: str) -> str:
 
 
 def build_outputs(*, seed: int = 31) -> dict[str, str]:
-    simulation = _plain(run_phase5_simulation(seed=seed))
+    simulation = _plain(run_support_selection_simulation(seed=seed))
     evaluation = {
         "approval_status": "blocked_pending_human_approval",
         "evidence_status": "synthetic_engineering_only",
@@ -100,7 +100,7 @@ def build_outputs(*, seed: int = 31) -> dict[str, str]:
     }
     artifact_text = _render(artifact_payload)
     manifest = {
-        "package_version": "phase5-model2-evidence-v1",
+        "package_version": "support_selection-model2-evidence-v1",
         "scope": "synthetic_offline_and_shadow_engineering_evidence",
         "files": {
             "model2-artifact.json": _digest(artifact_text),
