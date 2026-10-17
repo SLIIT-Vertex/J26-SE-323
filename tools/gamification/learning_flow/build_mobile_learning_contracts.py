@@ -6,12 +6,11 @@ import argparse
 import json
 from pathlib import Path
 
+from app.gamification.api.learning_flow_router import router
 from fastapi import FastAPI
 
-from app.gamification.api.phase6_router import router
-
 ROOT = Path(__file__).resolve().parents[3]
-OUTPUT = ROOT / "docs" / "adaptive-gamified-learning" / "phase6-mobile-contracts-v1.json"
+OUTPUT = ROOT / "docs" / "adaptive-gamified-learning" / "mobile-learning-contracts-v1.json"
 
 
 def build() -> dict[str, object]:
@@ -19,7 +18,7 @@ def build() -> dict[str, object]:
     app.include_router(router, prefix="/api/v1")
     schema = app.openapi()
     return {
-        "contract_version": "phase6-mobile-contracts-v1",
+        "contract_version": "mobile-learning-contracts-v1",
         "development_only": True,
         "production_child_delivery": "blocked_pending_human_approval",
         "openapi": schema,

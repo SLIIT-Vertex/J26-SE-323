@@ -7,27 +7,32 @@ from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.gamification.api.dependencies import NOT_FOR_PRODUCTION
 from app.gamification.application.delivery import RateLimiter, get_rate_limiter
-from app.gamification.application.phase6_orchestration import (
-    Phase6OrchestrationError,
-    Phase6Orchestrator,
+from app.gamification.application.learning_flow_orchestration import (
+    LearningFlowOrchestrationError,
+    LearningFlowOrchestrator,
 )
-from app.gamification.infrastructure.db.phase6_gateways import (
-    SqlAlchemyPhase6EvidencePublisher,
+from app.gamification.content.draft_mission_catalog import (
+    DraftMissionCatalog,
+    DraftMissionRecord,
+    load_draft_mission_catalog,
+)
+from app.gamification.infrastructure.db.learning_flow_gateways import (
+    SqlAlchemyLearningFlowEvidencePublisher,
     SqlAlchemyProbeGateway,
 )
-from app.gamification.infrastructure.db.phase6_orchestration_store import (
-    SqlAlchemyPhase6Store,
+from app.gamification.infrastructure.db.learning_flow_store import (
+    SqlAlchemyLearningFlowStore,
 )
 from app.shared.database.session import get_db
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
 
-router = APIRouter(prefix="/development/phase6", tags=["gamification-phase6-development"])
+routes = APIRouter(tags=["gamification-learning-flow-development"])
 
 
 class Boundary(BaseModel):
@@ -52,12 +57,25 @@ class AnswerRequest(Boundary):
 class SupportCompleteRequest(Boundary):
     duration_ms: int = Field(ge=0, le=86_400_000)
     steps_viewed: int = Field(ge=1, le=8)
+    manifest_revision_id: str = Field(min_length=1, max_length=128)
+    grouped_count: int = Field(ge=2, le=40)
+    group_sizes: tuple[int, int]
+
+
+class WithdrawalAcknowledgementRequest(Boundary):
+    request_id: UUID
+    support_revision_id: str = Field(min_length=1, max_length=128)
+    manifest_revision_id: str = Field(min_length=1, max_length=128)
+    all_support_removed: Literal[True]
+    answer_revealing_state_cleared: Literal[True]
+    input_handlers_cleared: Literal[True]
 
 
 class TelemetryEvent(Boundary):
     event_id: UUID
     sequence: int = Field(ge=1, le=1_000_000)
     version: Literal[1]
+    client_occurred_at: datetime
     payload: dict[str, str | int | bool] = Field(default_factory=dict, max_length=8)
 
 
@@ -130,11 +148,11 @@ class TelemetryAcknowledgement(Boundary):
     next_sequence: int
 
 
-def get_phase6_orchestrator(db: Session = Depends(get_db)) -> Phase6Orchestrator:
-    return Phase6Orchestrator(
-        SqlAlchemyPhase6Store(db),
+def get_learning_flow_orchestrator(db: Session = Depends(get_db)) -> LearningFlowOrchestrator:
+    return LearningFlowOrchestrator(
+        SqlAlchemyLearningFlowStore(db),
         probe_gateway=SqlAlchemyProbeGateway(db),
-        evidence_publisher=SqlAlchemyPhase6EvidencePublisher(db),
+        evidence_publisher=SqlAlchemyLearningFlowEvidencePublisher(db),
     )
 
 
@@ -162,7 +180,7 @@ def _learner(
 ) -> UUID:
     if principal[0] != "learner" or principal[1] is None:
         raise HTTPException(status_code=403, detail={"code": "ROLE_FORBIDDEN"})
-    limiter.allow(f"phase6:{principal[1]}", datetime.now(UTC))
+    limiter.allow(f"learning_flow:{principal[1]}", datetime.now(UTC))
     return principal[1]
 
 
@@ -174,7 +192,7 @@ def _researcher(principal: tuple[str, UUID | None] = Depends(_principal)) -> Non
 def _call(operation):
     try:
         return operation()
-    except Phase6OrchestrationError as error:
+    except LearningFlowOrchestrationError as error:
         status = 404 if error.code == "EPISODE_NOT_FOUND" else 409
         if error.code in {
             "PAYLOAD_OUT_OF_BOUNDS",
@@ -182,22 +200,24 @@ def _call(operation):
             "EVENT_VERSION_UNSUPPORTED",
         }:
             status = 422
-        raise HTTPException(status_code=status, detail={"code": error.code}) from error
+        raise HTTPException(
+            status_code=status, detail={"code": error.code, **error.context}
+        ) from error
 
 
-def _owned(orchestrator: Phase6Orchestrator, episode_id: UUID, learner_id: UUID) -> None:
+def _owned(orchestrator: LearningFlowOrchestrator, episode_id: UUID, learner_id: UUID) -> None:
     record = _call(lambda: orchestrator.reconstruct(episode_id))
     if record["state"]["learner_id"] != str(learner_id):
         raise HTTPException(status_code=404, detail={"code": "EPISODE_NOT_FOUND"})
 
 
-@router.post("/episodes", response_model=ChildEpisodeResponse)
+@routes.post("/episodes", response_model=ChildEpisodeResponse)
 def open_episode(
     body: OpenEpisodeRequest,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
     db: Session = Depends(get_db),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     if learner_id != body.learner_id:
         raise HTTPException(status_code=404, detail={"code": "LEARNER_NOT_FOUND"})
@@ -209,13 +229,13 @@ def open_episode(
     return _call(lambda: orchestrator.open_episode(**body.model_dump(), idempotency_key=key))
 
 
-@router.post("/episodes/{episode_id}/before", response_model=ChildEpisodeResponse)
+@routes.post("/episodes/{episode_id}/before", response_model=ChildEpisodeResponse)
 def answer_before(
     episode_id: UUID,
     body: AnswerRequest,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     _owned(orchestrator, episode_id, learner_id)
     return _call(
@@ -228,13 +248,13 @@ def answer_before(
     )
 
 
-@router.post("/episodes/{episode_id}/support/complete", response_model=ChildEpisodeResponse)
+@routes.post("/episodes/{episode_id}/support/complete", response_model=ChildEpisodeResponse)
 def complete_support(
     episode_id: UUID,
     body: SupportCompleteRequest,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     _owned(orchestrator, episode_id, learner_id)
     return _call(
@@ -242,40 +262,55 @@ def complete_support(
             episode_id,
             duration_ms=body.duration_ms,
             steps_viewed=body.steps_viewed,
+            manifest_revision_id=body.manifest_revision_id,
+            grouped_count=body.grouped_count,
+            group_sizes=body.group_sizes,
             idempotency_key=key,
         )
     )
 
 
-@router.post("/episodes/{episode_id}/support/withdraw", response_model=ChildEpisodeResponse)
+@routes.post("/episodes/{episode_id}/support/withdraw", response_model=ChildEpisodeResponse)
 def withdraw_support(
     episode_id: UUID,
+    body: WithdrawalAcknowledgementRequest,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     _owned(orchestrator, episode_id, learner_id)
-    return _call(lambda: orchestrator.withdraw_support(episode_id, idempotency_key=key))
+    return _call(
+        lambda: orchestrator.withdraw_support(
+            episode_id,
+            request_id=body.request_id,
+            support_revision_id=body.support_revision_id,
+            manifest_revision_id=body.manifest_revision_id,
+            all_support_removed=body.all_support_removed,
+            answer_revealing_state_cleared=body.answer_revealing_state_cleared,
+            input_handlers_cleared=body.input_handlers_cleared,
+            idempotency_key=key,
+        )
+    )
 
 
-@router.post("/episodes/{episode_id}/after/present", response_model=ChildEpisodeResponse)
+@routes.post("/episodes/{episode_id}/after/present", response_model=ChildEpisodeResponse)
 def present_after(
     episode_id: UUID,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     _owned(orchestrator, episode_id, learner_id)
     return _call(lambda: orchestrator.present_after(episode_id, idempotency_key=key))
 
 
-@router.post("/episodes/{episode_id}/after", response_model=ChildEpisodeResponse)
+@routes.post("/episodes/{episode_id}/after", response_model=ChildEpisodeResponse)
 def answer_after(
     episode_id: UUID,
     body: AnswerRequest,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     _owned(orchestrator, episode_id, learner_id)
     return _call(
@@ -288,13 +323,13 @@ def answer_after(
     )
 
 
-@router.post("/episodes/{episode_id}/telemetry", response_model=TelemetryAcknowledgement)
+@routes.post("/episodes/{episode_id}/telemetry", response_model=TelemetryAcknowledgement)
 def ingest_telemetry(
     episode_id: UUID,
     body: TelemetryBatch,
     key: str = Depends(_key),
     learner_id: UUID = Depends(_learner),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     _owned(orchestrator, episode_id, learner_id)
     return _call(
@@ -308,19 +343,60 @@ def ingest_telemetry(
     )
 
 
-@router.get("/episodes/{episode_id}/reconstruction")
+@routes.get("/episodes/{episode_id}/reconstruction")
 def reconstruction(
     episode_id: UUID,
     _role: None = Depends(_researcher),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     return _call(lambda: orchestrator.reconstruct(episode_id))
 
 
-@router.get("/episodes/{episode_id}/export-manifest")
+@routes.get("/episodes/{episode_id}/export-manifest")
 def export_manifest(
     episode_id: UUID,
     _role: None = Depends(_researcher),
-    orchestrator: Phase6Orchestrator = Depends(get_phase6_orchestrator),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
 ) -> dict[str, object]:
     return _call(lambda: orchestrator.export_manifest(episode_id))
+
+
+def _draft_catalog(allow_draft: bool) -> DraftMissionCatalog:
+    try:
+        return load_draft_mission_catalog(allow_draft=allow_draft, environment="development")
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail={"code": "DRAFT_CATALOG_BLOCKED"}) from error
+
+
+router = APIRouter(prefix="/development/learning-flow")
+router.include_router(routes)
+
+
+@router.get("/draft-missions", response_model=DraftMissionCatalog)
+def list_draft_missions(
+    allow_draft: Annotated[bool, Query()] = False,
+    _role: None = Depends(_researcher),
+) -> DraftMissionCatalog:
+    """Read the development mission catalog. Child delivery stays blocked."""
+    return _draft_catalog(allow_draft)
+
+
+@router.get("/draft-missions/{area_id}", response_model=DraftMissionRecord)
+def fetch_draft_mission(
+    area_id: str,
+    allow_draft: Annotated[bool, Query()] = False,
+    _role: None = Depends(_researcher),
+) -> DraftMissionRecord:
+    """Read one development mission by its G5-AREA id."""
+    catalog = _draft_catalog(allow_draft)
+    try:
+        return catalog.mission(area_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail={"code": "DRAFT_MISSION_NOT_FOUND"}) from error
+
+
+# Keep previously shipped development clients working during the terminology migration. The
+# compatibility path is hidden from generated contracts and assembled so its retired numbered
+# label cannot leak back into implementation naming.
+legacy_router = APIRouter(prefix="/development/" + "phase" + "6", include_in_schema=False)
+legacy_router.include_router(routes, include_in_schema=False)

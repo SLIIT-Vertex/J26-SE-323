@@ -38,7 +38,7 @@ from app.gamification.application.baseline_policy import (
     ConventionalBaselinePolicy,
 )
 from app.gamification.domain.types import ExperimentMode
-from tests.gamification.phase1_fixtures import (
+from tests.gamification.research_contract_fixtures import (
     AT,
     EPISODE_ID,
     LEARNER_ID,
@@ -65,7 +65,7 @@ def test_grade5_sinhala_pseudonymous_eligibility_round_trips() -> None:
     assert restored.contract_version == RESEARCH_CONTRACT_VERSION
 
 
-def test_phase1_execution_contracts_are_strict_versioned_and_serializable() -> None:
+def test_foundation_execution_contracts_are_strict_versioned_and_serializable() -> None:
     session = LearningSessionContract(
         session_id=SESSION_ID,
         learner_id=LEARNER_ID,

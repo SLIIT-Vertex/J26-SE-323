@@ -7,10 +7,10 @@ from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.gamification.application.phase6_orchestration import Phase6OrchestrationError
+from app.gamification.application.learning_flow_orchestration import LearningFlowOrchestrationError
 from app.gamification.infrastructure.db.models import (
     LearnerEvidenceOutboxModel,
-    Phase6ProbeReservationModel,
+    LearningFlowProbeReservationModel,
 )
 
 
@@ -23,18 +23,18 @@ class SqlAlchemyProbeGateway:
         self._session = session
 
     def reserve(self, *, learner_id, episode_id, item_revision_id, at) -> str:
-        statement = select(Phase6ProbeReservationModel).where(
-            Phase6ProbeReservationModel.learner_id == learner_id,
-            Phase6ProbeReservationModel.item_revision_id == item_revision_id,
+        statement = select(LearningFlowProbeReservationModel).where(
+            LearningFlowProbeReservationModel.learner_id == learner_id,
+            LearningFlowProbeReservationModel.item_revision_id == item_revision_id,
         )
         if self._session.get_bind().dialect.name == "postgresql":
             statement = statement.with_for_update()
         existing = self._session.scalar(statement)
         if existing is not None:
-            raise Phase6OrchestrationError("PROBE_ALREADY_RESERVED_OR_EXPOSED")
+            raise LearningFlowOrchestrationError("PROBE_ALREADY_RESERVED_OR_EXPOSED")
         reservation_id = uuid5(NAMESPACE_URL, f"{episode_id}:{item_revision_id}")
         self._session.add(
-            Phase6ProbeReservationModel(
+            LearningFlowProbeReservationModel(
                 reservation_id=reservation_id,
                 episode_id=episode_id,
                 learner_id=learner_id,
@@ -51,32 +51,32 @@ class SqlAlchemyProbeGateway:
         return str(reservation_id)
 
     def confirm_unexposed(self, reservation_id: str) -> bool:
-        row = self._session.get(Phase6ProbeReservationModel, UUID(reservation_id))
+        row = self._session.get(LearningFlowProbeReservationModel, UUID(reservation_id))
         return row is not None and row.status == "reserved"
 
     def mark_used(self, reservation_id: str, *, at) -> None:
-        row = self._session.get(Phase6ProbeReservationModel, UUID(reservation_id))
+        row = self._session.get(LearningFlowProbeReservationModel, UUID(reservation_id))
         expires_at = row.expires_at if row is not None else None
         if expires_at is not None and expires_at.tzinfo is None:
             expires_at = expires_at.replace(tzinfo=UTC)
         if row is None or row.status != "reserved" or expires_at is None or expires_at <= at:
-            raise Phase6OrchestrationError("PROBE_RESERVATION_UNAVAILABLE")
+            raise LearningFlowOrchestrationError("PROBE_RESERVATION_UNAVAILABLE")
         row.status = "used"
         row.used_at = at
         self._session.flush()
 
     def contaminate(self, reservation_id: str, *, source: str) -> None:
         if source not in {"game", "paper_generator", "tutor", "worked_example"}:
-            raise Phase6OrchestrationError("UNKNOWN_CONTAMINATION_SOURCE")
-        row = self._session.get(Phase6ProbeReservationModel, UUID(reservation_id))
+            raise LearningFlowOrchestrationError("UNKNOWN_CONTAMINATION_SOURCE")
+        row = self._session.get(LearningFlowProbeReservationModel, UUID(reservation_id))
         if row is None:
-            raise Phase6OrchestrationError("PROBE_RESERVATION_UNAVAILABLE")
+            raise LearningFlowOrchestrationError("PROBE_RESERVATION_UNAVAILABLE")
         row.status = "contaminated"
         row.contamination_source = source
         self._session.flush()
 
 
-class SqlAlchemyPhase6EvidencePublisher:
+class SqlAlchemyLearningFlowEvidencePublisher:
     """Durable outbox publisher that preserves assistance and measurement role."""
 
     version = "gamification-learner-evidence-v2"
@@ -95,7 +95,7 @@ class SqlAlchemyPhase6EvidencePublisher:
             return
         payload = dict(evidence)
         if any(field in payload for field in ("answer", "prompt", "selected_option_id")):
-            raise Phase6OrchestrationError("EVIDENCE_PAYLOAD_LEAKAGE")
+            raise LearningFlowOrchestrationError("EVIDENCE_PAYLOAD_LEAKAGE")
         self._session.add(
             LearnerEvidenceOutboxModel(
                 id=uuid4(),

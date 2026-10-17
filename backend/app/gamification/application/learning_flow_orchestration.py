@@ -16,14 +16,14 @@ from decimal import Decimal
 from typing import Literal, Protocol
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
-from app.gamification.content.phase2_registry import (
+from app.gamification.content.curriculum_registry import (
     ItemRevision,
-    PublicPhase2Package,
-    load_phase2_public_package,
-    load_phase2_server_answer_keys,
+    PublicCurriculumPackage,
+    load_curriculum_public_package,
+    load_curriculum_server_answer_keys,
 )
 from app.gamification.domain.types import AssistanceState, ExperimentMode, MeasurementRole
-from app.gamification.modeling.independence_gain.phase3 import (
+from app.gamification.modeling.independence_gain.measurement import (
     AttemptSubmission,
     MeasurementInput,
     NormalizedEvent,
@@ -33,22 +33,22 @@ from app.gamification.modeling.independence_gain.phase3 import (
     SupportWithdrawal,
     assert_unsupported_after_may_begin,
     calculate_measurement,
-    development_phase2_scorer,
+    development_curriculum_scorer,
 )
-from app.gamification.modeling.misconception_inference.phase4 import (
+from app.gamification.modeling.misconception_inference.inference import (
     CATALOGUE_VERSION as MODEL1_MAPPING_VERSION,
 )
-from app.gamification.modeling.misconception_inference.phase4 import (
+from app.gamification.modeling.misconception_inference.inference import (
     MODEL_VERSION as MODEL1_VERSION,
 )
-from app.gamification.modeling.misconception_inference.phase4 import (
+from app.gamification.modeling.misconception_inference.inference import (
     InferenceEvidence,
     InteractionSummary,
     Model1FeatureBuilder,
     Model1InferenceInput,
-    development_phase2_candidate,
+    development_curriculum_candidate,
 )
-from app.gamification.modeling.support_selection.phase5 import (
+from app.gamification.modeling.support_selection.selection import (
     ContextualScaffoldPolicy,
     DifficultyEvidence,
     EligibilityInput,
@@ -57,11 +57,11 @@ from app.gamification.modeling.support_selection.phase5 import (
     Model2ContextInput,
     PolicyMode,
     UnsupportedEvidence,
-    development_phase2_scaffolds,
+    development_curriculum_scaffolds,
 )
 
 PROTOCOL_VERSION = "adaptive-episode-v1"
-CONTRACT_VERSION = "phase6-orchestration-v1"
+CONTRACT_VERSION = "learning_flow-orchestration-v1"
 FORMULA_VERSION = "raw-independence-gain-v1"
 _FORBIDDEN_TELEMETRY_KEYS = frozenset(
     {
@@ -86,25 +86,26 @@ def request_digest(value: object) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
-class Phase6OrchestrationError(ValueError):
-    def __init__(self, code: str) -> None:
+class LearningFlowOrchestrationError(ValueError):
+    def __init__(self, code: str, **context: object) -> None:
         super().__init__(code)
         self.code = code
+        self.context = context
 
 
-class Phase6PersistenceError(ValueError):
+class LearningFlowPersistenceError(ValueError):
     pass
 
 
 @dataclass(frozen=True, slots=True)
-class StoredPhase6Run:
+class StoredLearningFlowRun:
     episode_id: UUID
     revision: int
     state: Mapping[str, object]
 
 
-class Phase6Store(Protocol):
-    def get(self, episode_id: UUID, *, for_update: bool = False) -> StoredPhase6Run: ...
+class LearningFlowStore(Protocol):
+    def get(self, episode_id: UUID, *, for_update: bool = False) -> StoredLearningFlowRun: ...
 
     def receipt(self, key: str, request_sha256: str) -> dict[str, object] | None: ...
 
@@ -155,7 +156,7 @@ class LocalProbeGateway:
         del at
         key = (learner_id, item_revision_id)
         if key in self._active:
-            raise Phase6OrchestrationError("PROBE_ALREADY_RESERVED_OR_EXPOSED")
+            raise LearningFlowOrchestrationError("PROBE_ALREADY_RESERVED_OR_EXPOSED")
         token = f"{self.version}:{episode_id}:{item_revision_id}"
         self._active[key] = token
         self._clean.add(token)
@@ -170,7 +171,7 @@ class LocalProbeGateway:
     def mark_used(self, reservation_id: str, *, at: datetime) -> None:
         del at
         if reservation_id not in self._clean:
-            raise Phase6OrchestrationError("PROBE_RESERVATION_UNAVAILABLE")
+            raise LearningFlowOrchestrationError("PROBE_RESERVATION_UNAVAILABLE")
         self._used.add(reservation_id)
 
 
@@ -184,12 +185,12 @@ class RecordingEvidencePublisher:
         self.records.append(dict(evidence))
 
 
-class Phase6Orchestrator:
+class LearningFlowOrchestrator:
     """State-transition owner for one durable development/test episode."""
 
     def __init__(
         self,
-        store: Phase6Store,
+        store: LearningFlowStore,
         *,
         probe_gateway: ProbeGateway,
         evidence_publisher: EvidencePublisher,
@@ -226,10 +227,10 @@ class Phase6Orchestrator:
         if prior is not None:
             return prior
         if environment not in {"development", "test"} or not allow_draft:
-            raise Phase6OrchestrationError("HUMAN_APPROVAL_REQUIRED")
+            raise LearningFlowOrchestrationError("HUMAN_APPROVAL_REQUIRED")
         if grade != 5 or medium != "si":
-            raise Phase6OrchestrationError("GRADE5_SINHALA_REQUIRED")
-        package = load_phase2_public_package(allow_draft=True)
+            raise LearningFlowOrchestrationError("GRADE5_SINHALA_REQUIRED")
+        package = load_curriculum_public_package(allow_draft=True)
         before = _item(package, "unsupported_before")
         after = _item(package, "unsupported_after")
         episode_id = uuid4()
@@ -344,10 +345,19 @@ class Phase6Orchestrator:
         *,
         duration_ms: int,
         steps_viewed: int,
+        manifest_revision_id: str,
+        grouped_count: int,
+        group_sizes: tuple[int, int],
         idempotency_key: str,
     ) -> dict[str, object]:
-        if duration_ms < 0 or steps_viewed < 1 or steps_viewed > 8:
-            raise Phase6OrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
+        if (
+            duration_ms < 0
+            or steps_viewed < 1
+            or steps_viewed > 8
+            or grouped_count < 2
+            or len(group_sizes) != 2
+        ):
+            raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
         return self._mutate(
             episode_id,
             idempotency_key,
@@ -356,22 +366,58 @@ class Phase6Orchestrator:
                 "episode_id": str(episode_id),
                 "duration_ms": duration_ms,
                 "steps_viewed": steps_viewed,
+                "manifest_revision_id": manifest_revision_id,
+                "grouped_count": grouped_count,
+                "group_sizes": list(group_sizes),
             },
             expected="support_active",
             transition=lambda state, _package, at: self._support_complete(
-                state, duration_ms, steps_viewed, at
+                state,
+                duration_ms,
+                steps_viewed,
+                manifest_revision_id,
+                grouped_count,
+                group_sizes,
+                at,
             ),
         )
 
     def withdraw_support(
-        self, episode_id: UUID, *, idempotency_key: str
+        self,
+        episode_id: UUID,
+        *,
+        request_id: UUID,
+        support_revision_id: str,
+        manifest_revision_id: str,
+        all_support_removed: bool,
+        answer_revealing_state_cleared: bool,
+        input_handlers_cleared: bool,
+        idempotency_key: str,
     ) -> dict[str, object]:
         return self._mutate(
             episode_id,
             idempotency_key,
-            {"op": "withdraw_support", "episode_id": str(episode_id)},
+            {
+                "op": "withdraw_support",
+                "episode_id": str(episode_id),
+                "request_id": str(request_id),
+                "support_revision_id": support_revision_id,
+                "manifest_revision_id": manifest_revision_id,
+                "all_support_removed": all_support_removed,
+                "answer_revealing_state_cleared": answer_revealing_state_cleared,
+                "input_handlers_cleared": input_handlers_cleared,
+            },
             expected="support_complete",
-            transition=lambda state, _package, at: self._withdraw(state, at),
+            transition=lambda state, _package, at: self._withdraw(
+                state,
+                request_id,
+                support_revision_id,
+                manifest_revision_id,
+                all_support_removed,
+                answer_revealing_state_cleared,
+                input_handlers_cleared,
+                at,
+            ),
         )
 
     def present_after(
@@ -418,36 +464,40 @@ class Phase6Orchestrator:
         idempotency_key: str,
     ) -> dict[str, object]:
         if not events or len(events) > 50:
-            raise Phase6OrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
+            raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
         for offset, event in enumerate(events):
             if event.get("sequence") != first_sequence + offset:
-                raise Phase6OrchestrationError("CLIENT_SEQUENCE_CONFLICT")
+                raise LearningFlowOrchestrationError("CLIENT_SEQUENCE_CONFLICT")
             payload = event.get("payload", {})
             if not isinstance(payload, Mapping) or len(payload) > 8:
-                raise Phase6OrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
+                raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
             if _FORBIDDEN_TELEMETRY_KEYS.intersection(payload):
-                raise Phase6OrchestrationError("PII_OR_ANSWER_DATA_REJECTED")
+                raise LearningFlowOrchestrationError("PII_OR_ANSWER_DATA_REJECTED")
             if event.get("version") != 1:
-                raise Phase6OrchestrationError("EVENT_VERSION_UNSUPPORTED")
+                raise LearningFlowOrchestrationError("EVENT_VERSION_UNSUPPORTED")
 
         def transition(
-            state: dict[str, object], _package: PublicPhase2Package, at: datetime
+            state: dict[str, object], _package: PublicCurriculumPackage, at: datetime
         ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
             expected = int(state["next_client_sequence"])
             existing = {str(row["event_id"]): row for row in state["telemetry"]}  # type: ignore[index]
             if first_sequence > expected:
-                raise Phase6OrchestrationError("CLIENT_SEQUENCE_GAP")
+                raise LearningFlowOrchestrationError(
+                    "CLIENT_SEQUENCE_GAP", expected_sequence=expected
+                )
             accepted = 0
             duplicates = 0
             for event in events:
                 event_id = str(event["event_id"])
                 if event_id in existing:
                     if request_digest(existing[event_id]) != request_digest(dict(event)):
-                        raise Phase6OrchestrationError("DUPLICATE_EVENT_CONFLICT")
+                        raise LearningFlowOrchestrationError("DUPLICATE_EVENT_CONFLICT")
                     duplicates += 1
                     continue
                 if int(event["sequence"]) < expected:
-                    raise Phase6OrchestrationError("LATE_EVENT_CONFLICT")
+                    raise LearningFlowOrchestrationError(
+                        "LATE_EVENT_CONFLICT", expected_sequence=expected
+                    )
                 state["telemetry"].append(dict(event))  # type: ignore[union-attr]
                 accepted += 1
                 expected += 1
@@ -460,10 +510,9 @@ class Phase6Orchestrator:
                 {"batch_id": str(batch_id), "accepted": accepted, "duplicates": duplicates},
             )
             response = {
-                "episode_id": str(episode_id),
                 "accepted": accepted,
                 "duplicates": duplicates,
-                "expected_next_sequence": expected,
+                "next_sequence": expected,
             }
             return state, response, "telemetry_ingested", ("PRIVACY_FILTERED",)
 
@@ -482,23 +531,23 @@ class Phase6Orchestrator:
     def reconstruct(self, episode_id: UUID) -> dict[str, object]:
         try:
             return self._store.reconstruct(episode_id)
-        except Phase6PersistenceError as error:
-            raise Phase6OrchestrationError(str(error)) from error
+        except LearningFlowPersistenceError as error:
+            raise LearningFlowOrchestrationError(str(error)) from error
 
     def export_manifest(self, episode_id: UUID) -> dict[str, object]:
         try:
             return self._store.export_manifest(episode_id)
-        except Phase6PersistenceError as error:
-            raise Phase6OrchestrationError(str(error)) from error
+        except LearningFlowPersistenceError as error:
+            raise LearningFlowOrchestrationError(str(error)) from error
 
     def invalidate(
         self, episode_id: UUID, *, reason: str, idempotency_key: str
     ) -> dict[str, object]:
         if not reason or len(reason) > 64:
-            raise Phase6OrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
+            raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
 
         def transition(
-            state: dict[str, object], _package: PublicPhase2Package, at: datetime
+            state: dict[str, object], _package: PublicCurriculumPackage, at: datetime
         ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
             state["status"] = "invalidated"
             state["validity"] = "invalid"
@@ -519,7 +568,7 @@ class Phase6Orchestrator:
     def _score_before(
         self,
         state: dict[str, object],
-        package: PublicPhase2Package,
+        package: PublicCurriculumPackage,
         option_id: str,
         response_time_ms: int | None,
         at: datetime,
@@ -538,7 +587,7 @@ class Phase6Orchestrator:
             state["reward"] = {"points": 1, "reason": "independent_correct"}
             _append_event(state, "episode_completed_no_support", at)
             return state, self._summary(state), "episode_completed", ("NO_SUPPORT_REQUIRED",)
-        keys = load_phase2_server_answer_keys()
+        keys = load_curriculum_server_answer_keys()
         mapping = keys[before.revision_id].distractor_misconception_ids.get(
             option_id, "unknown_or_other"
         )
@@ -578,7 +627,7 @@ class Phase6Orchestrator:
             presentation_id=UUID(str(scored["presentation_id"])),
             item_revision_id=before.revision_id,
             inference_at=at,
-            evidence_window_version="phase6-pre-decision-window-v1",
+            evidence_window_version="learning_flow-pre-decision-window-v1",
             evidence=(evidence,),
             recent_same_skill_errors=(),
             recent_error_evidence_ids=(),
@@ -592,7 +641,7 @@ class Phase6Orchestrator:
             development_mode=True,
         )
         feature_snapshot = Model1FeatureBuilder().build(inference_input)
-        belief = development_phase2_candidate(
+        belief = development_curriculum_candidate(
             artifact_sha256="0" * 64, allow_draft=True
         ).predict(feature_snapshot)
         state["model1"] = {
@@ -612,7 +661,7 @@ class Phase6Orchestrator:
             "synthetic_development_only": True,
             "uses_post_decision_evidence": False,
         }
-        scaffolds = development_phase2_scaffolds(allow_draft=True)
+        scaffolds = development_curriculum_scaffolds(allow_draft=True)
         after = _item(package, "unsupported_after")
         experiment_mode = (
             ExperimentMode.BASELINE
@@ -648,7 +697,7 @@ class Phase6Orchestrator:
                 difficulty_event_id=difficulty_event_id,
                 detected=True,
                 severity=1.0,
-                trigger_version="phase6-incorrect-unsupported-v1",
+                trigger_version="learning_flow-incorrect-unsupported-v1",
                 contributing_event_ids=(evidence_id,),
                 observed_at=at,
             ),
@@ -676,7 +725,7 @@ class Phase6Orchestrator:
                 reserved_probe_family_id=after.parallel_family_id,
             ),
             optional_evidence=(),
-            extra_metadata={"source": "phase6_durable_orchestrator"},
+            extra_metadata={"source": "learning_flow_durable_orchestrator"},
             development_mode=True,
         )
         policy_mode = (
@@ -685,7 +734,7 @@ class Phase6Orchestrator:
             else PolicyMode.PROPOSED_SHADOW
         )
         context_snapshot, decision = ContextualScaffoldPolicy(
-            artifact_version="phase5-synthetic-engineering-v1",
+            artifact_version="support_selection-synthetic-engineering-v1",
             artifact_sha256="0" * 64,
         ).decide(
             mode=policy_mode,
@@ -698,7 +747,7 @@ class Phase6Orchestrator:
             assignment_token=f"{state['episode_id']}:{state['condition']}",
         )
         if decision.selected_scaffold_id is None:
-            raise Phase6OrchestrationError("NO_SAFE_SCAFFOLD")
+            raise LearningFlowOrchestrationError("NO_SAFE_SCAFFOLD")
         selected = next(
             row for row in scaffolds if row.scaffold_id == decision.selected_scaffold_id
         )
@@ -736,7 +785,7 @@ class Phase6Orchestrator:
                 "event_id": str(difficulty_event_id),
                 "detected": True,
                 "severity": 1.0,
-                "trigger_version": "phase6-incorrect-unsupported-v1",
+                "trigger_version": "learning_flow-incorrect-unsupported-v1",
                 "raw_evidence_ids": [str(evidence_id)],
             },
         }
@@ -754,6 +803,8 @@ class Phase6Orchestrator:
             "duration_ms": None,
             "steps_viewed": 0,
             "answer_leakage": False,
+            "game_manifest_revision_id": scaffold.scaffold_revision_id,
+            "game_total_objects": visual_reference.worked_values[0],
         }
         state["status"] = "support_active"
         _append_event(state, "support_exposed", at)
@@ -780,24 +831,63 @@ class Phase6Orchestrator:
         return state, response, "support_selected", ("DEVELOPMENT_ONLY",)
 
     def _support_complete(
-        self, state: dict[str, object], duration_ms: int, steps: int, at: datetime
+        self,
+        state: dict[str, object],
+        duration_ms: int,
+        steps: int,
+        manifest_revision_id: str,
+        grouped_count: int,
+        group_sizes: tuple[int, int],
+        at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
         exposure = state["scaffold_exposure"]
         assert isinstance(exposure, dict)
+        expected_total = int(exposure["game_total_objects"])
+        if (
+            manifest_revision_id != exposure["game_manifest_revision_id"]
+            or grouped_count != expected_total
+            or sum(group_sizes) != expected_total
+            or group_sizes[0] != group_sizes[1]
+        ):
+            raise LearningFlowOrchestrationError("INVALID_SUPPORT_COMPLETION")
         exposure["completed_at"] = at.isoformat()
         exposure["duration_ms"] = duration_ms
         exposure["steps_viewed"] = steps
+        exposure["group_sizes"] = list(group_sizes)
         state["status"] = "support_complete"
         _append_event(state, "supported_practice_complete", at)
         return state, self._summary(state), "support_completed", ("ASSISTED_EVIDENCE",)
 
     def _withdraw(
-        self, state: dict[str, object], at: datetime
+        self,
+        state: dict[str, object],
+        request_id: UUID,
+        support_revision_id: str,
+        manifest_revision_id: str,
+        all_support_removed: bool,
+        answer_revealing_state_cleared: bool,
+        input_handlers_cleared: bool,
+        at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
+        exposure = state["scaffold_exposure"]
+        assert isinstance(exposure, dict)
+        if (
+            support_revision_id != exposure["revision_id"]
+            or manifest_revision_id != exposure["game_manifest_revision_id"]
+            or not all_support_removed
+            or not answer_revealing_state_cleared
+            or not input_handlers_cleared
+        ):
+            raise LearningFlowOrchestrationError("INVALID_WITHDRAWAL_ACKNOWLEDGEMENT")
         state["withdrawal"] = {
             "withdrawal_id": str(uuid4()),
-            "all_support_removed": True,
-            "answer_revealing_state_cleared": True,
+            "request_id": str(request_id),
+            "support_revision_id": support_revision_id,
+            "manifest_revision_id": manifest_revision_id,
+            "all_support_removed": all_support_removed,
+            "answer_revealing_state_cleared": answer_revealing_state_cleared,
+            "input_handlers_cleared": input_handlers_cleared,
+            "client_confirmed_at": at.isoformat(),
             "server_verified_at": at.isoformat(),
         }
         state["status"] = "support_withdrawn"
@@ -807,7 +897,7 @@ class Phase6Orchestrator:
     def _present_after(
         self,
         state: dict[str, object],
-        package: PublicPhase2Package,
+        package: PublicCurriculumPackage,
         at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
         reservation_id = str(state["probe_reservation_id"])
@@ -820,8 +910,8 @@ class Phase6Orchestrator:
             return state, self._summary(state), "episode_invalidated", ("PRIOR_PROBE_EXPOSURE",)
         after = _item(package, "unsupported_after")
         presentation_id = uuid4()
-        presentation = _phase3_presentation(state, after, presentation_id, at)
-        withdrawal = _phase3_withdrawal(state)
+        presentation = _independence_gain_presentation(state, after, presentation_id, at)
+        withdrawal = _independence_gain_withdrawal(state)
         assert_unsupported_after_may_begin(presentation, withdrawal)
         self._probe.mark_used(reservation_id, at=at)
         state["presentations"].append(  # type: ignore[union-attr]
@@ -834,7 +924,7 @@ class Phase6Orchestrator:
     def _score_after(
         self,
         state: dict[str, object],
-        package: PublicPhase2Package,
+        package: PublicCurriculumPackage,
         option_id: str,
         response_time_ms: int | None,
         at: datetime,
@@ -898,16 +988,16 @@ class Phase6Orchestrator:
         at: datetime,
     ) -> dict[str, object]:
         if option_id not in {option.option_id for option in item.options}:
-            raise Phase6OrchestrationError("UNKNOWN_OPTION")
+            raise LearningFlowOrchestrationError("UNKNOWN_OPTION")
         presentation_row = next(
             row
             for row in state["presentations"]  # type: ignore[union-attr]
             if row["revision_id"] == item.revision_id
         )
-        presentation = _phase3_presentation(
+        presentation = _independence_gain_presentation(
             state, item, UUID(str(presentation_row["presentation_id"])), at
         )
-        attempt = development_phase2_scorer(allow_draft=True).score(
+        attempt = development_curriculum_scorer(allow_draft=True).score(
             presentation,
             AttemptSubmission(
                 attempt_id=uuid4(),
@@ -937,15 +1027,15 @@ class Phase6Orchestrator:
             "hint_count": 0,
             "difficulty": "easy",
             "difficulty_source": item.difficulty_band,
-            "difficulty_mapping_version": "phase6-introductory-v1",
+            "difficulty_mapping_version": "learning_flow-introductory-v1",
             "scored_at": at.isoformat(),
         }
 
     def _measurement(
-        self, state: dict[str, object], package: PublicPhase2Package, at: datetime
+        self, state: dict[str, object], package: PublicCurriculumPackage, at: datetime
     ):
         presentations = tuple(
-            _phase3_presentation(
+            _independence_gain_presentation(
                 state,
                 next(item for item in package.item_revisions if item.revision_id == row["revision_id"]),
                 UUID(str(row["presentation_id"])),
@@ -958,7 +1048,7 @@ class Phase6Orchestrator:
         for row in state["attempts"]:  # type: ignore[union-attr]
             presentation = by_id[UUID(str(row["presentation_id"]))]
             attempts.append(
-                development_phase2_scorer(allow_draft=True).score(
+                development_curriculum_scorer(allow_draft=True).score(
                     presentation,
                     AttemptSubmission(
                         attempt_id=UUID(str(row["attempt_id"])),
@@ -1035,7 +1125,7 @@ class Phase6Orchestrator:
                 attempts=tuple(attempts),
                 reservations=(reservation,),
                 scaffold_exposures=(exposure_record,),
-                withdrawal=_phase3_withdrawal(state),
+                withdrawal=_independence_gain_withdrawal(state),
                 events=tuple(measurement_events),
                 expected_event_sequence_end=len(measurement_events),
             ),
@@ -1073,7 +1163,7 @@ class Phase6Orchestrator:
     def _mutate(self, episode_id, key, request, *, expected, transition):
         def checked(state, package, at):
             if state["status"] != expected:
-                raise Phase6OrchestrationError("EPISODE_STATE_CONFLICT")
+                raise LearningFlowOrchestrationError("EPISODE_STATE_CONFLICT")
             return transition(state, package, at)
 
         return self._mutate_any(episode_id, key, request, checked)
@@ -1092,7 +1182,7 @@ class Phase6Orchestrator:
             state["telemetry"] = [dict(value) for value in state["telemetry"]]
             old_event_count = len(state["events"])
             expected_revision = int(state["revision"])
-            package = load_phase2_public_package(allow_draft=True)
+            package = load_curriculum_public_package(allow_draft=True)
             state, response, audit_type, audit_reasons = transition(state, package, at)
             state["revision"] = expected_revision + 1
             self._store.replace(
@@ -1116,8 +1206,8 @@ class Phase6Orchestrator:
     def _receipt(self, key: str, request: dict[str, object]) -> dict[str, object] | None:
         try:
             return self._store.receipt(key, request_digest(request))
-        except Phase6PersistenceError as error:
-            raise Phase6OrchestrationError(str(error)) from error
+        except LearningFlowPersistenceError as error:
+            raise LearningFlowOrchestrationError(str(error)) from error
 
     def _atomic(self, operation: Callable[[], None]) -> None:
         try:
@@ -1160,7 +1250,7 @@ class Phase6Orchestrator:
         }
 
 
-def _item(package: PublicPhase2Package, role: str) -> ItemRevision:
+def _item(package: PublicCurriculumPackage, role: str) -> ItemRevision:
     return next(item for item in package.item_revisions if item.measurement_role == role)
 
 
@@ -1179,7 +1269,7 @@ def _presentation_record(
     }
 
 
-def _phase3_presentation(
+def _independence_gain_presentation(
     state: dict[str, object], item: ItemRevision, presentation_id: UUID, at: datetime
 ) -> Presentation:
     row = next(
@@ -1211,7 +1301,7 @@ def _phase3_presentation(
     )
 
 
-def _phase3_withdrawal(state: dict[str, object]) -> SupportWithdrawal:
+def _independence_gain_withdrawal(state: dict[str, object]) -> SupportWithdrawal:
     row = state["withdrawal"]
     assert isinstance(row, dict)
     exposure = state["scaffold_exposure"]
