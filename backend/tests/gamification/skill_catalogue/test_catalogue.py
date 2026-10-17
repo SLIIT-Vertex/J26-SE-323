@@ -56,7 +56,7 @@ def test_approved_skill_requires_review_metadata() -> None:
         replace(review, status=ReviewStatus.APPROVED, development_only=False)
 
 
-def test_manifest_hashes_candidates_taxonomy_and_pinned_phase5_bindings() -> None:
+def test_manifest_hashes_candidates_taxonomy_and_pinned_support_selection_bindings() -> None:
     manifest = json.loads(
         (SKILL_REVIEW_DATA_DIRECTORY / "manifest.json").read_text(encoding="utf-8")
     )

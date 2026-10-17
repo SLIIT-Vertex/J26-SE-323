@@ -474,12 +474,12 @@ class Model2ContextBuilder:
         feature_definitions = {name: _feature_definition(name) for name in sorted(values)}
         provenance: dict[str, object] = {
             "unsupported_evidence": {
-                "source": "phase3_authoritative_attempts",
+                "source": "independence_gain_authoritative_attempts",
                 "as_of": max(row.observed_at for row in evidence).isoformat(),
                 "evidence_ids": [str(row.evidence_id) for row in evidence],
             },
             "difficulty": {
-                "source": "phase1_difficulty_trigger",
+                "source": "foundation_difficulty_trigger",
                 "source_version": data.difficulty.trigger_version,
                 "as_of": data.difficulty.observed_at.isoformat(),
                 "evidence_ids": [
@@ -495,7 +495,7 @@ class Model2ContextBuilder:
                 "as_of": belief.inference_at.isoformat() if belief else None,
             },
             "prior_outcomes": {
-                "source": "phase3_valid_raw_independence_gain",
+                "source": "independence_gain_valid_raw_independence_gain",
                 "formula_version": FORMULA_VERSION,
                 "evidence_ids": [str(row.measurement_id) for row in data.prior_outcomes],
             },
@@ -911,12 +911,12 @@ class ContextualScaffoldPolicy:
         )
 
 
-def development_phase2_scaffolds(*, allow_draft: bool = False) -> tuple[ScaffoldCandidate, ...]:
+def development_curriculum_scaffolds(*, allow_draft: bool = False) -> tuple[ScaffoldCandidate, ...]:
     if not allow_draft:
         raise PermissionError("draft scaffolds require allow_draft=True")
-    from app.gamification.content.phase2_registry import load_phase2_public_package
+    from app.gamification.content.curriculum_registry import load_curriculum_public_package
 
-    package = load_phase2_public_package(allow_draft=True)
+    package = load_curriculum_public_package(allow_draft=True)
     if package.skill.skill_id != SKILL_ID:
         raise Model2Error("content skill does not match Model 2")
     rows = []
@@ -1495,7 +1495,7 @@ def evaluate_off_policy(
     )
 
 
-def run_phase5_simulation(*, seed: int = 31) -> Mapping[str, object]:
+def run_support_selection_simulation(*, seed: int = 31) -> Mapping[str, object]:
     """Deterministic synthetic scenarios; never learner or effectiveness evidence."""
 
     rng = random.Random(seed)

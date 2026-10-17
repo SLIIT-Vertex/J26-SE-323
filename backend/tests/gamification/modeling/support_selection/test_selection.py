@@ -8,14 +8,14 @@ from uuid import UUID, uuid4
 import pytest
 
 from app.gamification.domain.types import AssistanceState, ExperimentMode, MeasurementRole
-from app.gamification.modeling.independence_gain.phase3 import (
+from app.gamification.modeling.independence_gain.measurement import (
     FORMULA_VERSION,
     IndependenceMeasurement,
     PolicyUpdateStatus,
     ScoreTotal,
 )
-from app.gamification.modeling.misconception_inference.phase4 import replay_inference
-from app.gamification.modeling.support_selection.phase5 import (
+from app.gamification.modeling.misconception_inference.inference import replay_inference
+from app.gamification.modeling.support_selection.selection import (
     ACTION_TYPES,
     CONTEXT_SCHEMA_VERSION,
     ArtifactLifecycle,
@@ -39,17 +39,17 @@ from app.gamification.modeling.support_selection.phase5 import (
     SelectionKind,
     UnsupportedEvidence,
     delivery_failure_fallback,
-    development_phase2_scaffolds,
+    development_curriculum_scaffolds,
     evaluate_context_ablation,
     evaluate_model2,
     evaluate_off_policy,
-    run_phase5_simulation,
+    run_support_selection_simulation,
     time_split_evaluation_rows,
 )
-from tests.gamification.modeling.misconception_inference.test_phase4_model1 import (
+from tests.gamification.modeling.misconception_inference.test_inference import (
     inference_input as model1_input,
 )
-from tests.gamification.modeling.misconception_inference.test_phase4_model1 import (
+from tests.gamification.modeling.misconception_inference.test_inference import (
     model as model1_model,
 )
 
@@ -155,7 +155,7 @@ def context_input(**changes) -> Model2ContextInput:
 
 
 def candidates() -> tuple[ScaffoldCandidate, ...]:
-    return development_phase2_scaffolds(allow_draft=True)
+    return development_curriculum_scaffolds(allow_draft=True)
 
 
 def eligibility(*, child_facing: bool = False, allow_draft: bool = True):
@@ -336,7 +336,7 @@ def test_draft_child_session_budget_and_no_action_exclusions_fallback() -> None:
 
 
 def test_missing_and_stale_external_context_are_explicit_and_safe() -> None:
-    from app.gamification.modeling.misconception_inference.phase4 import OptionalEvidence
+    from app.gamification.modeling.misconception_inference.inference import OptionalEvidence
 
     missing = OptionalEvidence("knowledge_tracing", "kt-v1", None, None, None, None, True, True, {})
     stale = OptionalEvidence(
@@ -389,7 +389,7 @@ def test_future_postdecision_answer_and_personal_leakage_is_rejected(change) -> 
 
 def test_learned_child_control_and_default_draft_composition_are_blocked() -> None:
     with pytest.raises(PermissionError, match="allow_draft"):
-        development_phase2_scaffolds()
+        development_curriculum_scaffolds()
     _, decision = decide(
         mode=PolicyMode.LEARNED_DELIVERY,
         gate=eligibility(child_facing=True),
@@ -619,8 +619,8 @@ def test_synthetic_evaluation_and_simulation_are_deterministic_and_labelled() ->
     }
     with pytest.raises(PermissionError, match="authorization reference"):
         evaluate_model2(evaluation_rows(), authorized_real_data=True)
-    assert run_phase5_simulation(seed=31) == run_phase5_simulation(seed=31)
-    simulation = run_phase5_simulation(seed=31)
+    assert run_support_selection_simulation(seed=31) == run_support_selection_simulation(seed=31)
+    simulation = run_support_selection_simulation(seed=31)
     assert simulation["synthetic"] is True
     assert set(simulation["scenarios"]) >= {
         "cold_start",
