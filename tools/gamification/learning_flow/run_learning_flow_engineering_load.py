@@ -9,19 +9,20 @@ import time
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-
-from app.gamification.application.phase6_orchestration import Phase6Orchestrator
-from app.gamification.infrastructure.db.phase6_gateways import (
-    SqlAlchemyPhase6EvidencePublisher,
+from app.gamification.application.learning_flow_orchestration import (
+    LearningFlowOrchestrator,
+)
+from app.gamification.infrastructure.db.learning_flow_gateways import (
+    SqlAlchemyLearningFlowEvidencePublisher,
     SqlAlchemyProbeGateway,
 )
-from app.gamification.infrastructure.db.phase6_orchestration_store import (
-    SqlAlchemyPhase6Store,
+from app.gamification.infrastructure.db.learning_flow_store import (
+    SqlAlchemyLearningFlowStore,
 )
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
 
 def percentile(values: list[float], fraction: float) -> float:
@@ -53,10 +54,10 @@ def main() -> int:
                 )
             )
             session.commit()
-            service = Phase6Orchestrator(
-                SqlAlchemyPhase6Store(session),
+            service = LearningFlowOrchestrator(
+                SqlAlchemyLearningFlowStore(session),
                 probe_gateway=SqlAlchemyProbeGateway(session),
-                evidence_publisher=SqlAlchemyPhase6EvidencePublisher(session),
+                evidence_publisher=SqlAlchemyLearningFlowEvidencePublisher(session),
             )
             one = time.perf_counter()
             opened = service.open_episode(

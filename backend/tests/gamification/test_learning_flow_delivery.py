@@ -63,7 +63,7 @@ def _headers(
     headers = {
         "X-Dev-Principal": NOT_FOR_PRODUCTION,
         "X-Dev-Role": role,
-        "X-Correlation-ID": "phase6",
+        "X-Correlation-ID": "learning_flow",
     }
     if role == "learner":
         headers["X-Learner-Id"] = str(learner)

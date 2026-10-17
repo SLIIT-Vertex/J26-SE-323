@@ -8,22 +8,22 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-from app.gamification.application.phase6_orchestration import (
+from app.gamification.application.learning_flow_orchestration import (
+    LearningFlowOrchestrationError,
+    LearningFlowOrchestrator,
     LocalProbeGateway,
-    Phase6OrchestrationError,
-    Phase6Orchestrator,
     RecordingEvidencePublisher,
+)
+from app.gamification.infrastructure.db.learning_flow_gateways import SqlAlchemyProbeGateway
+from app.gamification.infrastructure.db.learning_flow_store import (
+    SqlAlchemyLearningFlowStore,
 )
 from app.gamification.infrastructure.db.models import (
     LearnerEvidenceOutboxModel,
-    Phase6AuditEventModel,
-    Phase6EpisodeEventModel,
-    Phase6EpisodeRunModel,
-    Phase6IdempotencyReceiptModel,
-)
-from app.gamification.infrastructure.db.phase6_gateways import SqlAlchemyProbeGateway
-from app.gamification.infrastructure.db.phase6_orchestration_store import (
-    SqlAlchemyPhase6Store,
+    LearningFlowAuditEventModel,
+    LearningFlowEpisodeEventModel,
+    LearningFlowEpisodeRunModel,
+    LearningFlowIdempotencyReceiptModel,
 )
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
@@ -54,8 +54,8 @@ def _service(engine, *, probe=None, publisher=None):
     session = Session(engine)
     return (
         session,
-        Phase6Orchestrator(
-            SqlAlchemyPhase6Store(session),
+        LearningFlowOrchestrator(
+            SqlAlchemyLearningFlowStore(session),
             probe_gateway=probe or LocalProbeGateway(),
             evidence_publisher=publisher or RecordingEvidencePublisher(),
         ),
@@ -75,12 +75,38 @@ def _open(service, *, condition="proposed", key="open"):
     )
 
 
+def _complete_support(service, episode_id, *, key="support"):
+    exposure = service.reconstruct(episode_id)["state"]["scaffold_exposure"]
+    total = int(exposure["game_total_objects"])
+    return service.complete_support(
+        episode_id,
+        duration_ms=900,
+        steps_viewed=1,
+        manifest_revision_id=exposure["game_manifest_revision_id"],
+        grouped_count=total,
+        group_sizes=(total // 2, total // 2),
+        idempotency_key=key,
+    )
+
+
+def _withdraw_support(service, episode_id, *, key="withdraw"):
+    exposure = service.reconstruct(episode_id)["state"]["scaffold_exposure"]
+    return service.withdraw_support(
+        episode_id,
+        request_id=uuid4(),
+        support_revision_id=exposure["revision_id"],
+        manifest_revision_id=exposure["game_manifest_revision_id"],
+        all_support_removed=True,
+        answer_revealing_state_cleared=True,
+        input_handlers_cleared=True,
+        idempotency_key=key,
+    )
+
+
 def _complete(service, episode_id, *, after="C"):
     service.submit_before(episode_id, option_id="A", idempotency_key="before")
-    service.complete_support(
-        episode_id, duration_ms=900, steps_viewed=1, idempotency_key="support"
-    )
-    service.withdraw_support(episode_id, idempotency_key="withdraw")
+    _complete_support(service, episode_id)
+    _withdraw_support(service, episode_id)
     presented = service.present_after(episode_id, idempotency_key="present-after")
     assert "correct_option_id" not in str(presented)
     return service.submit_after(episode_id, option_id=after, idempotency_key="after")
@@ -172,9 +198,9 @@ def test_production_unapproved_and_wrong_scope_fail_closed_without_rows(database
             "idempotency_key": str(uuid4()),
             **kwargs,
         }
-        with pytest.raises(Phase6OrchestrationError, match=code):
+        with pytest.raises(LearningFlowOrchestrationError, match=code):
             service.open_episode(**values)
-    assert session.scalar(select(func.count()).select_from(Phase6EpisodeRunModel)) == 0
+    assert session.scalar(select(func.count()).select_from(LearningFlowEpisodeRunModel)) == 0
     session.close()
 
 
@@ -186,9 +212,9 @@ def test_idempotency_conflict_rolls_back_and_exact_retry_replays(database):
     assert service.submit_before(
         episode_id, option_id="A", idempotency_key="response"
     ) == first
-    with pytest.raises(Phase6OrchestrationError, match="IDEMPOTENCY_CONFLICT"):
+    with pytest.raises(LearningFlowOrchestrationError, match="IDEMPOTENCY_CONFLICT"):
         service.submit_before(episode_id, option_id="B", idempotency_key="response")
-    assert session.scalar(select(func.count()).select_from(Phase6IdempotencyReceiptModel)) == 2
+    assert session.scalar(select(func.count()).select_from(LearningFlowIdempotencyReceiptModel)) == 2
     session.close()
 
 
@@ -196,11 +222,11 @@ def test_invalid_answer_rolls_back_outbox_projection_and_receipt(database):
     session, service = _service(database)
     episode_id = UUID(str(_open(service)["episode_id"]))
     before = service.reconstruct(episode_id)
-    with pytest.raises(Phase6OrchestrationError, match="UNKNOWN_OPTION"):
+    with pytest.raises(LearningFlowOrchestrationError, match="UNKNOWN_OPTION"):
         service.submit_before(episode_id, option_id="forged", idempotency_key="forged")
     assert service.reconstruct(episode_id) == before
     assert session.scalar(select(func.count()).select_from(LearnerEvidenceOutboxModel)) == 0
-    assert session.get(Phase6IdempotencyReceiptModel, "forged") is None
+    assert session.get(LearningFlowIdempotencyReceiptModel, "forged") is None
     session.close()
 
 
@@ -209,8 +235,8 @@ def test_probe_contamination_invalidates_before_after_presentation(database):
     session, service = _service(database, probe=probe)
     episode_id = UUID(str(_open(service)["episode_id"]))
     service.submit_before(episode_id, option_id="A", idempotency_key="b")
-    service.complete_support(episode_id, duration_ms=1, steps_viewed=1, idempotency_key="s")
-    service.withdraw_support(episode_id, idempotency_key="w")
+    _complete_support(service, episode_id, key="s")
+    _withdraw_support(service, episode_id, key="w")
     state = service.reconstruct(episode_id)["state"]
     probe.contaminate(str(state["probe_reservation_id"]))
     result = service.present_after(episode_id, idempotency_key="p")
@@ -224,11 +250,46 @@ def test_support_must_be_completed_and_withdrawn_before_after_probe(database):
     session, service = _service(database)
     episode_id = UUID(str(_open(service)["episode_id"]))
     service.submit_before(episode_id, option_id="A", idempotency_key="b")
-    with pytest.raises(Phase6OrchestrationError, match="EPISODE_STATE_CONFLICT"):
+    with pytest.raises(LearningFlowOrchestrationError, match="EPISODE_STATE_CONFLICT"):
         service.present_after(episode_id, idempotency_key="too-soon")
-    service.complete_support(episode_id, duration_ms=1, steps_viewed=1, idempotency_key="s")
-    with pytest.raises(Phase6OrchestrationError, match="EPISODE_STATE_CONFLICT"):
+    _complete_support(service, episode_id, key="s")
+    with pytest.raises(LearningFlowOrchestrationError, match="EPISODE_STATE_CONFLICT"):
         service.present_after(episode_id, idempotency_key="still-too-soon")
+    session.close()
+
+
+def test_support_completion_and_withdrawal_proofs_are_revision_bound(database):
+    session, service = _service(database)
+    episode_id = UUID(str(_open(service)["episode_id"]))
+    service.submit_before(episode_id, option_id="A", idempotency_key="b-proof")
+    with pytest.raises(LearningFlowOrchestrationError, match="INVALID_SUPPORT_COMPLETION"):
+        service.complete_support(
+            episode_id,
+            duration_ms=1,
+            steps_viewed=1,
+            manifest_revision_id="stale-revision",
+            grouped_count=6,
+            group_sizes=(5, 1),
+            idempotency_key="bad-completion-proof",
+        )
+    _complete_support(service, episode_id, key="good-completion-proof")
+    with pytest.raises(
+        LearningFlowOrchestrationError, match="INVALID_WITHDRAWAL_ACKNOWLEDGEMENT"
+    ):
+        service.withdraw_support(
+            episode_id,
+            request_id=uuid4(),
+            support_revision_id="stale-revision",
+            manifest_revision_id="stale-revision",
+            all_support_removed=True,
+            answer_revealing_state_cleared=True,
+            input_handlers_cleared=True,
+            idempotency_key="bad-withdrawal-proof",
+        )
+    _withdraw_support(service, episode_id, key="good-withdrawal-proof")
+    withdrawal = service.reconstruct(episode_id)["state"]["withdrawal"]
+    assert withdrawal["request_id"]
+    assert withdrawal["input_handlers_cleared"] is True
     session.close()
 
 
@@ -253,7 +314,7 @@ def test_offline_batch_duplicate_gap_version_pii_and_bounds(database):
         idempotency_key="telemetry-2",
     )
     assert duplicate["duplicates"] == 1
-    with pytest.raises(Phase6OrchestrationError, match="CLIENT_SEQUENCE_GAP"):
+    with pytest.raises(LearningFlowOrchestrationError, match="CLIENT_SEQUENCE_GAP"):
         service.ingest_telemetry(
             episode_id,
             batch_id=uuid4(),
@@ -261,7 +322,7 @@ def test_offline_batch_duplicate_gap_version_pii_and_bounds(database):
             events=({**event, "event_id": str(uuid4()), "sequence": 3},),
             idempotency_key="gap",
         )
-    with pytest.raises(Phase6OrchestrationError, match="PII_OR_ANSWER_DATA_REJECTED"):
+    with pytest.raises(LearningFlowOrchestrationError, match="PII_OR_ANSWER_DATA_REJECTED"):
         service.ingest_telemetry(
             episode_id,
             batch_id=uuid4(),
@@ -287,37 +348,35 @@ def test_invalidated_episode_has_no_update_and_audit_is_persisted(database):
     )
     assert result["policy_update_status"] == "not_authorized_invalid"
     assert result["reward"] is None
-    assert session.scalar(select(func.count()).select_from(Phase6AuditEventModel)) == 2
-    assert session.scalar(select(func.count()).select_from(Phase6EpisodeEventModel)) == 2
+    assert session.scalar(select(func.count()).select_from(LearningFlowAuditEventModel)) == 2
+    assert session.scalar(select(func.count()).select_from(LearningFlowEpisodeEventModel)) == 2
     session.close()
 
 
 def test_sql_probe_reservation_survives_restart_and_blocks_cross_component_reuse(database):
     first_session = Session(database)
-    first = Phase6Orchestrator(
-        SqlAlchemyPhase6Store(first_session),
+    first = LearningFlowOrchestrator(
+        SqlAlchemyLearningFlowStore(first_session),
         probe_gateway=SqlAlchemyProbeGateway(first_session),
         evidence_publisher=RecordingEvidencePublisher(),
     )
     opened = _open(first, key="durable-open")
     episode_id = UUID(str(opened["episode_id"]))
     first.submit_before(episode_id, option_id="A", idempotency_key="durable-before")
-    first.complete_support(
-        episode_id, duration_ms=1, steps_viewed=1, idempotency_key="durable-support"
-    )
-    first.withdraw_support(episode_id, idempotency_key="durable-withdraw")
+    _complete_support(first, episode_id, key="durable-support")
+    _withdraw_support(first, episode_id, key="durable-withdraw")
     first_session.close()
 
     second_session = Session(database)
-    restarted = Phase6Orchestrator(
-        SqlAlchemyPhase6Store(second_session),
+    restarted = LearningFlowOrchestrator(
+        SqlAlchemyLearningFlowStore(second_session),
         probe_gateway=SqlAlchemyProbeGateway(second_session),
         evidence_publisher=RecordingEvidencePublisher(),
     )
     assert restarted.present_after(episode_id, idempotency_key="durable-present")[
         "status"
     ] == "after_presented"
-    with pytest.raises(Phase6OrchestrationError, match="PROBE_ALREADY_RESERVED_OR_EXPOSED"):
+    with pytest.raises(LearningFlowOrchestrationError, match="PROBE_ALREADY_RESERVED_OR_EXPOSED"):
         _open(restarted, key="cross-component-reuse")
     second_session.close()
 
@@ -343,7 +402,7 @@ def test_development_http_slice_is_durable_authorized_and_object_scoped(
         return values
 
     opened = client.post(
-        "/api/v1/development/phase6/episodes",
+        "/api/v1/development/learning-flow/episodes",
         headers=headers("http-open"),
         json={
             "learner_id": learner_id,
@@ -358,31 +417,47 @@ def test_development_http_slice_is_durable_authorized_and_object_scoped(
     assert opened.status_code == 200, opened.text
     episode_id = opened.json()["episode_id"]
     denied = client.post(
-        f"/api/v1/development/phase6/episodes/{episode_id}/before",
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/before",
         headers=headers("wrong-owner", subject=str(uuid4())),
         json={"option_id": "A"},
     )
     assert denied.status_code == 404
-    assert client.post(
-        f"/api/v1/development/phase6/episodes/{episode_id}/before",
+    supported = client.post(
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/before",
         headers=headers("http-before"),
         json={"option_id": "A"},
-    ).status_code == 200
+    )
+    assert supported.status_code == 200
+    support_revision = supported.json()["support"]["revision_id"]
     assert client.post(
-        f"/api/v1/development/phase6/episodes/{episode_id}/support/complete",
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/support/complete",
         headers=headers("http-support"),
-        json={"duration_ms": 3, "steps_viewed": 1},
+        json={
+            "duration_ms": 3,
+            "steps_viewed": 1,
+            "manifest_revision_id": support_revision,
+            "grouped_count": 6,
+            "group_sizes": [3, 3],
+        },
     ).status_code == 200
     assert client.post(
-        f"/api/v1/development/phase6/episodes/{episode_id}/support/withdraw",
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/support/withdraw",
         headers=headers("http-withdraw"),
+        json={
+            "request_id": str(uuid4()),
+            "support_revision_id": support_revision,
+            "manifest_revision_id": support_revision,
+            "all_support_removed": True,
+            "answer_revealing_state_cleared": True,
+            "input_handlers_cleared": True,
+        },
     ).status_code == 200
     assert client.post(
-        f"/api/v1/development/phase6/episodes/{episode_id}/after/present",
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/after/present",
         headers=headers("http-present"),
     ).status_code == 200
     completed = client.post(
-        f"/api/v1/development/phase6/episodes/{episode_id}/after",
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/after",
         headers=headers("http-after"),
         json={"option_id": "C"},
     )
@@ -399,13 +474,13 @@ def test_development_http_slice_is_durable_authorized_and_object_scoped(
     ):
         assert research_field not in child_payload
     reconstruction = client.get(
-        f"/api/v1/development/phase6/episodes/{episode_id}/reconstruction",
+        f"/api/v1/development/learning-flow/episodes/{episode_id}/reconstruction",
         headers=headers("unused", role="researcher"),
     )
     assert reconstruction.status_code == 200
     assert "correct_option_id" not in reconstruction.text
     missing = client.get(
-        f"/api/v1/development/phase6/episodes/{uuid4()}/reconstruction",
+        f"/api/v1/development/learning-flow/episodes/{uuid4()}/reconstruction",
         headers=headers("unused", role="researcher"),
     )
     assert missing.status_code == 404
