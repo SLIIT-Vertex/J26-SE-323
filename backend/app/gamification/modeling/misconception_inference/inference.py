@@ -564,14 +564,14 @@ class InterpretableBayesianCandidate:
         )
 
 
-def development_phase2_candidate(
+def development_curriculum_candidate(
     *, artifact_sha256: str, allow_draft: bool = False
 ) -> InterpretableBayesianCandidate:
     if not allow_draft:
         raise PermissionError("draft misconceptions require allow_draft=True")
-    from app.gamification.content.phase2_registry import load_phase2_public_package
+    from app.gamification.content.curriculum_registry import load_curriculum_public_package
 
-    package = load_phase2_public_package(allow_draft=True)
+    package = load_curriculum_public_package(allow_draft=True)
     codes = tuple(row.misconception_id for row in package.misconceptions)
     versions = {row.mapping_version for row in package.misconceptions}
     if set(codes) != set(CATALOGUE_CODES) or versions != {CATALOGUE_VERSION}:

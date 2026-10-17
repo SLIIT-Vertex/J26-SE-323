@@ -13,10 +13,10 @@ from app.gamification.modeling.misconception_inference.deterministic_baseline im
     DETERMINISTIC_BASELINE_VERSION,
     DeterministicMisconceptionBaseline,
 )
-from app.gamification.modeling.misconception_inference.phase4 import (
-    CATALOGUE_CODES as PHASE4_CATALOGUE_CODES,
+from app.gamification.modeling.misconception_inference.inference import (
+    CATALOGUE_CODES as MISCONCEPTION_INFERENCE_CATALOGUE_CODES,
 )
-from app.gamification.modeling.misconception_inference.phase4 import (
+from app.gamification.modeling.misconception_inference.inference import (
     MODEL1_INTERFACE_VERSION,
     BeliefSnapshot,
     Model1FeatureBuilder,
@@ -33,9 +33,9 @@ from app.gamification.modeling.shared.contracts import MisconceptionDistribution
 __all__ = [
     "BAYESIAN_MODEL_VERSION",
     "DETERMINISTIC_BASELINE_VERSION",
+    "MISCONCEPTION_INFERENCE_CATALOGUE_CODES",
     "MISCONCEPTION_MODEL_VERSION",
     "MODEL1_INTERFACE_VERSION",
-    "PHASE4_CATALOGUE_CODES",
     "UNKNOWN_CODE",
     "BayesianMisconceptionModel",
     "BeliefSnapshot",

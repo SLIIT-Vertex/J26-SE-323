@@ -8,7 +8,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from app.gamification.domain.types import AssistanceState, MeasurementRole
-from app.gamification.modeling.misconception_inference.phase4 import (
+from app.gamification.modeling.misconception_inference.inference import (
     CATALOGUE_CODES,
     CATALOGUE_VERSION,
     FEATURE_SCHEMA_VERSION,
@@ -25,7 +25,7 @@ from app.gamification.modeling.misconception_inference.phase4 import (
     Model1InferenceInput,
     OptionalEvidence,
     candidate_from_artifact,
-    development_phase2_candidate,
+    development_curriculum_candidate,
     evaluate_model1,
     fit_model1_candidate,
     replay_inference,
@@ -96,7 +96,7 @@ def inference_input(**changes: object) -> Model1InferenceInput:
 
 
 def model():
-    return development_phase2_candidate(artifact_sha256=ARTIFACT_HASH, allow_draft=True)
+    return development_curriculum_candidate(artifact_sha256=ARTIFACT_HASH, allow_draft=True)
 
 
 def test_complete_normalized_distribution_and_non_definitive_distractor() -> None:
@@ -290,7 +290,7 @@ def test_catalogue_and_mapping_version_mismatch_are_rejected_or_abstain() -> Non
     with pytest.raises(Model1Error, match="mapping version"):
         Model1FeatureBuilder().build(inference_input(mapping_version="wrong"))
     snapshot = Model1FeatureBuilder().build(inference_input())
-    mismatched = development_phase2_candidate(
+    mismatched = development_curriculum_candidate(
         artifact_sha256=ARTIFACT_HASH, allow_draft=True
     )
     mismatched.mapping_version = "wrong"
@@ -320,12 +320,12 @@ def synthetic_rows() -> tuple[Model1DatasetRow, ...]:
 
 def test_manifest_artifact_hash_shadow_activation_and_rollback() -> None:
     manifest = Model1DatasetManifest.build(
-        synthetic_rows(), dataset_id="phase4-synthetic-v1", split_seed=17,
+        synthetic_rows(), dataset_id="misconception_inference-synthetic-v1", split_seed=17,
         synthetic=True, authorized_expert_labels=False
     )
     manifest.assert_disjoint()
     assert manifest == Model1DatasetManifest.build(
-        synthetic_rows(), dataset_id="phase4-synthetic-v1", split_seed=17,
+        synthetic_rows(), dataset_id="misconception_inference-synthetic-v1", split_seed=17,
         synthetic=True, authorized_expert_labels=False
     )
     first = Model1Artifact.create(manifest, seed=17, parameters={"prior": [0.25, 0.25, 0.5]})
@@ -349,7 +349,7 @@ def test_fitting_is_reproducible_train_split_only_and_draft_gated() -> None:
     rows = synthetic_rows()
     manifest = Model1DatasetManifest.build(
         rows,
-        dataset_id="phase4-synthetic-fit-v1",
+        dataset_id="misconception_inference-synthetic-fit-v1",
         split_seed=19,
         synthetic=True,
         authorized_expert_labels=False,
@@ -418,9 +418,9 @@ def test_grade4_and_non_sinhala_active_content_are_rejected(change: dict[str, ob
         inference_input(**change)
 
 
-def test_phase2_draft_requires_explicit_development_composition() -> None:
+def test_curriculum_draft_requires_explicit_development_composition() -> None:
     with pytest.raises(PermissionError, match="allow_draft"):
-        development_phase2_candidate(artifact_sha256=ARTIFACT_HASH)
+        development_curriculum_candidate(artifact_sha256=ARTIFACT_HASH)
 
 
 def test_authored_prior_baseline_is_complete_and_unknown_first() -> None:
