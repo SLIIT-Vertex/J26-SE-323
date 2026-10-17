@@ -9,12 +9,12 @@ from uuid import UUID, uuid4
 import pytest
 
 from app.gamification.domain.types import AssistanceState, ExperimentMode, MeasurementRole
-from app.gamification.modeling.independence_gain.phase3 import (
+from app.gamification.modeling.independence_gain.measurement import (
     AttemptSubmission,
+    IndependenceGainError,
     ItemRubric,
     MeasurementInput,
     NormalizedEvent,
-    Phase3Error,
     PolicyUpdateStatus,
     Presentation,
     ProbeReservation,
@@ -26,7 +26,7 @@ from app.gamification.modeling.independence_gain.phase3 import (
     SupportWithdrawal,
     assert_unsupported_after_may_begin,
     calculate_measurement,
-    development_phase2_scorer,
+    development_curriculum_scorer,
     replay_measurement,
     support_dependency_rate,
 )
@@ -205,7 +205,7 @@ def test_server_scoring_rejects_client_forgery_and_changed_retry() -> None:
     assert first.earned_score == 0
     assert first.server_authoritative
     assert scorer.score(row, request) is first
-    with pytest.raises(Phase3Error, match="IDEMPOTENCY_CONFLICT"):
+    with pytest.raises(IndependenceGainError, match="IDEMPOTENCY_CONFLICT"):
         scorer.score(row, replace(request, response="B"))
 
 
@@ -219,15 +219,15 @@ def test_nonauthoritative_score_is_excluded_from_policy_feedback() -> None:
     assert result.policy_update_status is PolicyUpdateStatus.NOT_AUTHORIZED_INVALID
 
 
-def test_phase2_draft_scoring_requires_explicit_development_composition() -> None:
+def test_curriculum_draft_scoring_requires_explicit_development_composition() -> None:
     with pytest.raises(PermissionError, match="allow_draft"):
-        development_phase2_scorer()
-    scorer = development_phase2_scorer(allow_draft=True)
+        development_curriculum_scorer()
+    scorer = development_curriculum_scorer(allow_draft=True)
     row = presentation(
         MeasurementRole.UNSUPPORTED_BEFORE, "G5-MAT-HALF-I01@v1", 1
     )
     attempt = AttemptSubmission(
-        uuid4(), row.presentation_id, "B", AssistanceState.NONE, AT, "phase2-dev"
+        uuid4(), row.presentation_id, "B", AssistanceState.NONE, AT, "curriculum-dev"
     )
     assert scorer.score(row, attempt).earned_score == 1
 
@@ -251,7 +251,7 @@ def test_assistance_invalidates_measurement(assistance, reason) -> None:
 
 
 def test_roles_are_explicit_and_unsupported_after_requires_withdrawal() -> None:
-    with pytest.raises(Phase3Error, match="assistance_state=none"):
+    with pytest.raises(IndependenceGainError, match="assistance_state=none"):
         presentation(
             MeasurementRole.UNSUPPORTED_AFTER,
             "after@v1",
@@ -261,7 +261,7 @@ def test_roles_are_explicit_and_unsupported_after_requires_withdrawal() -> None:
     data = valid_input()
     after = next(row for row in data.presentations if row.role is MeasurementRole.UNSUPPORTED_AFTER)
     assert_unsupported_after_may_begin(after, data.withdrawal)
-    with pytest.raises(Phase3Error, match="withdrawal"):
+    with pytest.raises(IndependenceGainError, match="withdrawal"):
         assert_unsupported_after_may_begin(after, replace(data.withdrawal, all_support_removed=False))
 
 
