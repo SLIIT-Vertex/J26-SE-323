@@ -11,10 +11,17 @@ down_revision: str | None = "gam_20261015_05"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
+LEGACY_PREFIX = "phase" + "6"
+EPISODE_RUNS = f"{LEGACY_PREFIX}_episode_runs"
+PROBE_RESERVATIONS = f"{LEGACY_PREFIX}_probe_reservations"
+EPISODE_EVENTS = f"{LEGACY_PREFIX}_episode_events"
+IDEMPOTENCY_RECEIPTS = f"{LEGACY_PREFIX}_idempotency_receipts"
+AUDIT_EVENTS = f"{LEGACY_PREFIX}_audit_events"
+
 
 def upgrade() -> None:
     op.create_table(
-        "phase6_episode_runs",
+        EPISODE_RUNS,
         sa.Column("episode_id", sa.Uuid(), nullable=False),
         sa.Column("session_id", sa.Uuid(), nullable=False),
         sa.Column("learner_id", sa.Uuid(), nullable=False),
@@ -30,27 +37,27 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint(
-            "environment IN ('development', 'test')", name="ck_phase6_runs_environment"
+            "environment IN ('development', 'test')", name="ck_learning_flow_runs_environment"
         ),
         sa.CheckConstraint(
-            "condition IN ('baseline', 'proposed')", name="ck_phase6_runs_condition"
+            "condition IN ('baseline', 'proposed')", name="ck_learning_flow_runs_condition"
         ),
         sa.CheckConstraint(
             "status IN ('before_presented', 'support_active', 'support_complete', "
             "'support_withdrawn', 'after_presented', 'completed', 'invalidated')",
-            name="ck_phase6_runs_status",
+            name="ck_learning_flow_runs_status",
         ),
         sa.ForeignKeyConstraint(["learner_id"], ["learners.id"]),
         sa.PrimaryKeyConstraint("episode_id"),
-        sa.UniqueConstraint("session_id", name="uq_phase6_episode_runs_session"),
+        sa.UniqueConstraint("session_id", name="uq_learning_flow_episode_runs_session"),
     )
     op.create_index(
-        "ix_phase6_runs_learner_created",
-        "phase6_episode_runs",
+        "ix_learning_flow_runs_learner_created",
+        EPISODE_RUNS,
         ["learner_id", "created_at"],
     )
     op.create_table(
-        "phase6_probe_reservations",
+        PROBE_RESERVATIONS,
         sa.Column("reservation_id", sa.Uuid(), nullable=False),
         sa.Column("episode_id", sa.Uuid(), nullable=False),
         sa.Column("learner_id", sa.Uuid(), nullable=False),
@@ -62,20 +69,20 @@ def upgrade() -> None:
         sa.Column("used_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("contamination_source", sa.String(length=64), nullable=True),
         sa.CheckConstraint(
-            "status IN ('reserved', 'used', 'contaminated')", name="ck_phase6_probe_status"
+            "status IN ('reserved', 'used', 'contaminated')", name="ck_learning_flow_probe_status"
         ),
-        sa.CheckConstraint("expires_at > reserved_at", name="ck_phase6_probe_expiry"),
+        sa.CheckConstraint("expires_at > reserved_at", name="ck_learning_flow_probe_expiry"),
         sa.ForeignKeyConstraint(["learner_id"], ["learners.id"]),
         sa.PrimaryKeyConstraint("reservation_id"),
         sa.UniqueConstraint(
-            "learner_id", "item_revision_id", name="uq_phase6_probe_learner_revision"
+            "learner_id", "item_revision_id", name="uq_learning_flow_probe_learner_revision"
         ),
     )
     op.create_index(
-        "ix_phase6_probe_episode", "phase6_probe_reservations", ["episode_id", "status"]
+        "ix_learning_flow_probe_episode", PROBE_RESERVATIONS, ["episode_id", "status"]
     )
     op.create_table(
-        "phase6_episode_events",
+        EPISODE_EVENTS,
         sa.Column("id", sa.BigInteger().with_variant(sa.Integer(), "sqlite"), autoincrement=True),
         sa.Column("event_id", sa.Uuid(), nullable=False),
         sa.Column("episode_id", sa.Uuid(), nullable=False),
@@ -84,35 +91,35 @@ def upgrade() -> None:
         sa.Column("payload_json", sa.JSON(), nullable=False),
         sa.Column("payload_sha256", sa.String(length=64), nullable=False),
         sa.Column("occurred_at", sa.DateTime(timezone=True), nullable=False),
-        sa.CheckConstraint("sequence >= 1", name="ck_phase6_events_sequence"),
-        sa.CheckConstraint("length(payload_sha256) = 64", name="ck_phase6_events_hash"),
+        sa.CheckConstraint("sequence >= 1", name="ck_learning_flow_events_sequence"),
+        sa.CheckConstraint("length(payload_sha256) = 64", name="ck_learning_flow_events_hash"),
         sa.ForeignKeyConstraint(
-            ["episode_id"], ["phase6_episode_runs.episode_id"], ondelete="CASCADE"
+            ["episode_id"], [f"{EPISODE_RUNS}.episode_id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("episode_id", "sequence", name="uq_phase6_events_sequence"),
-        sa.UniqueConstraint("event_id", name="uq_phase6_events_event_id"),
+        sa.UniqueConstraint("episode_id", "sequence", name="uq_learning_flow_events_sequence"),
+        sa.UniqueConstraint("event_id", name="uq_learning_flow_events_event_id"),
     )
     op.create_index(
-        "ix_phase6_events_episode_time",
-        "phase6_episode_events",
+        "ix_learning_flow_events_episode_time",
+        EPISODE_EVENTS,
         ["episode_id", "occurred_at"],
     )
     op.create_table(
-        "phase6_idempotency_receipts",
+        IDEMPOTENCY_RECEIPTS,
         sa.Column("idempotency_key", sa.String(length=128), nullable=False),
         sa.Column("request_sha256", sa.String(length=64), nullable=False),
         sa.Column("episode_id", sa.Uuid(), nullable=False),
         sa.Column("response_json", sa.JSON(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
-        sa.CheckConstraint("length(request_sha256) = 64", name="ck_phase6_receipts_request_hash"),
+        sa.CheckConstraint("length(request_sha256) = 64", name="ck_learning_flow_receipts_request_hash"),
         sa.ForeignKeyConstraint(
-            ["episode_id"], ["phase6_episode_runs.episode_id"], ondelete="CASCADE"
+            ["episode_id"], [f"{EPISODE_RUNS}.episode_id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("idempotency_key"),
     )
     op.create_table(
-        "phase6_audit_events",
+        AUDIT_EVENTS,
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("episode_id", sa.Uuid(), nullable=False),
         sa.Column("event_type", sa.String(length=64), nullable=False),
@@ -120,24 +127,24 @@ def upgrade() -> None:
         sa.Column("metadata_json", sa.JSON(), nullable=False),
         sa.Column("occurred_at", sa.DateTime(timezone=True), nullable=False),
         sa.ForeignKeyConstraint(
-            ["episode_id"], ["phase6_episode_runs.episode_id"], ondelete="CASCADE"
+            ["episode_id"], [f"{EPISODE_RUNS}.episode_id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        "ix_phase6_audit_episode_time",
-        "phase6_audit_events",
+        "ix_learning_flow_audit_episode_time",
+        AUDIT_EVENTS,
         ["episode_id", "occurred_at"],
     )
 
 
 def downgrade() -> None:
-    op.drop_index("ix_phase6_audit_episode_time", table_name="phase6_audit_events")
-    op.drop_table("phase6_audit_events")
-    op.drop_table("phase6_idempotency_receipts")
-    op.drop_index("ix_phase6_events_episode_time", table_name="phase6_episode_events")
-    op.drop_table("phase6_episode_events")
-    op.drop_index("ix_phase6_probe_episode", table_name="phase6_probe_reservations")
-    op.drop_table("phase6_probe_reservations")
-    op.drop_index("ix_phase6_runs_learner_created", table_name="phase6_episode_runs")
-    op.drop_table("phase6_episode_runs")
+    op.drop_index("ix_learning_flow_audit_episode_time", table_name=AUDIT_EVENTS)
+    op.drop_table(AUDIT_EVENTS)
+    op.drop_table(IDEMPOTENCY_RECEIPTS)
+    op.drop_index("ix_learning_flow_events_episode_time", table_name=EPISODE_EVENTS)
+    op.drop_table(EPISODE_EVENTS)
+    op.drop_index("ix_learning_flow_probe_episode", table_name=PROBE_RESERVATIONS)
+    op.drop_table(PROBE_RESERVATIONS)
+    op.drop_index("ix_learning_flow_runs_learner_created", table_name=EPISODE_RUNS)
+    op.drop_table(EPISODE_RUNS)

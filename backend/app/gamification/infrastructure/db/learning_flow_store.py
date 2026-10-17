@@ -10,16 +10,16 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.gamification.application.phase6_orchestration import (
-    Phase6PersistenceError,
-    StoredPhase6Run,
+from app.gamification.application.learning_flow_orchestration import (
+    LearningFlowPersistenceError,
+    StoredLearningFlowRun,
 )
 from app.gamification.infrastructure.db.models import (
+    LearningFlowAuditEventModel,
+    LearningFlowEpisodeEventModel,
+    LearningFlowEpisodeRunModel,
+    LearningFlowIdempotencyReceiptModel,
     LearningRewardEntryModel,
-    Phase6AuditEventModel,
-    Phase6EpisodeEventModel,
-    Phase6EpisodeRunModel,
-    Phase6IdempotencyReceiptModel,
 )
 
 
@@ -31,39 +31,39 @@ def digest(value: object) -> str:
     return hashlib.sha256(canonical_json(value).encode()).hexdigest()
 
 
-class SqlAlchemyPhase6Store:
+class SqlAlchemyLearningFlowStore:
     """One transaction owns a command receipt, projection, events, and audit rows."""
 
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _row(self, episode_id: UUID, *, for_update: bool = False) -> Phase6EpisodeRunModel:
-        statement = select(Phase6EpisodeRunModel).where(
-            Phase6EpisodeRunModel.episode_id == episode_id
+    def _row(self, episode_id: UUID, *, for_update: bool = False) -> LearningFlowEpisodeRunModel:
+        statement = select(LearningFlowEpisodeRunModel).where(
+            LearningFlowEpisodeRunModel.episode_id == episode_id
         )
         if for_update and self.session.get_bind().dialect.name == "postgresql":
             statement = statement.with_for_update()
         row = self.session.scalar(statement)
         if row is None:
-            raise Phase6PersistenceError("EPISODE_NOT_FOUND")
+            raise LearningFlowPersistenceError("EPISODE_NOT_FOUND")
         if digest(row.state_json) != row.state_sha256:
-            raise Phase6PersistenceError("STATE_HASH_MISMATCH")
+            raise LearningFlowPersistenceError("STATE_HASH_MISMATCH")
         return row
 
-    def get(self, episode_id: UUID, *, for_update: bool = False) -> StoredPhase6Run:
+    def get(self, episode_id: UUID, *, for_update: bool = False) -> StoredLearningFlowRun:
         row = self._row(episode_id, for_update=for_update)
-        return StoredPhase6Run(
+        return StoredLearningFlowRun(
             episode_id=row.episode_id,
             revision=row.revision,
             state=dict(row.state_json),
         )
 
     def receipt(self, key: str, request_sha256: str) -> dict[str, object] | None:
-        row = self.session.get(Phase6IdempotencyReceiptModel, key)
+        row = self.session.get(LearningFlowIdempotencyReceiptModel, key)
         if row is None:
             return None
         if row.request_sha256 != request_sha256:
-            raise Phase6PersistenceError("IDEMPOTENCY_CONFLICT")
+            raise LearningFlowPersistenceError("IDEMPOTENCY_CONFLICT")
         return dict(row.response_json)
 
     def create(
@@ -78,7 +78,7 @@ class SqlAlchemyPhase6Store:
         self._validate_key(idempotency_key)
         episode_id = UUID(str(state["episode_id"]))
         self.session.add(
-            Phase6EpisodeRunModel(
+            LearningFlowEpisodeRunModel(
                 episode_id=episode_id,
                 session_id=UUID(str(state["session_id"])),
                 learner_id=UUID(str(state["learner_id"])),
@@ -95,6 +95,10 @@ class SqlAlchemyPhase6Store:
                 updated_at=now,
             )
         )
+        # Persist the parent before adding independently-mapped child rows. SQLite's
+        # default test configuration does not expose this ordering requirement, while
+        # PostgreSQL correctly enforces the child foreign keys during the flush.
+        self.session.flush()
         self._append_event(episode_id, state["events"][-1], now)
         self._audit(episode_id, "episode_opened", ("DEVELOPMENT_ONLY",), now)
         self._save_receipt(idempotency_key, request_sha256, episode_id, response, now)
@@ -117,7 +121,7 @@ class SqlAlchemyPhase6Store:
         self._validate_key(idempotency_key)
         row = self._row(episode_id, for_update=True)
         if row.revision != expected_revision:
-            raise Phase6PersistenceError("CONCURRENT_MODIFICATION")
+            raise LearningFlowPersistenceError("CONCURRENT_MODIFICATION")
         row.status = str(state["status"])
         row.revision = int(state["revision"])
         row.state_json = state
@@ -153,18 +157,18 @@ class SqlAlchemyPhase6Store:
     def reconstruct(self, episode_id: UUID) -> dict[str, object]:
         row = self._row(episode_id)
         events = self.session.scalars(
-            select(Phase6EpisodeEventModel)
-            .where(Phase6EpisodeEventModel.episode_id == episode_id)
-            .order_by(Phase6EpisodeEventModel.sequence)
+            select(LearningFlowEpisodeEventModel)
+            .where(LearningFlowEpisodeEventModel.episode_id == episode_id)
+            .order_by(LearningFlowEpisodeEventModel.sequence)
         ).all()
         for event in events:
             if digest(event.payload_json) != event.payload_sha256:
-                raise Phase6PersistenceError("EVENT_HASH_MISMATCH")
+                raise LearningFlowPersistenceError("EVENT_HASH_MISMATCH")
         expected = list(range(1, len(events) + 1))
         if [event.sequence for event in events] != expected:
-            raise Phase6PersistenceError("EVENT_SEQUENCE_GAP")
+            raise LearningFlowPersistenceError("EVENT_SEQUENCE_GAP")
         return {
-            "contract_version": "phase6-reconstruction-v1",
+            "contract_version": "learning_flow-reconstruction-v1",
             "episode_id": str(episode_id),
             "state": dict(row.state_json),
             "state_sha256": row.state_sha256,
@@ -177,7 +181,7 @@ class SqlAlchemyPhase6Store:
         state = record["state"]
         assert isinstance(state, dict)
         safe = {
-            "contract_version": "phase6-research-export-v1",
+            "contract_version": "learning_flow-research-export-v1",
             "episode_id": str(episode_id),
             "learner_id": state["learner_id"],
             "skill_id": state["skill_id"],
@@ -198,10 +202,10 @@ class SqlAlchemyPhase6Store:
 
     def _append_event(self, episode_id: UUID, event: object, now: datetime) -> None:
         if not isinstance(event, dict):
-            raise Phase6PersistenceError("INVALID_EVENT")
+            raise LearningFlowPersistenceError("INVALID_EVENT")
         payload = dict(event)
         self.session.add(
-            Phase6EpisodeEventModel(
+            LearningFlowEpisodeEventModel(
                 event_id=UUID(str(payload["event_id"])),
                 episode_id=episode_id,
                 sequence=int(payload["sequence"]),
@@ -221,7 +225,7 @@ class SqlAlchemyPhase6Store:
         now: datetime,
     ) -> None:
         self.session.add(
-            Phase6IdempotencyReceiptModel(
+            LearningFlowIdempotencyReceiptModel(
                 idempotency_key=key,
                 request_sha256=request_sha256,
                 episode_id=episode_id,
@@ -238,12 +242,12 @@ class SqlAlchemyPhase6Store:
         now: datetime,
     ) -> None:
         self.session.add(
-            Phase6AuditEventModel(
+            LearningFlowAuditEventModel(
                 id=uuid4(),
                 episode_id=episode_id,
                 event_type=event_type,
                 reason_codes_json=list(reasons),
-                metadata_json={"component": "gamification", "contract": "phase6-v1"},
+                metadata_json={"component": "gamification", "contract": "learning_flow-v1"},
                 occurred_at=now,
             )
         )
@@ -251,7 +255,7 @@ class SqlAlchemyPhase6Store:
     @staticmethod
     def _validate_key(key: str) -> None:
         if not key or len(key) > 128:
-            raise Phase6PersistenceError("IDEMPOTENCY_KEY_REQUIRED")
+            raise LearningFlowPersistenceError("IDEMPOTENCY_KEY_REQUIRED")
 
     def commit(self) -> None:
         self.session.commit()
