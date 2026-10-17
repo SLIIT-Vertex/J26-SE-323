@@ -15,14 +15,13 @@ import { Review } from "./screens/Review";
 import { ReportScreen } from "./screens/ReportScreen";
 import { HistoryScreen } from "./screens/HistoryScreen";
 import { WhoIsLearning } from "./screens/WhoIsLearning";
-import { ArchMark, GrowthIcon, HistoryIcon, PaperIcon, Wordmark } from "./ui";
+import { GrowthIcon, HistoryIcon, PaperIcon } from "./ui";
 
 function TopBar({ learner }: { learner: Learner | null }) {
   return (
     <div className="mb-topbar">
       <a className="mb-brand" href="#/" aria-label="MindBridge home">
-        <ArchMark className="mb-brand__mark" rays={false} />
-        <Wordmark />
+        <img className="mb-brand__wordmark" src="/primary_logo.png" alt="MindBridge" />
       </a>
       <a className="mb-pill" href={hrefFor({ name: "who" })}>
         {learner ? (
@@ -85,7 +84,14 @@ function Screen({ route, learnerId }: { route: Route; learnerId: string }) {
   }
 }
 
-export function PapersApp({ route }: { route: Route }) {
+export function PapersApp({
+  route,
+  embedded = false,
+}: {
+  route: Route;
+  /** Hosted inside MobileLearningApp practice tab — drop the standalone top brand bar. */
+  embedded?: boolean;
+}) {
   useBodyClass("mb-body");
   const learnerId = useLearnerId();
   const learner = useAsync(
@@ -103,9 +109,9 @@ export function PapersApp({ route }: { route: Route }) {
   const effective: Route = learnerId ? route : { name: "who" };
 
   return (
-    <div className="mb">
+    <div className={embedded ? "mb mb--embedded" : "mb"}>
       <div className="mb-frame">
-        <TopBar learner={known} />
+        {embedded ? null : <TopBar learner={known} />}
         <main className="mb-main">
           <Screen route={effective} learnerId={learnerId ?? ""} />
         </main>
