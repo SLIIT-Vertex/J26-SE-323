@@ -29,7 +29,7 @@ from app.shared.database.base import Base
 from app.shared.learner.domain import Learner
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
 
-OBSERVED_AT = datetime(2026, 10, 14, 9, 30)
+OBSERVED_AT = datetime(2026, 10, 14, 9, 30)  # noqa: DTZ001 - database-style naive time
 
 
 def signal(state: str, temporal_score: float = 0.7) -> SignalEvaluation:

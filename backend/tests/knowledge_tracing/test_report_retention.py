@@ -60,7 +60,9 @@ def test_one_more_week_never_goes_past_the_30_days() -> None:
 
 
 def test_a_time_without_a_zone_is_taken_as_utc() -> None:
-    naive = submission_at(datetime(2026, 11, 1, 9, 0))
+    naive = submission_at(
+        datetime(2026, 11, 1, 9, 0)  # noqa: DTZ001 - validates UTC normalization
+    )
 
     assert photos_expire_at(naive) == T0 + 30 * DAY
 

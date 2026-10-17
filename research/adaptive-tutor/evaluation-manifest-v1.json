@@ -1,0 +1,23 @@
+{
+  "schema_version": "adaptive-tutor-evaluation-manifest-v1",
+  "experiment_id": "AT-EVAL-16A-REFERENCE-POLICY-V1",
+  "evaluation_date": "2026-10-14",
+  "dataset_version": "reference-policy-v1",
+  "implementation_version": "controller-v1@6d7ca0d",
+  "configuration": {
+    "component": "ScaffoldingController",
+    "assistance_levels": "L0-L6 ordinal",
+    "dataset_source": "backend/app/adaptive_tutor/application/reference_scenarios.json",
+    "external_model_calls": false,
+    "database_required": false
+  },
+  "dataset_provenance": {
+    "data_origin": "DESIGN_AUTHORED_SYNTHETIC",
+    "label_status": "DESIGN_AUTHORED_UNREVIEWED",
+    "review_status": "NOT_REVIEWED",
+    "label_author": "MindBridge Adaptive Tutor project design team",
+    "source_provenance": "Reference Policy V1 provisional expert-informed design expectations",
+    "independent_labels": false,
+    "actual_learner_observations": false
+  }
+}

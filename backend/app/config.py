@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -66,6 +67,9 @@ class Settings(BaseSettings):
     tutor_gemini_timeout_seconds: float = 30.0
     tutor_gemini_max_output_tokens: int = 512
     tutor_gemini_temperature: float = 0.2
+
+    # Adaptive Tutor API: disabled unless an offline synthetic demo is explicit.
+    tutor_api_mode: Literal["disabled", "synthetic-demo"] = "disabled"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
