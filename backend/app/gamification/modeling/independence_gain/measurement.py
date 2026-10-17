@@ -24,15 +24,15 @@ RESERVATION_VERSION = "platform-probe-reservation-v1"
 PERCENT = Decimal(100)
 
 
-class Phase3Error(ValueError):
+class IndependenceGainError(ValueError):
     """An Independence Gain invariant was violated before a measurement could be recorded."""
 
 
-class ProbeUnavailableError(Phase3Error):
+class ProbeUnavailableError(IndependenceGainError):
     pass
 
 
-class ProbeExposureError(Phase3Error):
+class ProbeExposureError(IndependenceGainError):
     pass
 
 
@@ -53,7 +53,7 @@ class ItemRubric:
 
     def __post_init__(self) -> None:
         if self.maximum_score <= 0:
-            raise Phase3Error("rubric maximum_score must be positive")
+            raise IndependenceGainError("rubric maximum_score must be positive")
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,14 +78,14 @@ class Presentation:
             MeasurementRole.RETENTION,
         }
         if self.sequence < 1:
-            raise Phase3Error("presentation sequence must be positive")
+            raise IndependenceGainError("presentation sequence must be positive")
         if self.role in unsupported and self.assistance_state is not AssistanceState.NONE:
-            raise Phase3Error("unsupported presentations require assistance_state=none")
+            raise IndependenceGainError("unsupported presentations require assistance_state=none")
         if (
             self.role is MeasurementRole.SUPPORTED_PRACTICE
             and self.assistance_state is AssistanceState.NONE
         ):
-            raise Phase3Error("supported practice requires explicit assistance")
+            raise IndependenceGainError("supported practice requires explicit assistance")
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,18 +115,18 @@ class ScoredAttempt:
     scored_at: datetime
 
 
-def development_phase2_scorer(*, allow_draft: bool = False) -> ServerAuthoritativeScorer:
+def development_curriculum_scorer(*, allow_draft: bool = False) -> ServerAuthoritativeScorer:
     """Compose the draft content slice only when a caller explicitly opts into development use."""
 
     if not allow_draft:
         raise PermissionError("draft content requires allow_draft=True")
-    from app.gamification.content.phase2_registry import (
-        load_phase2_public_package,
-        load_phase2_server_answer_keys,
+    from app.gamification.content.curriculum_registry import (
+        load_curriculum_public_package,
+        load_curriculum_server_answer_keys,
     )
 
-    package = load_phase2_public_package(allow_draft=True)
-    keys = load_phase2_server_answer_keys()
+    package = load_curriculum_public_package(allow_draft=True)
+    keys = load_curriculum_server_answer_keys()
     items = {row.revision_id: row for row in package.item_revisions}
     return ServerAuthoritativeScorer(
         {
@@ -151,7 +151,7 @@ class ServerAuthoritativeScorer:
 
     def score(self, presentation: Presentation, attempt: AttemptSubmission) -> ScoredAttempt:
         if attempt.presentation_id != presentation.presentation_id:
-            raise Phase3Error("attempt presentation does not match")
+            raise IndependenceGainError("attempt presentation does not match")
         fingerprint = sha256(
             f"{attempt.attempt_id}|{attempt.presentation_id}|{attempt.response}|"
             f"{attempt.assistance_state}|{attempt.submitted_at.isoformat()}".encode()
@@ -159,14 +159,14 @@ class ServerAuthoritativeScorer:
         prior = self._attempts.get(attempt.idempotency_key)
         if prior is not None:
             if prior[0] != fingerprint:
-                raise Phase3Error("IDEMPOTENCY_CONFLICT")
+                raise IndependenceGainError("IDEMPOTENCY_CONFLICT")
             return prior[1]
         if attempt.assistance_state is not presentation.assistance_state:
-            raise Phase3Error("attempt assistance state conflicts with presentation")
+            raise IndependenceGainError("attempt assistance state conflicts with presentation")
         try:
             rubric = self._rubrics[presentation.item_revision_id]
         except KeyError as error:
-            raise Phase3Error("unknown immutable item/rubric version") from error
+            raise IndependenceGainError("unknown immutable item/rubric version") from error
         earned = rubric.maximum_score if attempt.response == rubric.correct_response else Decimal(0)
         result = ScoredAttempt(
             attempt_id=attempt.attempt_id,
@@ -215,9 +215,9 @@ class ProbeReservationLedger:
             MeasurementRole.UNSUPPORTED_BEFORE,
             MeasurementRole.UNSUPPORTED_AFTER,
         }:
-            raise Phase3Error("only unsupported probes may be reserved")
+            raise IndependenceGainError("only unsupported probes may be reserved")
         if reservation.expires_at <= reservation.reserved_at:
-            raise Phase3Error("probe reservation expiry must follow reservation time")
+            raise IndependenceGainError("probe reservation expiry must follow reservation time")
         key = (reservation.learner_id, reservation.item_revision_id)
         with self._lock:
             if key in self._exposed:
@@ -236,7 +236,7 @@ class ProbeReservationLedger:
         """Record exposure from a game, paper, tutor, example, or presentation."""
 
         if component not in {"game", "paper_generator", "tutor", "worked_example", "presentation"}:
-            raise Phase3Error("unknown probe-consuming component")
+            raise IndependenceGainError("unknown probe-consuming component")
         key = (learner_id, item_revision_id)
         with self._lock:
             self._exposed.add(key)
@@ -347,7 +347,7 @@ class SecondaryMeasurement:
 
 def support_dependency_rate(*, helped_attempts: int, eligible_attempts: int) -> SecondaryMeasurement:
     if helped_attempts < 0 or eligible_attempts <= 0 or helped_attempts > eligible_attempts:
-        raise Phase3Error("invalid support-dependency counts")
+        raise IndependenceGainError("invalid support-dependency counts")
     return SecondaryMeasurement(
         name="support_dependency_rate",
         value=Decimal(helped_attempts) / Decimal(eligible_attempts),
@@ -359,16 +359,16 @@ def assert_unsupported_after_may_begin(
     presentation: Presentation, withdrawal: SupportWithdrawal | None
 ) -> None:
     if presentation.role is not MeasurementRole.UNSUPPORTED_AFTER:
-        raise Phase3Error("presentation is not an unsupported-after probe")
+        raise IndependenceGainError("presentation is not an unsupported-after probe")
     if presentation.assistance_state is not AssistanceState.NONE:
-        raise Phase3Error("support remains active")
+        raise IndependenceGainError("support remains active")
     if (
         withdrawal is None
         or not withdrawal.all_support_removed
         or not withdrawal.answer_revealing_state_cleared
         or withdrawal.server_verified_at > presentation.created_at
     ):
-        raise Phase3Error("support withdrawal is not fully confirmed")
+        raise IndependenceGainError("support withdrawal is not fully confirmed")
 
 
 def calculate_measurement(data: MeasurementInput, *, calculated_at: datetime) -> IndependenceMeasurement:
