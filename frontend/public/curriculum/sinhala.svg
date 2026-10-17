@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Sinhala learning badge">
+  <defs>
+    <radialGradient id="badge" cx="53%" cy="32%" r="74%">
+      <stop offset="0" stop-color="#FFF9A8"/>
+      <stop offset=".56" stop-color="#FFE95A"/>
+      <stop offset="1" stop-color="#FFD127"/>
+    </radialGradient>
+    <linearGradient id="blueCover" x1="163" y1="410" x2="839" y2="832" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#149BFF"/>
+      <stop offset=".52" stop-color="#0575EA"/>
+      <stop offset="1" stop-color="#0754C8"/>
+    </linearGradient>
+    <linearGradient id="pageLeft" x1="198" y1="309" x2="525" y2="759" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFF9F0"/>
+    </linearGradient>
+    <linearGradient id="pageRight" x1="530" y1="300" x2="822" y2="755" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F8F4ED"/>
+    </linearGradient>
+    <linearGradient id="speech" x1="597" y1="145" x2="804" y2="359" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#28AEFF"/>
+      <stop offset="1" stop-color="#065DE2"/>
+    </linearGradient>
+    <linearGradient id="pencil" x1="714" y1="399" x2="851" y2="680" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF43A"/>
+      <stop offset=".55" stop-color="#FFC514"/>
+      <stop offset="1" stop-color="#FF8A00"/>
+    </linearGradient>
+    <linearGradient id="pinkLetter" x1="273" y1="401" x2="402" y2="542" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF71B8"/>
+      <stop offset="1" stop-color="#F01978"/>
+    </linearGradient>
+    <linearGradient id="goldLetter" x1="413" y1="380" x2="526" y2="513" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFE23E"/>
+      <stop offset="1" stop-color="#FFA000"/>
+    </linearGradient>
+    <linearGradient id="blueLetter" x1="349" y1="532" x2="476" y2="662" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#39B8FF"/>
+      <stop offset="1" stop-color="#0867DF"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="175%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#8D6400" flood-opacity=".23"/>
+    </filter>
+    <clipPath id="badgeClip"><circle cx="512" cy="512" r="467"/></clipPath>
+  </defs>
+
+  <!-- warm circular badge -->
+  <circle cx="512" cy="512" r="481" fill="url(#badge)" stroke="#FFFFFF" stroke-width="20"/>
+  <circle cx="512" cy="512" r="457" fill="none" stroke="#FFC719" stroke-width="9"/>
+  <g clip-path="url(#badgeClip)">
+    <path d="M121 247c121-131 350-194 567-120 101 35 162 99 171 167 10 75-51 133-146 120-122-17-181-104-306-77-96 21-144 104-231 110-76 5-111-68-55-200Z" fill="#FFFFFF" opacity=".18"/>
+    <path d="M115 714c133-94 257-82 375-20 113 59 217 57 405-44v252H111Z" fill="#FFF9B1" opacity=".28"/>
+  </g>
+
+  <!-- blue book cover -->
+  <g filter="url(#shadow)">
+    <path d="M133 407c115-24 240-3 379 93 139-96 264-117 379-93l-39 382c-111-18-223 6-340 75-117-69-229-93-340-75Z" fill="url(#blueCover)" stroke="#064DBA" stroke-width="18" stroke-linejoin="round"/>
+    <path d="M158 433c105-17 219 6 354 96 135-90 249-113 354-96" fill="none" stroke="#42C5FF" stroke-width="13" stroke-linecap="round"/>
+    <ellipse cx="512" cy="824" rx="61" ry="38" fill="#096CE3" stroke="#064DBA" stroke-width="14"/>
+    <ellipse cx="512" cy="816" rx="40" ry="18" fill="#198EFF" opacity=".78"/>
+  </g>
+
+  <!-- open book pages -->
+  <g filter="url(#shadow)">
+    <path d="M173 342c97-52 223-63 339 19v411c-102-73-207-81-315-33Z" fill="url(#pageLeft)" stroke="#D8CEC3" stroke-width="15" stroke-linejoin="round"/>
+    <path d="M851 342c-97-52-223-63-339 19v411c102-73 207-81 315-33Z" fill="url(#pageRight)" stroke="#D8CEC3" stroke-width="15" stroke-linejoin="round"/>
+    <path d="M512 361v411" fill="none" stroke="#DDD3C8" stroke-width="13"/>
+    <path d="M190 356c96-43 208-47 304 16" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round" opacity=".9"/>
+    <path d="M530 372c96-63 208-59 304-16" fill="none" stroke="#FFFFFF" stroke-width="15" stroke-linecap="round" opacity=".9"/>
+    <path d="M207 735c103-39 201-31 287 24M530 759c86-55 184-63 287-24" fill="none" stroke="#E7DDD4" stroke-width="11" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sinhala characters -->
+  <g filter="url(#shadow)" text-anchor="middle" font-family="Sinhala Sangam MN, Sinhala MN, sans-serif" font-weight="700" stroke-linejoin="round" paint-order="stroke fill">
+    <text x="337" y="520" font-size="158" fill="url(#pinkLetter)" stroke="#CF0B63" stroke-width="8">අ</text>
+    <text x="462" y="491" font-size="134" fill="url(#goldLetter)" stroke="#F18B00" stroke-width="8">ආ</text>
+    <text x="413" y="650" font-size="145" fill="url(#blueLetter)" stroke="#0756C5" stroke-width="8">ක</text>
+    <path d="M291 420c20-21 44-29 67-24" fill="none" stroke="#FFC4DE" stroke-width="12" stroke-linecap="round"/>
+    <path d="M429 397c16-15 34-21 52-18" fill="none" stroke="#FFF39A" stroke-width="10" stroke-linecap="round"/>
+    <path d="M374 557c18-18 39-24 58-20" fill="none" stroke="#9DDEFF" stroke-width="11" stroke-linecap="round"/>
+  </g>
+
+  <!-- writing lines -->
+  <g fill="none" stroke="#DED7D0" stroke-width="16" stroke-linecap="round">
+    <path d="M585 443c61-28 121-35 177-20"/>
+    <path d="M577 505c67-29 132-35 194-18"/>
+    <path d="M574 567c68-27 133-32 195-14"/>
+    <path d="M574 629c68-24 132-28 190-10"/>
+    <path d="M580 691c65-22 124-24 177-7"/>
+  </g>
+
+  <!-- speech bubble -->
+  <g filter="url(#shadow)">
+    <path d="M585 230c0-79 75-143 168-143s168 64 168 143-75 143-168 143c-26 0-51-5-73-14l-72 52 17-76c-25-27-40-64-40-105Z" fill="url(#speech)" stroke="#064DBD" stroke-width="16" stroke-linejoin="round"/>
+    <path d="M641 165c35-34 80-50 125-45" fill="none" stroke="#8DE1FF" stroke-width="14" stroke-linecap="round"/>
+    <g fill="#F8FDFF" stroke="#C6E9FF" stroke-width="6">
+      <circle cx="686" cy="236" r="24"/>
+      <circle cx="754" cy="236" r="24"/>
+      <circle cx="822" cy="236" r="24"/>
+    </g>
+  </g>
+
+  <!-- rounded pencil -->
+  <g filter="url(#shadow)" transform="rotate(31 772 568)">
+    <rect x="716" y="356" width="112" height="330" rx="28" fill="url(#pencil)" stroke="#F06E00" stroke-width="15"/>
+    <path d="M716 650h112l-56 116Z" fill="#FFD5A1" stroke="#D87319" stroke-width="15" stroke-linejoin="round"/>
+    <path d="M751 723l21 43 21-43Z" fill="#3D3B45"/>
+    <path d="M716 356h112v69H716Z" fill="#FF3C72" stroke="#DC1454" stroke-width="15"/>
+    <path d="M716 417h112v46H716Z" fill="#E9E9EE" stroke="#A9A9B3" stroke-width="10"/>
+    <path d="M742 474v145" fill="none" stroke="#FFF787" stroke-width="13" stroke-linecap="round"/>
+  </g>
+
+  <!-- sparkles -->
+  <g fill="#FFF72F" stroke="#FFA800" stroke-width="6" stroke-linejoin="round">
+    <path d="M387 134c9 37 22 50 58 59-36 9-49 23-58 60-9-37-22-51-58-60 36-9 49-22 58-59Z"/>
+    <path d="M274 202c5 23 14 31 36 37-22 6-31 14-36 38-6-24-14-32-37-38 23-6 31-14 37-37Z"/>
+    <path d="M886 335c5 24 14 32 37 38-23 6-32 15-37 39-6-24-14-33-38-39 24-6 32-14 38-38Z"/>
+    <path d="M906 640c5 23 13 31 35 36-22 6-30 14-35 37-6-23-14-31-36-37 22-5 30-13 36-36Z"/>
+  </g>
+
+  <circle cx="512" cy="512" r="481" fill="none" stroke="#FFFFFF" stroke-width="20"/>
+</svg>

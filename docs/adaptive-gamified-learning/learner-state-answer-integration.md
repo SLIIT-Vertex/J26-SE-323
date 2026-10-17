@@ -2,7 +2,7 @@
 
 This note describes how the adaptive game connects a scored answer to learner-state support
 recommendations and learner-evidence events. It is the implementation contract for the pilot
-and Phase 6 development flows.
+and learning-flow development flows.
 
 ## 1. Answer flow
 
@@ -108,9 +108,9 @@ Pilot numeric difficulty is normalized under `pilot-difficulty-v1`:
 | `2` | `medium` |
 | `3` | `hard` |
 
-The original numeric value is retained. Phase 6 maps its source category `introductory` to
-`easy` under `phase6-introductory-v1`, retains the source category, and does not invent a
-numeric value. Phase 6 answer requests also accept nullable `response_time_ms`.
+The original numeric value is retained. learning-flow maps its source category `introductory` to
+`easy` under `learning_flow-introductory-v1`, retains the source category, and does not invent a
+numeric value. learning-flow answer requests also accept nullable `response_time_ms`.
 
 Development and test events set `model_ingestion_eligible = false`. That field is a producer
 signal, not final authorization: the Knowledge Tracing ingestion boundary owns the final
@@ -150,9 +150,9 @@ Before production release:
 The generated request and response schemas are published in:
 
 - `docs/adaptive-gamified-learning/openapi-pilot-v1.json`
-- `docs/adaptive-gamified-learning/phase6-mobile-contracts-v1.json`
+- `docs/adaptive-gamified-learning/mobile-learning-contracts-v1.json`
 
 The integration was verified with the backend suite, focused learner-state and gamification
 tests, Python linting, frontend type checking and linting, frontend tests, the web build, the
-Phase 6 type-drift check, and whitespace validation. The web build retains its existing warning
+learning-flow type-drift check, and whitespace validation. The web build retains its existing warning
 about the large Phaser chunk.

@@ -73,15 +73,15 @@ def test_fractions_subtree_maps_to_the_fractions_universal_node() -> None:
     assert links["G5-MAT-C05-L01-O01"].universal_skill_id == "MAT-FRC"
 
 
-def test_crosswalk_restores_the_pinned_phase5_bindings() -> None:
+def test_crosswalk_restores_the_pinned_support_selection_bindings() -> None:
     try:
-        bindings, blob_sha256 = BUILDER.read_phase5_bindings()
+        bindings, blob_sha256 = BUILDER.read_support_selection_bindings()
     except (OSError, subprocess.CalledProcessError):
         pytest.skip("Git history for the pinned skill-binding commit is not available")
     manifest = json.loads(
         (SKILL_REVIEW_DATA_DIRECTORY / "manifest.json").read_text(encoding="utf-8")
     )
-    source_key = f"git:{BUILDER.PHASE5_BINDINGS_COMMIT}:{BUILDER.PHASE5_BINDINGS_PATH}"
+    source_key = f"git:{BUILDER.SUPPORT_SELECTION_BINDINGS_COMMIT}:{BUILDER.SUPPORT_SELECTION_BINDINGS_PATH}"
 
     assert manifest["sources"][source_key]["sha256"] == blob_sha256
     expected = BUILDER.build_crosswalk(read_jsonl(BUILDER.SOURCE), bindings, universal_skill_ids())

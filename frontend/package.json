@@ -17,8 +17,15 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "generate:api": "node scripts/generate-pilot-types.mjs",
+    "generate:mobile-learning-types": "node scripts/generate-mobile-learning-types.mjs",
+    "check:mobile-learning-types": "node scripts/generate-mobile-learning-types.mjs --check",
+    "check:mobile-learning-types:drift": "node scripts/generate-mobile-learning-types.mjs --self-test-drift",
+    "check:mobile-learning-artifact": "node scripts/inspect-mobile-learning-artifact.mjs",
     "preview": "vite preview",
-    "cap:sync": "cap sync"
+    "cap:sync": "cap sync",
+    "native:generate": "node scripts/generate-native-projects.mjs && cap sync",
+    "native:verify": "node scripts/generate-native-projects.mjs --check",
+    "e2e:mobile-learning": "node e2e/run-mobile-learning-backend-e2e.mjs"
   },
   "dependencies": {
     "@capacitor/android": "8.4.3",

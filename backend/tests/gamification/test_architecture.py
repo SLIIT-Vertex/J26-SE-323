@@ -150,7 +150,7 @@ def test_application_does_not_depend_on_api_transport_layer() -> None:
     assert violations == []
 
 
-def test_phase1_ownership_ports_are_explicit() -> None:
+def test_foundation_ownership_ports_are_explicit() -> None:
     source = (GAMIFICATION_ROOT / "application" / "ownership_ports.py").read_text(
         encoding="utf-8"
     )

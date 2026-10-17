@@ -29,9 +29,9 @@ TAXONOMY_VERSION = "grade5-gamification-skills-v1"
 TAXONOMY_WORKBOOK = PROJECT_ROOT / "docs" / "skill_nodes.xlsx"
 CROSSWALK_FILE = "universal-skill-crosswalk.jsonl"
 CROSSWALK_VERSION = "grade5-universal-crosswalk-v1"
-PHASE5_BINDINGS_COMMIT = "7033835"
-PHASE5_BINDINGS_PATH = "data/gamification/skill-catalogue-review/v1/grade5-candidate-skill-bindings.jsonl"
-PHASE5_MAPPING_VERSION = "grade5-kt-skill-review-v1"
+SUPPORT_SELECTION_BINDINGS_COMMIT = "7033835"
+SUPPORT_SELECTION_BINDINGS_PATH = "data/gamification/skill-catalogue-review/v1/grade5-candidate-skill-bindings.jsonl"
+SUPPORT_SELECTION_MAPPING_VERSION = "grade5-kt-skill-review-v1"
 UNIVERSAL_SKILL_ID_MAX_LENGTH = 16
 
 
@@ -39,9 +39,9 @@ def read_jsonl(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
-def read_phase5_bindings() -> tuple[list[dict[str, object]], str]:
+def read_support_selection_bindings() -> tuple[list[dict[str, object]], str]:
     blob = subprocess.run(
-        ["git", "show", f"{PHASE5_BINDINGS_COMMIT}:{PHASE5_BINDINGS_PATH}"],
+        ["git", "show", f"{SUPPORT_SELECTION_BINDINGS_COMMIT}:{SUPPORT_SELECTION_BINDINGS_PATH}"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         check=True,
@@ -52,11 +52,11 @@ def read_phase5_bindings() -> tuple[list[dict[str, object]], str]:
 
 def build_crosswalk(
     candidates: list[dict[str, object]],
-    phase5_bindings: list[dict[str, object]],
+    support_selection_bindings: list[dict[str, object]],
     universal_skill_ids: set[str],
 ) -> list[dict[str, object]]:
-    by_candidate = {str(row["skill_candidate_id"]): row for row in phase5_bindings}
-    if len(by_candidate) != len(phase5_bindings):
+    by_candidate = {str(row["skill_candidate_id"]): row for row in support_selection_bindings}
+    if len(by_candidate) != len(support_selection_bindings):
         raise ValueError("skill bindings contain duplicate skill candidates")
     candidate_ids = [str(candidate["skill_candidate_id"]) for candidate in candidates]
     if set(candidate_ids) != set(by_candidate):
@@ -69,13 +69,13 @@ def build_crosswalk(
             raise ValueError(f"{skill_id}: {universal_skill_id} is not in {TAXONOMY_WORKBOOK.name}")
         if len(universal_skill_id) > UNIVERSAL_SKILL_ID_MAX_LENGTH:
             raise ValueError(f"{skill_id}: universal skill ID exceeds the Learner State limit")
-        if binding["mapping_version"] != PHASE5_MAPPING_VERSION:
+        if binding["mapping_version"] != SUPPORT_SELECTION_MAPPING_VERSION:
             raise ValueError(f"{skill_id}: unexpected skill-binding mapping version")
         crosswalk.append({
             "gamification_skill_id": skill_id,
             "universal_skill_id": universal_skill_id,
             "crosswalk_version": CROSSWALK_VERSION,
-            "source_mapping_version": PHASE5_MAPPING_VERSION,
+            "source_mapping_version": SUPPORT_SELECTION_MAPPING_VERSION,
             "source_binding_id": binding["binding_id"],
             "confidence": binding["confidence"],
             "rationale": binding["rationale"],
@@ -173,9 +173,9 @@ def build() -> None:
             "reviewed_on": None,
         })
 
-    phase5_bindings, phase5_sha256 = read_phase5_bindings()
+    support_selection_bindings, support_selection_sha256 = read_support_selection_bindings()
     universal_skill_ids = {node.skill_id for node in XlsxSkillTaxonomyCatalog(TAXONOMY_WORKBOOK).load()}
-    crosswalk = build_crosswalk(candidates, phase5_bindings, universal_skill_ids)
+    crosswalk = build_crosswalk(candidates, support_selection_bindings, universal_skill_ids)
 
     generated = {
         "skill-inventory.jsonl": inventory,
@@ -215,7 +215,7 @@ def build() -> None:
             TAXONOMY_WORKBOOK.relative_to(PROJECT_ROOT).as_posix(): {
                 "sha256": digest(TAXONOMY_WORKBOOK)
             },
-            f"git:{PHASE5_BINDINGS_COMMIT}:{PHASE5_BINDINGS_PATH}": {"sha256": phase5_sha256},
+            f"git:{SUPPORT_SELECTION_BINDINGS_COMMIT}:{SUPPORT_SELECTION_BINDINGS_PATH}": {"sha256": support_selection_sha256},
         },
         "files": {
             name: {"bytes": (OUTPUT_DIRECTORY / name).stat().st_size, "sha256": digest(OUTPUT_DIRECTORY / name)}

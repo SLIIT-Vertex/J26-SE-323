@@ -1,0 +1,3247 @@
+{
+  "development_only": true,
+  "missions": [
+    {
+      "area_id": "G5-AREA-MAT-01",
+      "cited_node_id": "G5-MAT-C01",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් හතරේ සංඛ්‍යාවල ස්ථානීය අගය දක්වයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C01-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-01",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C01"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "100 000 තෙක් සංඛ්‍යාංක කියවයි. ලියයි. සංඛ්‍යා නාමය ලියයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C01-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-01",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C01"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "දස දහසස්ථානය තෙක් සංඛ්‍යාවල එක් එක් ඉලක්කමෙන් නිරූපිත අගය දක්වයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C01-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-01",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C01"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "99 999ට නොවැඩි සංඛ්‍යා ස්ථානීය අගය අනුව විහිදුවා ලියයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C01-L01-O04",
+          "parent_area_id": "G5-AREA-MAT-01",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C01"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "99 999ට නොවැඩි කුමන හෝ සංඛ්‍යා තුනක් පටිපාටිගත කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C01-L01-O05",
+          "parent_area_id": "G5-AREA-MAT-01",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C01"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-02",
+      "cited_node_id": "G5-MAT-C06",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ගෙනයාම අවස්ථා දෙකක් සහිත ඉලක්කම් හතරේ සංඛ්‍යා දෙකක් එකතු කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C06-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-02",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C06"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ගෙනයාම අවස්ථා දෙකකට වැඩි ඉලක්කම් හතර තෙක් වූ සංඛ්‍යා දෙකක් එකතු කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C06-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-02",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C06"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් හතර තෙක් වූ සංඛ්‍යා තුනක් ගෙනයාම සහිත ව එකතු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C06-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-02",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C06"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-03",
+      "cited_node_id": "G5-MAT-C02",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "පොදු අන්තරය 6 සිට 10 තෙක් වූ සංඛ්‍යා රටා ගොඩන`ගයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C02-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-03",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C02"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "දී ඇති සංඛ්‍යා රටාවක රටාව හඳුනා ගෙන එම සංඛ්‍යා රටාව තව දුරටත් ගොඩන`ගයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C02-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-03",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C02"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "පොදු අනුපාතය 2 සිට 5 තෙක් වූ සංඛ්‍යා රටා ගොඩනගයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C02-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-03",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C02"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "pattern_temple"
+    },
+    {
+      "area_id": "G5-AREA-MAT-04",
+      "cited_node_id": "G5-MAT-C07",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් හතරේ සංඛ්‍යාවකින් එයට අඩු සංඛ්‍යාවක් (ගෙන ඒම එක් ස්ථානයකින් පමණක් සහිත ව* අඩු කර පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C07-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-04",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C07"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් හතර තෙක් වූ සංඛ්‍යාවකින් තවත් සංඛ්‍යාවක් (ගෙන ඒම අවස්ථා දෙකක් සහිත ව* අඩුකර පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C07-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-04",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C07"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් හතර තෙක් වූ සංඛ්‍යාවකින් තවත් සංඛ්‍යාවක් අඩු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C07-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-04",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C07"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-05",
+      "cited_node_id": "G5-MAT-C03",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ද්‍රව්‍ය සමූහයකින් 1 2 ක් ද්‍රව්‍ය කීයක් ද යන්න ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C03-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-05",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C03"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ද්‍රව්‍ය සමූහයකින් හතරෙන් පංගු එකක්, දෙකක් සහ තුනක් ද්‍රව්‍ය කීයක් ද යන්න ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C03-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-05",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C03"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "සම්පූර්ණ එකක කොටසක් වශයෙන් දහයෙන් පංගු දක්වයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C03-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-05",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C03"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "half_set"
+    },
+    {
+      "area_id": "G5-AREA-MAT-06",
+      "cited_node_id": "G5-MAT-C08",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුනකට නොවැඩි සංඛ්‍යා ගෙනයාම එක් අවස්ථාවක් සහිත ව 2, 3, 4 සහ 5න් ගුණ කිරීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් දෙකකට නොවැඩි කවර හෝ සංඛ්‍යාවක් 6න් ගුණ කර පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් දෙකකට නොවැඩි කවර හෝ සංඛ්‍යාවක් 7න් ගුණ කර පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L02-O02",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුනකට නොවැඩි සංඛ්‍යා 6න් සහ 7න් ගුණ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L02-O03",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුනකට නොවැඩි සංඛ්‍යා 6න් සහ 7න් ගුණ කිරීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L02-O04",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් දෙකකට නොවැඩි කුමන සංඛ්‍යාවක් වුව ද 8න් ගුණ කර පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L03-O01",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් දෙකකට නොවැඩි කුමන සංඛ්‍යාවක් වුව ද 9න් ගුණ කර පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L03-O02",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුනකට නොවැඩි සංඛ්‍යා 8න් සහ 9න් ගුණ කිරීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L03-O03",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් දෙකෙහි කුමන සංඛ්‍යාවක් වුව ද 10න් ගුණ කිරීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C08-L03-O04",
+          "parent_area_id": "G5-AREA-MAT-06",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C08"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-07",
+      "cited_node_id": "G5-MAT-C14",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "පැය හා මිනිත්තු ඇසුරෙන් වේලාව ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "පෙරවරු හා පස්වරු භාවිතයෙන් වේලාව කියයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "වේලාව පැය 24 ඔරලෝසුවෙන් (අන්තර්ජාතික සම්මත ආකාරය* ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "පැය 12 ඔරලෝසුවේ දැක්වෙන වේලාව පැය 24 ඔරලෝසුවෙන් ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L01-O04",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "පැය 24 ඔරලෝසු වේලාව පැය 12 ඔරලෝසුවෙන් ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L01-O05",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ආරම්භක වේලාව සහ ගත වූ කාලය අනුව යම් කාර්යයක් අවසන් කළ වේලාව ගණනය කර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "යම් කාර්යයකට ගත වූ කාලය සහ අවසන් කළ වේලාව අනුව ආරම්භක වේලාව ගණනය කර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L02-O02",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "කාලය ගත වීම් පිළිබඳ ගණනය කිරීම් සහිත සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C14-L02-O03",
+          "parent_area_id": "G5-AREA-MAT-07",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C14"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "parcel_workshop"
+    },
+    {
+      "area_id": "G5-AREA-MAT-08",
+      "cited_node_id": "G5-MAT-C09",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුනේ සංඛ්‍යා 2න්, 3න් සහ 4න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 5න් බෙදා පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යා 5න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 6න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 7න් බෙදා ලැබෙන පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L02-O02",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 7න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L02-O03",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යා 8න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L03-O01",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 9න් බෙදා පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L03-O02",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 9න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L03-O03",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යාවක් 10න් බෙදා ලැබෙන පිළිතුර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L03-O04",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යා 10න් බෙදීමේ සරල බෙදීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C09-L03-O05",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C09"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ඉලක්කම් තුන තෙක් වූ සංඛ්‍යා බෙදීම ඇතුළත් සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question. Trace competency G5-MAT-C10 is not a supplied area.",
+          "node_id": "G5-MAT-C10-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-08",
+          "publication_status": "blocked",
+          "supplied_area_match": false,
+          "trace_competency_id": "G5-MAT-C10"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-09",
+      "cited_node_id": "G5-MAT-C11",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "කිලෝමීටර මීටර ඒකක පරිවර්තන සිදු කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C11-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-09",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C11"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "කිලෝමීටර සහ මීටර ඇතුළත් එකතු කිරීමේ සහ අඩු කිරීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C11-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-09",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C11"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "මීටර සහ සෙන්ටිමීටර ඇතුළත් සරල ගුණ කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C11-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-09",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C11"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "මීටර සහ සෙන්ටිමීටර ඇතුළත් සරල බෙදීමේ ගැටලු විසඳයි. (ඒකක පරිවර්තන රහිත* Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C11-L01-O04",
+          "parent_area_id": "G5-AREA-MAT-09",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C11"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "parcel_workshop"
+    },
+    {
+      "area_id": "G5-AREA-MAT-10",
+      "cited_node_id": "G5-MAT-C15",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "භාණ්ඩ කිහිපයක් මිල දී ගත් විට ගෙවිය යුතු මුදල ගණනය කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C15-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-10",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C15"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "භාණ්ඩයක්/භාණ්ඩ කිහිපයක් මිල දී ගෙන මුදල් ගෙවූ විට ලැබෙන ඉතුරු මුදල ගණනය කර ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C15-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-10",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C15"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "සරල ගනුදෙනු සඳහා බිල්පත් සකස් කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C15-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-10",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C15"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-11",
+      "cited_node_id": "G5-MAT-C13",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ලීටර සහ මිලිලීටර ඇතුළත් සරල එකතු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C13-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-11",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C13"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ලීටර සහ මිලිලීටර ඇතුළත් සරල අඩු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C13-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-11",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C13"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ලීටර සහ මිලිලීටර ඇතුළත් සරල බෙදීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C13-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-11",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C13"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "parcel_workshop"
+    },
+    {
+      "area_id": "G5-AREA-MAT-12",
+      "cited_node_id": "G5-MAT-C12",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "බර මැනීම සඳහා විවිධ තරාදි යොදා ගන්නා බව හඳුනා ගෙන ප‍්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C12-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-12",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C12"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ග්‍රෑම් සහ කිලෝග්‍රෑම් ඒකක ඇතුළත් ගෙනයාම සහිත සරල එකතු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C12-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-12",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C12"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ග්‍රෑම් සහ කිලෝග්‍රෑම් ඒකක ඇතුළත් ගෙනඒම සහිත සරල අඩු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C12-L01-O03",
+          "parent_area_id": "G5-AREA-MAT-12",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C12"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ග්‍රෑම් සහ කිලෝග්‍රෑම් ඒකක ඇතුළත් සරල බෙදීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C12-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-12",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C12"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "parcel_workshop"
+    },
+    {
+      "area_id": "G5-AREA-MAT-13",
+      "cited_node_id": "G5-MAT-C16",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "pattern_temple"
+    },
+    {
+      "area_id": "G5-AREA-MAT-14",
+      "cited_node_id": "G5-MAT-C18",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "තීර ප‍්‍රස්තාර මඟින් නිරූපිත තොරතුරු විස්තර කරයි. Medium-confidence trace. This sentence is not an approved question. Trace competency G5-MAT-C19 is not a supplied area.",
+          "node_id": "G5-MAT-C19-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-14",
+          "publication_status": "blocked",
+          "supplied_area_match": false,
+          "trace_competency_id": "G5-MAT-C19"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "දත්ත වැඩි සංඛ්‍යාවක් තීර ප‍්‍රස්තාර මඟින් නිරූපණය කරයි. නිරූපිත තොරතුරු කියවයි. Medium-confidence trace. This sentence is not an approved question. Trace competency G5-MAT-C19 is not a supplied area.",
+          "node_id": "G5-MAT-C19-L01-O02",
+          "parent_area_id": "G5-AREA-MAT-14",
+          "publication_status": "blocked",
+          "supplied_area_match": false,
+          "trace_competency_id": "G5-MAT-C19"
+        },
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "වගුවකින් ඉදිරිපත් කර ඇති දත්ත විග‍්‍රහ කරයි. Medium-confidence trace. This sentence is not an approved question. Trace competency G5-MAT-C19 is not a supplied area.",
+          "node_id": "G5-MAT-C19-L02-O01",
+          "parent_area_id": "G5-AREA-MAT-14",
+          "publication_status": "blocked",
+          "supplied_area_match": false,
+          "trace_competency_id": "G5-MAT-C19"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "pattern_temple"
+    },
+    {
+      "area_id": "G5-AREA-MAT-15",
+      "cited_node_id": "G5-MAT-C05",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "එක් දශමස්ථානයක් සහිත දශම සංඛ්‍යා දහයෙන් පංගු ලෙස දක්වයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C05-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-15",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C05"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "market_mission"
+    },
+    {
+      "area_id": "G5-AREA-MAT-16",
+      "cited_node_id": "G5-MAT-C04",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [
+        {
+          "confidence": "medium",
+          "draft_item": true,
+          "item_text": "ස සිට ංං තෙක් රෝම සංඛ්‍යාංක ලියයි. Medium-confidence trace. This sentence is not an approved question.",
+          "node_id": "G5-MAT-C04-L01-O01",
+          "parent_area_id": "G5-AREA-MAT-16",
+          "publication_status": "blocked",
+          "supplied_area_match": true,
+          "trace_competency_id": "G5-MAT-C04"
+        }
+      ],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-01",
+      "cited_node_id": "G5-SIN-C03-L01-K01",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L01-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "කතන්දරයේ අන්තර්ගතය පිළිබඳ තම අදහස් ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L01-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "සිද්ධි ගළපමින් නිර්මාණාත්මක ලෙස කතන්දරයක් ඉදිරිපත් කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L01-O03",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "මාතෘකාවකට අදාළ ව කතා කිරීමට නොපැකිළ ව ඉදිරිපත් වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L03-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "වේදිකා නාට්‍යයක් නරඹා එයින් කියවෙන අදහස පවසයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L03-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "චිත්‍රපටයක් නරඹා එහි ඇතුළත් සිද්ධි පිළිබඳ කතා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L03-O03",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "චරිතාරෝපිත ව කතා කිරීමේ කුසලතාව වර්ධනය කර ගනියි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L04-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ප්‍රවෘත්ති ඉදිරිපත් කිරීමේ කුසලතාව ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L04-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "නිවේදන ඉදිරිපත් කිරීමේ කුසලතාව ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L06-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "සුහදව හා සංයමයෙන් යුතු ව තම අදහස් පළ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L06-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "කණ්ඩායමක් සමඟ එක් ව සාකච්ඡා කරමින් අදහස් හුවමාරු කර ගනියි. ගුරුවරුන් සමඟ සන්නිවේදනය ක්‍රියාකාරකම 1"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L07-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ජන කවි ගායනා කර ඒ පිළිබඳ සාකච්ඡා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L07-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "සාහිත්‍ය සමිතියක දී ඉදිරිපත් වීමේ කුසලතාව ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L08-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "සංයමයෙන් යුතු ව තම අදහස් පවසයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L08-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "තම අත්දැකීම් නිරවුල් ව සහ පැහැදිලි ව පවසයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L09-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කවි, ගීත රස විඳ ඒ පිළිබඳ ව කතා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L09-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කවි/ගීත/කතන්දර රස විඳ නිර්මාණශීලී ව ඉදිරිපත් කිරීමේ කුසලතාව පෙන්වයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L09-O03",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "සිද්ධි ගළපා කතන්දරයක් ඉදිරිපත් කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L10-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ප්‍රාණවාචී හෝ අප්‍රාණවාචී හෝ නාම පද යෙදෙන වාක්‍යයක ක්‍රියා පදය යෙදෙන ආකාරය සාකච්ඡා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C02-L10-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "අක්ෂර වින්‍යාසයේ නිවැරදි භාවිතය පිළිබඳ සාකච්ඡා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L01-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ශබ්ද නඟා කියවීමේ පරිචය ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L01-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ශබ්ද නඟා, හැඟීම් ප්‍රකාශ වන පරිදි කියවීමේ කුසලතාව වර්ධනය කර ගනියි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L01-O03",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "නිශ්ශබ්ද ව කියවීමේ කුසලතාව ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L01-O04",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "විරාම ලක්ෂණ පිළිබඳ ව සැලකිලිමත් වෙමින් වේගයෙන් කියවයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L01-O05",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "නිවැරදි ව පිලි යෙදීම පිළිබඳ කුසලතාව ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L01-O06",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "අර්ථය නිවැරදි ව ප්‍රකාශ වන පරිදි ලියයි. ඍ1උ1 ඉගෙනුම් - ඉගැන්වීම් ක්‍රමෝපාය කියවීමට සහ ලිවීමට හුරු කිරීම"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L02-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "සරල ඡේදයක් කියවා එහි සුවිශේෂ කරුණු උපුටා දක්වයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L03-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කවි, ගීත කියවා අසන ප්‍රශ්නවලට අවබෝධයෙන් යුතු ව නිවැරදි පිළිතුරු ලබා දෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L03-O02",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කතන්දර කියවා අසන ප්‍රශ්නවලට තර්කානුකූල ව අදහස් ඉදිරිපත් කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L03-O03",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "විද්‍යා ප්‍රබන්ධ කියවා එහි සිත් ගත් අවස්ථාවක් චිත්‍රයට නඟයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L03-O04",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "වේදිකා නාට්‍යයක් නරඹා ඒ ඇසුරෙන් අසන ප්‍රශ්නවලට පිළිතුරු සපයයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L03-O05",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "චරිතයකට ආරෝපණය වී අවබෝධයෙන් යුතු ව නිවැරදි ව කියවයි./ලියයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L03-O06",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "චිත්‍ර කතා කියවා නිර්මාණශීලී අදහස් ඉදිරිපත් කරයි"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L04-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "උපදෙස් කියවා නිවැරදි ව ප්‍රතිචාර දක්වයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L08-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "කියවීමේ පුරුදු වර්ධනය කර ගැනීම සඳහා පුස්තකාල භාවිතයට හුරු ව ලබයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L09-O01",
+          "parent_area_id": "G5-AREA-SIN-01",
+          "publication_status": "blocked",
+          "traced_text": "තොරතුරු කියවා අන්තර්ගත සුවිශේෂ කරුණු උපුටා දක්වයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-02",
+      "cited_node_id": "G5-SIN-C03-L01-K03",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-03",
+      "cited_node_id": "G5-SIN-C01-L05-K02",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L01-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "පවසන දෙයකට සවන් දී අසන ප්‍රශ්නවලට පිළිතුරු ලබා දෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L01-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "කතන්දරයක් ඇසුරෙන් අසන ලද ප්‍රශ්නවලට අවබෝධයෙන් යුතු ව ප්‍රතිචාර දක්වයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L01-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කවි, ගීතවලට සවන් දෙමින් තාල තබයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L01-O04",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කවි, ගීතවලට සවන් දෙමින් ගායනා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L01-O05",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "මාතෘකාවකට අදාළ ව නිවැරදි ව කතා කරයි. ඛ1ී1 පවසන දෙයකට සවන් දීම ක්‍රියාකාරකම 01 පියවර 1 :"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L02-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "සරල ඡේදයකට අවධානයෙන් යුතු ව සවන් දී අසන ප්‍රශ්නවලට නිවැරදි ව පිළිතුරු සපයයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L02-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "සරල ඡේදයකට අවබෝධයෙන් යුතු ව සවන් දී අන්තර්ගතයෙන් කියවෙන අදහස ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L02-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "සරල ගීතයකට සවන් දී අසන ප්‍රශ්නවලට අවබෝධයෙන් යුතු ව නිවැරදි ව පිළිතුරු සපයයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L03-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කවි, ගීතවලට සවන් දී එයින් කියවෙන අදහස පවසයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L03-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "ළමා කතන්දරවලට සවන් දී අන්තර්ගතය පිළිබඳ සාකච්ඡා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L03-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "විද්‍යා ප්‍රබන්ධවලට සවන් දී අන්තර්ගතය පිළිබඳ සංවාදයේ යෙදෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L04-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "ප්‍රවෘත්තිවලට සවන් දී එහි අන්තර්ගත කරුණු කෙටියෙන් ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L04-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "නිවේදනයකට සවන් දී එහි වැදගත් කරුණු නිවැරදි ව ඉදිරිපත් කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L04-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "විස්තර කථනයකට සවන් දී ඒ ඇසුරෙන් අසන ප්‍රශ්නවලට පිළිතුරු දෙයි. උපදෙස් ක්‍රියාකාරකම 1 පියවර 1 :"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L05-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "වාංමාලා පෝෂණය සඳහා වචන එක් රැස් කර නිවැරදි ව භාවිත කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L05-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "තේරවිලි විසඳීමේ දී විචාරශීලී ව පිළිතුරු සපයයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L05-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "යුගල පද, ප්‍රස්තාව පිරුළු, රූඪි/ඉඟි වැකි සහ ආප්තෝපදේශ නිවැරදි අර්ථ ගැන්වීම් සඳහා භාවිත කරයි. කතන්දර ක්‍රියාකාරකම 01 පියවර 1 :"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L06-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "යමෙකු කරන කතාවකට අවධානයෙන් හා ඉවසීමෙන් යුතු ව සවන් දෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L07-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "සාහිත්‍ය සමිතියක වැඩසටහන් පෙළගැස්ම සකසයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L07-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "සාහිත්‍ය සමිතියක් මෙහෙයවීමේ පරිචය ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L07-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "මාතෘකාවකට අදාළ ව කරුණු රැස් කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L08-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "නිර්මාණ කිරීමේ දී භාෂාව උචිත පරිදි හැසිරවීමේ කුසලතාව පෙන්වයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O01",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "ස්ත්‍රී ලිංග නාමපද හෝ පුරුෂ ලිංග නාමපද හෝ වාක්‍යයක භාවිත වන ආකාරය විස්තර කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O02",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "නාම පදයක ඒකවචන සහ බහුවචන භේදය ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O03",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "සරල වාක්‍යයක උක්තය, කර්මය සහ ක්‍රියාව නිවැරදි ව හඳුනා ගෙන ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O04",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "වාක්‍යයක යෙදෙන ආකාරය අනුව නාම පදයක උක්ත අනුක්ත භේදය ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O05",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "වර්තමාන කාල ප්‍රථම පුරුෂ හා උත්තම පුරුෂයට අදාළ ක්‍රියා පද භාවිතය ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O06",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "අතීත කාල ප්‍රථම පුරුෂයට හා උත්තම පුරුෂයට අදාළ ක්‍රියා පද භාවිතය ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C01-L10-O07",
+          "parent_area_id": "G5-AREA-SIN-03",
+          "publication_status": "blocked",
+          "traced_text": "‘ද/ත්/යි/හා/සහ’ යන්න යොදා එකතුවන නාමපද කිහිපයක් යෙදුණු වාක්‍යවල නිවැරදි භාවිතය විස්තර කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-04",
+      "cited_node_id": "G5-SIN-C01-L05-K03",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-05",
+      "cited_node_id": "G5-SIN-C01-L05-K04",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-06",
+      "cited_node_id": "G5-SIN-C01-L05-K06",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-07",
+      "cited_node_id": "G5-SIN-C01-L05-K09",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-08",
+      "cited_node_id": "G5-SIN-C01-L05-K08",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-09",
+      "cited_node_id": "G5-SIN-C01-L05-K07",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-10",
+      "cited_node_id": "G5-SIN-C01-L05-K05",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-13",
+      "cited_node_id": "G5-SIN-C03-L06-K04",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L06-O01",
+          "parent_area_id": "G5-AREA-SIN-13",
+          "publication_status": "blocked",
+          "traced_text": "ආරාධනා පත්‍රයක ඇතුළත් විය යුතු සුවිශේෂතා කෙරෙහි සැලකිලිමත් වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C03-L06-O02",
+          "parent_area_id": "G5-AREA-SIN-13",
+          "publication_status": "blocked",
+          "traced_text": "යම් අදහසක් කාටූන් මඟින් නිර්මාණශීලී ව ඉදිරිපත් කරයි. සුබ පැතුම් පත් ක්‍රියාකාරකම 01 පියවර 1 :"
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "story_studio"
+    },
+    {
+      "area_id": "G5-AREA-SIN-14",
+      "cited_node_id": "G5-SIN-C03-L10-K06",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-15",
+      "cited_node_id": "G5-SIN-C03-L10-K07",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-16",
+      "cited_node_id": "G5-SIN-C04-L10-O08",
+      "development_only": true,
+      "draft_item_slots": [
+        {
+          "area_match": true,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "අක්ෂර වින්‍යාසයේ නිවැරදි භාවිතය ප්‍රදර්ශනය කරයි.",
+          "node_id": "G5-SIN-C04-L10-O08",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked"
+        }
+      ],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L01-O01",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "වචන අතර පරතරය තබමින් ලියයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L01-O02",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "විරාම ලක්ෂණ නිවැරදි ව භාවිත කරමින් ලියයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L03-O01",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "චිත්‍රපටයක් නරඹා එහි සිත් ගත් අවස්ථාවක් චිත්‍රයට නඟයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L06-O01",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "සුබ පැතුම් පත් නිර්මාණශීලී ව සකස් කිරීමේ කුසලතාව ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L06-O02",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "තොරතුරුවල සුවිශේෂතා කෙරෙහි අවධානය යොමු කර නිවැරදි ව වගුගත කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L06-O03",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "පෞද්ගලික ලිපියක සුවිශේෂතා කෙරෙහි සැලකිලිමත් ව ලිපි ලියයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L06-O04",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "ආරාධනා පත්‍රයක් සකස් කර ඉදිරිපත් කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L06-O05",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "ආකෘති පත්‍රයක් නිවැරදි ව සම්පූර්ණ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L07-O01",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "මාතෘකාවකට අදාළ ව වාක්‍ය ලියයි. ජන කවි ක්‍රියාකාරකම 01 පියවර 1 :"
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-SIN-C04-L09-O01",
+          "parent_area_id": "G5-AREA-SIN-16",
+          "publication_status": "blocked",
+          "traced_text": "නිර්මාණශීලී ව ළමා කවි ගොඩනඟයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-17",
+      "cited_node_id": "G5-SIN-C03-L10-K14",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-18",
+      "cited_node_id": "G5-SIN-C03-L10-K14",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-19",
+      "cited_node_id": "G5-SIN-C03-L10-K15",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-20",
+      "cited_node_id": "G5-SIN-C03-L10-K16",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-21",
+      "cited_node_id": "G5-SIN-C03-L10-K04",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-22",
+      "cited_node_id": "G5-SIN-C04-L10-O02",
+      "development_only": true,
+      "draft_item_slots": [
+        {
+          "area_match": true,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "වාක්‍යයක උක්තයෙහි ප්‍රාණවාචී සහ අප්‍රාණවාචී භේදය සලකා ක්‍රියා පදය යොදයි.",
+          "node_id": "G5-SIN-C04-L10-O02",
+          "parent_area_id": "G5-AREA-SIN-22",
+          "publication_status": "blocked"
+        },
+        {
+          "area_match": false,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "උක්ත පදයේ ඒකවචන බහුවචන භේදය අනුව ක්‍රියා පදය යොදයි.",
+          "node_id": "G5-SIN-C04-L10-O03",
+          "parent_area_id": "G5-AREA-SIN-22",
+          "publication_status": "blocked"
+        },
+        {
+          "area_match": false,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "‘මම/අපි’ උක්තය ලෙස යෙදෙන වාක්‍යවල ක්‍රියා පදය නිවැරදි ව ලියයි.",
+          "node_id": "G5-SIN-C04-L10-O04",
+          "parent_area_id": "G5-AREA-SIN-22",
+          "publication_status": "blocked"
+        },
+        {
+          "area_match": false,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "ප්‍රථම පුරුෂ නාම පද උක්තය ලෙස යෙදෙන වාක්‍යවල ක්‍රියා පදය නිවැරදි ව ලියයි.",
+          "node_id": "G5-SIN-C04-L10-O05",
+          "parent_area_id": "G5-AREA-SIN-22",
+          "publication_status": "blocked"
+        }
+      ],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-23",
+      "cited_node_id": "G5-SIN-C04-L10-O06",
+      "development_only": true,
+      "draft_item_slots": [
+        {
+          "area_match": true,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "උක්ත පද සහ අනුක්ත පද වාක්‍යයක නිවැරදි ව යොදයි.",
+          "node_id": "G5-SIN-C04-L10-O06",
+          "parent_area_id": "G5-AREA-SIN-23",
+          "publication_status": "blocked"
+        }
+      ],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-24",
+      "cited_node_id": "G5-SIN-C04-L10-O01",
+      "development_only": true,
+      "draft_item_slots": [
+        {
+          "area_match": true,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "උක්තය, කර්මය සහ ක්‍රියාව නිවැරදි ව යොදමින් සරල වාක්‍ය ලියයි.",
+          "node_id": "G5-SIN-C04-L10-O01",
+          "parent_area_id": "G5-AREA-SIN-24",
+          "publication_status": "blocked"
+        }
+      ],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-SIN-25",
+      "cited_node_id": "G5-SIN-C04-L10-O07",
+      "development_only": true,
+      "draft_item_slots": [
+        {
+          "area_match": true,
+          "confidence": "high",
+          "draft_item": true,
+          "item_text": "‘ද/ත්/යි/හා/සහ’ යන්න යොදා එකතු වන නාමපද කිහිපයක් උක්තය ලෙස යෙදුණු වාක්‍යවල ක්‍රියා පදය නිවැරදි ව යොදයි.",
+          "node_id": "G5-SIN-C04-L10-O07",
+          "parent_area_id": "G5-AREA-SIN-25",
+          "publication_status": "blocked"
+        }
+      ],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "word_workshop"
+    },
+    {
+      "area_id": "G5-AREA-ENV-01",
+      "cited_node_id": "G5-ENV-U01",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "අන්‌ අය සමඟ කටයුතු කිරීමේ දී ගැටලු ඇති නොවන ආකාරයට වචන හා ඉරියවු පාලනය කිරීමේ වැදගත්කම පෙන්වා දෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "තීරණ ගැනීමේ දී කණ්ඩායමේ සැමගේ අදහස්වලට ගරු කරමින්‌ නිවැරදි තීරණ ගැනීමේ හෝ විකල්ප යෝජනා කිරීමේ හෝ වැදගත්කම පැහැදිලි කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "ආදර්ශවත්‌ පුද්ගලයකුගේ චරිත ලක්ෂණ විමසා බලා තම දිවි පැවැත්මට එක්‌ කරගත හැකි යහපත්‌ ගුණාංග ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "සරල දිවි පැවැත්මකින්‌ යුතු පුද්ගලයකුගේ ගුණාංග අනුගමනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "ඕනෑම ස්ථානයක දී, කාර්යයක දී අන්‌ අයට පීඩාවක්‌ ඇති නොවන ආකාරයෙන්‌ කටයුතු කළ යුතු ආකාරය පිළිබඳ අවබෝධයෙන්‌ ක්‍රියා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "කණ්ඩායමක්‌ ලෙස සමාජය තුළ ක්‍රියා කිරීමේ දී පවත්වා ගත යුතු, අනුගමනය කළ යුතු සිරිත්‌ විරිත්‌ අනුව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ මාධ්‍ය භාවිත කරමින්‌ යහපත්‌ සිරිත්‌ ඉස්මතු කරන නිර්මාණ ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "ශාරීරික හා මානසික යහපැවැත්ම සඳහා යෝග්‍ය ක්‍රියාකාරකම්වල නිරත වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C01-L00-O09",
+          "parent_area_id": "G5-AREA-ENV-01",
+          "publication_status": "blocked",
+          "traced_text": "උපදේශාත්මක කවිවල අර්ථය පැහැදිලි කර ගනිමින්‌ තාලානුකූල ව ගයමින්‌ නිරූපණය කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-02",
+      "cited_node_id": "G5-ENV-U02",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "ජාතික මෙන්‌ ම අන්තර්ජාතික උත්සවවල දී ශ්‍රී ලංකිකයකුගේ අනන්‍යතාව පිළිබිඹු කරන ඇඳුම්‌ පැලඳුම්‌ කතාබහ ආදියේ වැදගත්කම අවබෝධ කර ගනිමින්‌ කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "ජාතික උරුම කිහිපයක්‌ පිළිබඳ තොරතුරු ගවේෂණය කර ඒ පිළිබඳ ව විවිධ අයුරින්‌ තොරතුරු ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "ජාතික උරුමයන්‌ ආරක්ෂා කර ගැනීමේ ඇති වැදගත්කම පිළිබඳ ව විමසිලිමත්‌ ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "ශ්‍රී ලාංකික සියලු ම ජන කොටස්‌ අතර මිත්‍රශීලී ව කටයුතු කිරීමේ වැදගත්කම පිළිබඳ අවබෝධයෙන්‌ යුතු ව ක්‍රියා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "රටේ නිදහස වෙනුවෙන්‌ කැප කිරීම්‌ කළ විවිධ නායකයන්ගෙන්‌ වූ සේවය අගය කරමින්‌ වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "තමා ජීවත්‌ වන ප්‍රදේශයේ ඇති පරිපාලන ආයතනයක්‌ නිරීක්ෂණය කර එමඟින්‌ වන සේවය පිළිබඳ ව වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C06-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-02",
+          "publication_status": "blocked",
+          "traced_text": "තම ප්‍රදේශයට ආචේණික සැරසිලි පිළිබඳ ව සොයා බලා ඉන්‌ කිහිපයක්‌ නිර්මාණය කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-03",
+      "cited_node_id": "G5-ENV-U03",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-04",
+      "cited_node_id": "G5-ENV-U04",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-05",
+      "cited_node_id": "G5-ENV-U05",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C41-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-05",
+          "publication_status": "blocked",
+          "traced_text": "පාසලේ දී හා නිවසේ දී භාවිත කරන උපකරණ නිවැරදි ව හා ආරක්ෂාකාරී ච පරිහරණය කිරීමට යොමු වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C41-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-05",
+          "publication_status": "blocked",
+          "traced_text": "එදිනෙදා කටයුතුවල දී බලශක්තිය අරපිරිමැස්මෙන්‌ යුතු ව භාවිත කරන ආකාරය පිළිබඳ අවබෝධයෙන්‌ යුතු ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C41-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-05",
+          "publication_status": "blocked",
+          "traced_text": "භාණ්ඩ මිල ගණන්‌ පෙර හා පසු සසඳා අවශ්‍ය දේ පමණක්‌ තෝරා ගනියි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C41-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-05",
+          "publication_status": "blocked",
+          "traced_text": "ආර්ථික තත්ත්වය පිළිබඳ අවබෝධයෙන්‌ විමර්ශනගීලී ව භාණ්ඩ මිල දී ගැනීමට හුරු වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C41-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-05",
+          "publication_status": "blocked",
+          "traced_text": "ක්ෂණික ප්‍රතිලාභවලට හා අනුකරණවලට රැවටී සිදු කරන දැන්වීම්‌ පිළිබඳ දැනුම්වත්‌ භාවයෙන්‌ යුතු ව ක්‍රියා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C41-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-05",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ ස්ථානවලින්‌ ලබා ගන්නා සේවාවන්‌ කාර්යක්ෂම ව හා ඵලදායී ලෙස භාවිත කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-06",
+      "cited_node_id": "G5-ENV-U06",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "වයසට සුදුසු පරිදි උස හා බර පවත්වා ගැනීමේ වැදගත්කම අවබෝධ කර ගෙන කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "අප ගන්නා ආහාර උච්ත අයුරින්‌ වර්ගීකරණය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "පෝෂණ ගුණය ආරක්ෂා වන අයුරින්‌ ආහාර පිළියෙළ කිරීමට දායක වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "ආහාර ප්‍රචාරණය පිළිබඳ තොරතුරු අධ්‍යයනය කර චාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "ආහාර අපවිත්‍ර වන විවිධ ක්‍රම විමර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "ආහාර පවිත්‍ර ව තබා ගැනීමේ ක්‍රම අනුගමනය කරමින්‌ ඒ අනුව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "නිවැරදි පිළිවෙත්‌ අනුගමනය කරමින්‌ නිර්මාණශීලී ව ආහාර පිළිගැන්විය හැකි ආකාර අධ්‍යයනය කර චාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "ආකර්ෂණිය ලෙස ආහාර පිළිගැන්විය හැකි පරිසරයක්‌ ඇති කිරීම සඳහා සුදුසු නිර්මාණ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O09",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "ශක්ති වර්ධනය සඳහා විවිධ පැනීම්‌ ආශ්‍රිත ක්‍රීඩාවල යෙදෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C49-L00-O10",
+          "parent_area_id": "G5-AREA-ENV-06",
+          "publication_status": "blocked",
+          "traced_text": "වැරදි ආහාර ගැනීම නිසා ඇති වන අහිතකර තත්ත්ව මතු කරන අවස්ථා ඇසුරෙන්‌ චරිත නිරූපණය කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-07",
+      "cited_node_id": "G5-ENV-U07",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "ස්වාභාවික හේතු නිසා සිදුවිය හැකි අනතුරු හා එම අනතුරුවලින්‌ සිදුවිය හැකි හානි විස්තර කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "හදිසි අනතුරු විය හැකි අවස්ථා හා එවැනි අනතුරුවලින්‌ ආරක්ෂාවන ආකාර ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "ඔෟෞෂධ භාවිතයේ දී සැලකිලිමත්‌ විය යුතු කරුණු පිළිබඳ අවබෝධයෙන්‌ යුතු ච කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "අනකුරක්‌ සිදු වූ අවස්ථාවක ලබාදිය යුතු ප්‍රථමාධාර පිළිබඳ අත්දැකීම්‌ විස්තර කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "තමා මෙන්‌ ම අන්‌ අයට එරෙහිව සිදුවන සමාජ විරෝධී ක්‍රියාවලින්‌ ආරක්ෂා වෙමින්‌ විමසිලිමත්‌ ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ උපකරණ ආරක්ෂාකාරී ව භාවිත කරන ආකාර ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "එදිනෙදා කාර්යයන්‌ සඳහා විවිධ ශක්තීන්‌ ප්‍රයෝජනයට ගැනීමේ දී ආරක්ෂාකාරී ව හා සැලකිලිමත්‌ ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C56-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-07",
+          "publication_status": "blocked",
+          "traced_text": "තමා මෙන්‌ ම අන්‌ අය ද රෝගවලින්‌ ආරක්ෂා කර ගැනීම සඳහා කළ හැකි දේ පැහැදිලි කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-08",
+      "cited_node_id": "G5-ENV-U08",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "තාපයේ අඩු වැඩිවීම අනුව ජලයේ ඇතිවන වෙනස්කම්‌ පිළිබඳ පරීක්‍ෂා කොට වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "තමා අවට පරිසරයේ ජලය දූෂණය වී ඇති ආකාර නිරීක්ෂණය කර එය වළක්වා ගත යුතු ආකාර පිළිබඳ යෝජනා ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "ජල දූෂණය වළක්වා ගත හැකි විසඳුම්‌ සඳහා දායක වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "ජලය හා බැඳුණු සිරිත්‌ විරිත්‌ ගවේෂණය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "එම සිරිත්‌ විරිත්‌ පවත්වාගෙන යාමේ වැදගත්කම ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "ගංවතුර අවස්ථාවක එම ජලය පරිහරණයෙන්‌ ඇතිවිය හැකි ආපදා පිළිබඳ තොරතුරු වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "එදිනෙදා පරිහරණය සඳහා අවශ්‍ය ජලය පිරිසිදු කර ගැනීමේ උපකරණ නිර්මාණය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "ජලය සම්බන්ධ ව කළ හැකි සාමූහික ක්‍රීඩාවල නිරත වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O09",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "ජලය සුරක්ෂත කිරීමේ වැදගත්කම පිළිබිඹු කරන කෙටි නාට්‍ය ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C64-L00-O10",
+          "parent_area_id": "G5-AREA-ENV-08",
+          "publication_status": "blocked",
+          "traced_text": "ජලයේ සුන්දර තැන්‌ ගැන කියවෙන කවි, ගීත තාලානුකූල ව ගායනා කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-09",
+      "cited_node_id": "G5-ENV-U09",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "යම්‌ වැඩක්‌ ඉක්මනින, පහසුවෙන්‌ නිම කිරීම සඳහා වර්තමානයේ මිනිසුන්‌ යොදා ගන්නා විවිධ ක්‍රම නිරීක්ෂණය කර වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "සුමට ලෙස ද්‍රව්‍ය/භාණ්ඩ ස්පර්ශවීමට සැලැස්වීමෙන්‌ වැඩ පහසු කර ගන්නා ආකාරය හඳුනාගෙන ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ අවශ්‍යතා සපුරා ගැනීමේ දී පූර්ව සැලසුම්වලින්‌ යුතු ව කටයුතු කිරීමෙන්‌ එය සාර්ථක ව කර ගත හැකි බව ප්‍රායෝගික අත්දැකීම්‌ මඟින්‌ පෙන්වා දෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "සාමූහික කාර්යයන්‌ ආරම්භයේ සිට අවසානය දක්වා ක්‍රියාකාරී ව පවත්වා ගැනීම සඳහා දායක වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "යම්කිසි කාර්යයක්‌ කිරීමේ දී මුහුණ දිය හැකි අභියෝග හඳුනාගෙන ඒවාට සාර්ථක ව මුහුණ දෙන ආකාරය පිළිබඳ ව ප්‍රායෝගික කරුණු ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "වැඩ පහසු කිරීමේ දී විදුලියෙන්‌, සුළඟෙන්‌, ගලායන ජලයෙන්‌ තල්ලු කිරීම, ඇඳීම හා කරකැවීම සිදුවන ආකාර පිළිබඳ ව අත්හදා බලයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "නිවසේ හා පාසලේ කටයුතු සඳහා සරල යන්ත්‍ර භාවිත කරමින්‌ වැඩ පහසු කර ගනියි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C71-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-09",
+          "publication_status": "blocked",
+          "traced_text": "වැඩ පහසු කර ගැනීම සඳහා චුම්බක ශක්තිය යොදා ගත හැකි ආකාර නිර්මාණය කර අත්හදා බලයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-10",
+      "cited_node_id": "G5-ENV-U10",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "ගෙවතු වගාව සම්බන්ධ මූලික කරුණු පිළිබඳ අවබෝධයෙන්‌ යුතුව පාසල්‌ භූමියේ වගා කටයුතුවල නිරත වෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "තමා අවට පරිසරයේ වගාවන්‌ ඇසුරෙන්‌ වගාවට හිතකර හා අහිතකර සතුන්‌ නිරීක්ෂණය කොට වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "ක්ෂේත්‍ර චාරිකාවක්‌ ඇසුරෙන්‌ තම පරිසරයේ ඇති බෝගවලට වැළඳෙන රෝග හඳුනාගෙන නමි කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "බෝගවලට වැලඳෙන රොගවලින්‌ බෝග ආරක්ෂා කර ගැනීමට කළ හැකි දේ විමසා බලා වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "වගා කටයුතුවල දී අස්වැන්න නාස්ති වන අයුරු පිළිබඳ විමසිලිමත්‌ ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "අස්වැන්න ආරක්ෂා කිරීමට ගත හැකි පියවර යෝජනා කර ඒ අනුව ක්‍රියා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C78-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-10",
+          "publication_status": "blocked",
+          "traced_text": "ගෙවතු වගාවට පර්යේෂණාත්මක ව දායක වෙමින්‌ වින්දනයක්‌ ලබයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-11",
+      "cited_node_id": "G5-ENV-U11",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "මාර්ග භාවිත කිරීමේ දී හැසිරිය යුතු ආකාරය හා පිළිපැදිය යුතු නීතිරීති පිළිබඳ අවබෝධයෙන්‌ යුතු ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "මහමඟ ගමන්‌ කිරීමේ දී හමු වන ආලෝක සංඥා පිළිබඳ අධ්‍යයනය කර චාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "ශ්‍රී ලංකා සිතියමක්‌ ඇසුරෙන්‌ ගමනාගමනය සඳහා යොදා ගන්නා මාර්ග කිහිපයක්‌ නිරීක්ෂණය කර ඒවා පැහැදිලි කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "පොදු ප්‍රවාහණ සේවාවලින්‌ ඉටු කරන සේවය පිළිබඳ අගය කිරීමෙන්‌ යුතු ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "පොදු වාහන ආරක්ෂා වන ආකාරයෙන්‌ කටයුතු කළ හැකි ආකාර අවබෝධයෙන්‌ යුතු ව වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "ගමනාගමන කටයුතු සඳහා යාන්ත්‍රික ශක්තිය යොදා ගැනීමෙන්‌ ගමනාග මන ක්‍රම සංවර්ධනය වූ අවස්ථා විස්තර කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "මාර්ග සංඥා පද්ධතියක ක්‍රියාකාරිත්වය විදහා දැක්වෙන නිර්මාණවල නියැළෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "සංඥා හා විධාන අනුව ඇවිදීමේ, නැවතීමේ හා ගමන්‌ කිරීමේ මූලික හුරුකම්‌ ලබාගත හැකි ක්‍රියාකාරකම්වල නියැළෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C85-L00-O09",
+          "parent_area_id": "G5-AREA-ENV-11",
+          "publication_status": "blocked",
+          "traced_text": "ගමනාගමනය සම්බන්ධ නිර්මාණ කරගත්‌ කෙටි නාට්‍ය නිරූපණය කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-12",
+      "cited_node_id": "G5-ENV-U12",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "මිනිසුන්ගේ මූලික අවශ්‍යතා හඳුනාගෙන ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "සියලු ම දෙනාට සමාන අවශ්‍යතා ඇති බව වටහාගෙන ඒ අනුව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "සාමූහික ක්‍රියාකාරකම්වල දී තමාගේ මෙන්‌ ම අන්‌ අයගේ ද ගරුත්වය ආරක්ෂා වන ලෙස ආචාරශීලී ව හැසිරෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "සාමූහික ව කටයුතු කිරීමේ දී අන්‌ අය සමඟ සහයෝගයෙන්‌ ක්‍රියා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "මානව ගරුත්වය රැකෙන ආකාරයට තම අදහස්‌ ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "යහපත්‌ අන්තර්‌ සබඳතා දැක්වෙන පොස්ටර්‌ නිර්මාණය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "වළලු, බෝල සහ පනින ලණු ආශ්‍රයෙන්‌ නිර්මාණාත්මක සාමූහික ක්‍රීඩාවල යෙදෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "යහතත්‌ මිනිස්‌ හැසිරීම්‌ ගැන කියැවෙන ආදර්ශවත්‌ කවි, ගායනා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O09",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "චරිතාරෝපිත රංගන ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O10",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "ඉගෙනුම්‌ - ඉගැන්වීම්‌ ක්‍රමෝපාය ක්‍රියාකාරකම 1: පියවර 1 පන්තියේ සිසුන්ට අත්‍යවශ්‍ය දේ මොනවා ද යන්න පිළිබඳ විමසීමක්‌ කරන්න."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C91-L00-O11",
+          "parent_area_id": "G5-AREA-ENV-12",
+          "publication_status": "blocked",
+          "traced_text": "ඉන්‌ පසු සිසු සංඛ්‍යාව අනුව පන්තියේ සිසුන්‌ සුදුසු පරිදි කණ්ඩායම්වලට බෙදා වෙන්‌ කරන්න."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-13",
+      "cited_node_id": "G5-ENV-U13",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "පාසලේ හෝ තෝරාගත්‌ භූමියක හෝ ඇති විෂමතා ලක්ෂණ විමර්ශනය කර වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "වගුරු හා ජලාශ ආශ්‍රිත බිම්වල සුවිශේෂ ලක්ෂණ නිරීක්ෂණය කර වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "තම ප්‍රදේශයට ලැබෙන වර්ෂාව පිළිබඳ අවබෝධයෙන්‌ යුතු ව ක්‍රියා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "ශ්‍රී ලංකාවේ සාපේක්ෂ පිහිටීම හඳුනාගෙන ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "මුහුද ආශ්‍රයයෙන්‌ මිනිසාට ලැබෙන ප්‍රයෝජන ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "සුළඟින්‌ ඇති ප්‍රයෝජන විමර්ශනය කර වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "සඳේ (චන්ද්‍රයාගේ) වෙනස්කම්‌ නිරීක්ෂණය කර වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C95-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-13",
+          "publication_status": "blocked",
+          "traced_text": "චන්ද්‍රයාගේ බලපෑම නිසා පරිසරයේ ඇතිවන වෙනස්කම්‌ හඳුනාගෙන ප්‍රකාශ කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-14",
+      "cited_node_id": "G5-ENV-U14",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "පාසලේ දී හා පාසලින්‌ බැහැර ව අන්‌ අයට උදවු අවශ්‍ය අවස්ථා පිළිබඳ අත්දැකීම්‌ ඇසුරින්‌ කරුණු පැහැදිලි කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "උදවු අවශ්‍ය අයකුට උදවු අවශ්‍ය අවස්ථාවල දී තමන්ට සහය දැක්විය හැකි ආකාර ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "පාසල්‌ පරිසරයේ හෝ අවට පරිසරයේ දී හෝ තමා විසින්‌ කරන ලද ධනාත්මක වෙනස්කමක්‌ පිළිබඳ ව අභිමානයෙන්‌ යුතු ව කරුණු දක්වයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ ක්‍ෂේත්‍රවල උත්සාහයෙන්‌ දියුණු වූ පුද්ගලයන්‌ කිහිප දෙනෙකු සම්බන්ධ තොරතුරු ගවේෂණය කොට වාර්තා කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "ගුණාත්මක වෙනස්කමක්‌ සාර්ථකත්වය දක්වා නිම කර සතුට ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "තමා ආසන්න පරිසරයේ පවතින අහිතකර තත්ත්වයක්‌ හිතකර තත්ත්වයක්‌ බවට පත්‌ කර ගන්නා ආකාරය පිළිබඳ ව යෝජනා ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "පාසල්‌ පරිසරය තුළ යහපත්‌ වෙනස්කමක්‌ කිරීම සඳහා සුදුසු නිර්මාණ ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C105-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-14",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ ද්‍රව්‍ය උපයෝගි කර ගනිමින්‌ ක්‍රීඩා පිටියේ වෙනස්කම්‌ කිරීමට යෝග්‍ය වින්දනාත්මක ක්‍රීඩාවල යෙදෙයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-15",
+      "cited_node_id": "G5-ENV-U15",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "තොරතුරු ලබා ගන්නා මාධ්‍ය වර්ගීකරණය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "තොරතුරු ලබා ගැනීම සඳහා පරිගණකය ඵලදායී ව භාවිත කිරීමේ වැදගත්කම පැහැදිලි කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "පරිගණකයක්‌ හැසිරවීමේ මූලික හුරුකම්‌ ලබයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "පරිගණකයක්‌ ඇසුරෙන්‌ තොරතුරු හුවමාරු කර ගන්නා ආකාරය පිළිබඳ අත්දැකීම්‌ ලබයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "සන්නිවේදනයේ දී පොදුවේ භාවිත කරන සම්මත සංකේත හා උපදෙස්‌ කිහිපයක්‌ හඳුනා ගෙන ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ සන්නිවේදන මාධ්‍ය මඟින්‌ සමාජයට සිදුවන හිතකර හා අහිතකර බලපෑම්‌ පිළිබඳ අවබෝධයෙන්‌ යුතු ව කටයුතු කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "සන්නිවේදන කටයුතු සඳහා යෝග්‍ය නිර්මාණ ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O08",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "විවිධ පණිවිඩ යොදා ගනිමින්‌ සිදු කළ හැකි නිර්මාණාත්මක ක්‍රීඩාවල යෙදෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C110-L00-O09",
+          "parent_area_id": "G5-AREA-ENV-15",
+          "publication_status": "blocked",
+          "traced_text": "වැරදි තොරතුරු ලබා දීම නිසා ඇති විය හැකි අහිතකර තත්ත්ව ඉස්මතු කරන අවස්ථා නිරූපණය කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    },
+    {
+      "area_id": "G5-AREA-ENV-16",
+      "cited_node_id": "G5-ENV-U16",
+      "development_only": true,
+      "draft_item_slots": [],
+      "held_slots": [
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O01",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "එෙතිහාසික වටිනාකමකින්‌ යුතු ස්ථාන කිහිපයක තොරතුරු රැස්‌ කොට ඒවා රැක ගැනීමට කළ හැකි දේ ප්‍රකාශ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O02",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "එතිහාසික වටිනාකමකින්‌ යුත්‌ කලාකෘති ලැයිස්තු ගත කොට ඉන්‌ කිහිපයක්‌ පිළිබඳ තොරතුරු විස්තර කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O03",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "අතීත කලා කෘතිවල සුවිශේෂතා ගවේෂණය කොට ප්‍රදර්ශනය කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O04",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "රටේ දියුණුවට මහඟු සේවයක්‌ කළ රජවරුන්‌ කිහිප දෙනෙකු හඳුනා ගෙන ඔවුන්ගෙන්‌ ගත හැකි යහපත්‌ ආදර්ශ තම ජීවිතයට එක්‌ කර ගන්නා අයුරු විස්තර කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O05",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "අතීත කලාකෘති ඇසුරෙන්‌ විවිධ නිර්මාණ ඉදිරිපත්‌ කරයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O06",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "පැරණි සාමූහික ජන ක්‍රීඩාවල යෙදෙයි."
+        },
+        {
+          "child_question": null,
+          "confidence": "low",
+          "draft_item": false,
+          "held": true,
+          "node_id": "G5-ENV-C115-L00-O07",
+          "parent_area_id": "G5-AREA-ENV-16",
+          "publication_status": "blocked",
+          "traced_text": "දේශාභිමානය ඔප්‌ නැංවෙන විරිදු, කව්‌ ගායනා කර ඒවාට සුදුසු රිද්මානුකූල චලන ඉදිරිපත්‌ කරයි."
+        }
+      ],
+      "outcome_slots": [],
+      "publication_status": "blocked",
+      "template_id": "eco_explorer"
+    }
+  ],
+  "package_version": "grade5-draft-mission-catalog-v1",
+  "publication_status": "blocked"
+}

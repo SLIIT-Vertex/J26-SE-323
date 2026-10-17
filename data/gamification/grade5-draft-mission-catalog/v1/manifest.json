@@ -1,0 +1,8 @@
+{
+  "development_only": true,
+  "files": {
+    "missions.json": "c17febd2ec8c145f20dceeef7dd756b698568f75fce141cf1c17ff52d8d1b524"
+  },
+  "package_version": "grade5-draft-mission-catalog-v1",
+  "publication_status": "blocked"
+}

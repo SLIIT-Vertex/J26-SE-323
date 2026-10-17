@@ -112,7 +112,7 @@ def test_model_package_dependency_rules() -> None:
     assert violations == []
 
 
-def test_support_selection_does_not_name_other_model_classes() -> None:
+def test_selection_does_not_name_other_model_classes() -> None:
     banned = (
         "IndependenceGainResult",
         "RawIndependenceGainCalculator",
