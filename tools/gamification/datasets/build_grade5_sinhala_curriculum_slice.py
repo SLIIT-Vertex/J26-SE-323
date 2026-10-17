@@ -13,11 +13,11 @@ BACKEND_ROOT = PROJECT_ROOT / "backend"
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-from app.gamification.content.phase2_registry import (
-    PHASE2_CONTENT_DIRECTORY,
-    PHASE2_PACKAGE_VERSION,
-    PublicPhase2Package,
-    load_phase2_server_answer_keys,
+from app.gamification.content.curriculum_registry import (
+    CURRICULUM_CONTENT_DIRECTORY,
+    CURRICULUM_PACKAGE_VERSION,
+    PublicCurriculumPackage,
+    load_curriculum_server_answer_keys,
 )
 
 AUTHORED_FILES = ("README.md", "public_content.json", "server_answer_keys.json")
@@ -28,7 +28,7 @@ def _sha256(data: bytes) -> str:
 
 
 def build_manifest(path: Path) -> str:
-    package = PublicPhase2Package.model_validate_json(
+    package = PublicCurriculumPackage.model_validate_json(
         (path / "public_content.json").read_text(encoding="utf-8")
     )
     answer_rows = json.loads((path / "server_answer_keys.json").read_text(encoding="utf-8"))
@@ -36,7 +36,7 @@ def build_manifest(path: Path) -> str:
     if revision_ids != {item.revision_id for item in package.item_revisions}:
         raise ValueError("answer keys must exactly cover the immutable item revisions")
     manifest = {
-        "package_version": PHASE2_PACKAGE_VERSION,
+        "package_version": CURRICULUM_PACKAGE_VERSION,
         "scope": "one_atomic_grade5_sinhala_skill",
         "skill_id": package.skill.skill_id,
         "child_delivery_status": (
@@ -50,7 +50,7 @@ def build_manifest(path: Path) -> str:
 
 
 def verify_source(path: Path) -> None:
-    package = PublicPhase2Package.model_validate_json(
+    package = PublicCurriculumPackage.model_validate_json(
         (path / "public_content.json").read_text(encoding="utf-8")
     )
     source_path = PROJECT_ROOT / package.source.source_path
@@ -62,7 +62,7 @@ def verify_source(path: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--package-dir", type=Path, default=PHASE2_CONTENT_DIRECTORY)
+    parser.add_argument("--package-dir", type=Path, default=CURRICULUM_CONTENT_DIRECTORY)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--verify-source", action="store_true")
     args = parser.parse_args()
@@ -74,7 +74,7 @@ def main() -> int:
         if not manifest_path.is_file() or manifest_path.read_text(encoding="utf-8") != rendered:
             raise SystemExit("content manifest is out of date")
         # Full loader verification includes manifest integrity and server/public key consistency.
-        load_phase2_server_answer_keys(args.package_dir)
+        load_curriculum_server_answer_keys(args.package_dir)
         return 0
     manifest_path.write_text(rendered, encoding="utf-8", newline="\n")
     return 0

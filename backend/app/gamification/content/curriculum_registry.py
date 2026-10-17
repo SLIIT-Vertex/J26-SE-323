@@ -17,8 +17,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 
-PHASE2_CONTENT_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "grade5-sinhala-phase2-slice" / "v1"
-PHASE2_PACKAGE_VERSION = "grade5-sinhala-phase2-v1"
+CURRICULUM_CONTENT_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "grade5-sinhala-curriculum-slice" / "v1"
+CURRICULUM_PACKAGE_VERSION = "grade5-sinhala-curriculum-v1"
 SKILL_ID_PATTERN = re.compile(r"^G5-MAT-C\d{2}-L\d{2}-O\d{2}$")
 REVISION_ID_PATTERN = re.compile(r"^[A-Z0-9-]+@v[1-9][0-9]*$")
 SINHALA_PATTERN = re.compile(r"[\u0D80-\u0DFF]")
@@ -245,8 +245,8 @@ class ParallelFamily(FrozenModel):
         return self
 
 
-class PublicPhase2Package(FrozenModel):
-    package_version: Literal[PHASE2_PACKAGE_VERSION]
+class PublicCurriculumPackage(FrozenModel):
+    package_version: Literal[CURRICULUM_PACKAGE_VERSION]
     scope: Literal["one_atomic_grade5_sinhala_skill"]
     source: SourceRecord
     skill: SkillRecord
@@ -257,7 +257,7 @@ class PublicPhase2Package(FrozenModel):
     reviews: tuple[ReviewRecord, ...]
 
     @model_validator(mode="after")
-    def validate_package(self) -> PublicPhase2Package:
+    def validate_package(self) -> PublicCurriculumPackage:
         if self.skill.source_id != self.source.source_id:
             raise ValueError("skill source does not match registered source")
         if {record.review_kind for record in self.reviews} != REQUIRED_REVIEW_KINDS:
@@ -385,7 +385,7 @@ def _read_json(path: Path) -> object:
 
 def _verify_manifest(path: Path) -> None:
     manifest = _read_json(path / "manifest.json")
-    if not isinstance(manifest, dict) or manifest.get("package_version") != PHASE2_PACKAGE_VERSION:
+    if not isinstance(manifest, dict) or manifest.get("package_version") != CURRICULUM_PACKAGE_VERSION:
         raise ValueError("invalid content manifest")
     files = manifest.get("files")
     if not isinstance(files, dict):
@@ -396,11 +396,11 @@ def _verify_manifest(path: Path) -> None:
             raise ValueError(f"{name} does not match the immutable manifest")
 
 
-def load_phase2_public_package(
-    path: Path = PHASE2_CONTENT_DIRECTORY, *, allow_draft: bool = False
-) -> PublicPhase2Package:
+def load_curriculum_public_package(
+    path: Path = CURRICULUM_CONTENT_DIRECTORY, *, allow_draft: bool = False
+) -> PublicCurriculumPackage:
     _verify_manifest(path)
-    package = PublicPhase2Package.model_validate(_read_json(path / "public_content.json"))
+    package = PublicCurriculumPackage.model_validate(_read_json(path / "public_content.json"))
     if not allow_draft:
         keys = _parse_answer_keys(path)
         _validate_answer_keys(package, keys)
@@ -412,13 +412,13 @@ def load_phase2_public_package(
     return package
 
 
-def load_phase2_server_answer_keys(
-    path: Path = PHASE2_CONTENT_DIRECTORY,
+def load_curriculum_server_answer_keys(
+    path: Path = CURRICULUM_CONTENT_DIRECTORY,
 ) -> dict[str, AnswerKey]:
     """Load scoring material for trusted server code; never serialize this into child payloads."""
     _verify_manifest(path)
     keys = _parse_answer_keys(path)
-    package = load_phase2_public_package(path, allow_draft=True)
+    package = load_curriculum_public_package(path, allow_draft=True)
     _validate_answer_keys(package, keys)
     return keys
 
@@ -431,7 +431,7 @@ def _parse_answer_keys(path: Path) -> dict[str, AnswerKey]:
 
 
 def _validate_answer_keys(
-    package: PublicPhase2Package, keys: dict[str, AnswerKey]
+    package: PublicCurriculumPackage, keys: dict[str, AnswerKey]
 ) -> None:
     revision_ids = {item.revision_id for item in package.item_revisions}
     if set(keys) != revision_ids:

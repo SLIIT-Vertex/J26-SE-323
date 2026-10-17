@@ -1,7 +1,7 @@
 # Check the RAG from the terminal
 
 This Mac has no `python` command. Every command below uses
-`/tmp/j26-phase2-venv/bin/python`. `backend/.venv` is not present.
+`/tmp/j26-curriculum-venv/bin/python`. `backend/.venv` is not present.
 
 These checks ask the retriever. They do not start the play screen. A play response of
 `CURRICULUM_RETRIEVAL_UNAVAILABLE` is a separate route and does not mean the retriever failed.
@@ -10,7 +10,7 @@ These checks ask the retriever. They do not start the play screen. A play respon
 
 ```bash
 cd backend
-/tmp/j26-phase2-venv/bin/python -m pytest tests/curriculum tests/gamification/test_curriculum_pilot_retrieval.py -q
+/tmp/j26-curriculum-venv/bin/python -m pytest tests/curriculum tests/gamification/test_curriculum_pilot_retrieval.py -q
 ```
 
 Exit code 0 means the contracts, the index, the hybrid retriever, and the gamification
@@ -21,7 +21,7 @@ adapter agree. The adapter test loads the four `MAT-FRC` chunks and expects stat
 From `backend/`:
 
 ```bash
-/tmp/j26-phase2-venv/bin/python - <<'PY'
+/tmp/j26-curriculum-venv/bin/python - <<'PY'
 from pathlib import Path
 
 from app.curriculum.application.retrieval import CurriculumRetrievalRequest
@@ -88,7 +88,7 @@ The files are local indexes, not the gamification session store.
 From `backend/`, the same directory as the other checks:
 
 ```bash
-/tmp/j26-phase2-venv/bin/python scripts/evaluate_curriculum_retrieval.py
+/tmp/j26-curriculum-venv/bin/python scripts/evaluate_curriculum_retrieval.py
 ```
 
 A working run prints a line of this shape:

@@ -13,6 +13,6 @@ kept in the server-only file and never occur in the public item schema.
 Regenerate the manifest after an authorized content change:
 
 ```sh
-backend/.venv/bin/python tools/gamification/datasets/build_grade5_sinhala_phase2_slice.py
-backend/.venv/bin/python tools/gamification/datasets/build_grade5_sinhala_phase2_slice.py --check --verify-source
+backend/.venv/bin/python tools/gamification/datasets/build_grade5_sinhala_curriculum_slice.py
+backend/.venv/bin/python tools/gamification/datasets/build_grade5_sinhala_curriculum_slice.py --check --verify-source
 ```
