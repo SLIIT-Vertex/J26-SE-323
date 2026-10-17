@@ -1098,24 +1098,24 @@ class ExperimentAssignmentModel(Base):
     withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
-class Phase6EpisodeRunModel(Base):
+class LearningFlowEpisodeRunModel(Base):
     """Current durable projection for the development-only episode coordinator."""
 
-    __tablename__ = "phase6_episode_runs"
+    __tablename__ = "learning_flow_episode_runs"
     __table_args__ = (
-        UniqueConstraint("session_id", name="uq_phase6_episode_runs_session"),
+        UniqueConstraint("session_id", name="uq_learning_flow_episode_runs_session"),
         CheckConstraint(
-            "environment IN ('development', 'test')", name="ck_phase6_runs_environment"
+            "environment IN ('development', 'test')", name="ck_learning_flow_runs_environment"
         ),
         CheckConstraint(
-            "condition IN ('baseline', 'proposed')", name="ck_phase6_runs_condition"
+            "condition IN ('baseline', 'proposed')", name="ck_learning_flow_runs_condition"
         ),
         CheckConstraint(
             "status IN ('before_presented', 'support_active', 'support_complete', "
             "'support_withdrawn', 'after_presented', 'completed', 'invalidated')",
-            name="ck_phase6_runs_status",
+            name="ck_learning_flow_runs_status",
         ),
-        Index("ix_phase6_runs_learner_created", "learner_id", "created_at"),
+        Index("ix_learning_flow_runs_learner_created", "learner_id", "created_at"),
     )
 
     episode_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
@@ -1134,18 +1134,18 @@ class Phase6EpisodeRunModel(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class Phase6ProbeReservationModel(Base):
-    __tablename__ = "phase6_probe_reservations"
+class LearningFlowProbeReservationModel(Base):
+    __tablename__ = "learning_flow_probe_reservations"
     __table_args__ = (
         UniqueConstraint(
-            "learner_id", "item_revision_id", name="uq_phase6_probe_learner_revision"
+            "learner_id", "item_revision_id", name="uq_learning_flow_probe_learner_revision"
         ),
         CheckConstraint(
             "status IN ('reserved', 'used', 'contaminated')",
-            name="ck_phase6_probe_status",
+            name="ck_learning_flow_probe_status",
         ),
-        CheckConstraint("expires_at > reserved_at", name="ck_phase6_probe_expiry"),
-        Index("ix_phase6_probe_episode", "episode_id", "status"),
+        CheckConstraint("expires_at > reserved_at", name="ck_learning_flow_probe_expiry"),
+        Index("ix_learning_flow_probe_episode", "episode_id", "status"),
     )
 
     reservation_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
@@ -1160,22 +1160,22 @@ class Phase6ProbeReservationModel(Base):
     contamination_source: Mapped[str | None] = mapped_column(String(64))
 
 
-class Phase6EpisodeEventModel(Base):
+class LearningFlowEpisodeEventModel(Base):
     """Append-only normalized orchestration event used for replay and audit."""
 
-    __tablename__ = "phase6_episode_events"
+    __tablename__ = "learning_flow_episode_events"
     __table_args__ = (
-        UniqueConstraint("episode_id", "sequence", name="uq_phase6_events_sequence"),
-        UniqueConstraint("event_id", name="uq_phase6_events_event_id"),
-        CheckConstraint("sequence >= 1", name="ck_phase6_events_sequence"),
-        CheckConstraint("length(payload_sha256) = 64", name="ck_phase6_events_hash"),
-        Index("ix_phase6_events_episode_time", "episode_id", "occurred_at"),
+        UniqueConstraint("episode_id", "sequence", name="uq_learning_flow_events_sequence"),
+        UniqueConstraint("event_id", name="uq_learning_flow_events_event_id"),
+        CheckConstraint("sequence >= 1", name="ck_learning_flow_events_sequence"),
+        CheckConstraint("length(payload_sha256) = 64", name="ck_learning_flow_events_hash"),
+        Index("ix_learning_flow_events_episode_time", "episode_id", "occurred_at"),
     )
 
     id: Mapped[int] = mapped_column(BigIntType, primary_key=True, autoincrement=True)
     event_id: Mapped[UUID] = mapped_column(Uuid, nullable=False)
     episode_id: Mapped[UUID] = mapped_column(
-        ForeignKey("phase6_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
+        ForeignKey("learning_flow_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
     )
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -1184,28 +1184,28 @@ class Phase6EpisodeEventModel(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class Phase6IdempotencyReceiptModel(Base):
-    __tablename__ = "phase6_idempotency_receipts"
+class LearningFlowIdempotencyReceiptModel(Base):
+    __tablename__ = "learning_flow_idempotency_receipts"
     __table_args__ = (
-        CheckConstraint("length(request_sha256) = 64", name="ck_phase6_receipts_request_hash"),
+        CheckConstraint("length(request_sha256) = 64", name="ck_learning_flow_receipts_request_hash"),
     )
 
     idempotency_key: Mapped[str] = mapped_column(String(128), primary_key=True)
     request_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
     episode_id: Mapped[UUID] = mapped_column(
-        ForeignKey("phase6_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
+        ForeignKey("learning_flow_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
     )
     response_json: Mapped[dict[str, object]] = mapped_column(JsonType, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
-class Phase6AuditEventModel(Base):
-    __tablename__ = "phase6_audit_events"
-    __table_args__ = (Index("ix_phase6_audit_episode_time", "episode_id", "occurred_at"),)
+class LearningFlowAuditEventModel(Base):
+    __tablename__ = "learning_flow_audit_events"
+    __table_args__ = (Index("ix_learning_flow_audit_episode_time", "episode_id", "occurred_at"),)
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     episode_id: Mapped[UUID] = mapped_column(
-        ForeignKey("phase6_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
+        ForeignKey("learning_flow_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
     )
     event_type: Mapped[str] = mapped_column(String(64), nullable=False)
     reason_codes_json: Mapped[list[str]] = mapped_column(JsonType, nullable=False)

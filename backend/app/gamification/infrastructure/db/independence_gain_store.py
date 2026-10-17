@@ -10,14 +10,14 @@ from app.gamification.infrastructure.db.models import (
     ScaffoldExposureRecordV3Model,
     SupportWithdrawalConfirmationV3Model,
 )
-from app.gamification.modeling.independence_gain.phase3 import (
+from app.gamification.modeling.independence_gain.measurement import (
+    IndependenceGainError,
     IndependenceMeasurement,
     MeasurementInput,
-    Phase3Error,
 )
 
 
-class SqlAlchemyPhase3MeasurementStore:
+class SqlAlchemyIndependenceGainMeasurementStore:
     def __init__(self, session: Session) -> None:
         self._session = session
 
@@ -112,7 +112,7 @@ class SqlAlchemyPhase3MeasurementStore:
                 differing = tuple(
                     key for key in values if comparable_stored[key] != comparable_values[key]
                 )
-                raise Phase3Error(f"MEASUREMENT_IDEMPOTENCY_CONFLICT:{','.join(differing)}")
+                raise IndependenceGainError(f"MEASUREMENT_IDEMPOTENCY_CONFLICT:{','.join(differing)}")
             return existing
         row = IndependenceMeasurementV3Model(**values)
         self._session.add(row)
@@ -130,7 +130,7 @@ class SqlAlchemyPhase3MeasurementStore:
             if _comparable(getattr(existing, key)) != _comparable(value)
         )
         if differing:
-            raise Phase3Error(f"AUTHORITATIVE_RECORD_CONFLICT:{','.join(differing)}")
+            raise IndependenceGainError(f"AUTHORITATIVE_RECORD_CONFLICT:{','.join(differing)}")
 
 
 def _comparable(value: object) -> object:

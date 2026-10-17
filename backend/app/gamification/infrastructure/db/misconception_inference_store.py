@@ -13,7 +13,7 @@ from app.gamification.infrastructure.db.models import (
     Model1BeliefSnapshotV4Model,
     Model1FeatureSnapshotV4Model,
 )
-from app.gamification.modeling.misconception_inference.phase4 import (
+from app.gamification.modeling.misconception_inference.inference import (
     BeliefSnapshot,
     Model1Error,
     Model1FeatureSnapshot,

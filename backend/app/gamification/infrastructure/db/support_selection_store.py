@@ -17,7 +17,7 @@ from app.gamification.infrastructure.db.models import (
     Model2ScaffoldDecisionV5Model,
 )
 from app.gamification.modeling.shared.artifact_registry import canonical_json
-from app.gamification.modeling.support_selection.phase5 import (
+from app.gamification.modeling.support_selection.selection import (
     CandidateDecision,
     Model2ContextSnapshot,
     Model2Error,

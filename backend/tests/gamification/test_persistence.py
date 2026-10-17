@@ -24,6 +24,10 @@ from app.gamification.domain.types import (
     SkillId,
     TaxonomyVersion,
 )
+from app.gamification.infrastructure.db.independence_gain_store import (
+    SqlAlchemyIndependenceGainMeasurementStore,
+)
+from app.gamification.infrastructure.db.misconception_inference_store import SqlAlchemyModel1Store
 from app.gamification.infrastructure.db.models import (
     AdaptiveEpisodeModel,
     AuthoritativeAttemptV3Model,
@@ -46,41 +50,40 @@ from app.gamification.infrastructure.db.models import (
     SupportCandidateModel,
     VerificationPairModel,
 )
-from app.gamification.infrastructure.db.phase3_measurement_store import (
-    SqlAlchemyPhase3MeasurementStore,
-)
-from app.gamification.infrastructure.db.phase4_model1_store import SqlAlchemyModel1Store
-from app.gamification.infrastructure.db.phase5_model2_store import SqlAlchemyModel2Store
 from app.gamification.infrastructure.db.repositories import (
     SqlAlchemyFeatureSnapshotStore,
     SqlAlchemyPolicyDecisionStore,
     reconstruct_episode_evidence,
 )
-from app.gamification.modeling.independence_gain.phase3 import (
+from app.gamification.infrastructure.db.support_selection_store import SqlAlchemyModel2Store
+from app.gamification.modeling.independence_gain.measurement import (
+    IndependenceGainError,
     IndependenceMeasurement,
-    Phase3Error,
     PolicyUpdateStatus,
     ScoreTotal,
 )
-from app.gamification.modeling.misconception_inference.phase4 import Model1Error, replay_inference
-from app.gamification.modeling.support_selection.phase5 import (
+from app.gamification.modeling.misconception_inference.inference import (
+    Model1Error,
+    replay_inference,
+)
+from app.gamification.modeling.support_selection.selection import (
     Model2Error,
     PolicyMode,
     RewardLink,
 )
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
-from tests.gamification.modeling.independence_gain.test_phase3_measurement import valid_input
-from tests.gamification.modeling.misconception_inference.test_phase4_model1 import (
+from tests.gamification.modeling.independence_gain.test_measurement import valid_input
+from tests.gamification.modeling.misconception_inference.test_inference import (
     inference_input as model1_input,
 )
-from tests.gamification.modeling.misconception_inference.test_phase4_model1 import (
+from tests.gamification.modeling.misconception_inference.test_inference import (
     model as model1_model,
 )
-from tests.gamification.modeling.support_selection.test_phase5_model2 import (
+from tests.gamification.modeling.support_selection.test_selection import (
     context_input as model2_context_input,
 )
-from tests.gamification.modeling.support_selection.test_phase5_model2 import (
+from tests.gamification.modeling.support_selection.test_selection import (
     decide as model2_decide,
 )
 
@@ -95,7 +98,7 @@ from .fixtures import (
 )
 
 BACKEND_ROOT = Path(__file__).parents[2]
-PHASE3_TABLES = {
+INDEPENDENCE_GAIN_TABLES = {
     "game_sessions",
     "item_responses",
     "adaptive_episodes",
@@ -120,7 +123,7 @@ PHASE3_TABLES = {
     "research_exports",
     "consent_eligibility_references",
 }
-PHASE3_MEASUREMENT_TABLES = {
+INDEPENDENCE_GAIN_MEASUREMENT_TABLES = {
     "item_presentations_v3",
     "probe_reservations_v3",
     "scaffold_exposure_records_v3",
@@ -128,23 +131,23 @@ PHASE3_MEASUREMENT_TABLES = {
     "authoritative_attempts_v3",
     "independence_measurements_v3",
 }
-PHASE4_MODEL1_TABLES = {
+MISCONCEPTION_INFERENCE_TABLES = {
     "model1_feature_snapshots_v4",
     "model1_belief_snapshots_v4",
     "model1_belief_probabilities_v4",
 }
-PHASE5_MODEL2_TABLES = {
+SUPPORT_SELECTION_TABLES = {
     "model2_context_snapshots_v5",
     "model2_scaffold_decisions_v5",
     "model2_candidate_decisions_v5",
     "model2_reward_links_v5",
 }
-PHASE6_ORCHESTRATION_TABLES = {
-    "phase6_episode_runs",
-    "phase6_probe_reservations",
-    "phase6_episode_events",
-    "phase6_idempotency_receipts",
-    "phase6_audit_events",
+LEARNING_FLOW_ORCHESTRATION_TABLES = {
+    "learning_flow_episode_runs",
+    "learning_flow_probe_reservations",
+    "learning_flow_episode_events",
+    "learning_flow_idempotency_receipts",
+    "learning_flow_audit_events",
 }
 MODEL1_PRESENTATION_ID = uuid4()
 
@@ -181,11 +184,11 @@ def db(engine: Engine) -> Session:
         yield session
 
 
-def test_all_phase3_tables_and_named_constraints_exist(engine: Engine) -> None:
+def test_all_independence_gain_tables_and_named_constraints_exist(engine: Engine) -> None:
     inspector = inspect(engine)
-    assert PHASE3_TABLES <= set(inspector.get_table_names())
+    assert INDEPENDENCE_GAIN_TABLES <= set(inspector.get_table_names())
 
-    for table_name in PHASE3_TABLES:
+    for table_name in INDEPENDENCE_GAIN_TABLES:
         checks = inspector.get_check_constraints(table_name)
         assert all(check["name"] for check in checks), table_name
         foreign_keys = inspector.get_foreign_keys(table_name)
@@ -444,7 +447,7 @@ def test_policy_store_and_episode_reconstruction_use_frozen_evidence(db: Session
     assert bundle.outcome.raw_independence_gain == 1.0
 
 
-def test_phase3_measurement_store_is_idempotent_and_transaction_rollback_safe(db: Session) -> None:
+def test_measurement_store_is_idempotent_and_transaction_rollback_safe(db: Session) -> None:
     seed_complete_synthetic_episode(db)
     authoritative = valid_input()
     authoritative = replace(
@@ -484,7 +487,7 @@ def test_phase3_measurement_store_is_idempotent_and_transaction_rollback_safe(db
         measurement_version="independence-measurement-v1",
         calculated_at=NOW,
     )
-    store = SqlAlchemyPhase3MeasurementStore(db)
+    store = SqlAlchemyIndependenceGainMeasurementStore(db)
     store.add_authoritative_input(authoritative)
     store.add_authoritative_input(authoritative)
     assert db.query(ItemPresentationV3Model).count() == len(authoritative.presentations)
@@ -493,13 +496,13 @@ def test_phase3_measurement_store_is_idempotent_and_transaction_rollback_safe(db
     assert db.query(ScaffoldExposureRecordV3Model).count() == 1
     assert store.add(measurement).raw_independence_gain == Decimal("0.5")
     assert store.add(measurement).id == measurement.measurement_id
-    with pytest.raises(Phase3Error, match="IDEMPOTENCY_CONFLICT"):
+    with pytest.raises(IndependenceGainError, match="IDEMPOTENCY_CONFLICT"):
         store.add(replace(measurement, raw_independence_gain=Decimal("0.4")))
     db.rollback()
     assert db.get(IndependenceMeasurementV3Model, measurement.measurement_id) is None
 
 
-def test_phase4_model1_store_reconstructs_exactly_and_rejects_conflicting_retry(
+def test_inference_store_reconstructs_exactly_and_rejects_conflicting_retry(
     db: Session,
 ) -> None:
     seed_complete_synthetic_episode(db)
@@ -530,7 +533,7 @@ def test_phase4_model1_store_reconstructs_exactly_and_rejects_conflicting_retry(
     assert db.get(Model1BeliefSnapshotV4Model, belief.belief_snapshot_id) is None
 
 
-def test_phase5_model2_store_reconstructs_complete_decision_and_reward_atomically(
+def test_selection_store_reconstructs_complete_decision_and_reward_atomically(
     db: Session,
 ) -> None:
     seed_complete_synthetic_episode(db)
@@ -608,7 +611,7 @@ def test_phase5_model2_store_reconstructs_complete_decision_and_reward_atomicall
         measurement_version="independence-measurement-v1",
         calculated_at=NOW,
     )
-    measurement_store = SqlAlchemyPhase3MeasurementStore(db)
+    measurement_store = SqlAlchemyIndependenceGainMeasurementStore(db)
     measurement_store.add_authoritative_input(authoritative)
     measurement_store.add(result)
     link = RewardLink(
@@ -631,7 +634,7 @@ def test_phase5_model2_store_reconstructs_complete_decision_and_reward_atomicall
     assert db.get(Model2ScaffoldDecisionV5Model, DECISION_ID) is None
 
 
-def test_phase3_migration_upgrades_shared_learner_head_downgrades_and_reupgrades(
+def test_independence_gain_migration_upgrades_shared_learner_head_downgrades_and_reupgrades(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     database_path = tmp_path / "migration-cycle.sqlite"
@@ -650,31 +653,31 @@ def test_phase3_migration_upgrades_shared_learner_head_downgrades_and_reupgrades
     command.stamp(config, "20261007_01")
     command.upgrade(config, "gamification@head")
     migrated_engine = sqlite_engine(database_url)
-    assert PHASE3_TABLES <= set(inspect(migrated_engine).get_table_names())
-    assert PHASE3_MEASUREMENT_TABLES <= set(inspect(migrated_engine).get_table_names())
-    assert PHASE4_MODEL1_TABLES <= set(inspect(migrated_engine).get_table_names())
-    assert PHASE5_MODEL2_TABLES <= set(inspect(migrated_engine).get_table_names())
-    assert PHASE6_ORCHESTRATION_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert INDEPENDENCE_GAIN_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert INDEPENDENCE_GAIN_MEASUREMENT_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert MISCONCEPTION_INFERENCE_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert SUPPORT_SELECTION_TABLES <= set(inspect(migrated_engine).get_table_names())
+    assert LEARNING_FLOW_ORCHESTRATION_TABLES <= set(inspect(migrated_engine).get_table_names())
     migrated_engine.dispose()
 
     command.downgrade(config, "20261007_01")
     downgraded_engine = sqlite_engine(database_url)
-    assert PHASE3_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
-    assert PHASE3_MEASUREMENT_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
-    assert PHASE4_MODEL1_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
-    assert PHASE5_MODEL2_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
-    assert PHASE6_ORCHESTRATION_TABLES.isdisjoint(
+    assert INDEPENDENCE_GAIN_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert INDEPENDENCE_GAIN_MEASUREMENT_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert MISCONCEPTION_INFERENCE_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert SUPPORT_SELECTION_TABLES.isdisjoint(inspect(downgraded_engine).get_table_names())
+    assert LEARNING_FLOW_ORCHESTRATION_TABLES.isdisjoint(
         inspect(downgraded_engine).get_table_names()
     )
     downgraded_engine.dispose()
 
     command.upgrade(config, "gamification@head")
     reupgraded_engine = sqlite_engine(database_url)
-    assert PHASE3_TABLES <= set(inspect(reupgraded_engine).get_table_names())
-    assert PHASE3_MEASUREMENT_TABLES <= set(inspect(reupgraded_engine).get_table_names())
-    assert PHASE4_MODEL1_TABLES <= set(inspect(reupgraded_engine).get_table_names())
-    assert PHASE5_MODEL2_TABLES <= set(inspect(reupgraded_engine).get_table_names())
-    assert PHASE6_ORCHESTRATION_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert INDEPENDENCE_GAIN_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert INDEPENDENCE_GAIN_MEASUREMENT_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert MISCONCEPTION_INFERENCE_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert SUPPORT_SELECTION_TABLES <= set(inspect(reupgraded_engine).get_table_names())
+    assert LEARNING_FLOW_ORCHESTRATION_TABLES <= set(inspect(reupgraded_engine).get_table_names())
     reupgraded_engine.dispose()
     get_settings.cache_clear()
 
@@ -685,8 +688,8 @@ def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (gamification_head,) = script.get_revisions("gamification@head")
-    assert gamification_head.revision == "gam_20261015_06"
-    assert gamification_head.down_revision == "gam_20261015_05"
+    assert gamification_head.revision == "gam_20261017_07"
+    assert gamification_head.down_revision == "gam_20261015_06"
     assert gamification_head.revision in script.get_heads()
     for head in set(script.get_heads()) - {gamification_head.revision}:
         ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}
