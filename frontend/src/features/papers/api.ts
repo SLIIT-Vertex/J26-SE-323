@@ -6,6 +6,8 @@ const apiUrl: string = import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/ap
 /** Pictures come back as paths that start at the API prefix, so they need the origin. */
 export const apiOrigin = new URL(apiUrl).origin;
 
+import { type MessageKey, t } from "./i18n";
+
 // ---- types -------------------------------------------------------------------------------------
 
 export type Learner = {
@@ -101,7 +103,11 @@ export type Mastery = {
   skills: SkillMastery[];
 };
 
-export type Written = { part_no: number; label: string | null; text: string | null };
+export type Written = {
+  part_no: number;
+  label: string | null;
+  text: string | null;
+};
 
 export type ReportItem = {
   position: number;
@@ -193,25 +199,26 @@ export class ApiError extends Error {
   }
 }
 
-const FRIENDLY: Record<string, string> = {
-  network: "We could not reach MindBridge. Check your connection and try again.",
-  not_found: "We could not find that.",
-  paper_cancelled: "This paper was cancelled.",
-  photo_too_large: "That photo is too big. Please try a smaller one.",
-  unreadable_image: "We could not open that photo. Please take it again.",
-  page_already_graded: "This page has already been marked.",
-  page_in_progress:
-    "Some answers on this page already count. Please finish the unclear ones first.",
-  photos_removed: "This picture is no longer kept.",
-  not_eligible_yet: "The weekly paper opens after the first week in the app.",
+const FRIENDLY_KEYS: Record<string, MessageKey> = {
+  network: "error.network",
+  not_found: "error.not_found",
+  paper_cancelled: "error.paper_cancelled",
+  photo_too_large: "error.photo_too_large",
+  unreadable_image: "error.unreadable_image",
+  page_already_graded: "error.page_already_graded",
+  page_in_progress: "error.page_in_progress",
+  photos_removed: "error.photos_removed",
+  not_eligible_yet: "error.not_eligible_yet",
 };
 
 /** What to show a parent for an error. Technical text from the server is only a fallback. */
 export function friendlyMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    return FRIENDLY[error.code] ?? (error.status >= 500 ? "Something went wrong on our side. Please try again." : error.message);
+    const key = FRIENDLY_KEYS[error.code];
+    if (key) return t(key);
+    return error.status >= 500 ? t("error.server") : error.message;
   }
-  return FRIENDLY.network;
+  return t("error.network");
 }
 
 export async function toApiError(response: Response): Promise<ApiError> {
@@ -238,7 +245,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(`${apiUrl}${path}`, init);
   } catch {
-    throw new ApiError(0, "network", FRIENDLY.network);
+    throw new ApiError(0, "network", "network");
   }
   if (!response.ok) throw await toApiError(response);
   return response.json() as Promise<T>;
@@ -246,22 +253,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 // ---- what the parent is told when a photo cannot be used ----------------------------------------
 
-const FAILURES: Record<string, string> = {
-  markers_missing:
-    "We could not see all four black squares. Please retake the photo and keep every corner in the picture.",
-  low_match:
-    "We could not match this photo to the printed page. Lay the page flat in good light and try again.",
-  blurry: "The photo is blurry. Hold the phone steady and retake it.",
-  wrong_paper: "This looks like a different paper. Please photograph the right one.",
-  wrong_page: "This looks like a different page. Please check the page number.",
-  internal_error: "Something went wrong on our side. Please try again in a moment.",
-  file_missing: "Something went wrong on our side. Please try again in a moment.",
-  paper_missing: "Something went wrong on our side. Please try again in a moment.",
+const FAILURE_KEYS: Record<string, MessageKey> = {
+  markers_missing: "failure.markers_missing",
+  low_match: "failure.low_match",
+  blurry: "failure.blurry",
+  wrong_paper: "failure.wrong_paper",
+  wrong_page: "failure.wrong_page",
+  internal_error: "failure.internal",
+  file_missing: "failure.internal",
+  paper_missing: "failure.internal",
 };
 
 export function describeFailure(reason: string | null, fallback?: string | null): string {
-  if (reason && FAILURES[reason]) return FAILURES[reason];
-  return fallback || "We could not use this photo. Please retake it.";
+  if (reason && FAILURE_KEYS[reason]) return t(FAILURE_KEYS[reason]);
+  return fallback || t("failure.default");
 }
 
 // ---- how a page is shown ----------------------------------------------------------------------
@@ -302,16 +307,13 @@ export const getAvailability = (learnerId: string) =>
 export const createWeeklyPaper = (learnerId: string) =>
   request<Paper>(`/learners/${learnerId}/papers`, { method: "POST" });
 
-export const listPapers = (learnerId: string) =>
-  request<Paper[]>(`/learners/${learnerId}/papers?limit=20`);
+export const listPapers = (learnerId: string) => request<Paper[]>(`/learners/${learnerId}/papers?limit=20`);
 
-export const getHistory = (learnerId: string) =>
-  request<PaperHistory[]>(`/learners/${learnerId}/papers/history`);
+export const getHistory = (learnerId: string) => request<PaperHistory[]>(`/learners/${learnerId}/papers/history`);
 
 export const getPaper = (paperId: string) => request<Paper>(`/papers/${paperId}`);
 
-export const getSubmission = (submissionId: string) =>
-  request<Submission>(`/submissions/${submissionId}`);
+export const getSubmission = (submissionId: string) => request<Submission>(`/submissions/${submissionId}`);
 
 export async function uploadPagePhoto(
   paperId: string,
@@ -320,7 +322,10 @@ export async function uploadPagePhoto(
 ): Promise<{ submission_id: string; status: string }> {
   const form = new FormData();
   form.append("image", photo, photo.name || "page.jpg");
-  return request(`/papers/${paperId}/pages/${page}/photo`, { method: "POST", body: form });
+  return request(`/papers/${paperId}/pages/${page}/photo`, {
+    method: "POST",
+    body: form,
+  });
 }
 
 export const confirmDecisions = (submissionId: string, decisions: Decision[]) =>

@@ -13,10 +13,7 @@ export type Loaded<T> =
  * Runs `load` again whenever `key` changes (or `reload` is called). While reloading, data that
  * was already shown stays on screen, so a refresh does not flash the page empty.
  */
-export function useAsync<T>(
-  load: () => Promise<T>,
-  key: string,
-): { state: Loaded<T>; reload: () => void } {
+export function useAsync<T>(load: () => Promise<T>, key: string): { state: Loaded<T>; reload: () => void } {
   const loadRef = useRef(load);
   loadRef.current = load;
   const [state, setState] = useState<Loaded<T>>({ status: "loading" });
@@ -29,10 +26,7 @@ export function useAsync<T>(
     loadRef
       .current()
       .then((data) => alive && setState({ status: "ready", data }))
-      .catch(
-        (error: unknown) =>
-          alive && setState({ status: "error", error, message: friendlyMessage(error) }),
-      );
+      .catch((error: unknown) => alive && setState({ status: "error", error, message: friendlyMessage(error) }));
     return () => {
       alive = false;
     };
@@ -66,8 +60,7 @@ export function isNotFound(error: unknown): boolean {
 
 export const DEFAULT_SHARED_LEARNER_ID = "00000000-0000-4000-8000-000000000721";
 
-export const SHARED_LEARNER_ID: string =
-  import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEFAULT_SHARED_LEARNER_ID;
+export const SHARED_LEARNER_ID: string = import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEFAULT_SHARED_LEARNER_ID;
 
 export function useLearnerId(): string {
   return SHARED_LEARNER_ID;

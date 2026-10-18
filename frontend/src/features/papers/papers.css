@@ -84,7 +84,9 @@ body.mb-body {
 
 @media (min-width: 31rem) {
   .mb:not(.mb--embedded) .mb-frame {
-    box-shadow: 0 0 0 1px rgba(46, 42, 69, 0.06), 0 1.5rem 4rem rgba(46, 42, 69, 0.14);
+    box-shadow:
+      0 0 0 1px rgba(46, 42, 69, 0.06),
+      0 1.5rem 4rem rgba(46, 42, 69, 0.14);
   }
 }
 
@@ -149,7 +151,111 @@ body.mb-body {
 /* ---- screen header ------------------------------------------------------------------------------- */
 
 .mb-head {
+  position: relative;
   padding: 1rem 1.15rem 0.5rem;
+}
+.mb-head__text {
+  padding-right: 3.2rem; /* room for the settings gear */
+}
+
+/* ---- settings gear and the language sheet ---- */
+.mb-settings-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--badge-shadow);
+  color: var(--purple-dark);
+  cursor: pointer;
+}
+.mb-settings-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mb-settings-btn:focus-visible,
+.mb-sheet__choice:focus-within {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+}
+.mb-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(31, 31, 60, 0.45);
+}
+.mb-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+.mb-sheet__panel {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 30rem;
+  padding: 1.25rem 1.15rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  box-shadow: 0 -10px 30px rgba(31, 31, 60, 0.18);
+}
+.mb-sheet__label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+.mb-sheet__choices {
+  display: grid;
+  gap: 0.55rem;
+}
+.mb-sheet__choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--violet-line);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mb-sheet__choice.is-selected {
+  border-color: var(--purple);
+  background: var(--violet-bg);
+  color: var(--purple-dark);
+}
+.mb-sheet__choice svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .mb-head__row {
   display: grid;
@@ -384,7 +490,9 @@ body.mb-body {
   border: 0;
   border-radius: 16px;
   background: linear-gradient(135deg, #7565eb, var(--purple));
-  box-shadow: 0 6px 0 var(--press), 0 12px 24px rgba(108, 92, 231, 0.22);
+  box-shadow:
+    0 6px 0 var(--press),
+    0 12px 24px rgba(108, 92, 231, 0.22);
   color: #fff;
   font: inherit;
   font-weight: 850;
@@ -395,15 +503,21 @@ body.mb-body {
 }
 .mb-btn:active:not(:disabled) {
   transform: translateY(3px);
-  box-shadow: 0 3px 0 var(--press), 0 7px 16px rgba(108, 92, 231, 0.18);
+  box-shadow:
+    0 3px 0 var(--press),
+    0 7px 16px rgba(108, 92, 231, 0.18);
 }
 .mb-btn--sun {
   background: var(--gold);
-  box-shadow: 0 6px 0 #d9a21b, 0 12px 24px rgba(217, 162, 27, 0.2);
+  box-shadow:
+    0 6px 0 #d9a21b,
+    0 12px 24px rgba(217, 162, 27, 0.2);
   color: var(--ink);
 }
 .mb-btn--sun:active:not(:disabled) {
-  box-shadow: 0 3px 0 #d9a21b, 0 7px 16px rgba(217, 162, 27, 0.16);
+  box-shadow:
+    0 3px 0 #d9a21b,
+    0 7px 16px rgba(217, 162, 27, 0.16);
 }
 .mb-btn--ghost {
   border: 2px solid var(--lavender);
@@ -695,7 +809,9 @@ body.mb-body {
   padding: 0.6rem 1.05rem;
   border-radius: 999px;
   background: linear-gradient(135deg, #7565eb, var(--purple));
-  box-shadow: 0 4px 0 var(--press), 0 8px 18px rgba(108, 92, 231, 0.2);
+  box-shadow:
+    0 4px 0 var(--press),
+    0 8px 18px rgba(108, 92, 231, 0.2);
   color: #fff;
   font-size: 0.88rem;
   font-weight: 850;
@@ -1166,7 +1282,11 @@ body.mb-body {
   padding: 0.7rem 0.9rem;
   border-radius: 14px;
   background: var(--ink-tint);
-  font: 700 0.9rem ui-monospace, "Cascadia Code", Consolas, monospace;
+  font:
+    700 0.9rem ui-monospace,
+    "Cascadia Code",
+    Consolas,
+    monospace;
   overflow-wrap: anywhere;
 }
 .mb-answers dl {
@@ -1190,6 +1310,7 @@ body.mb-body {
 /* ---- skills -------------------------------------------------------------------------------------- */
 
 .mb-area {
+  --area-art: url("/practice/area-maths.webp");
   --tone: var(--sky-ink);
   --area-line: var(--sky-line);
   --area-bg: var(--sky-bg);
@@ -1200,12 +1321,14 @@ body.mb-body {
   box-shadow: var(--card-shadow);
 }
 .mb-area--violet {
+  --area-art: url("/practice/area-language.webp");
   --tone: var(--violet-ink);
   --area-line: var(--violet-line);
   --area-bg: var(--violet-bg);
   --area-fill: var(--purple);
 }
 .mb-area--mint {
+  --area-art: url("/practice/area-environment.webp");
   --tone: var(--mint-ink);
   --area-line: var(--mint-line);
   --area-bg: var(--mint-bg);
@@ -1218,6 +1341,7 @@ body.mb-body {
   --area-fill: #f06aa3;
 }
 .mb-area--sun {
+  --area-art: url("/practice/area-aptitude.webp");
   --tone: var(--sun-ink);
   --area-line: var(--sun-line);
   --area-bg: var(--sun-bg);
@@ -1242,6 +1366,37 @@ body.mb-body {
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+/* the area's picture fills the whole card head, softened so the words stay easy to read */
+.mb-area__toggle {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.mb-area__toggle::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--area-art) center / cover no-repeat;
+  opacity: 0.5;
+}
+/* a soft wash on the text side, so the name and the count stay easy to read over the picture */
+.mb-area__toggle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    var(--area-bg) 0%,
+    color-mix(in srgb, var(--area-bg) 75%, transparent) 38%,
+    transparent 75%
+  );
+}
+.mb-area.is-open .mb-area__toggle {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 .mb-area__heading {
   display: grid;
@@ -1373,7 +1528,9 @@ body.mb-body {
   }
   .mb-btn,
   .mb-link-card__go {
-    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    transition:
+      transform 0.16s ease,
+      box-shadow 0.16s ease;
   }
   .mb-area__body {
     transition: grid-template-rows 0.28s ease;

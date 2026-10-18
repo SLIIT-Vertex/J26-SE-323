@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { ScreenHeader } from "../ui";
 
 /**
@@ -7,23 +8,17 @@ import { ScreenHeader } from "../ui";
 export function MissingLearner({ learnerId }: { learnerId: string }) {
   return (
     <>
-      <ScreenHeader title="Learner not set up" kicker="Development setup" />
+      <ScreenHeader title={t("missing.title")} kicker={t("missing.kicker")} />
       <div className="mb-body-pad">
         <section className="mb-card" aria-labelledby="missing-title">
           <h2 id="missing-title" className="mb-h2">
-            This database has no learner with this id
+            {t("missing.heading")}
           </h2>
-          <p>
-            Until there is a login, the game and the papers share one development learner. It has to
-            exist in the database before either can save anything.
-          </p>
+          <p>{t("missing.body")}</p>
           <p className="mb-code mb-code--id">{learnerId}</p>
-          <p>Create it once, in the backend folder:</p>
+          <p>{t("missing.create")}</p>
           <p className="mb-command">python -m scripts.seed_dev_learner</p>
-          <p className="mb-fineprint">
-            To use another learner for both the game and the papers, set VITE_MOBILE_LEARNING_LEARNER_ID
-            and restart the frontend.
-          </p>
+          <p className="mb-fineprint">{t("missing.other")}</p>
         </section>
       </div>
     </>

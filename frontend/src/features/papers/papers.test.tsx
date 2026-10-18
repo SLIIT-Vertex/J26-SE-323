@@ -1,26 +1,25 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
+import gameSource from "../mobile-learning-flow/MobileLearningApp.tsx?raw";
 import {
   ApiError,
-  type PagePhoto,
-  type ReviewItem,
   anyPageChecking,
   describeFailure,
   friendlyMessage,
+  type PagePhoto,
   pageState,
+  type ReviewItem,
   toApiError,
 } from "./api";
-import { dayLabel, scoreText } from "./format";
-import gameSource from "../mobile-learning-flow/MobileLearningApp.tsx?raw";
+import { dayLabel, scoreText, skillName } from "./format";
+import { dictionaries, getLanguage, initialLanguage, setLanguage, tn } from "./i18n";
 import { DEFAULT_SHARED_LEARNER_ID, SHARED_LEARNER_ID } from "./hooks";
 import { PapersApp } from "./PapersApp";
-import { parseRoute } from "./router";
 import {
-  type Choice,
   blankCount,
   buildDecisions,
+  type Choice,
   decidedCount,
   groupByQuestion,
   isReadyToSubmit,
@@ -28,6 +27,7 @@ import {
   partTitle,
   toggleBlank,
 } from "./reviewLogic";
+import { parseRoute } from "./router";
 import { HistoryScreen } from "./screens/HistoryScreen";
 import { MasteryScreen, skillLine } from "./screens/MasteryScreen";
 import { ReportScreen } from "./screens/ReportScreen";
@@ -53,7 +53,11 @@ describe("api errors", () => {
   });
 
   it("reads a plain text detail and survives a body that is not JSON", async () => {
-    const plain = await toApiError(new Response(JSON.stringify({ detail: "Paper not found" }), { status: 404 }));
+    const plain = await toApiError(
+      new Response(JSON.stringify({ detail: "Paper not found" }), {
+        status: 404,
+      }),
+    );
     expect(plain.message).toBe("Paper not found");
     const broken = await toApiError(new Response("<html>", { status: 502 }));
     expect(broken.code).toBe("http_502");
@@ -116,8 +120,14 @@ describe("routes", () => {
     expect(parseRoute("#/papers")).toEqual({ name: "papers" });
     expect(parseRoute("#/papers/")).toEqual({ name: "papers" });
     expect(parseRoute(`#/papers/${ID_A}`)).toEqual({ name: "paper", id: ID_A });
-    expect(parseRoute(`#/papers/${ID_A}/report`)).toEqual({ name: "report", id: ID_A });
-    expect(parseRoute(`#/review/${ID_B}`)).toEqual({ name: "review", id: ID_B });
+    expect(parseRoute(`#/papers/${ID_A}/report`)).toEqual({
+      name: "report",
+      id: ID_A,
+    });
+    expect(parseRoute(`#/review/${ID_B}`)).toEqual({
+      name: "review",
+      id: ID_B,
+    });
     expect(parseRoute("#/mastery")).toEqual({ name: "mastery" });
     expect(parseRoute("#/history")).toEqual({ name: "history" });
     expect(parseRoute("#/play")).toBeNull();
@@ -191,7 +201,9 @@ describe("review decisions", () => {
       { paper_item_id: ID_B, part_no: 1, text: "kurulla" },
       { paper_item_id: ID_C, part_no: 1, instruction_met: true },
     ]);
-    const blank: Record<string, Choice> = { [itemKey(items[1])]: { blank: true, text: "ignored" } };
+    const blank: Record<string, Choice> = {
+      [itemKey(items[1])]: { blank: true, text: "ignored" },
+    };
     expect(buildDecisions([items[1]], blank)).toEqual([{ paper_item_id: ID_B, part_no: 1, text: "" }]);
   });
 });
@@ -286,7 +298,14 @@ describe("review screen", () => {
       summary: { items: 3, auto_final: 1, needs_review: 2 },
       review_items: [mcq(ID_A, 4), short(ID_B, 9)],
       // other questions on the page were already decided; the screen must not show them
-      results: [{ paper_item_id: ID_C, position: 1, question_id: "1.1", result: "correct" }],
+      results: [
+        {
+          paper_item_id: ID_C,
+          position: 1,
+          question_id: "1.1",
+          result: "correct",
+        },
+      ],
     });
 
     await show(<Review submissionId="s1" />);
@@ -400,9 +419,22 @@ const reportBody = {
   pages_total: 1,
   pages_marked: 1,
   complete: true,
-  summary: { questions: 4, marked: 3, correct: 1, wrong: 1, blank: 1, waiting_for_parent: 1, not_uploaded: 0 },
+  summary: {
+    questions: 4,
+    marked: 3,
+    correct: 1,
+    wrong: 1,
+    blank: 1,
+    waiting_for_parent: 1,
+    not_uploaded: 0,
+  },
   skills: [],
-  items: [reportItem(1, "correct"), reportItem(2, "wrong"), reportItem(3, "blank"), reportItem(4, "under_review", { picture_url: null })],
+  items: [
+    reportItem(1, "correct"),
+    reportItem(2, "wrong"),
+    reportItem(3, "blank"),
+    reportItem(4, "under_review", { picture_url: null }),
+  ],
   mistakes: [],
   answer_list: [{ position: 2, answers: [{ part_no: 1, label: null, answer: "1" }] }],
   next_paper_date: "2026-10-24",
@@ -478,7 +510,20 @@ describe("past papers screen", () => {
 
   it("shows how each paper went, and links to its results", async () => {
     answerWith([
-      paper(ID_A, "confirmed", { questions: 11, marked: 11, correct: 7, wrong: 3, blank: 1, waiting_for_parent: 0, not_uploaded: 0 }, true),
+      paper(
+        ID_A,
+        "confirmed",
+        {
+          questions: 11,
+          marked: 11,
+          correct: 7,
+          wrong: 3,
+          blank: 1,
+          waiting_for_parent: 0,
+          not_uploaded: 0,
+        },
+        true,
+      ),
       paper(ID_B, "generated", null, false),
     ]);
 
@@ -532,7 +577,10 @@ describe("the shared learner", () => {
   it("says how to create the learner when this database does not have it", async () => {
     vi.stubGlobal(
       "fetch",
-      async () => new Response(JSON.stringify({ detail: "Learner not found" }), { status: 404 }),
+      async () =>
+        new Response(JSON.stringify({ detail: "Learner not found" }), {
+          status: 404,
+        }),
     );
 
     await show(<PapersApp embedded route={{ name: "papers" }} />);
@@ -573,7 +621,13 @@ describe("practice navigation", () => {
       if (address.endsWith("/availability")) body = waiting;
       else if (address.endsWith(`/learners/${SHARED_LEARNER_ID}`)) body = learner;
       else if (address.endsWith("/mastery"))
-        body = { computed_at: "2026-10-18T00:00:00Z", model_version: "v", n_attempts: 0, definition: "", skills: [] };
+        body = {
+          computed_at: "2026-10-18T00:00:00Z",
+          model_version: "v",
+          n_attempts: 0,
+          definition: "",
+          skills: [],
+        };
       return new Response(JSON.stringify(body), { status: 200 });
     });
   }
@@ -681,5 +735,104 @@ describe("skill areas", () => {
     await act(async () => toggles()[1].click());
 
     expect(toggles().map((b) => b.getAttribute("aria-expanded"))).toEqual(["true", "true", "false", "false"]);
+  });
+});
+
+// ---- the language of the practice pages -----------------------------------------------------------------
+
+describe("language", () => {
+  const emptyMastery = {
+    computed_at: "2026-10-18T00:00:00Z",
+    model_version: "v",
+    n_attempts: 0,
+    definition: "",
+    skills: [],
+  };
+  const gear = () => host.querySelector<HTMLButtonElement>("button.mb-settings-btn");
+  const choices = () => [...document.querySelectorAll<HTMLInputElement>(".mb-sheet__choice input")];
+
+  it("speaks Sinhala until someone picks another language", () => {
+    localStorage.removeItem("mindbridge.practiceLanguage");
+    expect(initialLanguage()).toBe("si");
+  });
+
+  it("remembers the saved language, and ignores a value it does not know", () => {
+    localStorage.setItem("mindbridge.practiceLanguage", "ta");
+    expect(initialLanguage()).toBe("ta");
+    localStorage.setItem("mindbridge.practiceLanguage", "fr");
+    expect(initialLanguage()).toBe("si");
+  });
+
+  it("puts a settings gear at the top of the page, closed until it is tapped", async () => {
+    answerWith(emptyMastery);
+    await show(<MasteryScreen learnerId={ID_A} />);
+
+    expect(gear()?.getAttribute("aria-label")).toBe("Settings");
+    expect(document.querySelector(".mb-sheet")).toBeNull();
+  });
+
+  it("changes the words, saves the choice and closes with Done", async () => {
+    answerWith(emptyMastery);
+    await show(<MasteryScreen learnerId={ID_A} />);
+
+    await act(async () => gear()?.click());
+    expect(choices().map((c) => c.closest("label")?.textContent)).toEqual(["සිංහල", "English", "தமிழ்"]);
+    expect(choices().map((c) => c.checked)).toEqual([false, true, false]); // the tests start in English
+
+    await act(async () => choices()[0].click());
+    expect(host.querySelector("h1")?.textContent).toBe("ඉගෙනීම සිදුවන ආකාරය");
+    expect(getLanguage()).toBe("si");
+    expect(localStorage.getItem("mindbridge.practiceLanguage")).toBe("si");
+
+    await act(async () => choices()[2].click());
+    expect(host.querySelector("h1")?.textContent).toBe("கற்றல் எப்படிப் போகிறது");
+
+    await act(async () => document.querySelector<HTMLButtonElement>(".mb-sheet__panel .mb-btn")?.click());
+    expect(document.querySelector(".mb-sheet")).toBeNull();
+  });
+
+  it("closes the sheet with the Escape key", async () => {
+    answerWith(emptyMastery);
+    await show(<MasteryScreen learnerId={ID_A} />);
+    await act(async () => gear()?.click());
+
+    await act(async () => {
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    });
+
+    expect(document.querySelector(".mb-sheet")).toBeNull();
+  });
+
+  it("writes dates in the chosen language", () => {
+    const english = dayLabel("2026-10-17");
+    setLanguage("si", { remember: false });
+    expect(dayLabel("2026-10-17")).not.toBe(english);
+  });
+
+  it("names skills in Sinhala where there is a name, and in English otherwise", () => {
+    setLanguage("si", { remember: false });
+    expect(skillName({ en: "Fractions", si: "භාග" })).toBe("භාග");
+    expect(skillName({ en: "Fractions", si: null })).toBe("Fractions");
+    setLanguage("ta", { remember: false });
+    expect(skillName({ en: "Fractions", si: "භාග" })).toBe("Fractions");
+  });
+
+  it("gives Sinhala and Tamil every sentence English has, with the same {blanks}", () => {
+    const blanks = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+    const bold = (text: string) => (text.match(/\*\*/g) ?? []).length;
+    for (const language of ["si", "ta"] as const) {
+      const words = dictionaries[language];
+      expect(Object.keys(words).sort()).toEqual(Object.keys(dictionaries.en).sort());
+      for (const key of Object.keys(dictionaries.en) as (keyof typeof words)[]) {
+        expect(words[key].trim(), `${language} ${key}`).not.toBe("");
+        expect(blanks(words[key]), `${language} ${key}`).toEqual(blanks(dictionaries.en[key]));
+        expect(bold(words[key]), `${language} ${key}`).toBe(bold(dictionaries.en[key]));
+      }
+    }
+  });
+
+  it("uses singular and plural sentences", () => {
+    expect(tn("count.questions", 1)).toBe("1 question");
+    expect(tn("count.questions", 3)).toBe("3 questions");
   });
 });

@@ -1,31 +1,33 @@
 import "./papers.css";
 
-import { type Learner, getLearner } from "./api";
+import { getLearner, type Learner } from "./api";
 import { languageName, languageNative } from "./format";
 import { isNotFound, useAsync, useBodyClass, useLearnerId } from "./hooks";
+import { t, useLanguage } from "./i18n";
 import type { Route } from "./router";
+import { HistoryScreen } from "./screens/HistoryScreen";
 import { MasteryScreen } from "./screens/MasteryScreen";
+import { MissingLearner } from "./screens/MissingLearner";
 import { PaperDetail } from "./screens/PaperDetail";
 import { PapersHome } from "./screens/PapersHome";
-import { Review } from "./screens/Review";
 import { ReportScreen } from "./screens/ReportScreen";
-import { HistoryScreen } from "./screens/HistoryScreen";
-import { MissingLearner } from "./screens/MissingLearner";
+import { Review } from "./screens/Review";
 
 function TopBar({ learner }: { learner: Learner | null }) {
   return (
     <div className="mb-topbar">
-      <a className="mb-brand" href="#/" aria-label="MindBridge home">
+      <a className="mb-brand" href="#/" aria-label="MindBridge">
         <img className="mb-brand__wordmark" src="/primary_logo.png" alt="MindBridge" />
       </a>
       <span className="mb-pill">
         {learner ? (
           <>
-            Grade {learner.grade} · <span lang={learner.preferred_language}>{languageNative(learner.preferred_language)}</span>
+            {t("top.grade", { n: learner.grade })} ·{" "}
+            <span lang={learner.preferred_language}>{languageNative(learner.preferred_language)}</span>
             <span className="mb-visually-hidden"> ({languageName(learner.preferred_language)})</span>
           </>
         ) : (
-          "Learner"
+          t("top.learner")
         )}
       </span>
     </div>
@@ -57,6 +59,7 @@ export function PapersApp({
   /** Hosted inside MobileLearningApp practice tab — drop the standalone top brand bar. */
   embedded?: boolean;
 }) {
+  useLanguage(); // every screen below is redrawn when the language changes
   useBodyClass("mb-body");
   const learnerId = useLearnerId();
   const learner = useAsync(() => getLearner(learnerId), `learner:${learnerId}`);

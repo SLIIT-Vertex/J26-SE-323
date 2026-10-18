@@ -1,7 +1,97 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+
+import { LANGUAGE_CHOICES, setLanguage, t, useLanguage } from "./i18n";
 
 // The shared look of the practice screens follows the game's: purple pill buttons, pastel cards with
 // a coloured outline, a round white badge for the icon, and a purple eyebrow label above the title.
+
+const GEAR_PATH =
+  "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z";
+
+/** The gear at the top right of every practice page. It opens a small sheet to pick the language. */
+export function SettingsButton() {
+  const language = useLanguage();
+  const [open, setOpen] = useState(false);
+  const titleId = useId();
+  const button = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    panel.current?.querySelector<HTMLInputElement>("input:checked")?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  function close() {
+    setOpen(false);
+    button.current?.focus();
+  }
+
+  return (
+    <>
+      <button
+        ref={button}
+        type="button"
+        className="mb-settings-btn"
+        aria-label={t("settings.title")}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <circle cx="12" cy="12" r="3" />
+          <path d={GEAR_PATH} />
+        </svg>
+      </button>
+      {open ? (
+        <div className="mb-sheet">
+          <button
+            type="button"
+            className="mb-sheet__backdrop"
+            tabIndex={-1}
+            aria-label={t("settings.done")}
+            onClick={close}
+          />
+          <div ref={panel} className="mb-sheet__panel" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+            <h2 id={titleId} className="mb-h2">
+              {t("settings.title")}
+            </h2>
+            <p className="mb-sheet__label" id={`${titleId}-lang`}>
+              {t("settings.language")}
+            </p>
+            <div className="mb-sheet__choices" role="radiogroup" aria-labelledby={`${titleId}-lang`}>
+              {LANGUAGE_CHOICES.map((choice) => (
+                <label
+                  key={choice.code}
+                  lang={choice.code}
+                  className={`mb-sheet__choice${language === choice.code ? " is-selected" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="practice-language"
+                    className="mb-visually-hidden"
+                    checked={language === choice.code}
+                    onChange={() => setLanguage(choice.code)}
+                  />
+                  <span>{choice.native}</span>
+                  {language === choice.code ? <Tick /> : null}
+                </label>
+              ))}
+            </div>
+            <p className="mb-fineprint">{t("settings.note")}</p>
+            <button type="button" className="mb-btn mb-btn--wide" onClick={close}>
+              {t("settings.done")}
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+}
 
 export function ScreenHeader({
   title,
@@ -25,6 +115,7 @@ export function ScreenHeader({
   );
   return (
     <header className="mb-head">
+      <SettingsButton />
       {back ? (
         <a className="mb-back" href={back.href}>
           <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
@@ -80,7 +171,7 @@ export function LinkCard({
         <small>{text}</small>
       </span>
       <span className="mb-link-card__go">
-        Open
+        {t("common.open")}
         <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
           <path d="M4 10h11M11 5l5 5-5 5" />
         </svg>
@@ -89,15 +180,7 @@ export function LinkCard({
   );
 }
 
-export function Chip({
-  tone = "plain",
-  children,
-  icon,
-}: {
-  tone?: Tone;
-  children: ReactNode;
-  icon?: ReactNode;
-}) {
+export function Chip({ tone = "plain", children, icon }: { tone?: Tone; children: ReactNode; icon?: ReactNode }) {
   return (
     <span className={`mb-chip mb-chip--${tone}`}>
       {icon}
@@ -106,7 +189,7 @@ export function Chip({
   );
 }
 
-export function Loading({ label = "Loading" }: { label?: string }) {
+export function Loading({ label }: { label?: string }) {
   return (
     <div className="mb-loading" role="status">
       <span className="mb-loading__dots" aria-hidden="true">
@@ -114,7 +197,7 @@ export function Loading({ label = "Loading" }: { label?: string }) {
         <i />
         <i />
       </span>
-      <span>{label}</span>
+      <span>{label ?? t("common.loading")}</span>
     </div>
   );
 }
@@ -125,7 +208,7 @@ export function ErrorBox({ message, onRetry }: { message: string; onRetry?: () =
       <p>{message}</p>
       {onRetry ? (
         <button type="button" className="mb-btn mb-btn--ghost mb-btn--small" onClick={onRetry}>
-          Try again
+          {t("common.tryAgain")}
         </button>
       ) : null}
     </div>
@@ -157,15 +240,7 @@ export function PageGuide() {
 }
 
 /** Ten stepping stones, filled up to the value. Unknown is drawn as empty dashed stones. */
-export function StoneMeter({
-  value,
-  tone,
-  label,
-}: {
-  value: number | null;
-  tone: Tone;
-  label: string;
-}) {
+export function StoneMeter({ value, tone, label }: { value: number | null; tone: Tone; label: string }) {
   const filled = value === null ? 0 : Math.max(0, Math.min(10, Math.round(value * 10)));
   return (
     <span className={`mb-stones mb-stones--${tone}`} role="img" aria-label={label}>
