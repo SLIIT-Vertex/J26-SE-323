@@ -541,6 +541,64 @@ describe("the shared learner", () => {
     expect(text).toContain("Learner not set up");
     expect(text).toContain(SHARED_LEARNER_ID);
     expect(text).toContain("python -m scripts.seed_dev_learner");
-    expect(host.querySelector("nav.mb-tabs")).toBeNull(); // nothing to navigate to yet
+    expect(host.querySelector("a.mb-link-card")).toBeNull(); // nothing to open until it exists
+  });
+});
+
+// ---- the practice area is one page with buttons, not a second tab bar -----------------------------
+
+describe("practice navigation", () => {
+  const learner = {
+    id: SHARED_LEARNER_ID,
+    grade: 5,
+    preferred_language: "si",
+    created_at: "2026-10-01T00:00:00Z",
+    updated_at: "2026-10-01T00:00:00Z",
+  };
+  const waiting = {
+    state: "not_yet_eligible",
+    can_generate: false,
+    joined_at: "2026-10-18T00:00:00Z",
+    eligible_from: "2026-10-25T00:00:00Z",
+    days_until_eligible: 7,
+    week_start: "2026-10-17",
+    next_paper_date: "2026-10-24",
+    paper: null,
+  };
+
+  function backend() {
+    vi.stubGlobal("fetch", async (url: string) => {
+      const address = String(url);
+      let body: unknown = [];
+      if (address.endsWith("/availability")) body = waiting;
+      else if (address.endsWith(`/learners/${SHARED_LEARNER_ID}`)) body = learner;
+      else if (address.endsWith("/mastery"))
+        body = { computed_at: "2026-10-18T00:00:00Z", model_version: "v", n_attempts: 0, definition: "", skills: [] };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+  }
+
+  it("opens past papers and skills with buttons on the practice page, and has no tab bar", async () => {
+    backend();
+
+    await show(<PapersApp embedded route={{ name: "papers" }} />);
+
+    const cards = [...host.querySelectorAll("a.mb-link-card")];
+    expect(cards.map((c) => c.getAttribute("href"))).toEqual(["#/history", "#/mastery"]);
+    expect(cards.map((c) => c.querySelector("strong")?.textContent)).toEqual(["Past papers", "My skills"]);
+    expect(cards.every((c) => c.textContent?.includes("Open"))).toBe(true);
+    expect(host.querySelector(".mb-tabs, .mb-tab, nav")).toBeNull();
+  });
+
+  it("gives every other practice page a way back to the practice page", async () => {
+    backend();
+    for (const route of [{ name: "history" } as const, { name: "mastery" } as const]) {
+      host.replaceChildren();
+      await show(<PapersApp embedded route={route} />);
+      const back = host.querySelector("a.mb-back");
+      expect(back?.getAttribute("href")).toBe("#/papers");
+      expect(back?.textContent).toContain("Practice");
+      expect(host.querySelector(".mb-tabs")).toBeNull();
+    }
   });
 });

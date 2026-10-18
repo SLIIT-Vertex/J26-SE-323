@@ -161,7 +161,7 @@ export function PaperDetail({ paperId }: { paperId: string }) {
       <ScreenHeader
         title={paper ? paperTitle(paper.mode) : "Paper"}
         kicker={paper ? `Week of ${dayLabel(paper.week_start)}` : undefined}
-        back={{ href: hrefFor({ name: "papers" }), label: "Papers" }}
+        back={{ href: hrefFor({ name: "papers" }), label: "Practice" }}
       />
       <div className="mb-body-pad">
         {state.status === "loading" ? <Loading label="Opening the paper" /> : null}

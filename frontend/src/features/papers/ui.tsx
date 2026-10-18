@@ -1,80 +1,86 @@
 import type { ReactNode } from "react";
 
-// The shared look of the paper screens. The shapes come from the MindBridge logo: two arches that
-// overlap and blend where they cross (blue + pink = navy, blue + yellow = green, pink + yellow =
-// orange), with a small sun between them.
-
-export function ArchMark({ rays = true, className }: { rays?: boolean; className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 272 214" aria-hidden="true" focusable="false">
-      <g transform="translate(0 44)">
-        <path className="mb-arch mb-arch--sky" d="M34 136V92a66 66 0 0 1 132 0v44" />
-        <path className="mb-arch mb-arch--rose" d="M106 136V92a66 66 0 0 1 132 0v44" />
-        <circle className="mb-sun" cx="136" cy="130" r="32" />
-      </g>
-      {rays ? (
-        <g className="mb-rays">
-          <path d="M136 6v26" />
-          <path d="M96 18l14 22" />
-          <path d="M176 18l-14 22" />
-        </g>
-      ) : null}
-    </svg>
-  );
-}
-
-const LETTER_COLOURS = ["sky", "rose", "sun", "mint", "sky", "rose", "sun", "mint", "sky", "rose"];
-
-export function Wordmark() {
-  return (
-    <span className="mb-wordmark" role="img" aria-label="MindBridge">
-      {"MindBridge".split("").map((letter, index) => (
-        <span
-          // the letters never change order, so the position is a stable key
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed word
-          key={index}
-          className={`mb-wordmark__${LETTER_COLOURS[index]}`}
-          aria-hidden="true"
-        >
-          {letter}
-        </span>
-      ))}
-    </span>
-  );
-}
+// The shared look of the practice screens follows the game's: purple pill buttons, pastel cards with
+// a coloured outline, a round white badge for the icon, and a purple eyebrow label above the title.
 
 export function ScreenHeader({
   title,
   kicker,
   back,
+  icon,
   children,
 }: {
   title: string;
   kicker?: string;
   back?: { href: string; label: string };
+  icon?: ReactNode;
   children?: ReactNode;
 }) {
+  const text = (
+    <div className="mb-head__text">
+      {kicker ? <p className="mb-kicker">{kicker}</p> : null}
+      <h1 className="mb-title">{title}</h1>
+      {children}
+    </div>
+  );
   return (
     <header className="mb-head">
-      <ArchMark className="mb-head__arches" rays={false} />
-      <div className="mb-head__text">
-        {back ? (
-          <a className="mb-back" href={back.href}>
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-              <path d="M12.5 4 6.5 10l6 6" />
-            </svg>
-            {back.label}
-          </a>
-        ) : null}
-        {kicker ? <p className="mb-kicker">{kicker}</p> : null}
-        <h1 className="mb-title">{title}</h1>
-        {children}
-      </div>
+      {back ? (
+        <a className="mb-back" href={back.href}>
+          <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="M12.5 4 6.5 10l6 6" />
+          </svg>
+          {back.label}
+        </a>
+      ) : null}
+      {icon ? (
+        <div className="mb-head__row">
+          <span className="mb-head__badge" aria-hidden="true">
+            {icon}
+          </span>
+          {text}
+        </div>
+      ) : (
+        text
+      )}
     </header>
   );
 }
 
-export type Tone = "sky" | "rose" | "sun" | "mint" | "ink" | "plain";
+export type Tone = "sky" | "violet" | "rose" | "sun" | "mint" | "ink" | "plain";
+
+/** A button-sized card that opens another practice page, in the style of the game's subject cards. */
+export function LinkCard({
+  href,
+  tone,
+  icon,
+  title,
+  text,
+}: {
+  href: string;
+  tone: Tone;
+  icon: ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <a className={`mb-link-card mb-link-card--${tone}`} href={href}>
+      <span className="mb-link-card__badge" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="mb-link-card__copy">
+        <strong>{title}</strong>
+        <small>{text}</small>
+      </span>
+      <span className="mb-link-card__go">
+        Open
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <path d="M4 10h11M11 5l5 5-5 5" />
+        </svg>
+      </span>
+    </a>
+  );
+}
 
 export function Chip({
   tone = "plain",

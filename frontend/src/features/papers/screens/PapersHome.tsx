@@ -12,7 +12,17 @@ import {
 import { dayLabel, paperStatusLabel, paperTitle, shortDate } from "../format";
 import { useAsync } from "../hooks";
 import { go, hrefFor } from "../router";
-import { Chip, ErrorBox, Loading, ScreenHeader, type Tone } from "../ui";
+import {
+  Chip,
+  ErrorBox,
+  GrowthIcon,
+  HistoryIcon,
+  LinkCard,
+  Loading,
+  PaperIcon,
+  ScreenHeader,
+  type Tone,
+} from "../ui";
 
 export function statusTone(status: string): Tone {
   switch (status) {
@@ -142,9 +152,33 @@ function EarlierPapers({ papers }: { papers: Paper[] }) {
           </li>
         ))}
       </ul>
-      <a className="mb-btn mb-btn--ghost mb-btn--wide mb-all" href={hrefFor({ name: "history" })}>
-        See all past papers and their results
-      </a>
+    </section>
+  );
+}
+
+/** Where else the practice area goes: buttons, not another tab bar. */
+function MoreLinks() {
+  return (
+    <section aria-labelledby="more-title">
+      <h2 id="more-title" className="mb-h2 mb-h2--spaced">
+        More
+      </h2>
+      <div className="mb-link-cards">
+        <LinkCard
+          href={hrefFor({ name: "history" })}
+          tone="sky"
+          icon={<HistoryIcon />}
+          title="Past papers"
+          text="Every paper so far, and how each one went."
+        />
+        <LinkCard
+          href={hrefFor({ name: "mastery" })}
+          tone="mint"
+          icon={<GrowthIcon />}
+          title="My skills"
+          text="How learning is going in each skill."
+        />
+      </div>
     </section>
   );
 }
@@ -164,6 +198,7 @@ export function PapersHome({ learnerId }: { learnerId: string }) {
       <ScreenHeader
         title="Weekly paper"
         kicker={current ? `Week of ${dayLabel(current.week_start)}` : "This week"}
+        icon={<PaperIcon />}
       />
       <div className="mb-body-pad">
         {availability.state.status === "loading" ? <Loading label="Checking this week" /> : null}
@@ -180,6 +215,7 @@ export function PapersHome({ learnerId }: { learnerId: string }) {
 
         {list.state.status === "error" ? <ErrorBox message={list.state.message} onRetry={list.reload} /> : null}
         <EarlierPapers papers={earlier} />
+        <MoreLinks />
       </div>
     </>
   );

@@ -1,11 +1,9 @@
-import "@fontsource-variable/fredoka";
-import "@fontsource-variable/nunito";
 import "./papers.css";
 
 import { type Learner, getLearner } from "./api";
 import { languageName, languageNative } from "./format";
 import { isNotFound, useAsync, useBodyClass, useLearnerId } from "./hooks";
-import { type Route, hrefFor } from "./router";
+import type { Route } from "./router";
 import { MasteryScreen } from "./screens/MasteryScreen";
 import { PaperDetail } from "./screens/PaperDetail";
 import { PapersHome } from "./screens/PapersHome";
@@ -13,7 +11,6 @@ import { Review } from "./screens/Review";
 import { ReportScreen } from "./screens/ReportScreen";
 import { HistoryScreen } from "./screens/HistoryScreen";
 import { MissingLearner } from "./screens/MissingLearner";
-import { GrowthIcon, HistoryIcon, PaperIcon } from "./ui";
 
 function TopBar({ learner }: { learner: Learner | null }) {
   return (
@@ -32,34 +29,6 @@ function TopBar({ learner }: { learner: Learner | null }) {
         )}
       </span>
     </div>
-  );
-}
-
-function TabBar({ route }: { route: Route }) {
-  const papers = route.name === "papers" || route.name === "paper" || route.name === "report" || route.name === "review";
-  const history = route.name === "history";
-  const progress = route.name === "mastery";
-  return (
-    <nav className="mb-tabs" aria-label="Main">
-      <a className="mb-tab" href={hrefFor({ name: "papers" })} aria-current={papers ? "page" : undefined}>
-        <span className="mb-tab__icon">
-          <PaperIcon />
-        </span>
-        Papers
-      </a>
-      <a className="mb-tab" href={hrefFor({ name: "history" })} aria-current={history ? "page" : undefined}>
-        <span className="mb-tab__icon">
-          <HistoryIcon />
-        </span>
-        Past papers
-      </a>
-      <a className="mb-tab" href={hrefFor({ name: "mastery" })} aria-current={progress ? "page" : undefined}>
-        <span className="mb-tab__icon">
-          <GrowthIcon />
-        </span>
-        Progress
-      </a>
-    </nav>
   );
 }
 
@@ -103,7 +72,6 @@ export function PapersApp({
         <main className="mb-main">
           {missing ? <MissingLearner learnerId={learnerId} /> : <Screen route={route} learnerId={learnerId} />}
         </main>
-        {missing ? null : <TabBar route={route} />}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { type PaperHistory, getHistory } from "../api";
 import { dayLabel, paperStatusLabel, paperTitle, scoreText } from "../format";
 import { useAsync } from "../hooks";
 import { hrefFor } from "../router";
-import { Chip, ErrorBox, Loading, ScreenHeader, Tick } from "../ui";
+import { Chip, ErrorBox, HistoryIcon, Loading, ScreenHeader, Tick } from "../ui";
 import { statusTone } from "./PapersHome";
 
 // How a past paper went, as a bar: right (mint), not right (rose), left blank (sun).
@@ -83,12 +83,17 @@ export function HistoryScreen({ learnerId }: { learnerId: string }) {
 
   return (
     <>
-      <ScreenHeader title="Past papers" kicker="History" />
+      <ScreenHeader
+        title="Past papers"
+        kicker="History"
+        back={{ href: hrefFor({ name: "papers" }), label: "Practice" }}
+        icon={<HistoryIcon />}
+      />
       <div className="mb-body-pad">
         {state.status === "loading" ? <Loading label="Opening past papers" /> : null}
         {state.status === "error" ? <ErrorBox message={state.message} onRetry={reload} /> : null}
         {state.status === "ready" && papers.length === 0 ? (
-          <p className="mb-muted">No papers yet. This week's paper is on the Papers tab.</p>
+          <p className="mb-muted">No papers yet. This week's paper is on the practice page.</p>
         ) : null}
 
         {completed.length > 0 ? (

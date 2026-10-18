@@ -222,7 +222,7 @@ export function Review({ submissionId }: { submissionId: string }) {
   const groups = groupByQuestion(items);
   const back = submission
     ? { href: hrefFor({ name: "paper", id: submission.paper_id }), label: "Back to the paper" }
-    : { href: hrefFor({ name: "papers" }), label: "Papers" };
+    : { href: hrefFor({ name: "papers" }), label: "Practice" };
   const ready = isReadyToSubmit(items, choices);
   const blanks = blankCount(items, choices);
 

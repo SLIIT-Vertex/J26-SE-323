@@ -1,9 +1,11 @@
 import { type Mastery, type SkillMastery, getMastery } from "../api";
 import { AREAS, type Area, percent } from "../format";
 import { useAsync } from "../hooks";
-import { ErrorBox, Loading, ScreenHeader, StoneMeter, type Tone } from "../ui";
+import { hrefFor } from "../router";
+import { ErrorBox, GrowthIcon, Loading, ScreenHeader, StoneMeter, type Tone } from "../ui";
 
-const AREA_TONE: Record<Area, Tone> = { APT: "sky", MAT: "rose", LAN: "sun", ENV: "mint" };
+// The same colours the game uses for its subjects: maths blue, language violet, environment green.
+const AREA_TONE: Record<Area, Tone> = { APT: "sun", MAT: "sky", LAN: "violet", ENV: "mint" };
 
 export function skillLine(skill: SkillMastery): string {
   if (skill.mastery === null) {
@@ -76,7 +78,12 @@ export function MasteryScreen({ learnerId }: { learnerId: string }) {
 
   return (
     <>
-      <ScreenHeader title="How learning is going" kicker="Progress" />
+      <ScreenHeader
+        title="How learning is going"
+        kicker="My skills"
+        back={{ href: hrefFor({ name: "papers" }), label: "Practice" }}
+        icon={<GrowthIcon />}
+      />
       <div className="mb-body-pad">
         {state.status === "loading" ? <Loading label="Working out the skills" /> : null}
         {state.status === "error" ? <ErrorBox message={state.message} onRetry={reload} /> : null}

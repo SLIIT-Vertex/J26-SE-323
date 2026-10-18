@@ -114,7 +114,6 @@
 .mobile-shell[data-screen="practice"] {
   padding-inline: 0;
   padding-bottom: 0;
-  background: #f1e6cd;
 }
 .mobile-shell > .papers-tab {
   width: 100%;
@@ -125,10 +124,6 @@
   max-width: none;
   min-height: calc(100dvh - 4.2rem);
   box-shadow: none;
-}
-.mb--embedded .mb-tabs {
-  bottom: calc(3.9rem + env(safe-area-inset-bottom));
-  padding-bottom: 0;
 }
 
 @media (max-width: 370px) {
