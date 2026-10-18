@@ -19,9 +19,9 @@ FIXTURE = Path(__file__).parent / "fixtures" / "model_reference_predictions.json
 REFERENCE = json.loads(FIXTURE.read_text(encoding="utf-8"))
 
 EXPECTED_FEATURES = {
-    "mindbridge_behavior_model.json": CONFUSION_BEHAVIOR_FEATURES,
+    "mindbridge_behavior_model_v2.json": CONFUSION_BEHAVIOR_FEATURES,
     "mindbridge_visual_model.json": VISUAL_FEATURES,
-    "mindbridge_disengagement_behavior_model_v2.json": DISENGAGEMENT_BEHAVIOR_FEATURES,
+    "mindbridge_disengagement_behavior_model_v3.json": DISENGAGEMENT_BEHAVIOR_FEATURES,
     "mindbridge_disengagement_visual_model.json": VISUAL_FEATURES,
 }
 
@@ -64,6 +64,6 @@ def test_float32_rounding_matches_xgboost_input_conversion(value: float, expecte
 
 
 def test_extreme_inputs_do_not_crash_prediction() -> None:
-    model = _load_model("mindbridge_behavior_model.json", CONFUSION_BEHAVIOR_FEATURES)
+    model = _load_model("mindbridge_behavior_model_v2.json", CONFUSION_BEHAVIOR_FEATURES)
     probability = model.predict_probability((1e40,) * len(CONFUSION_BEHAVIOR_FEATURES))
     assert 0.0 <= probability <= 1.0

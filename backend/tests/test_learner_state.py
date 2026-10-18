@@ -50,8 +50,6 @@ def learner_state_payload(learner_id: str, window_id: int = 1) -> dict:
             "attempt_count": 4.0,
             "ms_first_response": 15000.0,
             "overlap_time": 25000.0,
-            "first_action": 0.0,
-            "position": 1.0,
             "original": 1.0,
         },
         "task_progress": 0.3,
@@ -185,3 +183,13 @@ def test_latest_state_is_stored_per_skill(client: TestClient) -> None:
     assert stored.support_need == confusion["temporal_score"]
     assert other_skill.status is SupportNeedStatus.AVAILABLE
     assert unseen_skill.status is SupportNeedStatus.NOT_FOUND
+
+
+def test_removed_assistments_only_fields_are_rejected(client: TestClient) -> None:
+    payload = learner_state_payload(create_learner(client))
+    payload["behaviour"]["position"] = 1.0
+
+    response = client.post("/api/v1/learner-state", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["loc"] == ["body", "behaviour", "position"]

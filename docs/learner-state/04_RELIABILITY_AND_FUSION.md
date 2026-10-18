@@ -207,17 +207,17 @@ detector:
 | Quantity | Value |
 | --- | --- |
 | Visual probability / threshold | 0.5224 / 0.50 → evidence 0.5224 |
-| Behaviour probability / threshold | 0.1293 / 0.79 → evidence 0.0819 |
+| Behaviour probability / threshold | 0.1041 / 0.78 → evidence 0.0667 |
 | Visual reliability | 0.95 (visibility 0.95, all angles below Q75) |
 | Behavioural reliability | 0.90 (data quality; missing `bottom_hint`) |
 | Weights | `w_v ≈ 0.514`, `w_b ≈ 0.486` |
-| Fused evidence | ≈ 0.308 |
-| Disagreement / conflict | ≈ 0.440 / ≈ 0.396 |
+| Fused evidence | ≈ 0.301 |
+| Disagreement / conflict | ≈ 0.456 / ≈ 0.410 |
 | Weighted reliability | ≈ 0.926 |
-| Fusion confidence | ≈ 0.559 |
+| Fusion confidence | ≈ 0.546 |
 
 The visual model is slightly above its threshold and the behaviour model is well below. Because
-the two disagree and both are reliable, confidence is reduced from ≈ 0.93 to ≈ 0.56.
+the two disagree and both are reliable, confidence is reduced from ≈ 0.93 to ≈ 0.55.
 
 ## 6. Design status
 

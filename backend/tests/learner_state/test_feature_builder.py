@@ -36,8 +36,6 @@ def observation(**overrides: object) -> BehaviorObservation:
         "attempt_count": 1.0,
         "ms_first_response": 999.0,
         "overlap_time": 5000.0,
-        "first_action": 0.0,
-        "position": 1.0,
         "original": 1.0,
     }
     data.update(overrides)

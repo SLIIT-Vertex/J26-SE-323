@@ -52,10 +52,10 @@ The absolute head-pose features and `face_visibility_ratio` are also used to com
 reliability** ([`04`](04_RELIABILITY_AND_FUSION.md)). Values must be produced in the same way and
 the same units as during training, otherwise the model inputs will be out of distribution.
 
-## 3. Confusion behaviour features (10)
+## 3. Confusion behaviour features (8)
 
 Built by `build_confusion_behavior_features()` in `infrastructure/feature_builder.py`
-(`CONFUSION_BEHAVIOR_FEATURES`). Nine come directly from the request; one is derived.
+(`CONFUSION_BEHAVIOR_FEATURES`). Seven come directly from the request; one is derived.
 
 | Feature | Source | Meaning |
 | --- | --- | --- |
@@ -65,9 +65,7 @@ Built by `build_confusion_behavior_features()` in `infrastructure/feature_builde
 | `attempt_count` | request | Number of attempts |
 | `ms_first_response` | request | Time to first response, in milliseconds |
 | `overlap_time` | request | Time spent on the problem, in milliseconds |
-| `first_action` | request | Behavioural model input field retained from the training data |
-| `position` | request | Behavioural model input field retained from the training data |
-| `original` | request | Behavioural model input field retained from the training data |
+| `original` | request | "1 = Main problem", "0 = Scaffolding problem" (ASSISTments definition) |
 | `bottom_hint_missing` | derived | `1.0` if `bottom_hint` is `null`, otherwise `0.0` |
 
 A `null` `bottom_hint` is replaced by **0.0**, the training-split median used in the training
@@ -75,15 +73,20 @@ notebooks, and `bottom_hint_missing` is set to 1. This matches exactly how the m
 (`BOTTOM_HINT_TRAIN_MEDIAN` in `feature_builder.py`); the flag lets the model learn from
 missingness explicitly.
 
-The field names follow the ASSISTments column names used during training. This documentation does
-not assign a semantic meaning to `first_action`, `position` or `original`; they are passed to the
-model as numeric inputs exactly as received. When MindBridge games produce these values, they must
-use the same coding and units as the training data.
+The field names follow the ASSISTments column names used during training. When MindBridge games
+produce these values, they must use the same meaning and units as the training data.
 
-## 4. Disengagement behaviour features (20)
+The two ASSISTments-only fields `position` ("assignment position on the class assignments page")
+and `first_action` ("the type of first action: attempt or ask for a hint", with an undocumented
+numeric coding) are **not** used. MindBridge cannot produce them truthfully, so both behaviour
+models were retrained without them; this cost almost no accuracy (see
+[`07`](07_EVALUATION_AND_LIMITATIONS.md#21-ablation-without-assistments-only-fields)). The API
+rejects requests that still send them.
+
+## 4. Disengagement behaviour features (18)
 
 Built by `build_disengagement_behavior_features()` (`DISENGAGEMENT_BEHAVIOR_FEATURES`). It
-contains the 10 confusion features above plus 10 **learner-history** features that compare the
+contains the 8 confusion features above plus 10 **learner-history** features that compare the
 current window with the same learner's recent behaviour in this session.
 
 ### 4.1 Learner history

@@ -18,12 +18,13 @@ def test_committed_json_models_preserve_trained_xgboost_predictions() -> None:
     disengagement_behavior = _numbered_features(DISENGAGEMENT_BEHAVIOR_FEATURES)
     visual = _numbered_features(VISUAL_FEATURES)
 
-    # Reference values were produced by XGBoost 3.4.1 before switching the runtime
-    # reader to the portable JSON-tree evaluator.
-    assert models.predict_confusion_behavior(behavior) == pytest.approx(0.02597002, rel=1e-5)
+    # Reference values were produced by XGBoost (3.4.1 for the visual models, 3.2.0 for the
+    # behaviour models retrained without `position` and `first_action`) before switching the
+    # runtime reader to the portable JSON-tree evaluator.
+    assert models.predict_confusion_behavior(behavior) == pytest.approx(0.02733618, rel=1e-5)
     assert models.predict_confusion_visual(visual) == pytest.approx(0.8224369, rel=1e-5)
     assert models.predict_disengagement_behavior(disengagement_behavior) == pytest.approx(
-        0.19750857, rel=1e-5
+        0.20429580, rel=1e-5
     )
     assert models.predict_disengagement_visual(visual) == pytest.approx(0.22835349, rel=1e-5)
 

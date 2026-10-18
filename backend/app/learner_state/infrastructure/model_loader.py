@@ -19,6 +19,9 @@ def _float32(value: float) -> float:
     return struct.unpack("f", struct.pack("f", value))[0]
 
 
+# The behaviour models were retrained without the ASSISTments-only fields `position` and
+# `first_action`, which MindBridge cannot produce truthfully (ablation in
+# research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py).
 CONFUSION_BEHAVIOR_FEATURES: Final = (
     "correct",
     "bottom_hint",
@@ -26,8 +29,6 @@ CONFUSION_BEHAVIOR_FEATURES: Final = (
     "attempt_count",
     "ms_first_response",
     "overlap_time",
-    "first_action",
-    "position",
     "original",
     "bottom_hint_missing",
 )
@@ -53,8 +54,6 @@ DISENGAGEMENT_BEHAVIOR_FEATURES: Final = (
     "attempt_count",
     "ms_first_response",
     "overlap_time",
-    "first_action",
-    "position",
     "original",
     "bottom_hint_missing",
     "recent_log_rt",
@@ -218,7 +217,7 @@ class LearnerStateModels:
     def load_default(cls) -> "LearnerStateModels":
         return cls(
             confusion_behavior=_load_model(
-                "mindbridge_behavior_model.json",
+                "mindbridge_behavior_model_v2.json",
                 CONFUSION_BEHAVIOR_FEATURES,
             ),
             confusion_visual=_load_model(
@@ -226,7 +225,7 @@ class LearnerStateModels:
                 VISUAL_FEATURES,
             ),
             disengagement_behavior=_load_model(
-                "mindbridge_disengagement_behavior_model_v2.json",
+                "mindbridge_disengagement_behavior_model_v3.json",
                 DISENGAGEMENT_BEHAVIOR_FEATURES,
             ),
             disengagement_visual=_load_model(

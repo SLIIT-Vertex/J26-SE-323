@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.learner_state.application.support_need import SkillId
 
@@ -33,6 +33,10 @@ class VisualFeatures(BaseModel):
 class BehaviourFeatures(BaseModel):
     """Behavioural interaction features for the current learning window."""
 
+    # Unknown fields are rejected so that a client still sending the removed ASSISTments-only
+    # fields (`first_action`, `position`) learns that they are not used.
+    model_config = ConfigDict(extra="forbid")
+
     correct: float = Field(
         ge=0.0,
         le=1.0,
@@ -45,9 +49,6 @@ class BehaviourFeatures(BaseModel):
 
     ms_first_response: float
     overlap_time: float
-
-    first_action: float
-    position: float
 
     original: float
 

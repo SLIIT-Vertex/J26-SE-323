@@ -75,8 +75,6 @@ def window(
             attempt_count=2.0,
             ms_first_response=10000.0,
             overlap_time=20000.0,
-            first_action=0.0,
-            position=1.0,
             original=1.0,
         ),
         task_progress=task_progress,
