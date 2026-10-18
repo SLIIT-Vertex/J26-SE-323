@@ -40,3 +40,5 @@
 *.eot binary
 *.xls binary
 *.xlsx binary
+*.task binary
+*.wasm binary

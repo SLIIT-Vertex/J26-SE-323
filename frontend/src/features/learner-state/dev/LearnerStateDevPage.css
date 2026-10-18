@@ -1,0 +1,45 @@
+.ls-dev h1 {
+  font-size: clamp(1.8rem, 7vw, 2.6rem);
+  letter-spacing: -0.03em;
+}
+
+.ls-dev__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ls-dev__controls button {
+  padding: 0.6rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.ls-dev__preview {
+  display: block;
+  width: 100%;
+  max-width: 24rem;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #dfe8dc;
+  border-radius: 0.75rem;
+  /* Mirrored for display only; features use the un-mirrored image. */
+  transform: scaleX(-1);
+}
+
+.ls-dev__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ls-dev__table th,
+.ls-dev__table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid #c9d8c5;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
