@@ -5,7 +5,14 @@ import { describe, expect, it } from "vitest";
 // Network calls belong only in the learner-state API client, which sends derived numbers.
 
 const sources = import.meta.glob<string>(
-  ["./camera/*.ts", "./visual/*.ts", "./dev/*.tsx", "./useVisualFeatures.ts", "!./**/*.test.ts"],
+  [
+    "./camera/*.ts",
+    "./visual/*.ts",
+    "./game/*.ts",
+    "./dev/*.tsx",
+    "./useVisualFeatures.ts",
+    "!./**/*.test.ts",
+  ],
   { query: "?raw", import: "default", eager: true },
 );
 
@@ -34,6 +41,7 @@ describe("on-device privacy guard", () => {
     expect(files).toContain("./camera/camera.ts");
     expect(files).toContain("./visual/frameCapture.ts");
     expect(files).toContain("./visual/faceLandmarker.ts");
+    expect(files).toContain("./game/useGameVisualFeatures.ts");
   });
 
   it.each(Object.entries(sources))("%s does not export, store or send frames", (_, code) => {

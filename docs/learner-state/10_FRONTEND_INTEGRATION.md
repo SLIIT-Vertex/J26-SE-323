@@ -11,7 +11,8 @@ Status:
 | Visual feature calculations (eye openness, gaze, head pose, aggregation) | Implemented; matches the Python/OpenCV training code on given landmarks (§4) |
 | Camera, MediaPipe, 10-second windows, no-face handling | Implemented |
 | Browser MediaPipe vs Python MediaPipe on the same frames | **Not yet verified** — planned local test (§9) |
-| Behaviour values, sending windows, handling `recommended_action` | Not yet implemented |
+| Snapshot for the game's answer request (`useGameVisualFeatures`, §12) | Implemented; not yet used by the game screen, which first needs a camera-consent flow |
+| Behaviour values, recording windows, handling `recommended_action` | Done by the game backend (Option B, [`11`](11_GAME_INTEGRATION.md)), not by this module |
 
 Until §9 has been run, it must not be claimed that the browser pipeline as a whole produces the
 same features as the training pipeline.
@@ -25,13 +26,14 @@ owned by other team members; they use this module without handing their screens 
 | --- | --- |
 | Camera permission, capture and shutdown | Deciding when the camera is on |
 | MediaPipe processing on the device | Layout, preview placement, wording |
-| Visual feature extraction and 10-second windows | Providing the answered question's behaviour values (later step) |
+| Visual feature extraction and 10-second windows | Sending the snapshot with the answer; the game backend adds the behaviour values |
 
 ## 2. Module structure
 
 ```text
 frontend/src/features/learner-state/
 ├── useVisualFeatures.ts          # React hook: start/stop, states, getVisualFeatures()
+├── game/useGameVisualFeatures.ts # consent-driven camera + `visualFeatures` callback for GameHost
 ├── camera/camera.ts              # getUserMedia, error classification, stopping tracks
 ├── visual/
 │   ├── faceLandmarker.ts         # MediaPipe Face Landmarker (pinned, bundled, notebook options)
@@ -227,3 +229,27 @@ npm run typecheck
 npm run build:web
 npm run dev       # development server
 ```
+
+## 12. Connecting to the game
+
+`GameHost` (`features/gamification/GameHost.tsx`, owned by the game) accepts an optional
+`visualFeatures: () => VisualFeatureWindow | null` callback. It calls it once when the learner
+submits an answer and sends the 11 numbers as the optional `visual` object of the answer request
+([`11`](11_GAME_INTEGRATION.md#3-data-sent-by-the-browser)). `useGameVisualFeatures()` provides that
+callback:
+
+```tsx
+const { status, visualFeatures } = useGameVisualFeatures({ enabled: cameraConsentGranted });
+return <GameHost visualFeatures={visualFeatures} />;
+```
+
+| Behaviour | Detail |
+| --- | --- |
+| Camera only with consent | The camera starts when `enabled` becomes true and stops when it becomes false or the screen unmounts. The caller sets `enabled` from the learner's `learner_state_camera` consent; this module does not decide consent. |
+| No window yet | Camera off, or no sample taken yet (`no-samples`): the callback returns `null`, so the answer is sent without visual data. |
+| Camera on, no usable face | `no-face`, `no-head-pose`, `invalid-value`: the "no visual evidence" values with `face_visibility_ratio = 0` are sent, which give the visual models zero weight (§8). |
+| Usable window | A copy of the 11 features of the last 10 seconds. |
+
+`status` is the pipeline state from §7, for example to show the learner that the camera is on.
+A test checks that the callback has the type `GameHost` accepts. The game screen does not use the
+hook yet: there is no camera-consent flow in the game so far.

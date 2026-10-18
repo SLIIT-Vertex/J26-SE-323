@@ -162,5 +162,7 @@ Still open:
    verification answers, and a source for `task_progress` (§5). `position` and `first_action` no
    longer need a value.
 3. Whether answers without a camera are recorded with "no visual evidence" (§3).
-4. The browser hook that provides the `visualFeatures` callback ([`10`](10_FRONTEND_INTEGRATION.md)).
+4. Using `useGameVisualFeatures({ enabled })` in the game screen once camera consent exists; the
+   hook that provides the `visualFeatures` callback is implemented
+   ([`10`](10_FRONTEND_INTEGRATION.md#12-connecting-to-the-game)).
 5. A durable `window_id` allocator before more than one backend worker can serve a session.

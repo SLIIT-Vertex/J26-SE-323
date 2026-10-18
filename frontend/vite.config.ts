@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react";
 
-import { mediapipeTelemetryPlugin } from "./build-plugins/mediapipeTelemetry";
+import { mediapipeTelemetryPlugin } from "./build-plugins/mediapipeTelemetry.ts";
 
 export default {
   plugins: [react(), mediapipeTelemetryPlugin()],
