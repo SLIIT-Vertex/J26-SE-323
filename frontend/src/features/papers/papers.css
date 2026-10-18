@@ -1046,6 +1046,18 @@ body.mb-body {
 .mb-past .mb-kicker {
   margin-bottom: 0.15rem;
 }
+.mb-code--id {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  letter-spacing: 0;
+}
+.mb-command {
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.9rem;
+  background: var(--ink-tint);
+  font: 700 0.9rem ui-monospace, "Cascadia Code", Consolas, monospace;
+  overflow-wrap: anywhere;
+}
 .mb-all {
   margin-top: 0.8rem;
 }

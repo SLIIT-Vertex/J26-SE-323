@@ -294,15 +294,6 @@ export function anyPageChecking(pages: PagePhoto[] | null | undefined): boolean 
 
 // ---- endpoints ---------------------------------------------------------------------------------
 
-export const listLearners = () => request<Learner[]>("/learners");
-
-export const createLearner = (grade: 4 | 5, preferredLanguage: "si" | "ta") =>
-  request<Learner>("/learners", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ grade, preferred_language: preferredLanguage }),
-  });
-
 export const getLearner = (id: string) => request<Learner>(`/learners/${id}`);
 
 export const getAvailability = (learnerId: string) =>

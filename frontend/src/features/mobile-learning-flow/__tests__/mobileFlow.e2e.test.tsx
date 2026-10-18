@@ -135,7 +135,8 @@ describe("baseline mobile flow", () => {
 			expect(container.textContent).toContain("To be implemented");
 		}
 		await click(container, "පුහුණුව");
-		expect(container.textContent).toContain("Who is learning?");
+		// the practice tab hosts the papers screens, which use the shared learner (no picker)
+		expect(container.querySelector(".papers-tab .mb")).not.toBeNull();
 		expect(container.querySelector("[data-planned-page]")).toBeNull();
 		expect(container.textContent).not.toContain("අද මෙහෙයුම");
 		expect(container.textContent).not.toContain("පුහුණුව අරඹන්න");

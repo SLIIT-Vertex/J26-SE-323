@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, friendlyMessage } from "./api";
 
@@ -58,42 +58,19 @@ export function isNotFound(error: unknown): boolean {
 }
 
 // ---- which child is using the app ---------------------------------------------------------------
-// There is no login yet, so the app remembers the chosen learner on this device.
+// There is no login or user management yet, so the practice screens and the game share ONE
+// development learner. A child's game answers and paper answers then belong to the same learner.
+// This is the same setting and the same default as the game (MobileLearningApp), so changing
+// VITE_MOBILE_LEARNING_LEARNER_ID switches both at once. Once there is a login, both should take
+// the signed-in child's id instead.
 
-const STORAGE_KEY = "mindbridge.learnerId";
-let memory: string | null = null;
-const listeners = new Set<() => void>();
+export const DEFAULT_SHARED_LEARNER_ID = "00000000-0000-4000-8000-000000000721";
 
-export function getLearnerId(): string | null {
-  try {
-    return window.localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return memory;
-  }
-}
+export const SHARED_LEARNER_ID: string =
+  import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEFAULT_SHARED_LEARNER_ID;
 
-export function setLearnerId(id: string | null): void {
-  memory = id;
-  try {
-    if (id === null) window.localStorage.removeItem(STORAGE_KEY);
-    else window.localStorage.setItem(STORAGE_KEY, id);
-  } catch {
-    // storage blocked: the choice lasts until the page is closed
-  }
-  for (const listener of listeners) listener();
-}
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  window.addEventListener("storage", listener);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", listener);
-  };
-}
-
-export function useLearnerId(): string | null {
-  return useSyncExternalStore(subscribe, getLearnerId);
+export function useLearnerId(): string {
+  return SHARED_LEARNER_ID;
 }
 
 // ---- the page body ------------------------------------------------------------------------------

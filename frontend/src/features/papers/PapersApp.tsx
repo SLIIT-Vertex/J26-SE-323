@@ -2,11 +2,9 @@ import "@fontsource-variable/fredoka";
 import "@fontsource-variable/nunito";
 import "./papers.css";
 
-import { useEffect } from "react";
-
 import { type Learner, getLearner } from "./api";
 import { languageName, languageNative } from "./format";
-import { isNotFound, setLearnerId, useAsync, useBodyClass, useLearnerId } from "./hooks";
+import { isNotFound, useAsync, useBodyClass, useLearnerId } from "./hooks";
 import { type Route, hrefFor } from "./router";
 import { MasteryScreen } from "./screens/MasteryScreen";
 import { PaperDetail } from "./screens/PaperDetail";
@@ -14,7 +12,7 @@ import { PapersHome } from "./screens/PapersHome";
 import { Review } from "./screens/Review";
 import { ReportScreen } from "./screens/ReportScreen";
 import { HistoryScreen } from "./screens/HistoryScreen";
-import { WhoIsLearning } from "./screens/WhoIsLearning";
+import { MissingLearner } from "./screens/MissingLearner";
 import { GrowthIcon, HistoryIcon, PaperIcon } from "./ui";
 
 function TopBar({ learner }: { learner: Learner | null }) {
@@ -23,16 +21,16 @@ function TopBar({ learner }: { learner: Learner | null }) {
       <a className="mb-brand" href="#/" aria-label="MindBridge home">
         <img className="mb-brand__wordmark" src="/primary_logo.png" alt="MindBridge" />
       </a>
-      <a className="mb-pill" href={hrefFor({ name: "who" })}>
+      <span className="mb-pill">
         {learner ? (
           <>
             Grade {learner.grade} · <span lang={learner.preferred_language}>{languageNative(learner.preferred_language)}</span>
-            <span className="mb-visually-hidden"> ({languageName(learner.preferred_language)}). Change learner</span>
+            <span className="mb-visually-hidden"> ({languageName(learner.preferred_language)})</span>
           </>
         ) : (
-          "Choose learner"
+          "Learner"
         )}
-      </a>
+      </span>
     </div>
   );
 }
@@ -79,8 +77,6 @@ function Screen({ route, learnerId }: { route: Route; learnerId: string }) {
       return <HistoryScreen learnerId={learnerId} />;
     case "mastery":
       return <MasteryScreen learnerId={learnerId} />;
-    case "who":
-      return <WhoIsLearning />;
   }
 }
 
@@ -94,28 +90,20 @@ export function PapersApp({
 }) {
   useBodyClass("mb-body");
   const learnerId = useLearnerId();
-  const learner = useAsync(
-    async () => (learnerId ? await getLearner(learnerId) : null),
-    `learner:${learnerId ?? "none"}`,
-  );
+  const learner = useAsync(() => getLearner(learnerId), `learner:${learnerId}`);
 
-  // A remembered learner that no longer exists (for example after the database was reset)
-  const gone = learner.state.status === "error" && isNotFound(learner.state.error);
-  useEffect(() => {
-    if (gone) setLearnerId(null);
-  }, [gone]);
-
+  // The shared learner has to exist in the database (the game and the papers both point at it)
+  const missing = learner.state.status === "error" && isNotFound(learner.state.error);
   const known = learner.state.status === "ready" ? learner.state.data : null;
-  const effective: Route = learnerId ? route : { name: "who" };
 
   return (
     <div className={embedded ? "mb mb--embedded" : "mb"}>
       <div className="mb-frame">
         {embedded ? null : <TopBar learner={known} />}
         <main className="mb-main">
-          <Screen route={effective} learnerId={learnerId ?? ""} />
+          {missing ? <MissingLearner learnerId={learnerId} /> : <Screen route={route} learnerId={learnerId} />}
         </main>
-        {learnerId ? <TabBar route={effective} /> : null}
+        {missing ? null : <TabBar route={route} />}
       </div>
     </div>
   );

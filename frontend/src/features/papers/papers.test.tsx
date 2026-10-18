@@ -13,6 +13,9 @@ import {
   toApiError,
 } from "./api";
 import { dayLabel, scoreText } from "./format";
+import gameSource from "../mobile-learning-flow/MobileLearningApp.tsx?raw";
+import { DEFAULT_SHARED_LEARNER_ID, SHARED_LEARNER_ID } from "./hooks";
+import { PapersApp } from "./PapersApp";
 import { parseRoute } from "./router";
 import {
   type Choice,
@@ -489,5 +492,55 @@ describe("past papers screen", () => {
     expect(links).toContain(`#/papers/${ID_A}/report`);
     expect(links).not.toContain(`#/papers/${ID_B}/report`); // nothing to see yet for that one
     expect(scoreText({ correct: 7, marked: 11 })).toBe("7 of 11 correct");
+  });
+});
+
+// ---- one shared learner for the game and the practice screens (there is no login yet) -------------
+
+describe("the shared learner", () => {
+  it("is the same learner the game uses, so game answers and paper answers belong together", () => {
+    const gameDefault = /const DEV_LEARNER\s*=\s*"([0-9a-fA-F-]{36})"/.exec(gameSource)?.[1];
+    expect(gameDefault).toBe(DEFAULT_SHARED_LEARNER_ID);
+    // and both read the same setting, so changing it switches both
+    expect(gameSource).toContain("VITE_MOBILE_LEARNING_LEARNER_ID");
+    expect(SHARED_LEARNER_ID).toBe(import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEFAULT_SHARED_LEARNER_ID);
+  });
+
+  it("asks the backend about that learner, with no saved choice involved", async () => {
+    window.localStorage.setItem("mindbridge.learnerId", ID_A); // a leftover from the old picker
+    const asked: string[] = [];
+    const learner = {
+      id: SHARED_LEARNER_ID,
+      grade: 5,
+      preferred_language: "si",
+      created_at: "2026-10-01T00:00:00Z",
+      updated_at: "2026-10-01T00:00:00Z",
+    };
+    vi.stubGlobal("fetch", async (url: string) => {
+      asked.push(String(url));
+      const body = String(url).endsWith(`/learners/${SHARED_LEARNER_ID}`) ? learner : [];
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+
+    await show(<PapersApp embedded route={{ name: "history" }} />);
+
+    expect(asked.some((u) => u.includes(`/learners/${SHARED_LEARNER_ID}`))).toBe(true);
+    expect(asked.some((u) => u.includes(ID_A))).toBe(false); // the old choice is ignored
+    window.localStorage.removeItem("mindbridge.learnerId");
+  });
+
+  it("says how to create the learner when this database does not have it", async () => {
+    vi.stubGlobal(
+      "fetch",
+      async () => new Response(JSON.stringify({ detail: "Learner not found" }), { status: 404 }),
+    );
+
+    await show(<PapersApp embedded route={{ name: "papers" }} />);
+
+    const text = host.textContent ?? "";
+    expect(text).toContain("Learner not set up");
+    expect(text).toContain(SHARED_LEARNER_ID);
+    expect(text).toContain("python -m scripts.seed_dev_learner");
+    expect(host.querySelector("nav.mb-tabs")).toBeNull(); // nothing to navigate to yet
   });
 });

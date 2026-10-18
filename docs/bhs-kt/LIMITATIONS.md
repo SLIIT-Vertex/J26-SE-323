@@ -91,6 +91,12 @@ to provide are in `GAME_INTEGRATION.md`. Until that is done:
 22. **Game difficulty is the game's own label.** The game sends a fixed "easy" today, and no hint
     count other than 0 (it only sends answers given without help).
 
+23. **One shared development learner.** Until there is a login, the game and the practice screens
+    use one fixed learner (`00000000-0000-4000-8000-000000000721`, set by
+    `VITE_MOBILE_LEARNING_LEARNER_ID`). Everyone using a development build is the same learner, so
+    data from several children would be mixed. This must be replaced by the signed-in child's id
+    before real use. The earlier "who is learning" picker was removed for this reason.
+
 ## Not done in this component
 
 - The game side of the connection (see `GAME_INTEGRATION.md`).
