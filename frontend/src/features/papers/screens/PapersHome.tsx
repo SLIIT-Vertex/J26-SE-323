@@ -12,17 +12,7 @@ import {
 import { dayLabel, paperStatusLabel, paperTitle, shortDate } from "../format";
 import { useAsync } from "../hooks";
 import { go, hrefFor } from "../router";
-import {
-  Chip,
-  ErrorBox,
-  GrowthIcon,
-  HistoryIcon,
-  LinkCard,
-  Loading,
-  PaperIcon,
-  ScreenHeader,
-  type Tone,
-} from "../ui";
+import { Chip, ErrorBox, LinkCard, Loading, PaperIcon, ScreenHeader, type Tone } from "../ui";
 
 export function statusTone(status: string): Tone {
   switch (status) {
@@ -167,14 +157,14 @@ function MoreLinks() {
         <LinkCard
           href={hrefFor({ name: "history" })}
           tone="sky"
-          icon={<HistoryIcon />}
+          image="/practice/past-papers.png"
           title="Past papers"
           text="Every paper so far, and how each one went."
         />
         <LinkCard
           href={hrefFor({ name: "mastery" })}
           tone="mint"
-          icon={<GrowthIcon />}
+          image="/practice/my-skills.png"
           title="My skills"
           text="How learning is going in each skill."
         />

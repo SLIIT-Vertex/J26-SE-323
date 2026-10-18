@@ -54,20 +54,27 @@ export function LinkCard({
   href,
   tone,
   icon,
+  image,
   title,
   text,
 }: {
   href: string;
   tone: Tone;
-  icon: ReactNode;
+  icon?: ReactNode;
+  /** A picture for the card (a round illustration). Used instead of the icon when given. */
+  image?: string;
   title: string;
   text: string;
 }) {
   return (
-    <a className={`mb-link-card mb-link-card--${tone}`} href={href}>
-      <span className="mb-link-card__badge" aria-hidden="true">
-        {icon}
-      </span>
+    <a className={`mb-link-card mb-link-card--${tone}${image ? " mb-link-card--picture" : ""}`} href={href}>
+      {image ? (
+        <img className="mb-link-card__art" src={image} alt="" width={96} height={96} />
+      ) : (
+        <span className="mb-link-card__badge" aria-hidden="true">
+          {icon}
+        </span>
+      )}
       <span className="mb-link-card__copy">
         <strong>{title}</strong>
         <small>{text}</small>

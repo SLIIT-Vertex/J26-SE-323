@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { type Mastery, type SkillMastery, getMastery } from "../api";
 import { AREAS, type Area, percent } from "../format";
 import { useAsync } from "../hooks";
@@ -37,25 +39,43 @@ function SkillRow({ skill, tone }: { skill: SkillMastery; tone: Tone }) {
   );
 }
 
+/** One area (Maths, Language ...). It starts closed; opening it shows each skill of the area. */
 function AreaSection({ area, skills }: { area: (typeof AREAS)[number]; skills: SkillMastery[] }) {
+  const [open, setOpen] = useState(false);
   const tone = AREA_TONE[area.code];
   const measured = skills.filter((s) => s.mastery !== null).length;
+  const panel = `area-panel-${area.code}`;
   return (
-    <section className={`mb-area mb-area--${tone}`} aria-labelledby={`area-${area.code}`}>
-      <div className="mb-area__head">
-        <h2 id={`area-${area.code}`} className="mb-h2">
-          {area.name}
-        </h2>
-        <span className="mb-area__count">
-          {measured} of {skills.length} measured
-        </span>
+    <section className={`mb-area mb-area--${tone}${open ? " is-open" : ""}`}>
+      <h2 className="mb-area__title">
+        <button
+          type="button"
+          className="mb-area__toggle"
+          aria-expanded={open}
+          aria-controls={panel}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <span className="mb-area__heading">
+            <span className="mb-area__name">{area.name}</span>
+            <span className="mb-area__blurb">{area.blurb}</span>
+          </span>
+          <span className="mb-area__count">
+            {measured} of {skills.length} measured
+          </span>
+          <svg className="mb-area__chevron" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+            <path d="m5 7.5 5 5 5-5" />
+          </svg>
+        </button>
+      </h2>
+      <div className="mb-area__body" id={panel}>
+        <div className="mb-area__inner" inert={!open}>
+          <ul className="mb-list mb-list--tight">
+            {skills.map((skill) => (
+              <SkillRow key={skill.code} skill={skill} tone={tone} />
+            ))}
+          </ul>
+        </div>
       </div>
-      <p className="mb-muted">{area.blurb}</p>
-      <ul className="mb-list mb-list--tight">
-        {skills.map((skill) => (
-          <SkillRow key={skill.code} skill={skill} tone={tone} />
-        ))}
-      </ul>
     </section>
   );
 }

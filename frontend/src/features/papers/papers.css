@@ -639,6 +639,17 @@ body.mb-body {
   --bg-c: var(--sun-bg);
   --ink-c: var(--sun-ink);
 }
+.mb-link-card--picture {
+  grid-template-columns: 96px 1fr;
+}
+.mb-link-card__art {
+  display: block;
+  grid-row: span 2;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 12px rgba(31, 31, 60, 0.14));
+}
 .mb-link-card__badge {
   display: grid;
   grid-row: span 2;
@@ -1183,7 +1194,6 @@ body.mb-body {
   --area-line: var(--sky-line);
   --area-bg: var(--sky-bg);
   --area-fill: var(--sky);
-  padding: 1.1rem 1.1rem 0.5rem;
   border: 2px solid var(--area-line);
   border-radius: 27px;
   background: var(--area-bg);
@@ -1213,21 +1223,87 @@ body.mb-body {
   --area-bg: var(--sun-bg);
   --area-fill: var(--gold);
 }
-.mb-area__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+.mb-area__title {
+  margin: 0;
+  font: inherit;
 }
-.mb-area__head h2 {
+.mb-area__toggle {
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 1.05rem 1.1rem;
+  border: 0;
+  border-radius: 25px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mb-area__heading {
+  display: grid;
+  gap: 0.15rem;
+}
+.mb-area__name {
   color: var(--tone);
   font-size: 1.3rem;
   font-weight: 950;
+  line-height: 1.2;
+}
+.mb-area__blurb {
+  color: var(--body-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 .mb-area__count {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 850;
+  grid-column: 1;
+  justify-self: start;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--area-line);
+  color: var(--tone);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+.mb-area__chevron {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--badge-shadow);
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mb-area.is-open .mb-area__chevron {
+  transform: rotate(180deg);
+}
+/* closed: the skills take no space; open: they grow to their natural height */
+.mb-area__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  padding: 0 1.1rem;
+}
+.mb-area.is-open .mb-area__body {
+  grid-template-rows: 1fr;
+}
+.mb-area__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.mb-area__inner > ul {
+  padding-bottom: 0.5rem;
 }
 
 .mb-skill {
@@ -1298,6 +1374,12 @@ body.mb-body {
   .mb-btn,
   .mb-link-card__go {
     transition: transform 0.16s ease, box-shadow 0.16s ease;
+  }
+  .mb-area__body {
+    transition: grid-template-rows 0.28s ease;
+  }
+  .mb-area__chevron {
+    transition: transform 0.28s ease;
   }
   .mb-loading__dots i {
     animation: mb-bounce 0.9s ease-in-out infinite;

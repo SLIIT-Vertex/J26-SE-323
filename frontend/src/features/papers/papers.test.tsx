@@ -587,6 +587,13 @@ describe("practice navigation", () => {
     expect(cards.map((c) => c.getAttribute("href"))).toEqual(["#/history", "#/mastery"]);
     expect(cards.map((c) => c.querySelector("strong")?.textContent)).toEqual(["Past papers", "My skills"]);
     expect(cards.every((c) => c.textContent?.includes("Open"))).toBe(true);
+    // each card carries its own picture (decorative: the title says what it is)
+    const pictures = cards.map((c) => c.querySelector("img"));
+    expect(pictures.map((p) => p?.getAttribute("src"))).toEqual([
+      "/practice/past-papers.png",
+      "/practice/my-skills.png",
+    ]);
+    expect(pictures.every((p) => p?.getAttribute("alt") === "")).toBe(true);
     expect(host.querySelector(".mb-tabs, .mb-tab, nav")).toBeNull();
   });
 
@@ -600,5 +607,79 @@ describe("practice navigation", () => {
       expect(back?.textContent).toContain("Practice");
       expect(host.querySelector(".mb-tabs")).toBeNull();
     }
+  });
+});
+
+// ---- skill areas open and close -----------------------------------------------------------------------
+
+describe("skill areas", () => {
+  const skill = (code: string, area: string, mastery: number | null, attempts: number) => ({
+    code,
+    area,
+    name_en: `Skill ${code}`,
+    name_si: null,
+    mastery,
+    attempts,
+  });
+  const body = {
+    computed_at: "2026-10-18T00:00:00Z",
+    model_version: "v",
+    n_attempts: 9,
+    definition: "",
+    skills: [skill("APT-PAT", "APT", 0.8, 6), skill("MAT-FRC", "MAT", 0.6, 5), skill("MAT-NUM", "MAT", null, 1)],
+  };
+
+  const toggles = () => [...host.querySelectorAll<HTMLButtonElement>("button.mb-area__toggle")];
+  const panelOf = (button: HTMLButtonElement) => document.getElementById(button.getAttribute("aria-controls") ?? "");
+
+  it("shows the four areas closed, with how many of their skills are measured", async () => {
+    answerWith(body);
+
+    await show(<MasteryScreen learnerId={ID_A} />);
+
+    expect(toggles().map((b) => b.querySelector(".mb-area__name")?.textContent)).toEqual([
+      "Aptitude",
+      "Maths",
+      "Language",
+      "Environment",
+    ]);
+    expect(toggles().every((b) => b.getAttribute("aria-expanded") === "false")).toBe(true);
+    expect(toggles()[1].textContent).toContain("1 of 2 measured");
+    // closed: the skills are there but cannot be reached or read out
+    const closed = panelOf(toggles()[1])?.querySelector(".mb-area__inner");
+    expect(closed?.hasAttribute("inert")).toBe(true);
+    expect(host.querySelectorAll(".mb-area.is-open").length).toBe(0);
+  });
+
+  it("opens one area to show its own skills, and closes it again", async () => {
+    answerWith(body);
+    await show(<MasteryScreen learnerId={ID_A} />);
+    const maths = toggles()[1];
+
+    await act(async () => maths.click());
+
+    expect(maths.getAttribute("aria-expanded")).toBe("true");
+    const inner = panelOf(maths)?.querySelector(".mb-area__inner");
+    expect(inner?.hasAttribute("inert")).toBe(false);
+    expect([...(inner?.querySelectorAll(".mb-skill__names strong") ?? [])].map((s) => s.textContent)).toEqual([
+      "Skill MAT-FRC",
+      "Skill MAT-NUM",
+    ]); // each skill of Maths, once, and none from another area
+    expect(toggles().filter((b) => b.getAttribute("aria-expanded") === "true")).toEqual([maths]);
+
+    await act(async () => maths.click());
+
+    expect(maths.getAttribute("aria-expanded")).toBe("false");
+    expect(panelOf(maths)?.querySelector(".mb-area__inner")?.hasAttribute("inert")).toBe(true);
+  });
+
+  it("opens each area on its own", async () => {
+    answerWith(body);
+    await show(<MasteryScreen learnerId={ID_A} />);
+
+    await act(async () => toggles()[0].click());
+    await act(async () => toggles()[1].click());
+
+    expect(toggles().map((b) => b.getAttribute("aria-expanded"))).toEqual(["true", "true", "false", "false"]);
   });
 });
