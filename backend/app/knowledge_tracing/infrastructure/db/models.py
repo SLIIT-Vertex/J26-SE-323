@@ -147,6 +147,16 @@ class AttemptModel(Base):
         CheckConstraint("language IN ('si', 'ta')", name="ck_attempts_language"),
         CheckConstraint("source IN (0, 1)", name="ck_attempts_source"),
         CheckConstraint("penalty BETWEEN 0 AND 1", name="ck_attempts_penalty"),
+        CheckConstraint(
+            "difficulty IS NULL OR difficulty IN ('easy', 'medium', 'hard')",
+            name="ck_attempts_difficulty",
+        ),
+        # An answer points at a bank question (paper, and game answers that use the bank), or
+        # carries its own skill and difficulty (game answers with the game's own questions).
+        CheckConstraint(
+            "question_id IS NOT NULL OR (skill_code IS NOT NULL AND difficulty IS NOT NULL)",
+            name="ck_attempts_question_or_skill",
+        ),
         Index("ix_attempts_history", "learner_id", "answered_at", "id"),
         Index(
             "uq_attempts_paper_item",
@@ -159,7 +169,10 @@ class AttemptModel(Base):
 
     id: Mapped[int] = mapped_column(BigIntType, primary_key=True, autoincrement=True)
     learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"))
-    question_id: Mapped[str] = mapped_column(ForeignKey("questions.id"))
+    question_id: Mapped[str | None] = mapped_column(ForeignKey("questions.id"))
+    # Only for an answer with no bank question (the game's own questions): its skill and level.
+    skill_code: Mapped[str | None] = mapped_column(ForeignKey("skills.code"))
+    difficulty: Mapped[str | None] = mapped_column(String(6))
     language: Mapped[str] = mapped_column(String(2))
     source: Mapped[int] = mapped_column(SmallInteger)  # 1 digital game, 0 paper
     correct: Mapped[bool] = mapped_column(Boolean)

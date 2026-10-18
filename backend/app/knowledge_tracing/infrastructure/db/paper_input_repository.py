@@ -38,16 +38,18 @@ class SqlAlchemyPaperInputRepository:
         return [(code, area, index) for code, area, index in rows]
 
     def skill_activity(self, learner_id: UUID) -> dict[str, SkillActivity]:
+        # Game answers with no bank question carry their own skill, so they count here too.
+        skill = func.coalesce(QuestionModel.skill_code, AttemptModel.skill_code)
         statement = (
             select(
-                QuestionModel.skill_code,
+                skill,
                 AttemptModel.source,
                 func.count(),
                 func.sum(case((AttemptModel.correct.is_(True), 1), else_=0)),
             )
-            .join(QuestionModel, QuestionModel.id == AttemptModel.question_id)
+            .outerjoin(QuestionModel, QuestionModel.id == AttemptModel.question_id)
             .where(AttemptModel.learner_id == learner_id)
-            .group_by(QuestionModel.skill_code, AttemptModel.source)
+            .group_by(skill, AttemptModel.source)
         )
         digital: dict[str, tuple[int, int]] = {}
         paper: dict[str, int] = {}
@@ -68,7 +70,11 @@ class SqlAlchemyPaperInputRepository:
     def recently_answered(self, learner_id: UUID, since: datetime) -> set[str]:
         rows = self.session.scalars(
             select(AttemptModel.question_id)
-            .where(AttemptModel.learner_id == learner_id, AttemptModel.answered_at >= since)
+            .where(
+                AttemptModel.learner_id == learner_id,
+                AttemptModel.answered_at >= since,
+                AttemptModel.question_id.is_not(None),  # a game answer has no bank question
+            )
             .distinct()
         ).all()
         return set(rows)

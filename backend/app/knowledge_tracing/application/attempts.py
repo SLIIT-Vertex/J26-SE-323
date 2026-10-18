@@ -31,6 +31,17 @@ class IdempotencyKeyReusedError(Exception):
     pass
 
 
+class SkillNotFoundError(Exception):
+    pass
+
+
+class InvalidAttemptError(Exception):
+    """The answer names both a bank question and a skill, or neither."""
+
+
+DIFFICULTIES = ("easy", "medium", "hard")
+
+
 class AttemptRepository(Protocol):
     def learner_exists(self, learner_id: UUID) -> bool: ...
 
@@ -49,11 +60,15 @@ class AttemptRepository(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class DigitalAttemptCommand:
+    """One game answer: either a bank question, or the game's own skill and difficulty."""
+
     learner_id: UUID
-    question_id: str
     language: str
     correct: bool
     answered_at: datetime
+    question_id: str | None = None
+    skill_code: str | None = None
+    difficulty: str | None = None
     time_ms: int | None = None
     hints: int | None = None
     idempotency_key: str | None = None
@@ -77,12 +92,24 @@ class AttemptService:
             if existing is not None:
                 return self._replay(existing, command), False
 
+        with_question = command.question_id is not None
+        with_skill = command.skill_code is not None or command.difficulty is not None
+        if with_question == with_skill:
+            raise InvalidAttemptError("give a question_id, or a skill_code and a difficulty")
         if not self.repository.learner_exists(command.learner_id):
             raise LearnerNotFoundError(command.learner_id)
-        if not self.repository.question_exists(command.question_id):
-            raise QuestionNotFoundError(command.question_id)
-        if not self.repository.variant_exists(command.question_id, command.language):
-            raise LanguageNotAvailableError((command.question_id, command.language))
+        if command.question_id is not None:
+            if not self.repository.question_exists(command.question_id):
+                raise QuestionNotFoundError(command.question_id)
+            if not self.repository.variant_exists(command.question_id, command.language):
+                raise LanguageNotAvailableError((command.question_id, command.language))
+        else:
+            if command.skill_code is None or command.difficulty is None:
+                raise InvalidAttemptError("a game answer needs both a skill_code and a difficulty")
+            if command.skill_code not in self.spec.skills:
+                raise SkillNotFoundError(command.skill_code)
+            if command.difficulty not in DIFFICULTIES:
+                raise InvalidAttemptError(f"difficulty must be one of {DIFFICULTIES}")
         if command.answered_at > self.now() + FUTURE_TOLERANCE:
             raise AnsweredInFutureError(command.answered_at)
 
@@ -100,6 +127,8 @@ class AttemptService:
             ),
             answered_at=command.answered_at,
             idempotency_key=command.idempotency_key,
+            skill_code=command.skill_code,
+            difficulty=command.difficulty,
         )
         stored, created = self.repository.add(attempt)
         if not created:
@@ -111,6 +140,8 @@ class AttemptService:
         same = (
             existing.learner_id == command.learner_id
             and existing.question_id == command.question_id
+            and existing.skill_code == command.skill_code
+            and existing.difficulty == command.difficulty
             and existing.language == command.language
             and existing.correct == command.correct
         )

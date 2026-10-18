@@ -53,12 +53,14 @@ what would change it.
     cannot decide. How often that happens on real photos is not measured.
 12. **One reader.** A second opinion (a second model) is supported but only one is configured;
     the OpenAI-compatible reader is not written.
-13. **Pages can stay at "grading"** if the server restarts while a page is being marked. There is
-    no retry sweep; the parent re-uploads the page.
+13. **Pages left at "grading" by a restart are marked again at startup.** Marking runs inside the
+    server process, so after a restart every page still in "grading" is set back to "uploaded"
+    and marked again. With several server workers, one worker restarting would reset pages that
+    another worker is still marking.
 
 ## Privacy and operation
 
-14. **Photo deletion is not scheduled.** `scripts/delete_expired_photos.py` must be run daily
+14. **Photo deletion is not scheduled.** `scripts/delete_old_photos.py` must be run daily
     (cron / Task Scheduler). Until then, expired photos are never *served* (410) but the files
     remain on disk.
 15. **No authentication.** Access checks (parent <-> child) belong to the platform team's login
@@ -68,10 +70,30 @@ what would change it.
 17. **Pictures sent to Gemini** leave the system. Using a paid key (no training on inputs) and
     parental consent are needed before real children use it.
 
+## Connection with the game
+
+The game (gamified module) has its own questions, so its answers are saved with a skill and a
+difficulty instead of a bank question (`POST /attempts` accepts either form, and
+`scripts/ingest_game_evidence.py` reads the game's outbox). The contract and what the game still has
+to provide are in `GAME_INTEGRATION.md`. Until that is done:
+
+18. **No real game answer reaches the model.** Every record the game writes today is marked as a
+    development record that must not be used for models (`model_ingestion_eligible: false`), and
+    the reader respects that. A local trial is possible with `--include-development`.
+19. **Only one skill has game questions** (fractions, Grade 5, Sinhala). The other 29 skills get
+    no game evidence, so their mastery stays unknown, or comes from paper only.
+20. **The game's skill crosswalk is a draft.** All 548 rows are unreviewed. It reaches 25 of the 30
+    skills; the five aptitude skills APT-LOG, APT-REL, APT-SPA, APT-VIS and APT-WRD cannot receive
+    game evidence. The reader refuses any record whose skill disagrees with the crosswalk.
+21. **A game answer has no bank question.** It cannot exclude a question from the next paper (the
+    "not answered in the last 30 days" rule works for paper questions only), but it does count
+    towards each skill's game activity, which decides which skills are verified on paper.
+22. **Game difficulty is the game's own label.** The game sends a fixed "easy" today, and no hint
+    count other than 0 (it only sends answers given without help).
+
 ## Not done in this component
 
-- The game does not yet call `POST /attempts`.
-- Frontend screens (paper download, upload, review, report).
+- The game side of the connection (see `GAME_INTEGRATION.md`).
 - Per-question time on paper.
 - Checking model mastery against real paper accuracy.
 

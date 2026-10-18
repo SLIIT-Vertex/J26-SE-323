@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -28,6 +28,8 @@ def _to_domain(model: AttemptModel) -> Attempt:
         answered_at=model.answered_at,
         idempotency_key=model.idempotency_key,
         paper_item_id=model.paper_item_id,
+        skill_code=model.skill_code,
+        difficulty=model.difficulty,
     )
 
 
@@ -37,6 +39,11 @@ class SqlAlchemyAttemptRepository:
 
     def learner_exists(self, learner_id: UUID) -> bool:
         return self.session.get(LearnerModel, learner_id) is not None
+
+    def learner_language(self, learner_id: UUID) -> str | None:
+        """The learner's preferred language, or None when there is no such learner."""
+        learner = self.session.get(LearnerModel, learner_id)
+        return learner.preferred_language if learner else None
 
     def question_exists(self, question_id: str) -> bool:
         return self.session.get(QuestionModel, question_id) is not None
@@ -63,6 +70,8 @@ class SqlAlchemyAttemptRepository:
             answered_at=attempt.answered_at,
             idempotency_key=attempt.idempotency_key,
             paper_item_id=attempt.paper_item_id,
+            skill_code=attempt.skill_code,
+            difficulty=attempt.difficulty,
         )
         self.session.add(model)
         try:
@@ -78,10 +87,14 @@ class SqlAlchemyAttemptRepository:
         return _to_domain(model), True
 
     def history(self, learner_id: UUID, limit: int | None = None) -> list[HistoryItem]:
+        # A bank answer takes its skill and difficulty from its question; a game answer that has
+        # no bank question carries its own. Both kinds are part of the same history.
+        skill = func.coalesce(QuestionModel.skill_code, AttemptModel.skill_code)
+        level = func.coalesce(QuestionModel.difficulty, AttemptModel.difficulty)
         statement = (
-            select(AttemptModel, QuestionModel.difficulty, SkillModel.code, SkillModel.sort_index)
-            .join(QuestionModel, QuestionModel.id == AttemptModel.question_id)
-            .join(SkillModel, SkillModel.code == QuestionModel.skill_code)
+            select(AttemptModel, level, SkillModel.code, SkillModel.sort_index)
+            .outerjoin(QuestionModel, QuestionModel.id == AttemptModel.question_id)
+            .join(SkillModel, SkillModel.code == skill)
             .where(AttemptModel.learner_id == learner_id)
         )
         if limit is None:
