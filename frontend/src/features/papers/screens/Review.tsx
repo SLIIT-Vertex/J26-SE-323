@@ -1,24 +1,19 @@
 import { useState } from "react";
 
-import {
-  type ReviewItem,
-  confirmDecisions,
-  friendlyMessage,
-  getSubmission,
-  pictureUrl,
-} from "../api";
+import { confirmDecisions, friendlyMessage, getSubmission, pictureUrl, type ReviewItem } from "../api";
 import { useAsync } from "../hooks";
+import { t, tn, useLanguage } from "../i18n";
 import {
-  type Choice,
-  type QuestionGroup,
   blankCount,
   buildDecisions,
+  type Choice,
   decidedCount,
   groupByQuestion,
   isInstruction,
   isReadyToSubmit,
   itemKey,
   partTitle,
+  type QuestionGroup,
   readingText,
   toggleBlank,
 } from "../reviewLogic";
@@ -32,20 +27,20 @@ import { ErrorBox, Loading, ScreenHeader, Tick } from "../ui";
 function Crop({ item }: { item: ReviewItem }) {
   const [open, setOpen] = useState(false);
   const [missing, setMissing] = useState(false);
-  if (missing) return <p className="mb-note">This picture is no longer kept.</p>;
+  if (missing) return <p className="mb-note">{t("review.pictureGone")}</p>;
   return (
     <button
       type="button"
       className={`mb-crop${open ? " is-open" : ""}`}
       onClick={() => setOpen((now) => !now)}
-      aria-label={open ? "Shrink the picture" : "Enlarge the picture"}
+      aria-label={open ? t("review.shrink") : t("review.enlarge")}
     >
       <img
         src={pictureUrl(item.crop_url)}
-        alt={`Question ${item.position} as photographed`}
+        alt={t("review.pictureAlt", { n: item.position })}
         onError={() => setMissing(true)}
       />
-      <span className="mb-crop__hint">{open ? "Tap to shrink" : "Tap to enlarge"}</span>
+      <span className="mb-crop__hint">{open ? t("review.hintShrink") : t("review.hintEnlarge")}</span>
     </button>
   );
 }
@@ -69,7 +64,7 @@ function Decide({
           aria-pressed={choice?.instructionMet === true}
           onClick={() => onChange({ instructionMet: true })}
         >
-          Yes
+          {t("review.yes")}
         </button>
         <button
           type="button"
@@ -77,7 +72,7 @@ function Decide({
           aria-pressed={choice?.instructionMet === false}
           onClick={() => onChange({ instructionMet: false })}
         >
-          No
+          {t("review.no")}
         </button>
       </fieldset>
     );
@@ -86,7 +81,7 @@ function Decide({
   if (item.part_type === "mcq") {
     return (
       <fieldset className="mb-choices">
-        <legend>Which option did your child mark?</legend>
+        <legend>{t("review.whichOption")}</legend>
         {(item.options ?? []).map((option) => (
           <button
             key={option}
@@ -104,7 +99,7 @@ function Decide({
           aria-pressed={choice?.selected === null}
           onClick={() => onChange({ selected: null })}
         >
-          No answer
+          {t("review.noAnswer")}
         </button>
       </fieldset>
     );
@@ -114,7 +109,7 @@ function Decide({
   return (
     <div className="mb-choices">
       <label className="mb-label" htmlFor={`text-${itemKey(item)}`}>
-        What did your child write?
+        {t("review.whatWrote")}
       </label>
       <input
         id={`text-${itemKey(item)}`}
@@ -133,7 +128,7 @@ function Decide({
             className="mb-btn mb-btn--ghost mb-btn--small"
             onClick={() => onChange({ text: reading })}
           >
-            Same as we read
+            {t("review.sameAsRead")}
           </button>
         ) : null}
         <button
@@ -142,7 +137,7 @@ function Decide({
           aria-pressed={choice?.blank === true}
           onClick={() => onChange(toggleBlank(choice))}
         >
-          No answer
+          {t("review.noAnswer")}
         </button>
       </div>
     </div>
@@ -166,7 +161,7 @@ function PartFields({
       {many ? <h4 className="mb-part__title">{partTitle(item)}</h4> : null}
       {!isInstruction(item) ? (
         <p className="mb-read">
-          We read: <strong>{reading ?? "nothing clear"}</strong>
+          {t("review.weRead")} <strong>{reading ?? t("review.nothingClear")}</strong>
         </p>
       ) : null}
       <Decide item={item} choice={choice} onChange={onChange} />
@@ -188,13 +183,12 @@ function QuestionCard({
   const first = group.items[0];
   return (
     <li className="mb-card mb-review">
-      <h3 className="mb-h3">Question {group.position}</h3>
+      <h3 className="mb-h3">{t("review.question", { n: group.position })}</h3>
       <Crop item={first} />
       {many ? (
         <p className="mb-fineprint">
-          This question has {group.partCount} answers. Fill in each one in the order it is printed: top to
-          bottom, then left to right.
-          {group.items.length < group.partCount ? " The others were read clearly." : ""}
+          {t("review.manyAnswers", { n: group.partCount })}
+          {group.items.length < group.partCount ? t("review.othersClear") : ""}
         </p>
       ) : null}
       {group.items.map((item) => (
@@ -211,6 +205,7 @@ function QuestionCard({
 }
 
 export function Review({ submissionId }: { submissionId: string }) {
+  useLanguage();
   const { state, reload } = useAsync(() => getSubmission(submissionId), `submission:${submissionId}`);
   const [choices, setChoices] = useState<Record<string, Choice>>({});
   const [saving, setSaving] = useState(false);
@@ -221,8 +216,11 @@ export function Review({ submissionId }: { submissionId: string }) {
   const items = submission?.review_items ?? [];
   const groups = groupByQuestion(items);
   const back = submission
-    ? { href: hrefFor({ name: "paper", id: submission.paper_id }), label: "Back to the paper" }
-    : { href: hrefFor({ name: "papers" }), label: "Papers" };
+    ? {
+        href: hrefFor({ name: "paper", id: submission.paper_id }),
+        label: t("review.backToPaper"),
+      }
+    : { href: hrefFor({ name: "papers" }), label: t("common.practice") };
   const ready = isReadyToSubmit(items, choices);
   const blanks = blankCount(items, choices);
 
@@ -250,26 +248,27 @@ export function Review({ submissionId }: { submissionId: string }) {
 
   return (
     <>
-      <ScreenHeader title="Unclear answers" kicker={submission ? `Page ${submission.page}` : undefined} back={back} />
+      <ScreenHeader
+        title={t("review.title")}
+        kicker={submission ? t("review.pageKicker", { n: submission.page }) : undefined}
+        back={back}
+      />
       <div className="mb-body-pad mb-body-pad--bar">
-        {state.status === "loading" ? <Loading label="Opening the page" /> : null}
+        {state.status === "loading" ? <Loading label={t("review.opening")} /> : null}
         {state.status === "error" ? <ErrorBox message={state.message} onRetry={reload} /> : null}
 
         {submission && items.length === 0 ? (
           <div className="mb-note mb-note--mint">
-            <p>Nothing is waiting for you on this page.</p>
+            <p>{t("review.nothingWaiting")}</p>
             <a className="mb-btn mb-btn--small" href={back.href}>
-              Back to the paper
+              {t("review.backToPaper")}
             </a>
           </div>
         ) : null}
 
         {items.length > 0 ? (
           <>
-            <p className="mb-lead">
-              A few answers were hard to read. Tell us what your child wrote. We will not show right or wrong until you
-              decide.
-            </p>
+            <p className="mb-lead">{t("review.intro")}</p>
             <ul className="mb-list mb-list--loose">
               {groups.map((group) => (
                 <QuestionCard key={group.paperItemId} group={group} choices={choices} onChange={change} />
@@ -283,13 +282,16 @@ export function Review({ submissionId }: { submissionId: string }) {
         <div className="mb-savebar">
           <div className="mb-savebar__text" aria-live="polite">
             {confirmBlanks ? (
-              `${blanks} ${blanks === 1 ? "answer" : "answers"} will be saved as “No answer”. Is that right?`
+              tn("review.confirmBlanks", blanks)
             ) : ready ? (
               <>
-                <Tick className="mb-savebar__tick" /> All decided
+                <Tick className="mb-savebar__tick" /> {t("review.allDecided")}
               </>
             ) : (
-              `${decidedCount(items, choices)} of ${items.length} decided`
+              t("review.decided", {
+                n: decidedCount(items, choices),
+                total: items.length,
+              })
             )}
             {error ? <span className="mb-savebar__error"> · {error}</span> : null}
           </div>
@@ -300,11 +302,11 @@ export function Review({ submissionId }: { submissionId: string }) {
                 className="mb-btn mb-btn--ghost mb-btn--small"
                 onClick={() => setConfirmBlanks(false)}
               >
-                Go back
+                {t("review.goBack")}
               </button>
             ) : null}
             <button type="button" className="mb-btn" disabled={!ready || saving} onClick={save}>
-              {saving ? "Saving…" : confirmBlanks ? "Save anyway" : "Save answers"}
+              {saving ? t("review.saving") : confirmBlanks ? t("review.saveAnyway") : t("review.save")}
             </button>
           </div>
         </div>

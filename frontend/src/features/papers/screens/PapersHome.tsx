@@ -2,17 +2,18 @@ import { useState } from "react";
 
 import {
   type Availability,
-  type Paper,
   createWeeklyPaper,
   friendlyMessage,
   getAvailability,
   listPapers,
+  type Paper,
   pdfUrl,
 } from "../api";
-import { dayLabel, paperStatusLabel, paperTitle, shortDate } from "../format";
+import { dayLabel, pageCount, paperStatusLabel, paperTitle, questionCount, shortDate } from "../format";
 import { useAsync } from "../hooks";
+import { rich, t, useLanguage } from "../i18n";
 import { go, hrefFor } from "../router";
-import { Chip, ErrorBox, Loading, ScreenHeader, type Tone } from "../ui";
+import { Chip, ErrorBox, LinkCard, Loading, PaperIcon, ScreenHeader, type Tone } from "../ui";
 
 export function statusTone(status: string): Tone {
   switch (status) {
@@ -31,12 +32,7 @@ export function statusTone(status: string): Tone {
 }
 
 export function PrintNote() {
-  return (
-    <p className="mb-fineprint">
-      Print at <strong>Actual size (100%)</strong>. Keep all four black squares in the corners: do not crop, fold or
-      staple over them.
-    </p>
-  );
+  return <p className="mb-fineprint">{rich("print.note")}</p>;
 }
 
 function Countdown({ availability }: { availability: Availability }) {
@@ -44,15 +40,14 @@ function Countdown({ availability }: { availability: Availability }) {
     <section className="mb-hero mb-hero--wait" aria-labelledby="wait-title">
       <div className="mb-hero__arch">
         <span className="mb-hero__number">{availability.days_until_eligible}</span>
-        <span className="mb-hero__unit">{availability.days_until_eligible === 1 ? "day" : "days"}</span>
+        <span className="mb-hero__unit">
+          {t(availability.days_until_eligible === 1 ? "home.day.one" : "home.day.other")}
+        </span>
       </div>
       <h2 id="wait-title" className="mb-h2">
-        Your first paper is on its way
+        {t("home.wait.title")}
       </h2>
-      <p>
-        A few days of play first, so the paper fits your child. It opens on{" "}
-        <strong>{dayLabel(availability.eligible_from)}</strong>.
-      </p>
+      <p>{rich("home.wait.body", { date: dayLabel(availability.eligible_from) })}</p>
     </section>
   );
 }
@@ -82,12 +77,12 @@ function MakePaper({ learnerId }: { learnerId: string }) {
         </svg>
       </div>
       <h2 id="make-title" className="mb-h2">
-        This week's paper is ready to make
+        {t("home.make.title")}
       </h2>
-      <p>It is chosen from what your child found easy and hard, in games and on paper.</p>
+      <p>{t("home.make.body")}</p>
       {error ? <ErrorBox message={error} /> : null}
       <button type="button" className="mb-btn" onClick={make} disabled={making}>
-        {making ? "Making your paper… a few seconds" : "Make this week's paper"}
+        {making ? t("home.make.busy") : t("home.make.button")}
       </button>
     </section>
   );
@@ -98,21 +93,25 @@ function ThisWeek({ paper }: { paper: Paper }) {
     <section className="mb-card mb-card--paper" aria-labelledby="week-title">
       <div className="mb-row">
         <Chip tone={statusTone(paper.status)}>{paperStatusLabel(paper.status)}</Chip>
-        <span className="mb-code">Code {paper.code}</span>
+        <span className="mb-code">{t("detail.code", { code: paper.code })}</span>
       </div>
       <h2 id="week-title" className="mb-h2">
         {paperTitle(paper.mode)}
       </h2>
       <p className="mb-muted">
-        Week of {dayLabel(paper.week_start)} · {paper.question_count} questions · about{" "}
-        {Math.round(paper.estimated_minutes)} min · {paper.page_count} {paper.page_count === 1 ? "page" : "pages"}
+        {t("home.details", {
+          date: dayLabel(paper.week_start),
+          questions: questionCount(paper.question_count),
+          minutes: Math.round(paper.estimated_minutes),
+          pages: pageCount(paper.page_count),
+        })}
       </p>
       <div className="mb-actions">
         <a className="mb-btn mb-btn--sun" href={pdfUrl(paper)} target="_blank" rel="noreferrer">
-          Open PDF to print
+          {t("home.openPdf")}
         </a>
         <a className="mb-btn" href={hrefFor({ name: "paper", id: paper.paper_id })}>
-          Upload photos
+          {t("home.uploadPhotos")}
         </a>
       </div>
       <PrintNote />
@@ -126,7 +125,7 @@ function EarlierPapers({ papers }: { papers: Paper[] }) {
   return (
     <section aria-labelledby="earlier-title">
       <h2 id="earlier-title" className="mb-h2 mb-h2--spaced">
-        Earlier papers
+        {t("home.earlier")}
       </h2>
       <ul className="mb-list">
         {latest.map((paper) => (
@@ -134,7 +133,7 @@ function EarlierPapers({ papers }: { papers: Paper[] }) {
             <a className="mb-paper-row" href={hrefFor({ name: "paper", id: paper.paper_id })}>
               <span className="mb-paper-row__date">
                 <strong>{shortDate(paper.week_start)}</strong>
-                <small>{paper.question_count} questions</small>
+                <small>{questionCount(paper.question_count)}</small>
               </span>
               <span className="mb-paper-row__title">{paperTitle(paper.mode)}</span>
               <Chip tone={statusTone(paper.status)}>{paperStatusLabel(paper.status)}</Chip>
@@ -142,31 +141,55 @@ function EarlierPapers({ papers }: { papers: Paper[] }) {
           </li>
         ))}
       </ul>
-      <a className="mb-btn mb-btn--ghost mb-btn--wide mb-all" href={hrefFor({ name: "history" })}>
-        See all past papers and their results
-      </a>
+    </section>
+  );
+}
+
+/** Where else the practice area goes: buttons, not another tab bar. */
+function MoreLinks() {
+  return (
+    <section aria-labelledby="more-title">
+      <h2 id="more-title" className="mb-h2 mb-h2--spaced">
+        {t("home.more")}
+      </h2>
+      <div className="mb-link-cards">
+        <LinkCard
+          href={hrefFor({ name: "history" })}
+          tone="sky"
+          image="/practice/past-papers.png"
+          title={t("home.pastPapers.title")}
+          text={t("home.pastPapers.text")}
+        />
+        <LinkCard
+          href={hrefFor({ name: "mastery" })}
+          tone="mint"
+          image="/practice/my-skills.png"
+          title={t("home.skills.title")}
+          text={t("home.skills.text")}
+        />
+      </div>
     </section>
   );
 }
 
 export function PapersHome({ learnerId }: { learnerId: string }) {
+  useLanguage();
   const availability = useAsync(() => getAvailability(learnerId), `availability:${learnerId}`);
   const list = useAsync(() => listPapers(learnerId), `papers:${learnerId}`);
 
   const current = availability.state.status === "ready" ? availability.state.data : null;
   const earlier =
-    list.state.status === "ready"
-      ? list.state.data.filter((paper) => paper.paper_id !== current?.paper?.paper_id)
-      : [];
+    list.state.status === "ready" ? list.state.data.filter((paper) => paper.paper_id !== current?.paper?.paper_id) : [];
 
   return (
     <>
       <ScreenHeader
-        title="Weekly paper"
-        kicker={current ? `Week of ${dayLabel(current.week_start)}` : "This week"}
+        title={t("home.title")}
+        kicker={current ? t("home.weekOf", { date: dayLabel(current.week_start) }) : t("home.thisWeek")}
+        icon={<PaperIcon />}
       />
       <div className="mb-body-pad">
-        {availability.state.status === "loading" ? <Loading label="Checking this week" /> : null}
+        {availability.state.status === "loading" ? <Loading label={t("home.checking")} /> : null}
         {availability.state.status === "error" ? (
           <ErrorBox message={availability.state.message} onRetry={availability.reload} />
         ) : null}
@@ -175,11 +198,12 @@ export function PapersHome({ learnerId }: { learnerId: string }) {
         {current?.state === "available" && current.can_generate ? <MakePaper learnerId={learnerId} /> : null}
         {current?.state === "generated" && current.paper ? <ThisWeek paper={current.paper} /> : null}
         {current && current.state !== "not_yet_eligible" ? (
-          <p className="mb-fineprint">Next paper: {dayLabel(current.next_paper_date)}</p>
+          <p className="mb-fineprint">{t("home.nextPaper", { date: dayLabel(current.next_paper_date) })}</p>
         ) : null}
 
         {list.state.status === "error" ? <ErrorBox message={list.state.message} onRetry={list.reload} /> : null}
         <EarlierPapers papers={earlier} />
+        <MoreLinks />
       </div>
     </>
   );

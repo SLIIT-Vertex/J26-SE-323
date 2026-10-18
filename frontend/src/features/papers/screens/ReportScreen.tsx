@@ -1,8 +1,9 @@
 import { useState } from "react";
 
-import { type Report, type ReportItem, getPaper, getReport, pictureUrl } from "../api";
-import { dayLabel, resultLabel, shortDate } from "../format";
+import { getPaper, getReport, pictureUrl, type Report, type ReportItem } from "../api";
+import { dayLabel, resultLabel, shortDate, skillName } from "../format";
 import { useAsync } from "../hooks";
+import { t, tn, useLanguage } from "../i18n";
 import { hrefFor } from "../router";
 import { Chip, ErrorBox, Loading, ScreenHeader, Tick } from "../ui";
 
@@ -20,12 +21,15 @@ function Summary({ report }: { report: Report }) {
   return (
     <section aria-labelledby="summary-title">
       <h2 id="summary-title" className="mb-h2">
-        {summary.marked} of {summary.questions} questions marked
+        {t("report.summary", {
+          marked: summary.marked,
+          questions: summary.questions,
+        })}
       </h2>
       <ul className="mb-tiles">
-        <Tile tone="mint" count={summary.correct} label="Correct" />
-        <Tile tone="rose" count={summary.wrong} label="Not correct" />
-        <Tile tone="sun" count={summary.blank} label="Left blank" />
+        <Tile tone="mint" count={summary.correct} label={t("result.correct")} />
+        <Tile tone="rose" count={summary.wrong} label={t("result.wrong")} />
+        <Tile tone="sun" count={summary.blank} label={t("result.blank")} />
       </ul>
     </section>
   );
@@ -36,7 +40,7 @@ function Skills({ report }: { report: Report }) {
   return (
     <section aria-labelledby="skills-title">
       <h2 id="skills-title" className="mb-h2 mb-h2--spaced">
-        By skill
+        {t("report.bySkill")}
       </h2>
       <ul className="mb-list">
         {report.skills.map((skill) => {
@@ -44,17 +48,16 @@ function Skills({ report }: { report: Report }) {
           return (
             <li key={skill.skill_code} className="mb-skillrow">
               <div>
-                <strong>{skill.name}</strong>
-                {skill.name_si ? (
-                  <small lang="si" className="mb-muted">
-                    {skill.name_si}
-                  </small>
-                ) : null}
+                <strong>{skillName({ en: skill.name, si: skill.name_si })}</strong>
               </div>
               <span
                 className="mb-split"
                 role="img"
-                aria-label={`${skill.correct} correct, ${skill.wrong} not correct, ${skill.blank} blank`}
+                aria-label={t("report.splitAria", {
+                  correct: skill.correct,
+                  wrong: skill.wrong,
+                  blank: skill.blank,
+                })}
               >
                 <i className="mb-split__ok" style={{ flexGrow: skill.correct }} />
                 <i className="mb-split__no" style={{ flexGrow: skill.wrong }} />
@@ -91,39 +94,35 @@ function QuestionRow({ item }: { item: ReportItem }) {
     <img
       className="mb-mistake__picture"
       src={pictureUrl(item.picture_url)}
-      alt={`Question ${item.position} with your child's writing`}
+      alt={t("report.photoAlt", { n: item.position })}
     />
   ) : (
-    <p className="mb-fineprint">The photo has been removed.</p>
+    <p className="mb-fineprint">{t("report.photoRemoved")}</p>
   );
   return (
     <li className={`mb-card mb-mistake mb-q--${item.result}`}>
       <div className="mb-row">
-        <h3 className="mb-h3">Question {item.position}</h3>
+        <h3 className="mb-h3">{t("review.question", { n: item.position })}</h3>
         <Chip tone={tone} icon={right ? <Tick className="mb-chip__tick" /> : undefined}>
           {resultLabel(item.result)}
         </Chip>
       </div>
       <p className="mb-muted">
-        {item.skill_name ?? item.skill_code}
-        {item.skill_name_si ? (
-          <>
-            {" · "}
-            <span lang="si">{item.skill_name_si}</span>
-          </>
-        ) : null}
+        {item.skill_name ? skillName({ en: item.skill_name, si: item.skill_name_si }) : item.skill_code}
       </p>
       {right ? (
         <details className="mb-photo">
-          <summary>See the photo</summary>
+          <summary>{t("report.seePhoto")}</summary>
           {photo}
         </details>
       ) : (
         photo
       )}
       <p className="mb-read">
-        Written:{" "}
-        <strong>{item.written.map((part) => part.text ?? "nothing").join(" · ") || "nothing"}</strong>
+        {t("report.written")}{" "}
+        <strong>
+          {item.written.map((part) => part.text ?? t("report.nothing")).join(" · ") || t("report.nothing")}
+        </strong>
       </p>
     </li>
   );
@@ -138,22 +137,22 @@ function Questions({ report }: { report: Report }) {
   const practise = marked.length - right;
   const shown = visibleIn(report.items, filter);
   const options: { value: Filter; label: string }[] = [
-    { value: "all", label: `All (${marked.length})` },
-    { value: "right", label: `Correct (${right})` },
-    { value: "practise", label: `To practise (${practise})` },
+    { value: "all", label: t("report.filter.all", { n: marked.length }) },
+    { value: "right", label: t("report.filter.right", { n: right }) },
+    { value: "practise", label: t("report.filter.practise", { n: practise }) },
   ];
   return (
     <section aria-labelledby="questions-title">
       <h2 id="questions-title" className="mb-h2 mb-h2--spaced">
-        Question by question
+        {t("report.qbq")}
       </h2>
       {practise === 0 ? (
         <div className="mb-note mb-note--mint">
-          <p>No mistakes on the pages marked so far. Well done!</p>
+          <p>{t("report.noMistakes")}</p>
         </div>
       ) : null}
       <fieldset className="mb-seg mb-seg--filter">
-        <legend className="mb-visually-hidden">Show</legend>
+        <legend className="mb-visually-hidden">{t("report.show")}</legend>
         {options.map((option) => (
           <label key={option.value}>
             <input
@@ -181,16 +180,14 @@ function AnswerList({ report }: { report: Report }) {
   return (
     <section className="mb-card mb-answers" aria-labelledby="answers-title">
       <h2 id="answers-title" className="mb-h2">
-        Answer list
+        {t("report.answerList")}
       </h2>
-      <p className="mb-fineprint">Only for the questions above. Look after your child has tried them again.</p>
+      <p className="mb-fineprint">{t("report.answerListNote")}</p>
       <dl>
         {report.answer_list.map((entry) => (
           <div key={entry.position} className="mb-answers__row">
-            <dt>Q{entry.position}</dt>
-            <dd>
-              {entry.answers.map((a) => (a.label ? `${a.label}: ${a.answer}` : a.answer)).join("  ·  ")}
-            </dd>
+            <dt>{t("report.qShort", { n: entry.position })}</dt>
+            <dd>{entry.answers.map((a) => (a.label ? `${a.label}: ${a.answer}` : a.answer)).join("  ·  ")}</dd>
           </div>
         ))}
       </dl>
@@ -199,30 +196,34 @@ function AnswerList({ report }: { report: Report }) {
 }
 
 export function ReportScreen({ paperId }: { paperId: string }) {
+  useLanguage();
   const report = useAsync(() => getReport(paperId), `report:${paperId}`);
   const paper = useAsync(() => getPaper(paperId), `report-paper:${paperId}`);
   const data = report.state.status === "ready" ? report.state.data : null;
-  const waiting = paper.state.status === "ready" ? (paper.state.data.pages ?? []).filter((p) => p.submission_status === "needs_review") : [];
+  const waiting =
+    paper.state.status === "ready"
+      ? (paper.state.data.pages ?? []).filter((p) => p.submission_status === "needs_review")
+      : [];
 
   return (
     <>
       <ScreenHeader
-        title="Results"
-        kicker={data ? `Week of ${dayLabel(data.week_start)}` : undefined}
-        back={{ href: hrefFor({ name: "paper", id: paperId }), label: "The paper" }}
+        title={t("report.title")}
+        kicker={data ? t("home.weekOf", { date: dayLabel(data.week_start) }) : undefined}
+        back={{
+          href: hrefFor({ name: "paper", id: paperId }),
+          label: t("report.back"),
+        }}
       />
       <div className="mb-body-pad">
-        {report.state.status === "loading" ? <Loading label="Gathering the results" /> : null}
+        {report.state.status === "loading" ? <Loading label={t("report.gathering")} /> : null}
         {report.state.status === "error" ? <ErrorBox message={report.state.message} onRetry={report.reload} /> : null}
 
         {data ? (
           <>
             {waiting.length > 0 ? (
               <div className="mb-note mb-note--rose">
-                <p>
-                  {data.summary.waiting_for_parent} answer{data.summary.waiting_for_parent === 1 ? " is" : "s are"} waiting for
-                  you before the results are complete.
-                </p>
+                <p>{tn("report.waiting", data.summary.waiting_for_parent)}</p>
                 {waiting.map((page) =>
                   page.submission_id ? (
                     <a
@@ -230,28 +231,28 @@ export function ReportScreen({ paperId }: { paperId: string }) {
                       className="mb-btn mb-btn--small"
                       href={hrefFor({ name: "review", id: page.submission_id })}
                     >
-                      Review page {page.page}
+                      {t("report.reviewPage", { n: page.page })}
                     </a>
                   ) : null,
                 )}
               </div>
             ) : null}
             {data.summary.not_uploaded > 0 ? (
-              <p className="mb-fineprint">
-                {data.summary.not_uploaded} questions are on pages with no photo yet.
-              </p>
+              <p className="mb-fineprint">{t("report.notUploaded", { n: data.summary.not_uploaded })}</p>
             ) : null}
 
-            {data.summary.marked > 0 ? <Summary report={data} /> : <p className="mb-muted">Nothing is marked yet.</p>}
+            {data.summary.marked > 0 ? (
+              <Summary report={data} />
+            ) : (
+              <p className="mb-muted">{t("report.nothingMarked")}</p>
+            )}
             <Skills report={data} />
             <Questions report={data} />
             <AnswerList report={data} />
 
             <p className="mb-fineprint">
-              {data.photos_kept_until
-                ? `Photos of these pages are kept until ${shortDate(data.photos_kept_until)}, then deleted. `
-                : ""}
-              Next paper: {dayLabel(data.next_paper_date)}.
+              {data.photos_kept_until ? `${t("report.photosKept", { date: shortDate(data.photos_kept_until) })} ` : ""}
+              {t("report.nextPaper", { date: dayLabel(data.next_paper_date) })}
             </p>
           </>
         ) : null}

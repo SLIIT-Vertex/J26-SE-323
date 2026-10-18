@@ -1,46 +1,56 @@
-/* MindBridge paper screens.
-   Look: warm cream paper, the four logo colours as fills (never as small text), and the logo's two
-   overlapping arches as the recurring shape. Text is always dark navy ink on a light fill. */
+/* The practice screens (weekly paper, upload, review, results, past papers, skills).
 
-html:has(body.mb-body) {
-  scroll-padding-bottom: 10rem;
-}
+   They live inside the game's mobile app, so they use the game's look: its colours and fonts come
+   from styles.css (--ink, --muted, --purple, --purple-dark, --purple-soft, --gold, --orange, --teal,
+   --cream, --shadow), buttons are the purple pill with a pressed-down edge, cards are rounded white
+   or pastel with a coloured outline, and labels above titles are the purple eyebrow. Only colours the
+   game does not define are declared here, with the same values the game's subject cards use. */
 
 body.mb-body {
   overflow-x: hidden;
-  display: block;
-  place-items: initial;
-  min-height: 100dvh;
-  background: #f1e6cd;
 }
 
 .mb {
-  --cream: #fff9ed;
-  --paper: #ffffff;
-  --sand: #f0e3c6;
-  --sky: #41aee3;
-  --rose: #f5789c;
-  --sun: #ffc841;
-  --mint: #5ecb93;
-  --orange: #f45f27;
-  --navy: #3e538c;
-  --navy-deep: #2a3a6e;
-  --ink: #232c57;
-  --ink-soft: #565f8a;
-  --sky-tint: #d9eefa;
-  --rose-tint: #fde0e9;
+  --paper: #fff;
+  --line: #e9e5f6;
+  --ink-tint: #eeebf8;
+  --press: #5040be;
+  --lavender: #cfc8fa;
+  --body-text: #42445f;
+  --card-shadow: 0 8px 22px rgba(31, 31, 60, 0.06);
+  --badge-shadow: 0 7px 18px rgba(31, 31, 60, 0.12);
+  /* tones: text colour, light fill, outline and pastel card background */
+  --sky-ink: #1769bf;
+  --sky-tint: #dceeff;
+  --sky-line: #72bff8;
+  --sky-bg: #f5faff;
+  --violet-ink: #5b35d6;
+  --violet-tint: #ece4ff;
+  --violet-line: #b9a4f4;
+  --violet-bg: #f7f4ff;
+  --mint-ink: #0d8a74;
+  --mint-tint: #d9f6ef;
+  --mint-line: #7dcec3;
+  --mint-bg: #f3fbf8;
+  --rose-ink: #c43178;
+  --rose-tint: #ffe3f0;
+  --rose-line: #f0b0cf;
+  --rose-bg: #fff5fa;
+  --sun-ink: #7a5a00;
   --sun-tint: #fff0c4;
-  --mint-tint: #d6f2e4;
-  --ink-tint: #e8ebf5;
-  --tabs-h: 4.6rem;
-  --font: "Nunito Variable", "Noto Sans Sinhala", "Nirmala UI", "Iskoola Pota", system-ui, sans-serif;
-  --display: "Fredoka Variable", "Nunito Variable", system-ui, sans-serif;
+  --sun-line: #f3cf6b;
+  --sun-bg: #fffaf0;
+  --nav-h: 0px;
 
   color: var(--ink);
-  font-family: var(--font);
   font-size: 1rem;
   line-height: 1.5;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* inside the game's shell the bottom navigation is fixed above the page */
+.mb--embedded {
+  --nav-h: calc(4.2rem + env(safe-area-inset-bottom));
 }
 
 .mb *,
@@ -54,7 +64,7 @@ body.mb-body {
 }
 
 .mb :focus-visible {
-  outline: 3px solid var(--navy);
+  outline: 3px solid var(--teal);
   outline-offset: 3px;
 }
 
@@ -66,12 +76,17 @@ body.mb-body {
   min-height: 100dvh;
   margin: 0 auto;
   overflow-x: clip;
-  background: var(--cream);
+  background: radial-gradient(circle at 88% 5%, rgba(108, 92, 231, 0.08), transparent 26%), var(--cream);
+}
+.mb--embedded .mb-frame {
+  background: transparent;
 }
 
 @media (min-width: 31rem) {
-  .mb-frame {
-    box-shadow: 0 0 0 1px rgba(35, 44, 87, 0.06), 0 1.5rem 4rem rgba(35, 44, 87, 0.14);
+  .mb:not(.mb--embedded) .mb-frame {
+    box-shadow:
+      0 0 0 1px rgba(46, 42, 69, 0.06),
+      0 1.5rem 4rem rgba(46, 42, 69, 0.14);
   }
 }
 
@@ -93,30 +108,7 @@ body.mb-body {
   opacity: 0;
 }
 
-/* ---- logo, top bar ------------------------------------------------------------------------- */
-
-.mb-arch {
-  fill: none;
-  stroke-width: 52;
-  stroke-linecap: round;
-  mix-blend-mode: multiply;
-}
-.mb-arch--sky {
-  stroke: var(--sky);
-}
-.mb-arch--rose {
-  stroke: var(--rose);
-}
-.mb-sun {
-  fill: var(--sun);
-  mix-blend-mode: multiply;
-}
-.mb-rays path {
-  fill: none;
-  stroke: #f6b302;
-  stroke-width: 9;
-  stroke-linecap: round;
-}
+/* ---- top bar (only when the screens run on their own) ------------------------------------------- */
 
 .mb-topbar {
   position: relative;
@@ -125,14 +117,13 @@ body.mb-body {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 1.1rem 0;
+  padding: 0.75rem 1.15rem 0;
 }
 
 .mb-brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  min-height: 2.75rem;
+  min-height: 48px;
   text-decoration: none;
 }
 .mb-brand__wordmark {
@@ -144,69 +135,164 @@ body.mb-body {
   background: #000;
 }
 
-.mb-wordmark {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 1.35rem;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-.mb-wordmark__sky {
-  color: var(--sky);
-}
-.mb-wordmark__rose {
-  color: var(--rose);
-}
-.mb-wordmark__sun {
-  color: var(--sun);
-}
-.mb-wordmark__mint {
-  color: var(--mint);
-}
-
 .mb-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  min-height: 2.75rem;
+  min-height: 40px;
   padding: 0 0.95rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 99px;
+  border-radius: 999px;
   background: var(--paper);
-  font-size: 0.86rem;
-  font-weight: 800;
-  text-decoration: none;
+  box-shadow: var(--card-shadow);
+  font-size: 0.82rem;
+  font-weight: 850;
 }
 
-/* ---- screen header ------------------------------------------------------------------------- */
+/* ---- screen header ------------------------------------------------------------------------------- */
 
 .mb-head {
   position: relative;
-  padding: 0.5rem 1.25rem 1.1rem;
-}
-.mb-head__arches {
-  position: absolute;
-  top: -5.2rem;
-  right: -2rem;
-  z-index: 0;
-  width: 11.5rem;
-  height: auto;
-  opacity: 0.55;
-  pointer-events: none;
+  padding: 1rem 1.15rem 0.5rem;
 }
 .mb-head__text {
+  padding-right: 3.2rem; /* room for the settings gear */
+}
+
+/* ---- settings gear and the language sheet ---- */
+.mb-settings-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--badge-shadow);
+  color: var(--purple-dark);
+  cursor: pointer;
+}
+.mb-settings-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mb-settings-btn:focus-visible,
+.mb-sheet__choice:focus-within {
+  outline: 3px solid var(--purple);
+  outline-offset: 2px;
+}
+.mb-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(31, 31, 60, 0.45);
+}
+.mb-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: default;
+}
+.mb-sheet__panel {
   position: relative;
-  z-index: 1;
+  box-sizing: border-box;
+  display: grid;
+  gap: 0.85rem;
+  width: 100%;
+  max-width: 30rem;
+  padding: 1.25rem 1.15rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  box-shadow: 0 -10px 30px rgba(31, 31, 60, 0.18);
+}
+.mb-sheet__label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+.mb-sheet__choices {
+  display: grid;
+  gap: 0.55rem;
+}
+.mb-sheet__choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 0.6rem 1rem;
+  border: 2px solid var(--violet-line);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.mb-sheet__choice.is-selected {
+  border-color: var(--purple);
+  background: var(--violet-bg);
+  color: var(--purple-dark);
+}
+.mb-sheet__choice svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mb-head__row {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 0.85rem;
+  align-items: center;
+}
+.mb-head__badge {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: var(--badge-shadow);
+  color: var(--purple);
+}
+.mb-head__badge svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .mb-back {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  min-height: 2.75rem;
-  margin-left: -0.3rem;
-  color: var(--navy);
-  font-weight: 800;
+  gap: 0.25rem;
+  min-height: 48px;
+  margin: -0.45rem 0 0.1rem -0.65rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 16px;
+  color: var(--purple-dark);
+  font-weight: 850;
   text-decoration: none;
 }
 .mb-back svg {
@@ -221,44 +307,44 @@ body.mb-body {
 
 .mb-kicker {
   margin: 0 0 0.3rem;
-  color: var(--ink-soft);
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  color: var(--purple);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
 }
 
 .mb h1.mb-title {
   margin: 0;
-  font-family: var(--display);
-  font-size: 2.05rem;
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
+  color: var(--ink);
+  font-size: clamp(1.6rem, 6.5vw, 2.1rem);
+  font-weight: 900;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
 }
 
 .mb-h2,
 .mb-h3 {
   margin: 0;
-  font-family: var(--display);
-  font-weight: 600;
-  line-height: 1.2;
+  color: var(--ink);
+  font-weight: 900;
+  line-height: 1.25;
 }
 .mb-h2 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
 }
 .mb-h2--spaced {
   margin: 0.4rem 0 0.2rem;
 }
 .mb-h3 {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 .mb-body-pad {
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  padding: 0.25rem 1.25rem 2rem;
+  padding: 0.5rem 1.15rem 2rem;
 }
 .mb-body-pad--bar {
   padding-bottom: 1.5rem;
@@ -274,21 +360,21 @@ body.mb-body {
   margin: 0;
 }
 .mb-muted {
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 .mb-lead {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   line-height: 1.55;
 }
 .mb-fineprint {
-  color: var(--ink-soft);
-  font-size: 0.83rem;
+  color: var(--muted);
+  font-size: 0.82rem;
   line-height: 1.45;
 }
 .mb-code {
-  color: var(--ink-soft);
+  color: var(--muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 850;
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
@@ -299,110 +385,160 @@ body.mb-body {
   gap: 0.75rem;
 }
 
-/* ---- cards, hero --------------------------------------------------------------------------- */
+/* ---- cards --------------------------------------------------------------------------------------- */
 
 .mb-card {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  padding: 1.15rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 1.4rem;
+  padding: 1.1rem;
+  border-radius: 22px;
   background: var(--paper);
-  box-shadow: 0 0.7rem 1.4rem -1.1rem rgba(35, 44, 87, 0.35);
+  box-shadow: var(--shadow);
 }
 
+/* the paper itself: the game's purple "mission" card */
+.mb-card--paper {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(142deg, #7565eb, #5e49d4);
+  box-shadow: 0 18px 34px rgba(91, 72, 211, 0.25);
+}
+.mb-card--paper::after {
+  content: "";
+  position: absolute;
+  top: -80px;
+  right: -85px;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.mb-card--paper > * {
+  position: relative;
+  z-index: 1;
+}
+.mb-card--paper .mb-h2,
+.mb-card--paper .mb-muted,
+.mb-card--paper .mb-code,
+.mb-card--paper .mb-fineprint {
+  color: rgba(255, 255, 255, 0.88);
+}
+.mb-card--paper .mb-h2 {
+  color: #fff;
+}
+
+/* a big message in the middle: waiting, or ready to make */
 .mb-hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  padding: 1.5rem 1.4rem 1.5rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 9rem 9rem 1.5rem 1.5rem;
-  background: var(--paper);
+  padding: 1.4rem 1.2rem 1.3rem;
+  border: 2px solid var(--violet-line);
+  border-radius: 27px;
+  background: linear-gradient(180deg, var(--violet-bg), var(--paper));
   text-align: center;
-  box-shadow: 0 0.7rem 1.4rem -1.1rem rgba(35, 44, 87, 0.35);
+  box-shadow: var(--card-shadow);
+}
+.mb-hero--wait {
+  border-color: var(--sky-line);
+  background: linear-gradient(180deg, var(--sky-bg), var(--paper));
 }
 .mb-hero__arch {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 6.4rem;
-  height: 6.4rem;
-  border-radius: 99px 99px 1rem 1rem;
-  background: var(--sky-tint);
-  box-shadow: inset 0 0 0 1.5px rgba(35, 44, 87, 0.14);
-}
-.mb-hero__arch--sun {
-  background: var(--sun-tint);
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: var(--badge-shadow);
 }
 .mb-hero__arch svg {
-  width: 3.2rem;
-  height: 3.2rem;
+  width: 2.8rem;
+  height: 2.8rem;
   fill: none;
-  stroke: var(--ink);
+  stroke: var(--purple);
   stroke-width: 2.4;
   stroke-linecap: round;
 }
 .mb-hero__number {
-  font-family: var(--display);
-  font-size: 2.7rem;
-  font-weight: 600;
+  color: var(--sky-ink);
+  font-size: 2.4rem;
+  font-weight: 950;
   line-height: 1;
 }
 .mb-hero__unit {
-  font-size: 0.8rem;
-  font-weight: 800;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 850;
 }
 
-/* ---- buttons ------------------------------------------------------------------------------- */
+/* ---- buttons ------------------------------------------------------------------------------------- */
 
 .mb-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-height: 3.1rem;
-  padding: 0.7rem 1.3rem;
+  min-height: 48px;
+  padding: 0.85rem 1.1rem;
   border: 0;
-  border-radius: 1rem;
-  background: var(--navy);
-  box-shadow: 0 0.22rem 0 var(--navy-deep);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #7565eb, var(--purple));
+  box-shadow:
+    0 6px 0 var(--press),
+    0 12px 24px rgba(108, 92, 231, 0.22);
   color: #fff;
-  font: 800 1rem/1.15 var(--font);
+  font: inherit;
+  font-weight: 850;
+  line-height: 1.15;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
 }
 .mb-btn:active:not(:disabled) {
-  transform: translateY(0.18rem);
-  box-shadow: 0 0.04rem 0 var(--navy-deep);
+  transform: translateY(3px);
+  box-shadow:
+    0 3px 0 var(--press),
+    0 7px 16px rgba(108, 92, 231, 0.18);
 }
 .mb-btn--sun {
-  background: var(--sun);
-  box-shadow: 0 0.22rem 0 #d9a21b;
+  background: var(--gold);
+  box-shadow:
+    0 6px 0 #d9a21b,
+    0 12px 24px rgba(217, 162, 27, 0.2);
   color: var(--ink);
 }
 .mb-btn--sun:active:not(:disabled) {
-  box-shadow: 0 0.04rem 0 #d9a21b;
+  box-shadow:
+    0 3px 0 #d9a21b,
+    0 7px 16px rgba(217, 162, 27, 0.16);
 }
 .mb-btn--ghost {
-  background: transparent;
-  box-shadow: inset 0 0 0 2px var(--navy);
-  color: var(--navy);
+  border: 2px solid var(--lavender);
+  background: var(--paper);
+  box-shadow: none;
+  color: var(--purple-dark);
+}
+.mb-btn--ghost:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: none;
 }
 .mb-btn--small {
-  min-height: 2.75rem;
-  padding: 0.4rem 1rem;
+  min-height: 44px;
+  padding: 0.55rem 1rem;
   font-size: 0.92rem;
 }
 .mb-btn--wide {
   width: 100%;
 }
 .mb-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -411,28 +547,37 @@ body.mb-body {
   align-self: stretch;
 }
 
+/* on the purple paper card the buttons turn white, as in the game's mission card */
+.mb-card--paper .mb-btn:not(.mb-btn--sun) {
+  background: #fff;
+  box-shadow: 0 5px 0 rgba(44, 29, 132, 0.42);
+  color: var(--purple-dark);
+}
+
 .mb-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: 0.7rem;
 }
 .mb-actions > .mb-btn {
   flex: 1 1 9rem;
 }
 
-/* ---- chips, notes, loading ----------------------------------------------------------------- */
+/* ---- chips, notes, loading ----------------------------------------------------------------------- */
 
 .mb-chip {
-  --dot: var(--ink-soft);
+  --dot: var(--muted);
+  --chip-ink: var(--ink);
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.28rem 0.7rem;
-  border-radius: 99px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
   background: var(--ink-tint);
-  color: var(--ink);
-  font-size: 0.78rem;
-  font-weight: 800;
+  color: var(--chip-ink);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 .mb-chip::before {
@@ -455,19 +600,28 @@ body.mb-body {
   stroke-linejoin: round;
 }
 .mb-chip--sky {
-  --dot: var(--sky);
+  --dot: var(--sky-ink);
+  --chip-ink: var(--sky-ink);
   background: var(--sky-tint);
 }
+.mb-chip--violet {
+  --dot: var(--violet-ink);
+  --chip-ink: var(--violet-ink);
+  background: var(--violet-tint);
+}
 .mb-chip--rose {
-  --dot: var(--rose);
+  --dot: var(--rose-ink);
+  --chip-ink: var(--rose-ink);
   background: var(--rose-tint);
 }
 .mb-chip--sun {
-  --dot: #e0a400;
+  --dot: #d99a00;
+  --chip-ink: var(--sun-ink);
   background: var(--sun-tint);
 }
 .mb-chip--mint {
-  --dot: #2fa56c;
+  --dot: var(--mint-ink);
+  --chip-ink: var(--mint-ink);
   background: var(--mint-tint);
 }
 
@@ -477,7 +631,7 @@ body.mb-body {
   align-items: flex-start;
   gap: 0.6rem;
   padding: 0.9rem 1rem;
-  border-radius: 1.1rem;
+  border-radius: 18px;
   background: var(--ink-tint);
 }
 .mb-note--rose {
@@ -491,8 +645,8 @@ body.mb-body {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  color: var(--ink-soft);
-  font-weight: 700;
+  color: var(--muted);
+  font-weight: 800;
 }
 .mb-loading__dots {
   display: inline-flex;
@@ -502,13 +656,13 @@ body.mb-body {
   width: 0.65rem;
   height: 0.65rem;
   border-radius: 50%;
-  background: var(--sky);
+  background: var(--purple);
 }
 .mb-loading__dots i:nth-child(2) {
-  background: var(--rose);
+  background: var(--teal);
 }
 .mb-loading__dots i:nth-child(3) {
-  background: var(--sun);
+  background: var(--gold);
 }
 @keyframes mb-bounce {
   50% {
@@ -516,7 +670,7 @@ body.mb-body {
   }
 }
 
-/* ---- lists --------------------------------------------------------------------------------- */
+/* ---- lists --------------------------------------------------------------------------------------- */
 
 .mb-list {
   display: flex;
@@ -540,9 +694,9 @@ body.mb-body {
   gap: 0.85rem;
   min-height: 3.6rem;
   padding: 0.75rem 1rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 1.1rem;
+  border-radius: 18px;
   background: var(--paper);
+  box-shadow: var(--shadow);
   text-decoration: none;
 }
 .mb-paper-row__date {
@@ -551,83 +705,132 @@ body.mb-body {
   line-height: 1.2;
 }
 .mb-paper-row__date small {
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 .mb-paper-row__title {
-  font-weight: 700;
-}
-
-.mb-learner {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  width: 100%;
-  min-height: 4.2rem;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 1.2rem;
-  background: var(--paper);
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.mb-learner__text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  line-height: 1.3;
-}
-.mb-learner__text small {
-  color: var(--ink-soft);
-}
-.mb-learner__current {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: var(--navy);
-  font-size: 0.82rem;
   font-weight: 800;
 }
-.mb-learner__current svg {
-  width: 1rem;
-  height: 1rem;
+
+/* ---- the buttons that open other practice pages -------------------------------------------------- */
+
+.mb-link-cards {
+  display: grid;
+  gap: 0.9rem;
+}
+.mb-link-card {
+  --line-c: var(--sky-line);
+  --bg-c: var(--sky-bg);
+  --ink-c: var(--sky-ink);
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 0.15rem 0.85rem;
+  align-items: center;
+  padding: 1.05rem;
+  border: 2px solid var(--line-c);
+  border-radius: 27px;
+  background: var(--bg-c);
+  box-shadow: var(--card-shadow);
+  color: var(--ink);
+  text-decoration: none;
+}
+.mb-link-card--violet {
+  --line-c: var(--violet-line);
+  --bg-c: var(--violet-bg);
+  --ink-c: var(--violet-ink);
+}
+.mb-link-card--mint {
+  --line-c: var(--mint-line);
+  --bg-c: var(--mint-bg);
+  --ink-c: var(--mint-ink);
+}
+.mb-link-card--rose {
+  --line-c: var(--rose-line);
+  --bg-c: var(--rose-bg);
+  --ink-c: var(--rose-ink);
+}
+.mb-link-card--sun {
+  --line-c: var(--sun-line);
+  --bg-c: var(--sun-bg);
+  --ink-c: var(--sun-ink);
+}
+.mb-link-card--picture {
+  grid-template-columns: 96px 1fr;
+}
+.mb-link-card__art {
+  display: block;
+  grid-row: span 2;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 12px rgba(31, 31, 60, 0.14));
+}
+.mb-link-card__badge {
+  display: grid;
+  grid-row: span 2;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: var(--badge-shadow);
+  color: var(--ink-c);
+}
+.mb-link-card__badge svg {
+  width: 30px;
+  height: 30px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 3;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
-.mb-avatar {
-  flex: none;
-  width: 3rem;
-  height: 3rem;
+.mb-link-card__copy {
+  display: grid;
+  gap: 0.2rem;
 }
-.mb-avatar--sky {
-  --tone: var(--sky);
+.mb-link-card__copy strong {
+  color: var(--ink-c);
+  font-size: 1.2rem;
+  font-weight: 950;
+  line-height: 1.15;
 }
-.mb-avatar--rose {
-  --tone: var(--rose);
+.mb-link-card__copy small {
+  color: var(--body-text);
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
-.mb-avatar--mint {
-  --tone: var(--mint);
+.mb-link-card__go {
+  display: inline-flex;
+  grid-column: 2;
+  align-items: center;
+  gap: 0.4rem;
+  justify-self: end;
+  margin-top: 0.35rem;
+  padding: 0.6rem 1.05rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #7565eb, var(--purple));
+  box-shadow:
+    0 4px 0 var(--press),
+    0 8px 18px rgba(108, 92, 231, 0.2);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 850;
 }
-.mb-avatar--sun {
-  --tone: var(--sun);
-}
-.mb-avatar__arch {
+.mb-link-card__go svg {
+  width: 1.05rem;
+  height: 1.05rem;
   fill: none;
-  stroke: var(--tone);
-  stroke-width: 11;
+  stroke: currentColor;
+  stroke-width: 2.4;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.mb-avatar__sun {
-  fill: var(--sun);
-  mix-blend-mode: multiply;
+.mb-link-card:active .mb-link-card__go {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--press);
 }
 
-/* ---- form pieces --------------------------------------------------------------------------- */
+/* ---- form pieces --------------------------------------------------------------------------------- */
 
 .mb-seg {
   display: flex;
@@ -641,7 +844,7 @@ body.mb-body {
   width: 100%;
   margin-bottom: 0.4rem;
   padding: 0;
-  font-weight: 800;
+  font-weight: 850;
 }
 .mb-seg label {
   position: relative;
@@ -654,46 +857,56 @@ body.mb-body {
 .mb-seg span {
   display: inline-flex;
   align-items: center;
-  min-height: 2.9rem;
+  min-height: 48px;
   padding: 0 1.1rem;
-  border: 2px solid var(--navy);
-  border-radius: 99px;
-  font-weight: 800;
+  border: 2px solid var(--lavender);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--purple-dark);
+  font-weight: 850;
+}
+.mb-seg--filter {
+  margin-bottom: 0.9rem;
 }
 .mb-seg--filter span {
-  min-height: 2.6rem;
   padding: 0 0.9rem;
   font-size: 0.88rem;
 }
 .mb-seg input:checked + span {
-  background: var(--navy);
+  border-color: var(--purple);
+  background: var(--purple);
   color: #fff;
 }
 .mb-seg input:focus-visible + span {
-  outline: 3px solid var(--navy);
+  outline: 3px solid var(--teal);
   outline-offset: 3px;
 }
 
 .mb-label {
   display: block;
   margin-bottom: 0.4rem;
-  font-weight: 800;
+  font-weight: 850;
 }
 .mb-input {
   width: 100%;
   min-height: 3.1rem;
   padding: 0.5rem 0.9rem;
-  border: 2px solid var(--navy);
-  border-radius: 1rem;
+  border: 2px solid var(--lavender);
+  border-radius: 16px;
   background: #fff;
   color: var(--ink);
-  font: 700 1.1rem var(--font);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.mb-input:focus {
+  border-color: var(--purple);
 }
 .mb-input:disabled {
   background: var(--ink-tint);
 }
 
-/* ---- the bridge: one stone per page -------------------------------------------------------- */
+/* ---- the pages of a paper: one stone each, along a dashed path ------------------------------------ */
 
 .mb-bridge {
   position: relative;
@@ -711,7 +924,7 @@ body.mb-body {
   top: 1.2rem;
   bottom: 1.2rem;
   left: 0.85rem;
-  border-left: 3px dashed #d3c19a;
+  border-left: 3px dashed var(--lavender);
 }
 .mb-page {
   position: relative;
@@ -719,9 +932,9 @@ body.mb-body {
   flex-direction: column;
   gap: 0.7rem;
   padding: 1rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 1.2rem;
+  border-radius: 22px;
   background: var(--paper);
+  box-shadow: var(--shadow);
   counter-increment: stone;
 }
 .mb-page::before {
@@ -733,29 +946,37 @@ body.mb-body {
   place-items: center;
   width: 1.9rem;
   height: 1.9rem;
-  border: 2px solid var(--navy);
-  border-radius: 50% 50% 0.45rem 0.45rem;
-  background: var(--cream);
-  color: var(--ink);
-  font: 600 0.9rem var(--display);
+  border: 2px solid var(--purple);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--purple-dark);
+  font-size: 0.9rem;
+  font-weight: 900;
 }
 .mb-page--empty::before {
   border-style: dashed;
 }
 .mb-page--checking::before {
-  background: var(--sun);
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--ink);
 }
 .mb-page--retake::before,
 .mb-page--problem::before {
-  background: var(--rose);
+  border-color: var(--rose-ink);
+  background: var(--rose-tint);
+  color: var(--rose-ink);
 }
 .mb-page--review::before {
+  border-color: var(--orange);
   background: var(--orange);
   color: #fff;
 }
 .mb-page--done::before {
   content: "✓";
-  background: var(--mint);
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
 }
 @keyframes mb-pulse {
   50% {
@@ -766,14 +987,15 @@ body.mb-body {
 .mb-guide-box {
   margin-bottom: 1rem;
   padding: 0 1rem;
-  border-radius: 1.2rem;
+  border-radius: 22px;
   background: var(--sky-tint);
 }
 .mb-guide-box summary {
   display: flex;
   align-items: center;
   min-height: 3rem;
-  font-weight: 800;
+  color: var(--sky-ink);
+  font-weight: 850;
   cursor: pointer;
 }
 .mb-guide-box__body {
@@ -801,12 +1023,12 @@ body.mb-body {
 }
 .mb-guide__lines path {
   fill: none;
-  stroke: var(--ink-soft);
+  stroke: var(--muted);
   stroke-width: 4;
   stroke-linecap: round;
 }
 
-/* ---- review -------------------------------------------------------------------------------- */
+/* ---- review -------------------------------------------------------------------------------------- */
 
 .mb-review {
   gap: 0.9rem;
@@ -818,8 +1040,8 @@ body.mb-body {
   max-height: 12rem;
   padding: 0;
   overflow: hidden;
-  border: 2px solid var(--sand);
-  border-radius: 1rem;
+  border: 2px solid var(--line);
+  border-radius: 16px;
   background: #fff;
   cursor: zoom-in;
 }
@@ -837,14 +1059,14 @@ body.mb-body {
   right: 0.5rem;
   bottom: 0.5rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 99px;
-  background: rgba(35, 44, 87, 0.88);
+  border-radius: 999px;
+  background: rgba(46, 42, 69, 0.88);
   color: #fff;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 850;
 }
 .mb-read {
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 .mb-read strong {
   color: var(--ink);
@@ -859,18 +1081,19 @@ body.mb-body {
   width: 100%;
   margin-bottom: 0.5rem;
   padding: 0;
-  font-weight: 800;
+  font-weight: 850;
 }
 .mb-choice {
-  min-width: 3rem;
-  min-height: 3rem;
+  min-width: 48px;
+  min-height: 48px;
   margin: 0 0.55rem 0.55rem 0;
   padding: 0 1rem;
-  border: 2px solid var(--navy);
-  border-radius: 1rem;
+  border: 2px solid var(--lavender);
+  border-radius: 16px;
   background: var(--paper);
-  color: var(--ink);
-  font: 800 1rem var(--font);
+  color: var(--purple-dark);
+  font: inherit;
+  font-weight: 850;
   cursor: pointer;
 }
 .mb-choice--round {
@@ -879,7 +1102,8 @@ body.mb-body {
   border-radius: 50%;
 }
 .mb-choice[aria-pressed="true"] {
-  background: var(--navy);
+  border-color: var(--purple);
+  background: linear-gradient(135deg, #7565eb, var(--purple));
   color: #fff;
 }
 
@@ -893,31 +1117,31 @@ body.mb-body {
 
 .mb-part {
   padding-top: 0.9rem;
-  border-top: 1.5px dashed var(--sand);
+  border-top: 2px dashed var(--line);
 }
 .mb-part__title {
   margin: 0 0 0.3rem;
-  font: 600 1rem var(--display);
+  font-size: 1rem;
+  font-weight: 900;
 }
 
 .mb-savebar {
   position: sticky;
-  bottom: var(--tabs-h);
+  bottom: var(--nav-h);
   z-index: 3;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem 1rem;
-  padding: 0.8rem 1.25rem;
-  border-top: 1.5px solid var(--sand);
+  padding: 0.8rem 1.15rem;
   background: var(--paper);
-  box-shadow: 0 -0.7rem 1.2rem -1rem rgba(35, 44, 87, 0.4);
+  box-shadow: 0 -10px 30px rgba(46, 42, 69, 0.07);
 }
 .mb-savebar__text {
   flex: 1;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 850;
 }
 .mb-savebar__buttons {
   display: flex;
@@ -927,7 +1151,7 @@ body.mb-body {
   width: 1rem;
   height: 1rem;
   fill: none;
-  stroke: #2fa56c;
+  stroke: var(--teal);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -939,7 +1163,7 @@ body.mb-body {
   font-weight: 700;
 }
 
-/* ---- results ------------------------------------------------------------------------------- */
+/* ---- results ------------------------------------------------------------------------------------- */
 
 .mb-tiles {
   display: grid;
@@ -953,29 +1177,36 @@ body.mb-body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 1.3rem 0.3rem 0.8rem;
-  border-radius: 99px 99px 1rem 1rem;
-  box-shadow: inset 0 0 0 1.5px rgba(35, 44, 87, 0.12);
+  padding: 1rem 0.3rem 0.8rem;
+  border: 2px solid var(--line);
+  border-radius: 22px;
   text-align: center;
 }
 .mb-tile--mint {
-  background: var(--mint-tint);
+  border-color: var(--mint-line);
+  background: var(--mint-bg);
+  --tile-ink: var(--mint-ink);
 }
 .mb-tile--rose {
-  background: var(--rose-tint);
+  border-color: var(--rose-line);
+  background: var(--rose-bg);
+  --tile-ink: var(--rose-ink);
 }
 .mb-tile--sun {
-  background: var(--sun-tint);
+  border-color: var(--sun-line);
+  background: var(--sun-bg);
+  --tile-ink: var(--sun-ink);
 }
 .mb-tile__count {
-  font-family: var(--display);
+  color: var(--tile-ink, var(--ink));
   font-size: 2.3rem;
-  font-weight: 600;
+  font-weight: 950;
   line-height: 1;
 }
 .mb-tile__label {
-  font-size: 0.8rem;
-  font-weight: 800;
+  color: var(--body-text);
+  font-size: 0.78rem;
+  font-weight: 850;
 }
 
 .mb-skillrow {
@@ -984,14 +1215,14 @@ body.mb-body {
   align-items: center;
   gap: 0.8rem;
   padding: 0.6rem 0;
-  border-bottom: 1px solid var(--sand);
+  border-bottom: 1px solid var(--line);
 }
 .mb-skillrow small {
   display: block;
 }
 .mb-skillrow__score {
   min-width: 2.2rem;
-  font-weight: 800;
+  font-weight: 850;
   text-align: right;
 }
 .mb-split {
@@ -999,38 +1230,38 @@ body.mb-body {
   width: 5.2rem;
   height: 0.85rem;
   overflow: hidden;
-  border-radius: 99px;
+  border-radius: 999px;
   background: var(--ink-tint);
-  box-shadow: inset 0 0 0 1.5px rgba(35, 44, 87, 0.25);
 }
 .mb-split i {
   flex-basis: 0;
 }
 .mb-split__ok {
-  background: var(--mint);
+  background: var(--teal);
 }
 .mb-split__no {
-  background: var(--rose);
+  background: #f06aa3;
 }
 .mb-split__blank {
-  background: var(--sun);
+  background: var(--gold);
+}
+.mb-split--wide {
+  width: 100%;
+  height: 1rem;
 }
 
 .mb-mistake__picture {
   width: 100%;
   height: auto;
-  border: 2px solid var(--sand);
-  border-radius: 0.9rem;
-}
-.mb-seg--filter {
-  margin-bottom: 0.9rem;
+  border: 2px solid var(--line);
+  border-radius: 14px;
 }
 .mb-photo summary {
   display: flex;
   align-items: center;
-  min-height: 2.75rem;
-  color: var(--navy);
-  font-weight: 800;
+  min-height: 48px;
+  color: var(--purple-dark);
+  font-weight: 850;
   cursor: pointer;
 }
 .mb-photo img {
@@ -1039,15 +1270,24 @@ body.mb-body {
 .mb-score {
   font-size: 1.05rem;
 }
-.mb-split--wide {
-  width: 100%;
-  height: 1rem;
-}
 .mb-past .mb-kicker {
   margin-bottom: 0.15rem;
 }
-.mb-all {
-  margin-top: 0.8rem;
+.mb-code--id {
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  letter-spacing: 0;
+}
+.mb-command {
+  padding: 0.7rem 0.9rem;
+  border-radius: 14px;
+  background: var(--ink-tint);
+  font:
+    700 0.9rem ui-monospace,
+    "Cascadia Code",
+    Consolas,
+    monospace;
+  overflow-wrap: anywhere;
 }
 .mb-answers dl {
   margin: 0;
@@ -1056,57 +1296,169 @@ body.mb-body {
   display: flex;
   gap: 0.8rem;
   padding: 0.55rem 0;
-  border-bottom: 1px dashed #d9caa4;
+  border-bottom: 2px dashed var(--line);
 }
 .mb-answers dt {
   min-width: 2.6rem;
-  font-family: var(--display);
-  font-weight: 600;
+  font-weight: 900;
 }
 .mb-answers dd {
   margin: 0;
   font-weight: 700;
 }
 
-/* ---- progress ------------------------------------------------------------------------------ */
+/* ---- skills -------------------------------------------------------------------------------------- */
 
 .mb-area {
-  --tone: var(--sky);
-  padding: 1.1rem 1.1rem 0.5rem;
-  border: 1.5px solid var(--sand);
-  border-radius: 1.4rem;
-  background: var(--paper);
+  --area-art: url("/practice/area-maths.webp");
+  --tone: var(--sky-ink);
+  --area-line: var(--sky-line);
+  --area-bg: var(--sky-bg);
+  --area-fill: var(--sky);
+  border: 2px solid var(--area-line);
+  border-radius: 27px;
+  background: var(--area-bg);
+  box-shadow: var(--card-shadow);
 }
-.mb-area--rose {
-  --tone: var(--rose);
-}
-.mb-area--sun {
-  --tone: var(--sun);
+.mb-area--violet {
+  --area-art: url("/practice/area-language.webp");
+  --tone: var(--violet-ink);
+  --area-line: var(--violet-line);
+  --area-bg: var(--violet-bg);
+  --area-fill: var(--purple);
 }
 .mb-area--mint {
-  --tone: var(--mint);
+  --area-art: url("/practice/area-environment.webp");
+  --tone: var(--mint-ink);
+  --area-line: var(--mint-line);
+  --area-bg: var(--mint-bg);
+  --area-fill: var(--teal);
 }
-.mb-area__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+.mb-area--rose {
+  --tone: var(--rose-ink);
+  --area-line: var(--rose-line);
+  --area-bg: var(--rose-bg);
+  --area-fill: #f06aa3;
 }
-.mb-area__head h2::before {
+.mb-area--sun {
+  --area-art: url("/practice/area-aptitude.webp");
+  --tone: var(--sun-ink);
+  --area-line: var(--sun-line);
+  --area-bg: var(--sun-bg);
+  --area-fill: var(--gold);
+}
+.mb-area__title {
+  margin: 0;
+  font: inherit;
+}
+.mb-area__toggle {
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 1.05rem 1.1rem;
+  border: 0;
+  border-radius: 25px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* the area's picture fills the whole card head, softened so the words stay easy to read */
+.mb-area__toggle {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.mb-area__toggle::before {
   content: "";
-  display: inline-block;
-  width: 1.4rem;
-  height: 1rem;
-  margin-right: 0.5rem;
-  border-radius: 99px 99px 0 0;
-  background: var(--tone);
-  box-shadow: inset 0 0 0 1.5px rgba(35, 44, 87, 0.3);
-  vertical-align: -0.05rem;
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--area-art) center / cover no-repeat;
+  opacity: 0.5;
+}
+/* a soft wash on the text side, so the name and the count stay easy to read over the picture */
+.mb-area__toggle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    var(--area-bg) 0%,
+    color-mix(in srgb, var(--area-bg) 75%, transparent) 38%,
+    transparent 75%
+  );
+}
+.mb-area.is-open .mb-area__toggle {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.mb-area__heading {
+  display: grid;
+  gap: 0.15rem;
+}
+.mb-area__name {
+  color: var(--tone);
+  font-size: 1.3rem;
+  font-weight: 950;
+  line-height: 1.2;
+}
+.mb-area__blurb {
+  color: var(--body-text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 .mb-area__count {
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-  font-weight: 800;
+  grid-column: 1;
+  justify-self: start;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1.5px var(--area-line);
+  color: var(--tone);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+.mb-area__chevron {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--badge-shadow);
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mb-area.is-open .mb-area__chevron {
+  transform: rotate(180deg);
+}
+/* closed: the skills take no space; open: they grow to their natural height */
+.mb-area__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  padding: 0 1.1rem;
+}
+.mb-area.is-open .mb-area__body {
+  grid-template-rows: 1fr;
+}
+.mb-area__inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.mb-area__inner > ul {
+  padding-bottom: 0.5rem;
 }
 
 .mb-skill {
@@ -1120,7 +1472,7 @@ body.mb-body {
   column-gap: 0.7rem;
   row-gap: 0.35rem;
   padding: 0.8rem 0;
-  border-bottom: 1px solid var(--sand);
+  border-bottom: 1px solid rgba(46, 42, 69, 0.08);
 }
 .mb-skill:last-child {
   border-bottom: 0;
@@ -1134,107 +1486,57 @@ body.mb-body {
 .mb-skill__value {
   grid-area: value;
   min-width: 2.7rem;
-  font-family: var(--display);
+  color: var(--tone);
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 950;
   text-align: right;
 }
 .mb-skill__value.is-unknown {
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 .mb-skill__why {
   grid-area: why;
-  color: var(--ink-soft);
+  color: var(--muted);
   font-size: 0.8rem;
 }
 
 .mb-stones {
-  --tone: var(--sky);
   display: flex;
   align-items: flex-end;
   gap: 0.2rem;
-}
-.mb-stones--rose {
-  --tone: var(--rose);
-}
-.mb-stones--sun {
-  --tone: var(--sun);
-}
-.mb-stones--mint {
-  --tone: var(--mint);
 }
 .mb-stones i {
   flex: 1;
   height: 1rem;
   border-radius: 0.4rem 0.4rem 0.18rem 0.18rem;
-  background: var(--ink-tint);
-  box-shadow: inset 0 0 0 1.5px rgba(35, 44, 87, 0.3);
+  background: rgba(46, 42, 69, 0.09);
 }
-.mb-stones i.is-filled {
-  background: var(--tone);
+.mb-area .mb-stones i.is-filled {
+  background: var(--area-fill);
 }
 .mb-stones i.is-unknown {
   background: transparent;
-  box-shadow: none;
-  border: 1.5px dashed var(--ink-soft);
+  border: 1.5px dashed var(--faint);
 }
 .mb-skill > .mb-stones {
   grid-area: meter;
-}
-
-/* ---- bottom tabs --------------------------------------------------------------------------- */
-
-.mb-tabs {
-  position: sticky;
-  bottom: 0;
-  z-index: 4;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  min-height: var(--tabs-h);
-  padding-bottom: env(safe-area-inset-bottom);
-  border-top: 1.5px solid var(--sand);
-  background: var(--paper);
-}
-.mb-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-.mb-tab__icon {
-  display: grid;
-  place-items: center;
-  width: 3.6rem;
-  height: 2.1rem;
-  border-radius: 99px 99px 0.6rem 0.6rem;
-}
-.mb-tab__icon svg {
-  width: 1.5rem;
-  height: 1.5rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.mb-tab[aria-current="page"] {
-  color: var(--ink);
-}
-.mb-tab[aria-current="page"] .mb-tab__icon {
-  background: var(--sun);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .mb-body-pad {
     animation: mb-rise 0.35s ease-out both;
   }
-  .mb-btn {
-    transition: transform 0.08s, box-shadow 0.08s;
+  .mb-btn,
+  .mb-link-card__go {
+    transition:
+      transform 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+  .mb-area__body {
+    transition: grid-template-rows 0.28s ease;
+  }
+  .mb-area__chevron {
+    transition: transform 0.28s ease;
   }
   .mb-loading__dots i {
     animation: mb-bounce 0.9s ease-in-out infinite;

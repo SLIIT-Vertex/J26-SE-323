@@ -1,4 +1,5 @@
 import type { Decision, ReviewItem } from "./api";
+import { t } from "./i18n";
 
 // What the parent has decided for one unclear answer. A short answer counts as decided when text
 // was typed or "No answer" was chosen on purpose; an empty box alone is not a decision.
@@ -10,8 +11,7 @@ export type Choice = {
   instructionMet?: boolean;
 };
 
-export const itemKey = (item: Pick<ReviewItem, "paper_item_id" | "part_no">) =>
-  `${item.paper_item_id}:${item.part_no}`;
+export const itemKey = (item: Pick<ReviewItem, "paper_item_id" | "part_no">) => `${item.paper_item_id}:${item.part_no}`;
 
 export const isInstruction = (item: ReviewItem) => item.ask !== null;
 
@@ -71,14 +71,17 @@ export function groupByQuestion(items: ReviewItem[]): QuestionGroup[] {
     groups.set(item.paper_item_id, group);
   }
   return [...groups.values()]
-    .map((group) => ({ ...group, items: [...group.items].sort((a, b) => a.part_no - b.part_no) }))
+    .map((group) => ({
+      ...group,
+      items: [...group.items].sort((a, b) => a.part_no - b.part_no),
+    }))
     .sort((a, b) => a.position - b.position);
 }
 
 /** "Answer 2 of 5", with the printed label first when the question has one. */
 export function partTitle(item: ReviewItem): string {
   const label = item.label ? `(${item.label}) ` : "";
-  return `${label}Answer ${item.part_no} of ${item.part_count}`;
+  return `${label}${t("review.partTitle", { n: item.part_no, total: item.part_count })}`;
 }
 
 /** Decisions made on purpose as "No answer". Saving these deserves one more look. */

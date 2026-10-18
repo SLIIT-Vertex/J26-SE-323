@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 // Hash routes, in the same style as the rest of the app: #/papers, #/papers/<id>, ...
 
 export type Route =
-  | { name: "who" }
   | { name: "papers" }
   | { name: "history" }
   | { name: "paper"; id: string }
@@ -19,7 +18,6 @@ export function parseRoute(hash: string): Route | null {
   if (path === "/papers") return { name: "papers" };
   if (path === "/mastery") return { name: "mastery" };
   if (path === "/history") return { name: "history" };
-  if (path === "/who") return { name: "who" };
   const report = new RegExp(`^/papers/${ID}/report$`).exec(path);
   if (report) return { name: "report", id: report[1] };
   const paper = new RegExp(`^/papers/${ID}$`).exec(path);
@@ -31,8 +29,6 @@ export function parseRoute(hash: string): Route | null {
 
 export function hrefFor(route: Route): string {
   switch (route.name) {
-    case "who":
-      return "#/who";
     case "papers":
       return "#/papers";
     case "history":
