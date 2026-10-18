@@ -71,7 +71,7 @@ def payload(**overrides: object) -> dict[str, object]:
         "hint_count": 0,
         "difficulty": "easy",
         "difficulty_source": "introductory",
-        "difficulty_mapping_version": "phase6-introductory-v1",
+        "difficulty_mapping_version": "learning_flow-introductory-v1",
         "environment": "development",
         "model_ingestion_eligible": False,
         "session_id": str(uuid4()),
@@ -381,16 +381,13 @@ def her_outbox_model():
 
 
 def her_publisher_class():
-    """The module's durable publisher; the file was renamed on her branch, so look for both."""
-    for module, name in (
-        ("learning_flow_gateways", "SqlAlchemyLearningFlowEvidencePublisher"),
-        ("phase6_gateways", "SqlAlchemyPhase6EvidencePublisher"),
-    ):
-        try:
-            return getattr(importlib.import_module(f"app.gamification.infrastructure.db.{module}"), name)
-        except (ImportError, AttributeError):
-            continue
-    pytest.skip("the game's evidence publisher was not found under a known name")
+    """The game's durable evidence publisher. If it is renamed again, this test skips (it does not
+    fail), and the table contract tests above still run."""
+    try:
+        module = importlib.import_module("app.gamification.infrastructure.db.learning_flow_gateways")
+        return module.SqlAlchemyLearningFlowEvidencePublisher
+    except (ImportError, AttributeError):
+        pytest.skip("the game's evidence publisher was not found under its known name")
 
 
 def publish_like_the_game(session: Session, **overrides: object) -> dict[str, object]:

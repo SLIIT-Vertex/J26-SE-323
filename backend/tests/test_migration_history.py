@@ -39,5 +39,5 @@ def test_only_the_intentional_module_heads_exist() -> None:
     assert set(heads) == {
         "curr_20261015_01",
         "gam_20261017_07",
-        "20261018_01",  # knowledge tracing, grading, and learner state
+        "20261019_01",  # knowledge tracing, grading, and learner state
     }
