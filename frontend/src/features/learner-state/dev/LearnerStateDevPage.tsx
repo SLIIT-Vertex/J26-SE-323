@@ -8,6 +8,7 @@ import "./LearnerStateDevPage.css";
 
 import { type VisualPipelineStatus, useVisualFeatures } from "../useVisualFeatures";
 import type { ApiVisualResult } from "../visual/apiVisualFeatures";
+import { EquivalenceRunner } from "./EquivalenceRunner";
 
 const STATUS_TEXT: Record<VisualPipelineStatus["state"], string> = {
   idle: "Camera is off.",
@@ -91,6 +92,8 @@ export default function LearnerStateDevPage() {
           </table>
         </section>
       ) : null}
+
+      <EquivalenceRunner />
     </main>
   );
 }

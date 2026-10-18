@@ -10,12 +10,13 @@ Status:
 | --- | --- |
 | Visual feature calculations (eye openness, gaze, head pose, aggregation) | Implemented; matches the Python/OpenCV training code on given landmarks (§4) |
 | Camera, MediaPipe, 10-second windows, no-face handling | Implemented |
-| Browser MediaPipe vs Python MediaPipe on the same frames | **Not yet verified** — planned local test (§9) |
+| Browser MediaPipe vs Python MediaPipe on the same frames | Passed a local engineering equivalence test on 9 developer-owned clips (§9) |
 | Snapshot for the game's answer request (`useGameVisualFeatures`, §12) | Implemented; not yet used by the game screen, which first needs a camera-consent flow |
 | Behaviour values, recording windows, handling `recommended_action` | Done by the game backend (Option B, [`11`](11_GAME_INTEGRATION.md)), not by this module |
 
-Until §9 has been run, it must not be claimed that the browser pipeline as a whole produces the
-same features as the training pipeline.
+§9 shows that, given the same frames, the browser pipeline produces the same 11 features as the
+training pipeline within small tolerances. It does not cover live video decoding or camera
+scaling, and it is not a validation of confusion or disengagement detection.
 
 ## 1. Responsibilities
 
@@ -168,7 +169,7 @@ zero weight in fusion ([`04`](04_RELIABILITY_AND_FUSION.md)). When the face is m
 some samples, the real features are sent and `face_visibility_ratio` reflects the share of
 samples with a face, exactly as in training.
 
-## 9. Planned local equivalence test (browser vs Python MediaPipe)
+## 9. Local equivalence test (browser vs Python MediaPipe)
 
 Purpose: check that browser MediaPipe 1.0.1 plus the TypeScript features produce **sufficiently
 equivalent final 11 features** to the notebook's Python MediaPipe 1.0.1 pipeline on the same
@@ -192,8 +193,81 @@ Plan:
 4. Only numeric results are committed: per-landmark coordinate differences, per-feature
    differences for the 11 window features, maximum and mean errors, and the configuration and
    versions used. No frames, screenshots or face crops are stored in the repository.
-5. Acceptance tolerances for the 11 features will be stated before the run and reported with the
-   results.
+5. Acceptance tolerances for the 11 features are stated before the run (below) and reported with
+   the results.
+
+Acceptance tolerances (absolute difference of each clip's window feature, Python vs browser),
+fixed on 2026-10-18 before the first comparison:
+
+| Features | Tolerance | Reason |
+| --- | --- | --- |
+| `mean_eye_openness`, `std_eye_openness`, `mean_gaze_ratio`, `std_gaze_ratio` | 0.01 | ratios of landmark distances |
+| `mean_pitch`, `mean_yaw`, `mean_roll`, `mean_abs_pitch`, `mean_abs_yaw`, `mean_abs_roll` | 1.0° | small against the reliability quantiles (Q75 of 6–11°, [`04`](04_RELIABILITY_AND_FUSION.md#12-head-pose-quality)) |
+| `face_visibility_ratio` | 1/30 | at most one of the 30 frames differs in face detection |
+
+A feature that is missing in a window (no face, or no head pose) must be missing on both sides.
+
+How to run (from the repository root; tool:
+`research/learner-state/tools/mediapipe_equivalence.py`):
+
+1. Create a separate environment with the notebook's versions:
+   `py -3.12 -m venv research/learner-state/.venv`, then
+   `research/learner-state/.venv/Scripts/python -m pip install mediapipe==1.0.1 "opencv-contrib-python==4.14.0.*"`.
+   Only one OpenCV package may be installed: MediaPipe pulls in `opencv-contrib-python`, and a
+   second `opencv-python` would make the `cv2` version ambiguous.
+2. Put the clips in `research/learner-state/local-test-frames/clips/`.
+3. `… python research/learner-state/tools/mediapipe_equivalence.py extract`: 30 frames per clip with
+   the notebook's `np.linspace` selection, centre-cropped to 4:3, resized to 640×480 and saved as
+   lossless PNG in `local-test-frames/frames/`, so both pipelines read the same pixels.
+4. `… mediapipe_equivalence.py python`: the notebook's MediaPipe pipeline and feature functions
+   (the copies in `generate_visual_feature_fixtures.py`).
+5. Browser: `npm run dev`, open `http://localhost:5173/?dev=learner-state`, section
+   **Equivalence test**, pick `local-test-frames/frames`, **Run**, then **Save results** as
+   `local-test-frames/browser-results.json` (Edge or Chrome). The page uses the app's bundled
+   MediaPipe, detector and feature code.
+6. `… mediapipe_equivalence.py compare` writes
+   `research/learner-state/results/mediapipe_equivalence_results.json`: per-feature differences,
+   pass/fail against the tolerances, face-detection agreement and landmark distances (pixels).
+   No frames, landmarks or feature values are written there.
+
+Scope: identical decoded frames are given to both pipelines. Differences in live video decoding
+and in the browser's 640×480 scaling of camera frames are not covered by this test.
+
+### 9.1 Result (2026-10-18)
+
+Run on 9 developer-owned clips (270 frames): 6 clips with the face in every frame, 2 with the face
+in some frames, 1 without a face. Python: MediaPipe 1.0.1, OpenCV 4.14.0, NumPy 2.5.4,
+Python 3.12.0. Browser: `@mediapipe/tasks-vision` 1.0.1 in Google Chrome on Windows. Full
+numbers: `research/learner-state/results/mediapipe_equivalence_results.json`.
+
+**Passed.** Largest difference per window feature over the 9 clips:
+
+| Feature | Largest difference | Tolerance |
+| --- | --- | --- |
+| `mean_eye_openness` | 0.000021 | 0.01 |
+| `std_eye_openness` | 0.000031 | 0.01 |
+| `mean_gaze_ratio` | 0.000017 | 0.01 |
+| `std_gaze_ratio` | 0.000009 | 0.01 |
+| `mean_pitch` | 0.0005° | 1.0° |
+| `mean_yaw` | 0.0005° | 1.0° |
+| `mean_roll` | 0.0002° | 1.0° |
+| `mean_abs_pitch` | 0.0019° | 1.0° |
+| `mean_abs_yaw` | 0.0008° | 1.0° |
+| `mean_abs_roll` | 0.0001° | 1.0° |
+| `face_visibility_ratio` | 0 | 1/30 |
+
+Supporting results:
+
+- Face detection agreed on all 270 frames (195 with a face on both sides, 75 without on both).
+  Missing window values (the clip without a face) were missing on both sides.
+- Landmarks of the 195 frames: mean distance 0.0012 px, largest 0.026 px at 640×480.
+- Per-frame differences: eye openness and gaze ratio at most 0.00012; pitch, yaw and roll at most
+  0.0084°.
+
+The remaining differences are most likely floating-point differences between the browser
+(WebAssembly) and native Python MediaPipe builds; they are far below the tolerances. This is an
+implementation consistency check on one developer's face, lighting and camera, not a participant
+study.
 
 ## 10. Native camera permissions (Capacitor)
 
