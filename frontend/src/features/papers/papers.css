@@ -135,9 +135,13 @@ body.mb-body {
   min-height: 2.75rem;
   text-decoration: none;
 }
-.mb-brand__mark {
-  width: 2.2rem;
+.mb-brand__wordmark {
+  display: block;
+  width: min(11.5rem, 46vw);
   height: auto;
+  border-radius: 0.65rem;
+  object-fit: contain;
+  background: #000;
 }
 
 .mb-wordmark {

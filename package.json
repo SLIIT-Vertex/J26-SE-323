@@ -2,6 +2,7 @@
   "name": "mindbridge",
   "private": true,
   "scripts": {
+    "dev": "bash scripts/dev.sh",
     "prepare": "husky",
     "check": "npm run check:push",
     "check:commit": "./scripts/check.sh commit",

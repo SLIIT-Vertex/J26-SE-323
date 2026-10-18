@@ -7,7 +7,8 @@ from fastapi import FastAPI, Request, Response
 from starlette.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.gamification.api.phase6_router import router as phase6_router
+from app.gamification.api.learning_flow_router import legacy_router as legacy_learning_flow_router
+from app.gamification.api.learning_flow_router import router as learning_flow_router
 from app.gamification.api.router import register_play_errors
 from app.gamification.api.router import router as gamification_router
 from app.gamification.application.delivery import METRICS, privacy_log
@@ -73,9 +74,11 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+_local_frontend = settings.frontend_origin.startswith(("http://localhost", "http://127.0.0.1"))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if _local_frontend else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -127,5 +130,6 @@ app.include_router(vision_router, prefix=settings.api_v1_prefix)
 app.include_router(submissions_router, prefix=settings.api_v1_prefix)
 app.include_router(report_router, prefix=settings.api_v1_prefix)
 app.include_router(gamification_router, prefix=settings.api_v1_prefix)
-app.include_router(phase6_router, prefix=settings.api_v1_prefix)
+app.include_router(learning_flow_router, prefix=settings.api_v1_prefix)
+app.include_router(legacy_learning_flow_router, prefix=settings.api_v1_prefix)
 register_play_errors(app)

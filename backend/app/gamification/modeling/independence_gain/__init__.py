@@ -11,10 +11,10 @@ from app.gamification.modeling.independence_gain.contracts import (
     IndependenceGainInput,
     IndependenceGainResult,
 )
-from app.gamification.modeling.independence_gain.phase3 import (
-    FORMULA_VERSION as PHASE3_FORMULA_VERSION,
+from app.gamification.modeling.independence_gain.measurement import (
+    FORMULA_VERSION as INDEPENDENCE_GAIN_FORMULA_VERSION,
 )
-from app.gamification.modeling.independence_gain.phase3 import (
+from app.gamification.modeling.independence_gain.measurement import (
     AttemptSubmission,
     IndependenceMeasurement,
     ItemRubric,
@@ -31,14 +31,14 @@ from app.gamification.modeling.independence_gain.phase3 import (
     SupportWithdrawal,
     assert_unsupported_after_may_begin,
     calculate_measurement,
-    development_phase2_scorer,
+    development_curriculum_scorer,
     replay_measurement,
     support_dependency_rate,
 )
 
 __all__ = [
     "FORMULA_VERSION",
-    "PHASE3_FORMULA_VERSION",
+    "INDEPENDENCE_GAIN_FORMULA_VERSION",
     "AttemptSubmission",
     "EquivalenceEvidence",
     "IndependenceGainCalculator",
@@ -61,7 +61,7 @@ __all__ = [
     "assert_unsupported_after_may_begin",
     "calculate_independence_gain",
     "calculate_measurement",
-    "development_phase2_scorer",
+    "development_curriculum_scorer",
     "replay_measurement",
     "support_dependency_rate",
 ]

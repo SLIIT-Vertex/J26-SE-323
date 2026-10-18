@@ -1,7 +1,7 @@
 # Adaptive gamified learning
 
 > Read this file first. It describes one component: the Grade 5 Sinhala-medium adaptive game
-> loop. Code lives in `backend/app/gamification/` and `frontend/src/features/phase7/`.
+> loop. Code lives in `backend/app/gamification/` and `frontend/src/features/mobile-learning-flow/`.
 
 ## 1. Purpose
 
@@ -17,8 +17,8 @@ support that policy.
 ## 2. Scope
 
 - Learners are Grade 5 and Sinhala-medium (`grade = 5`, `curriculum_medium = si`).
-- Learner-facing copy, items, feedback, and scaffolds are Sinhala. English appears only as
-  subject content inside an approved item.
+- Learner-facing copy, items, feedback, and scaffolds are Sinhala. The English school subject
+  is outside the 57-area coverage target.
 - The client is React packaged with Capacitor for Android and iOS. Phaser draws the interactive
   scene and talks only to React. React owns navigation, accessibility, Sinhala copy, and the
   server conversation. The layout fills the device.
@@ -124,13 +124,24 @@ backend/app/gamification/
   modeling/       Model 1, Model 2, and Independence Gain
   content/        draft content registry
   infrastructure/ persistence and the curriculum, mastery, and learner-state adapters
-frontend/src/features/phase7/   React client, Phaser half-set scene, event queue
+frontend/src/features/mobile-learning-flow/   React client, Phaser half-set scene, event queue
 data/gamification/               draft content and synthetic development data
 ```
 
-Machine contracts in this folder are `phase6-mobile-contracts-v1.json` and
-`openapi-pilot-v1.json`. Development routes are `/api/v1/development/phase6`. The client flag
-`VITE_ENABLE_PHASE7_DRAFT` and the header `X-Dev-Principal` are for local composition only.
+Machine contracts in this folder are `mobile-learning-contracts-v1.json` and
+`openapi-pilot-v1.json`. Development routes are `/api/v1/development/learning-flow`.
+Local `npm run dev` shows the draft missions; the limit is written in
+[Local development](local-development.md), not hidden behind a flag you must set.
+The header `X-Dev-Principal` stays a development caller mark.
+The production React entry mounts only `MobileLearningApp`; the old hash routes and inspector are not part
+of the child bundle. `VITE_MOBILE_LEARNING_CONDITION` is an engineering-build input, not a child setting.
+Native project generation is reproducible through `npm run native:generate` from locked inputs.
+
+The telemetry queue is scoped by episode, preserves occurrence time and stable event/batch IDs,
+and retries automatically with bounded backoff and expected-sequence reconciliation. It does not
+queue answers or episode transitions. Browser development storage uses a non-extractable
+IndexedDB CryptoKey; native builds fall back to memory until a reviewed keystore/keychain adapter
+exists, so native process-death recovery remains a mobile-learning blocker rather than a security claim.
 
 The answer-time learner-state, visual-feature, consent, and learner-evidence contract is
 documented in [Learner-state integration at answer submission](learner-state-answer-integration.md).
@@ -142,5 +153,7 @@ three scaffold types, in baseline and proposed modes, on the phone. The first sk
 Grade 5 Mathematics fractions (`MAT-FRC`). A larger skill inventory is not that loop.
 
 A named reviewer approves content, ethics, and release. Passing tests do not approve those
-decisions. Draft content loads only when development mode explicitly allows it. The play path
+decisions. Draft content loads only when development mode explicitly allows it. The draft
+mission catalog for the 55 mapped skill areas is the same: a development or test caller may
+read it only with `allow_draft`, and the production loader rejects it. The play path
 returns `CURRICULUM_RETRIEVAL_UNAVAILABLE` until the shared retriever supplies a passage.
