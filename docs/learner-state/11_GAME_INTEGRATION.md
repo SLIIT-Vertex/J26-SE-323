@@ -2,8 +2,11 @@
 
 This document describes how the learner-state component is integrated with the game
 (`backend/app/gamification`, `frontend/src/features/gamification`). It is the design chosen by the
-learner-state owner. **The game-side changes are not implemented yet** and need the game owner's
-agreement. The learner-state side that the integration needs is implemented (§7).
+learner-state owner. The learner-state side is implemented (§7). Most of the game side was
+implemented by the game owner in `Feature/game dev (#26)` (§8); the adapter that actually calls
+learner-state is **not composed yet**, so the running game does not record learner-state windows.
+The game owner's own description is in
+[`docs/adaptive-gamified-learning/learner-state-answer-integration.md`](../adaptive-gamified-learning/learner-state-answer-integration.md).
 
 ## 1. Responsibilities
 
@@ -26,30 +29,42 @@ POST /api/v1/game-sessions/{session_id}/responses
      -> _baseline() / _verification()
         1. correct = selected option == item.correct_option_id     (server truth)
         2. open_episode / record_verification
-        3. >>> record the learner-state window here <<<
-        4. assess_struggle -> struggle trigger
+        3. _record_learner_state() -> LearnerStateAnswerGateway.record_answer()
+        4. assess_struggle -> struggle trigger   (baseline answers only)
 ```
 
 The learner-state window is recorded after the server computes `correct` and before
 `assess_struggle`, inside the idempotent call, so a retried request does not record a second
-window. At the time of writing the running game does not call learner-state at all:
-`build_session_play()` passes no learner-state gateway.
+window. `record_answer()` returns the `recommended_action` of the window it just recorded, so the
+baseline struggle decision uses the evaluation of the current answer. Any gateway error is
+swallowed: learner-state evidence never makes an answer fail.
+
+`build_session_play()` does not yet pass a gateway or a consent store, so at the time of writing
+step 3 returns without recording anything.
 
 ## 3. Data sent by the browser
 
-An optional `visual` object added to the game's existing `ResponseRequest`
-(`episode_id`, `selected_option_id`, `response_time_ms`):
+An optional `visual` object (`VisualFeatureWindow`) on the game's `ResponseRequest`
+(`episode_id`, `selected_option_id`, `response_time_ms`). It contains exactly the 11 visual
+features, computed from the last 10 seconds before **Submit**
+([`10`](10_FRONTEND_INTEGRATION.md)); other fields are rejected (`extra="forbid"`), and all values
+must be finite with `face_visibility_ratio` in `[0, 1]`. An invalid `visual` object is dropped and
+the answer continues.
 
-| Field | Meaning |
-| --- | --- |
-| the 11 visual features | from the last 10 seconds before **Submit** ([`10`](10_FRONTEND_INTEGRATION.md)) |
-| `usable`, `reason` | whether the window has usable face data (`no-face`, `no-head-pose`, …) |
-| `samples`, `samples_with_face` | how many of the 30 samples were taken and contained a face |
-| `captured_at` | when the window was taken |
+In the browser, `GameHost` takes an optional `visualFeatures: () => VisualFeatureWindow | null`
+callback, calls it once on **Submit**, keeps only the 11 keys and freezes the snapshot. The
+learner-state frontend module provides this callback; `GameHost` does not run its own camera
+pipeline.
 
-No frames, landmarks or images are sent. Without a camera the object is omitted and the backend
-records the window with "no visual evidence" (zeros and `face_visibility_ratio = 0`), which gives the
-visual models zero weight.
+No frames, landmarks or images are sent. The server also checks consent for the purpose
+`learner_state_camera` before the visual values reach the gateway.
+
+**Open point.** The current game code records a learner-state window only when a `visual` object
+is present and consent is granted. The original design records every answer, using "no visual
+evidence" (zeros and `face_visibility_ratio = 0`) when there is no camera, so the visual models get
+zero weight and the behavioural evidence is still used (see
+[`04`](04_RELIABILITY_AND_FUSION.md#4-what-happens-when-one-modality-is-less-reliable)). Which of the two is
+used must be agreed with the game owner.
 
 ## 4. Identifier flow
 
@@ -57,7 +72,7 @@ visual models zero weight.
 | --- | --- |
 | `session_id` | the game session UUID, used as the learner-state `session_id` |
 | `learner_id` | the shared learner UUID; it must exist in `learners` |
-| `window_id` | a counter kept by the game backend per game session, +1 for each submitted answer |
+| `window_id` | `learner_state_window_id`, kept by the game backend per game session, +1 for each submitted answer (also when no window is recorded, which leaves allowed gaps); in process memory for the pilot |
 | Universal `skill_id` | `item.skill_id` -> game crosswalk (`universal-skill-crosswalk.jsonl`) -> Universal Skill ID; the same ID is used to record the window and for every later lookup |
 | `timestamp` | the server's submission time |
 
@@ -72,7 +87,7 @@ Definitions are quoted from the official ASSISTments 2012–13 dataset documenta
 | `attempt_count` | "Number of student attempts on this problem." | 1 (one submission per item) | equivalent |
 | `ms_first_response` | "The time in milliseconds for the student's first response." | `response_time_ms` (shown → submitted) | equivalent |
 | `overlap_time` | "The time in milliseconds for the student's overlap time." | `response_time_ms` for a single response | **to confirm**: the official definition is not specific |
-| `hint_count` | "Number of hints on this problem." | 0 for baseline answers (no help exists before answering) | equivalent for baseline; **differs** for verification answers (support was shown by the system, not requested) |
+| `hint_count` | "Number of hints on this problem." | 0 for baseline answers (no help exists before answering); the game currently also passes 0 for verification answers | equivalent for baseline; **to agree** for verification answers (support was shown by the system, not requested) |
 | `bottom_hint` | "Whether or not the student asks for all hints." | not applicable → `null` | honest: sent as missing, handled as in training |
 | `original` | "1 = Main problem", "0 = Scaffolding problem" | answered game items are main problems | **to agree**: likely 1, but verification items must be confirmed as main problems |
 
@@ -87,24 +102,26 @@ undocumented numeric coding). Both behaviour models were retrained without them 
 
 ## 6. Consuming the result
 
-The game receives the full evaluation for the current answer, so no lookup or staleness rule is
-needed for that decision. To avoid a second, independent threshold on top of the learner-state
-decision, the game uses `recommended_action` instead of its `support_need ≥ 0.70` rule:
+The game receives the `recommended_action` of the current answer's window. To avoid a second,
+independent threshold on top of the learner-state decision, the struggle trigger
+(`application/struggle_trigger.py`) uses `recommended_action` instead of its `support_need ≥ 0.70`
+rule:
 
-| Learner-state result | Game behaviour |
+| Learner-state result | Game behaviour (implemented in #26) |
 | --- | --- |
-| `request_tutor_support` | learner-state reason to offer support |
-| `request_reengagement_support` | re-engagement path (designed by the game) |
-| `collect_more_evidence` | recorded, never a trigger |
-| `monitor`, `none` | no learner-state trigger |
+| `request_tutor_support` | reason `LEARNER_STATE_TUTOR_SUPPORT` |
+| `request_reengagement_support` | reason `LEARNER_STATE_REENGAGEMENT_SUPPORT`; the learner-facing re-engagement action is still to be designed by the game |
+| `collect_more_evidence`, `monitor`, `none` | no learner-state trigger |
+| any other value | skipped as `LEARNER_STATE_UNKNOWN_RECOMMENDATION` |
 
-The learner-state 0.60 intervention threshold is not changed and is not replaced by the game's
-0.70 value; they have different responsibilities.
+The 0.70 rule is kept only for older gateways that return no `recommended_action`. The
+learner-state 0.60 intervention threshold is not changed and is not replaced by the game's 0.70
+value; they have different responsibilities.
 
-For later lookups (for example when choosing the next activity), the game passes the current
-`session_id` and `max_age_ms = RECOMMENDED_MAX_STATE_AGE_MS` (60 s, provisional and configurable)
-to `SupportNeedProvider` and treats `STALE` as absent ([`09`](09_TUTOR_HANDOFF.md#321-freshness)).
-The game's current 7-day maximum age is not suitable for moment-to-moment states.
+For lookups through `SupportNeedProvider`, the game's gateway passes the game `session_id` and a
+60-second maximum age (`RECOMMENDED_MAX_STATE_AGE_MS`, provisional and configurable) and treats
+`STALE` as absent ([`09`](09_TUTOR_HANDOFF.md#321-freshness)). `SupportNeedResult` also carries
+`recommended_action` for fresh results; the game owner added this field in #26.
 
 ## 7. Implemented on the learner-state side
 
@@ -115,12 +132,35 @@ The game's current 7-day maximum age is not suitable for moment-to-moment states
 - `WindowOrderError` and `UnknownLearnerError` for callers outside HTTP.
 - `SupportNeedResult.session_id`, the `STALE` status and optional `session_id` / `max_age_ms` on
   `SupportNeedRequest`; all backward compatible.
+- `GameAnswerRecorder` in `infrastructure/game_answers.py`: the adapter behind the game's
+  `LearnerStateAnswerGateway`. Its `record_answer()` has the same signature as the game protocol
+  (checked by a test), maps the game answer to the behavioural fields as in §5 (`attempt_count = 1`,
+  `overlap_time = ms_first_response = response_time_ms`, provisional `original = 1`,
+  `bottom_hint` missing, `task_progress` unknown), opens its own database session, records the
+  window through `LearnerStateRecorder` with the shared service, and returns the window's
+  `recommended_action`. It records nothing when `response_time_ms` is unknown, accepts
+  `visual = None` as "no visual evidence", and logs and re-raises errors. The game composes it as
+  `GameAnswerRecorder(session_factory=SessionLocal)`.
 
-## 8. Still to agree with the game owner
+## 8. Status of the game side
 
-1. The optional `visual` object on `ResponseRequest` and how the game composes
-   `LearnerStateRecorder` (database session, learner check).
-2. The per-session `window_id` counter.
-3. Using `recommended_action` instead of the 0.70 support-need rule, and the 60-second / same-session
-   freshness for lookups.
-4. The values for `overlap_time`, `hint_count` on verification answers and `original`.
+Implemented by the game owner in #26:
+
+- the optional `visual` object on `ResponseRequest` and the `visualFeatures` callback in `GameHost`;
+- the `learner_state_camera` consent check;
+- the per-session `learner_state_window_id` counter;
+- the `LearnerStateAnswerGateway.record_answer()` boundary, called after scoring and before the
+  struggle decision;
+- `recommended_action` instead of the 0.70 rule, and 60-second / same-session freshness for lookups.
+
+Still open:
+
+1. Composing the adapter (`GameAnswerRecorder`, §7) in `build_session_play()` together with a
+   consent store and a way to record `learner_state_camera` consent; neither exists in the game
+   yet.
+2. Agreement on the provisional values for `overlap_time`, `original` and `hint_count` on
+   verification answers, and a source for `task_progress` (§5). `position` and `first_action` no
+   longer need a value.
+3. Whether answers without a camera are recorded with "no visual evidence" (§3).
+4. The browser hook that provides the `visualFeatures` callback ([`10`](10_FRONTEND_INTEGRATION.md)).
+5. A durable `window_id` allocator before more than one backend worker can serve a session.
