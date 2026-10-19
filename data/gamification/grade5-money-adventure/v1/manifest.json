@@ -1,0 +1,32 @@
+{
+  "area_id": "G5-AREA-MAT-10",
+  "package_version": "g5-mat-money-adventure-v1",
+  "grade": 5,
+  "medium": "si",
+  "universal_skill_id": "MAT-MON",
+  "source_id": "SRC-G5-MAT-TG-01",
+  "source_nodes": ["G5-MAT-C15", "G5-MAT-U011", "G5-MAT-U020"],
+  "atomic_skill_ids": [
+    "G5-MAT-MONEY-DENOMINATION-01",
+    "G5-MAT-MONEY-COMPOSE-01",
+    "G5-MAT-MONEY-ADD-01",
+    "G5-MAT-MONEY-SUBTRACT-01",
+    "G5-MAT-MONEY-SHOP-01"
+  ],
+  "misconception_catalogue_version": "g5-mat-money-misconceptions-v1",
+  "scaffold_catalogue_version": "g5-mat-money-deterministic-support-v1",
+  "policy_version": "g5-mat-money-deterministic-support-v1",
+  "review_status": "draft_blocked",
+  "production_child_delivery": false,
+  "human_review_required": [
+    "curriculum",
+    "usage_rights",
+    "sinhala_language",
+    "educator_content",
+    "accessibility",
+    "answer_leakage",
+    "ethics_privacy",
+    "model_safety",
+    "release"
+  ]
+}
