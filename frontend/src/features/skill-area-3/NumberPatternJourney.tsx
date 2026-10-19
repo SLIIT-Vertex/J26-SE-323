@@ -453,15 +453,17 @@ export function NumberPatternJourney({
 					{support.body_si.map((line) => (
 						<p key={line}>{line}</p>
 					))}
-					{support.game_manifest.schema_version !== "half-set-manifest-v1" && (
-						<AdaptiveSupportActivity
-							manifest={support.game_manifest}
-							onProgress={(actions, complete) => {
-								setSupportActions(actions);
-								setSupportComplete(complete);
-							}}
-						/>
-					)}
+					{support.game_manifest.schema_version !== "half-set-manifest-v1" &&
+						support.game_manifest.schema_version !==
+							"classroom-action-support-v1" && (
+							<AdaptiveSupportActivity
+								manifest={support.game_manifest}
+								onProgress={(actions, complete) => {
+									setSupportActions(actions);
+									setSupportComplete(complete);
+								}}
+							/>
+						)}
 					<button
 						type="button"
 						className="primary-action"

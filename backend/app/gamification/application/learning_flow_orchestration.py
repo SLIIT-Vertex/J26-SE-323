@@ -19,6 +19,7 @@ from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 from app.gamification.application.adaptive_game_flow import AdaptiveGameFlow
 from app.gamification.application.addition_adventure_flow import AdditionAdventureFlow
 from app.gamification.application.capacity_adventure_flow import CapacityAdventureFlow
+from app.gamification.application.classroom_action_quest_flow import ClassroomActionQuestFlow
 from app.gamification.application.decimal_adventure_flow import DecimalAdventureFlow
 from app.gamification.application.direction_adventure_flow import DirectionAdventureFlow
 from app.gamification.application.distance_adventure_flow import DistanceAdventureFlow
@@ -238,6 +239,7 @@ class LearningFlowOrchestrator:
             DirectionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
             DecimalAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
             RomanAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            ClassroomActionQuestFlow(store, probe_gateway, evidence_publisher, now=self._now),
         )
         self._area_flows = {flow.area_id: flow for flow in flows}
         self._experience_flows = {flow.experience_id: flow for flow in flows}

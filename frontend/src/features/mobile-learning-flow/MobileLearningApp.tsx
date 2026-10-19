@@ -27,6 +27,7 @@ import { ShapeAdventureJourney } from "../skill-area-13/ShapeAdventureJourney";
 import { DirectionAdventureJourney } from "../skill-area-14/DirectionAdventureJourney";
 import { DecimalAdventureJourney } from "../skill-area-15/DecimalAdventureJourney";
 import { RomanAdventureJourney } from "../skill-area-16/RomanAdventureJourney";
+import { ClassroomActionQuest } from "../english-area-1/ClassroomActionQuest";
 import {
 	createFixtureRoundClient,
 	type FixtureRoundClient,
@@ -99,7 +100,8 @@ type Screen =
 	| "shape-adventure"
 	| "direction-adventure"
 	| "decimal-adventure"
-	| "roman-adventure";
+	| "roman-adventure"
+	| "classroom-action-quest";
 
 const GAME_SCREENS = new Set<Screen>([
 	"mission",
@@ -130,6 +132,7 @@ const GAME_SCREENS = new Set<Screen>([
 	"direction-adventure",
 	"decimal-adventure",
 	"roman-adventure",
+	"classroom-action-quest",
 ]);
 
 type SyncState = "synced" | "pending" | "offline" | "conflict";
@@ -492,6 +495,10 @@ export function MobileLearningApp({
 		}
 		if (areaId === "G5-AREA-MAT-16") {
 			setScreen("roman-adventure");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-01") {
+			setScreen("classroom-action-quest");
 			return;
 		}
 		setScreen(isFixtureLoop(mission) ? "fixture-round" : "draft-player");
@@ -1155,6 +1162,16 @@ export function MobileLearningApp({
 			)}
 			{screen === "roman-adventure" && (
 				<RomanAdventureJourney
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "classroom-action-quest" && (
+				<ClassroomActionQuest
 					api={api}
 					learnerId={learnerId}
 					condition={engineeringCondition}

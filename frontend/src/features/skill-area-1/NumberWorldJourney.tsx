@@ -81,7 +81,9 @@ export function NumberWorldJourney({
 	const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
 	const [activeGameIndex, setActiveGameIndex] = useState<number | null>(null);
 	const [activeChallengeIndex, setActiveChallengeIndex] = useState(0);
-	const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
+	const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>(
+		{},
+	);
 	const [supportActions, setSupportActions] = useState(0);
 	const [supportComplete, setSupportComplete] = useState(false);
 	const requestSequence = useRef(0);
@@ -260,7 +262,8 @@ export function NumberWorldJourney({
 		}
 		if (correct && !next.support && activeGameIndex !== null) {
 			setResponse(null);
-			const challengeCount = NUMBER_WORLD_GAMES[activeGameIndex].skillIds.length;
+			const challengeCount =
+				NUMBER_WORLD_GAMES[activeGameIndex].skillIds.length;
 			if (activeChallengeIndex + 1 < challengeCount) {
 				await openChallenge(activeGameIndex, activeChallengeIndex + 1);
 				return;
@@ -385,15 +388,24 @@ export function NumberWorldJourney({
 				<div className="adventure-play">
 					<AdventureProgress stage={progressStage} />
 					<p className="game-round-label">
-						ක්‍රීඩාව {(activeGameIndex ?? 0) + 1} · අභියෝගය {activeChallengeIndex + 1}/
+						ක්‍රීඩාව {(activeGameIndex ?? 0) + 1} · අභියෝගය{" "}
+						{activeChallengeIndex + 1}/
 						{activeGameIndex === null
 							? 0
 							: NUMBER_WORLD_GAMES[activeGameIndex].skillIds.length}
 					</p>
 					<p className="independent-badge">තනිවම අතින් ගොඩනඟන්න</p>
 					<h2>{manifest.prompt_si}</h2>
-					<div aria-disabled={step === "feedback"} style={step === "feedback" ? { pointerEvents: "none" } : undefined}>
-						<NumberManipulation key={manifest.revision_id} chapter={chapter} game={manifest.game ?? {}} onChange={record} />
+					<div
+						aria-disabled={step === "feedback"}
+						style={step === "feedback" ? { pointerEvents: "none" } : undefined}
+					>
+						<NumberManipulation
+							key={manifest.revision_id}
+							chapter={chapter}
+							game={manifest.game ?? {}}
+							onChange={record}
+						/>
 					</div>
 					{step === "feedback" && !answeredCorrectly && (
 						<h3 role="status">{message}</h3>
@@ -415,16 +427,27 @@ export function NumberWorldJourney({
 			{step === "support" && support && chapter && (
 				<div className="adventure-play" data-support-visible="true">
 					<AdventureProgress stage={progressStage} />
-					<p className="support-badge" data-support-type={support.scaffold_type}>
+					<p
+						className="support-badge"
+						data-support-type={support.scaffold_type}
+					>
 						උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
 					</p>
 					<h2>{support.title_si}</h2>
 					{support.body_si.map((line) => (
 						<p key={line}>{line}</p>
 					))}
-					{support.game_manifest.schema_version !== "half-set-manifest-v1" && (
-						<AdaptiveSupportActivity manifest={support.game_manifest} onProgress={(actions, complete) => { setSupportActions(actions); setSupportComplete(complete); }} />
-					)}
+					{support.game_manifest.schema_version !== "half-set-manifest-v1" &&
+						support.game_manifest.schema_version !==
+							"classroom-action-support-v1" && (
+							<AdaptiveSupportActivity
+								manifest={support.game_manifest}
+								onProgress={(actions, complete) => {
+									setSupportActions(actions);
+									setSupportComplete(complete);
+								}}
+							/>
+						)}
 					<button
 						type="button"
 						className="primary-action"
@@ -539,9 +562,7 @@ export function Harbour({
 	if (skill.endsWith("100000-01"))
 		return (
 			<div className="manipulation-board milestone-builder">
-				<p className="milestone-instruction">
-					එක් එක් පේළියේ 1ක් එකතු වන රටාව බලන්න.
-				</p>
+				<p className="milestone-instruction">එක් එක් පේළියේ 1ක් එකතු වන රටාව බලන්න.</p>
 				<div className="milestone-ladder">
 					<span>9 + 1 = 10</span>
 					<span>99 + 1 = 100</span>
@@ -589,10 +610,8 @@ export function Harbour({
 				isTarget: isDigit && digitIndex === targetDigitIndex,
 			};
 		});
-	const selectedVisualIndex =
-		selectedPlace === null ? null : 5 - selectedPlace;
-	const selectedPower =
-		selectedPlace === null ? null : 10 ** selectedPlace;
+	const selectedVisualIndex = selectedPlace === null ? null : 5 - selectedPlace;
+	const selectedPower = selectedPlace === null ? null : 10 ** selectedPlace;
 	const isRepresentedValue = skill.endsWith("REPRESENTED-01");
 	return (
 		<div className="manipulation-board harbour-board place-value-board">
@@ -625,9 +644,7 @@ export function Harbour({
 			</div>
 			<div className="place-value-table-frame">
 				<table className="place-value-table">
-					<caption className="sr-only">
-						ඉලක්කම තැබීමට ස්ථානීය අගය වගුව
-					</caption>
+					<caption className="sr-only">ඉලක්කම තැබීමට ස්ථානීය අගය වගුව</caption>
 					<thead>
 						<tr>
 							{placeLabels.map((label, index) => (
@@ -645,7 +662,9 @@ export function Harbour({
 							{placeLabels.map((label, index) => (
 								<td
 									key={label}
-									className={selectedVisualIndex === index ? "is-selected" : undefined}
+									className={
+										selectedVisualIndex === index ? "is-selected" : undefined
+									}
 								>
 									<button
 										type="button"
@@ -723,7 +742,9 @@ export function ExpandedTable({
 				<thead>
 					<tr>
 						{placeLabels.map((label) => (
-							<th scope="col" key={label}>{label}</th>
+							<th scope="col" key={label}>
+								{label}
+							</th>
 						))}
 					</tr>
 				</thead>
@@ -758,7 +779,8 @@ export function ExpandedTable({
 				</tbody>
 			</table>
 			<p className="expanded-strip" data-expanded-terms={terms.join("+")}>
-				විහිදුණු ආකාරය: {terms.length ? terms.map(formatPlaceValue).join(" + ") : "…"}
+				විහිදුණු ආකාරය:{" "}
+				{terms.length ? terms.map(formatPlaceValue).join(" + ") : "…"}
 			</p>
 		</div>
 	);
@@ -838,25 +860,25 @@ export function Abacus({
 					<div className="abacus-rod-control" key={label}>
 						<span className="abacus-control-label">{label}</span>
 						<div className="abacus-stepper">
-						<button
-							type="button"
-							className="abacus-step-button abacus-step-button--decrement"
-							onClick={() => update(index, -1)}
-							disabled={rods[index] === 0}
-							aria-label={`${label} තැනින් එකක් ඉවත් කරන්න`}
-						>
-							−
-						</button>
-						<strong>{rods[index]}</strong>
-						<button
-							type="button"
-							className="abacus-step-button abacus-step-button--increment"
-							onClick={() => update(index, 1)}
-							disabled={rods[index] === 9}
-							aria-label={`${label} තැනට එකක් එකතු කරන්න`}
-						>
-							+
-						</button>
+							<button
+								type="button"
+								className="abacus-step-button abacus-step-button--decrement"
+								onClick={() => update(index, -1)}
+								disabled={rods[index] === 0}
+								aria-label={`${label} තැනින් එකක් ඉවත් කරන්න`}
+							>
+								−
+							</button>
+							<strong>{rods[index]}</strong>
+							<button
+								type="button"
+								className="abacus-step-button abacus-step-button--increment"
+								onClick={() => update(index, 1)}
+								disabled={rods[index] === 9}
+								aria-label={`${label} තැනට එකක් එකතු කරන්න`}
+							>
+								+
+							</button>
 						</div>
 					</div>
 				))}
@@ -882,9 +904,7 @@ export function Kite({
 	const digits = digitCards.map((card) => card.value);
 	const greatest = Boolean(game.greatest);
 	const activePlaceLabels = placeLabels.slice(-digits.length);
-	const [available, setAvailable] = useState(
-		digitCards,
-	);
+	const [available, setAvailable] = useState(digitCards);
 	const [slots, setSlots] = useState<
 		Array<{ id: string; value: number } | null>
 	>(Array(digits.length).fill(null));
@@ -942,24 +962,34 @@ export function Kite({
 			<div className="extreme-construction">
 				<div className="extreme-digit-source">
 					<span>දී ඇති ඉලක්කම්</span>
-					<div className={`extreme-digit-circle extreme-digit-circle--${digits.length}`}>
+					<div
+						className={`extreme-digit-circle extreme-digit-circle--${digits.length}`}
+					>
 						{digitCards.map((patch) => {
-							const isAvailable = available.some((item) => item.id === patch.id);
+							const isAvailable = available.some(
+								(item) => item.id === patch.id,
+							);
 							return (
-							<button
-								type="button"
-								key={patch.id}
-								disabled={!isAvailable}
-								aria-label={isAvailable ? `${patch.value} ඉලක්කම තෝරන්න` : `${patch.value} ඉලක්කම තබා ඇත`}
-								onClick={() => place(patch.id, slots.indexOf(null))}
-							>
-								{patch.value}
-							</button>
+								<button
+									type="button"
+									key={patch.id}
+									disabled={!isAvailable}
+									aria-label={
+										isAvailable
+											? `${patch.value} ඉලක්කම තෝරන්න`
+											: `${patch.value} ඉලක්කම තබා ඇත`
+									}
+									onClick={() => place(patch.id, slots.indexOf(null))}
+								>
+									{patch.value}
+								</button>
 							);
 						})}
 					</div>
 				</div>
-				<span className="extreme-arrow" aria-hidden="true">→</span>
+				<span className="extreme-arrow" aria-hidden="true">
+					→
+				</span>
 				<div className="extreme-place-table-wrap">
 					<table className="extreme-place-table">
 						<caption className="sr-only">
@@ -967,7 +997,11 @@ export function Kite({
 						</caption>
 						<thead>
 							<tr>
-								{activePlaceLabels.map((label) => <th key={label} scope="col">{label}</th>)}
+								{activePlaceLabels.map((label) => (
+									<th key={label} scope="col">
+										{label}
+									</th>
+								))}
 							</tr>
 						</thead>
 						<tbody>
@@ -1007,8 +1041,7 @@ export function River({
 	): void;
 }) {
 	const values = useMemo(
-		() =>
-			(game.values as number[] | undefined) ?? [40105, 40015, 40150, 40051],
+		() => (game.values as number[] | undefined) ?? [40105, 40015, 40150, 40051],
 		[game.values],
 	);
 	const [bank, setBank] = useState(values);
@@ -1038,9 +1071,7 @@ export function River({
 		<div className="manipulation-board river-board">
 			<div className="river-direction-card">
 				<span aria-hidden="true">{game.ascending ? "↗" : "↘"}</span>
-				<strong>
-					{game.ascending ? "කුඩා සිට විශාල දක්වා" : "විශාල සිට කුඩා දක්වා"}
-				</strong>
+				<strong>{game.ascending ? "කුඩා සිට විශාල දක්වා" : "විශාල සිට කුඩා දක්වා"}</strong>
 			</div>
 			<p className="river-instruction">අංක පුවරු තට්ටු කර මාර්ගය සම්පූර්ණ කරන්න.</p>
 			<div className="river-bank">
@@ -1051,7 +1082,9 @@ export function River({
 							type="button"
 							key={value}
 							disabled={!isAvailable}
-							aria-label={isAvailable ? `${value} මාර්ගයට එක් කරන්න` : `${value} මාර්ගයේ ඇත`}
+							aria-label={
+								isAvailable ? `${value} මාර්ගයට එක් කරන්න` : `${value} මාර්ගයේ ඇත`
+							}
 							onClick={() => add(value)}
 						>
 							<img src={`${NUMBER_WORLD_ASSET_ROOT}/river-stone.png`} alt="" />
@@ -1074,7 +1107,10 @@ export function River({
 						return (
 							<li key={`route-position-${sourceValue}`}>
 								{value === undefined ? (
-									<span className="river-route-position-number" aria-hidden="true">
+									<span
+										className="river-route-position-number"
+										aria-hidden="true"
+									>
 										{index + 1}
 									</span>
 								) : (

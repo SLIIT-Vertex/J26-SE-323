@@ -1,0 +1,57 @@
+{
+  "area_id": "G5-AREA-ENG-01",
+  "title_en": "Our Good Behaviour",
+  "package_version": "g5-eng-classroom-action-quest-draft-v1",
+  "status": "development_only_unreviewed",
+  "grade": 5,
+  "subject": "ENG",
+  "curriculum_medium": "si",
+  "target_language": "en",
+  "instruction_languages": ["en", "si"],
+  "source_basis": {
+    "kind": "user_supplied_textbook_screenshot",
+    "heading": "Theme 1: Our Good Behaviour — අපේ යහ පැවැත්ම",
+    "page_number": null,
+    "rights_status": "needs_review"
+  },
+  "atomic_skills": [
+    "G5-ENG-BEH-POSTURE-01",
+    "G5-ENG-BEH-DESTINATION-01",
+    "G5-ENG-BEH-RETURN-01"
+  ],
+  "commands_en": [
+    "Bend",
+    "Stretch your arms",
+    "Put your arms down",
+    "Stand straight",
+    "Run to the wall",
+    "Come back",
+    "Run to the blackboard",
+    "Turn around",
+    "Sit down"
+  ],
+  "response_schemas": ["body_state", "classroom_navigation"],
+  "model_versions": {
+    "misconception": "g5-eng-action-command-authored-probabilistic-v1",
+    "support_policy": "g5-eng-action-command-raw-ig-shadow-v1",
+    "independence_measurement": "classroom-action-independence-measurement-v1"
+  },
+  "human_review_required": [
+    "curriculum",
+    "usage_rights",
+    "english_language",
+    "sinhala_support_language",
+    "educator_content",
+    "accessibility",
+    "answer_leakage",
+    "privacy",
+    "model_safety",
+    "release"
+  ],
+  "unsupported_claims": [
+    "listening mastery",
+    "pronunciation mastery",
+    "spontaneous speaking mastery",
+    "free-writing mastery"
+  ]
+}

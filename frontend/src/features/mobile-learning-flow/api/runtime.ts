@@ -1,6 +1,7 @@
 import type {
 	AdditionAdventureSupportManifest,
 	CapacityAdventureSupportManifest,
+	ClassroomActionSupportManifest,
 	ChildEpisodeResponse,
 	DecimalAdventureSupportManifest,
 	DirectionAdventureSupportManifest,
@@ -127,7 +128,8 @@ function parseManifest(value: unknown): PresentationManifest | null {
 							game.schema_version !== "shape-adventure-item-v1" &&
 							game.schema_version !== "direction-adventure-item-v1" &&
 							game.schema_version !== "decimal-adventure-item-v1" &&
-							game.schema_version !== "roman-adventure-item-v1"
+							game.schema_version !== "roman-adventure-item-v1" &&
+							game.schema_version !== "classroom-action-item-v1"
 						) {
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						}
@@ -211,32 +213,39 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																					"solid_net_match",
 																				]
 																			: game.schema_version ===
-																					"direction-adventure-item-v1"
+																					"classroom-action-item-v1"
 																				? [
-																						"main_direction_compass",
-																						"secondary_direction_compass",
-																						"place_direction_scene",
+																						"action_mirror",
+																						"classroom_dash",
+																						"come_back",
 																					]
 																				: game.schema_version ===
-																						"decimal-adventure-item-v1"
+																						"direction-adventure-item-v1"
 																					? [
-																							"decimal_reading_match",
-																							"decimal_tenths_shading",
-																							"tenths_fraction_to_decimal",
-																							"decimal_to_tenths_fraction",
+																							"main_direction_compass",
+																							"secondary_direction_compass",
+																							"place_direction_scene",
 																						]
 																					: game.schema_version ===
-																							"mass-adventure-item-v1"
+																							"decimal-adventure-item-v1"
 																						? [
-																								"weighing_station",
-																								"kilogram_machine",
-																								"market_delivery",
+																								"decimal_reading_match",
+																								"decimal_tenths_shading",
+																								"tenths_fraction_to_decimal",
+																								"decimal_to_tenths_fraction",
 																							]
-																						: [
-																								"equal_share_studio",
-																								"quarter_orchard",
-																								"tenths_mosaic",
-																							];
+																						: game.schema_version ===
+																								"mass-adventure-item-v1"
+																							? [
+																									"weighing_station",
+																									"kilogram_machine",
+																									"market_delivery",
+																								]
+																							: [
+																									"equal_share_studio",
+																									"quarter_orchard",
+																									"tenths_mosaic",
+																								];
 						if (!allowedChapters.includes(chapter))
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						return game as PresentationManifest["game"];
@@ -286,6 +295,7 @@ function parseSupport(value: unknown): SupportView | null {
 		"direction-adventure-support-v1",
 		"decimal-adventure-support-v1",
 		"roman-adventure-support-v1",
+		"classroom-action-support-v1",
 	].includes(String(game.schema_version));
 	if (
 		(!isAdaptiveGame && game.schema_version !== "half-set-manifest-v1") ||
@@ -383,7 +393,8 @@ function parseSupport(value: unknown): SupportView | null {
 							| "shape-adventure-support-v1"
 							| "direction-adventure-support-v1"
 							| "decimal-adventure-support-v1"
-							| "roman-adventure-support-v1",
+							| "roman-adventure-support-v1"
+							| "classroom-action-support-v1",
 						activity_id: text(game.activity_id),
 						revision_id: text(game.revision_id),
 						deterministic_seed: deterministicSeed,
@@ -456,9 +467,12 @@ function parseSupport(value: unknown): SupportView | null {
 																							"roman-adventure-support-v1"
 																						? "roman-adventure-item-v1"
 																						: game.schema_version ===
-																								"mass-adventure-support-v1"
-																							? "mass-adventure-item-v1"
-																							: "addition-adventure-item-v1") ||
+																								"classroom-action-support-v1"
+																							? "classroom-action-item-v1"
+																							: game.schema_version ===
+																									"mass-adventure-support-v1"
+																								? "mass-adventure-item-v1"
+																								: "addition-adventure-item-v1") ||
 								(response !== null && typeof response.kind !== "string") ||
 								!Array.isArray(worked.steps_si) ||
 								worked.steps_si.some((step) => typeof step !== "string")
@@ -482,7 +496,8 @@ function parseSupport(value: unknown): SupportView | null {
 									| ShapeAdventureSupportManifest["worked_example"]["game"]
 									| DirectionAdventureSupportManifest["worked_example"]["game"]
 									| DecimalAdventureSupportManifest["worked_example"]["game"]
-									| RomanAdventureSupportManifest["worked_example"]["game"],
+									| RomanAdventureSupportManifest["worked_example"]["game"]
+									| ClassroomActionSupportManifest["worked_example"]["game"],
 								correct_response: response as
 									| AdditionAdventureSupportManifest["worked_example"]["correct_response"]
 									| NumberPatternSupportManifest["worked_example"]["correct_response"]
@@ -498,7 +513,8 @@ function parseSupport(value: unknown): SupportView | null {
 									| ShapeAdventureSupportManifest["worked_example"]["correct_response"]
 									| DirectionAdventureSupportManifest["worked_example"]["correct_response"]
 									| DecimalAdventureSupportManifest["worked_example"]["correct_response"]
-									| RomanAdventureSupportManifest["worked_example"]["correct_response"],
+									| RomanAdventureSupportManifest["worked_example"]["correct_response"]
+									| ClassroomActionSupportManifest["worked_example"]["correct_response"],
 								steps_si: worked.steps_si as string[],
 							};
 						})(),

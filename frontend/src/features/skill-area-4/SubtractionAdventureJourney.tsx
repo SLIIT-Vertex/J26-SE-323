@@ -112,7 +112,9 @@ export function SubtractionAdventureJourney({
 	const [supportActions, setSupportActions] = useState(0);
 	const [supportComplete, setSupportComplete] = useState(false);
 	const [evidence, setEvidence] = useState<Evidence>(emptyEvidence);
-	const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
+	const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>(
+		{},
+	);
 	const [pendingWithdrawal, setPendingWithdrawal] = useState<{
 		episodeId: string;
 		requestId: string;
@@ -235,10 +237,12 @@ export function SubtractionAdventureJourney({
 			...current,
 			digitEntries: current.digitEntries + (change.digitEntries ?? 0),
 			exchanges: current.exchanges + (change.exchanges ?? 0),
-			invalidExchanges: current.invalidExchanges + (change.invalidExchanges ?? 0),
+			invalidExchanges:
+				current.invalidExchanges + (change.invalidExchanges ?? 0),
 			corrections: current.corrections + (change.corrections ?? 0),
 			cleared: current.cleared + (change.cleared ?? 0),
-			operationChanges: current.operationChanges + (change.operationChanges ?? 0),
+			operationChanges:
+				current.operationChanges + (change.operationChanges ?? 0),
 			storyReorders: current.storyReorders + (change.storyReorders ?? 0),
 			alignmentCorrections:
 				current.alignmentCorrections + (change.alignmentCorrections ?? 0),
@@ -272,9 +276,7 @@ export function SubtractionAdventureJourney({
 				completion_order_consistent:
 					evidence.startedFromOnes && evidence.alignmentCorrections === 0,
 				first_action_ms: evidence.firstActionMs ?? 0,
-				active_time_ms: reducedMotion
-					? 0
-					: Math.max(0, Date.now() - startedAt),
+				active_time_ms: reducedMotion ? 0 : Math.max(0, Date.now() - startedAt),
 				attempt_count: activeSkillId
 					? (failedAttempts[activeSkillId] ?? 0) + 1
 					: 1,
@@ -309,7 +311,8 @@ export function SubtractionAdventureJourney({
 				[activeSkillId]: (current[activeSkillId] ?? 0) + 1,
 			}));
 		}
-		if (next.status === "support_active" && next.support) setSupport(next.support);
+		if (next.status === "support_active" && next.support)
+			setSupport(next.support);
 		else setSupport(null);
 		setStep(next.status === "support_active" ? "feedback" : "result");
 	};
@@ -397,7 +400,11 @@ export function SubtractionAdventureJourney({
 							<button
 								type="button"
 								key={item.id}
-								style={{ "--card-tone": ["#54CBAB", "#E6A23C", "#7B61E8"][index] } as CSSProperties}
+								style={
+									{
+										"--card-tone": ["#54CBAB", "#E6A23C", "#7B61E8"][index],
+									} as CSSProperties
+								}
 								onClick={() => {
 									const first = SUBTRACTION_SKILLS.find(
 										(skill) => skill.chapter === item.id,
@@ -419,7 +426,10 @@ export function SubtractionAdventureJourney({
 			)}
 			{(step === "question" || step === "feedback") && manifest && chapter && (
 				<div className="adventure-play">
-					<AdventureProgress stage={progressStage} activityCount={skills.length} />
+					<AdventureProgress
+						stage={progressStage}
+						activityCount={skills.length}
+					/>
 					<p className="game-round-label">
 						ක්‍රීඩාව {activeChapterIndex + 1} · අභියෝගය {activeChallengeIndex + 1}/
 						{skills.length}
@@ -454,23 +464,31 @@ export function SubtractionAdventureJourney({
 			)}
 			{step === "support" && support && (
 				<div className="adventure-play" data-support-visible="true">
-					<AdventureProgress stage={progressStage} activityCount={skills.length} />
-					<p className="support-badge" data-support-type={support.scaffold_type}>
+					<AdventureProgress
+						stage={progressStage}
+						activityCount={skills.length}
+					/>
+					<p
+						className="support-badge"
+						data-support-type={support.scaffold_type}
+					>
 						උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
 					</p>
 					<h2>{support.title_si}</h2>
 					{support.body_si.map((line) => (
 						<p key={line}>{line}</p>
 					))}
-					{support.game_manifest.schema_version !== "half-set-manifest-v1" && (
-						<AdaptiveSupportActivity
-							manifest={support.game_manifest}
-							onProgress={(actions, complete) => {
-								setSupportActions(actions);
-								setSupportComplete(complete);
-							}}
-						/>
-					)}
+					{support.game_manifest.schema_version !== "half-set-manifest-v1" &&
+						support.game_manifest.schema_version !==
+							"classroom-action-support-v1" && (
+							<AdaptiveSupportActivity
+								manifest={support.game_manifest}
+								onProgress={(actions, complete) => {
+									setSupportActions(actions);
+									setSupportComplete(complete);
+								}}
+							/>
+						)}
 					<button
 						type="button"
 						className="primary-action"
@@ -483,7 +501,10 @@ export function SubtractionAdventureJourney({
 			)}
 			{step === "withdrawing" && (
 				<div className="adventure-result" role="status">
-					<AdventureProgress stage={progressStage} activityCount={skills.length} />
+					<AdventureProgress
+						stage={progressStage}
+						activityCount={skills.length}
+					/>
 					<h2>උදව් සම්පූර්ණයෙන් ඉවත් කරමින්…</h2>
 				</div>
 			)}
@@ -492,7 +513,10 @@ export function SubtractionAdventureJourney({
 					className={`adventure-result${answeredCorrectly ? " is-success" : ""}`}
 					data-answer-result={answeredCorrectly ? "correct" : "incorrect"}
 				>
-					<AdventureProgress stage={progressStage} activityCount={skills.length} />
+					<AdventureProgress
+						stage={progressStage}
+						activityCount={skills.length}
+					/>
 					{answeredCorrectly && isLastChallenge && <SuccessCelebration />}
 					<h2>
 						{answeredCorrectly
@@ -531,9 +555,16 @@ export function SubtractionMechanic({
 }: {
 	game: Record<string, unknown>;
 	reducedMotion: boolean;
-	onChange(response: ConstructedResponse | null, evidence?: Partial<Evidence>): void;
+	onChange(
+		response: ConstructedResponse | null,
+		evidence?: Partial<Evidence>,
+	): void;
 }) {
-	const places = (game.places as string[] | undefined) ?? ["hundreds", "tens", "ones"];
+	const places = (game.places as string[] | undefined) ?? [
+		"hundreds",
+		"tens",
+		"ones",
+	];
 	const labels = (game.place_labels_si as string[] | undefined) ?? places;
 	const quantities = game.quantities as Quantity[] | undefined;
 	const expanded = game.representation === "expanded";
@@ -542,8 +573,12 @@ export function SubtractionMechanic({
 	const [destination, setDestination] = useState<string | null>(null);
 	const [exchanges, setExchanges] = useState<Exchange[]>([]);
 	const [digits, setDigits] = useState(places.map(() => ""));
-	const [minuendSource, setMinuendSource] = useState<"first" | "second" | null>(null);
-	const [subtrahendSource, setSubtrahendSource] = useState<"first" | "second" | null>(null);
+	const [minuendSource, setMinuendSource] = useState<"first" | "second" | null>(
+		null,
+	);
+	const [subtrahendSource, setSubtrahendSource] = useState<
+		"first" | "second" | null
+	>(null);
 	const [terms, setTerms] = useState({
 		minuend: places.map(() => ""),
 		subtrahend: places.map(() => ""),
@@ -553,17 +588,27 @@ export function SubtractionMechanic({
 	const [finalResult, setFinalResult] = useState("");
 	const [notice, setNotice] = useState("");
 	const [moving, setMoving] = useState<Exchange | null>(null);
-	const storyReady = !quantities || (minuendSource !== null && subtrahendSource !== null && minuendSource !== subtrahendSource);
+	const storyReady =
+		!quantities ||
+		(minuendSource !== null &&
+			subtrahendSource !== null &&
+			minuendSource !== subtrahendSource);
 	const placed = quantities
 		? {
-				minuend: quantities.find((item) => item.source === minuendSource)?.value,
-				subtrahend: quantities.find((item) => item.source === subtrahendSource)?.value,
+				minuend: quantities.find((item) => item.source === minuendSource)
+					?.value,
+				subtrahend: quantities.find((item) => item.source === subtrahendSource)
+					?.value,
 			}
 		: { minuend: Number(game.minuend), subtrahend: Number(game.subtrahend) };
 	const minuendDigits =
-		placed.minuend == null ? places.map(() => null) : digitsOf(placed.minuend, width);
+		placed.minuend == null
+			? places.map(() => null)
+			: digitsOf(placed.minuend, width);
 	const subtrahendDigits =
-		placed.subtrahend == null ? places.map(() => null) : digitsOf(placed.subtrahend, width);
+		placed.subtrahend == null
+			? places.map(() => null)
+			: digitsOf(placed.subtrahend, width);
 	const adjusted = applyExchanges(
 		minuendDigits.map((digit) => digit ?? 0),
 		places,
@@ -674,7 +719,8 @@ export function SubtractionMechanic({
 		);
 		setSource(null);
 		setDestination(null);
-		if (quantities) emitStory(digits, minuendSource, subtrahendSource, { exchanges: 1 });
+		if (quantities)
+			emitStory(digits, minuendSource, subtrahendSource, { exchanges: 1 });
 		else emitColumn(digits, next, { exchanges: 1 });
 	};
 
@@ -687,7 +733,11 @@ export function SubtractionMechanic({
 			{quantities && (
 				<div className="story-scene">
 					{quantities.map((quantity) => (
-						<article key={quantity.source} className="story-quantity" data-source={quantity.source}>
+						<article
+							key={quantity.source}
+							className="story-quantity"
+							data-source={quantity.source}
+						>
 							<img src={String(game.asset ?? "")} alt="" />
 							<p>{quantity.label_si}</p>
 							<strong>{quantity.value}</strong>
@@ -780,7 +830,9 @@ export function SubtractionMechanic({
 							aria-label="අවසාන පිළිතුර ඇතුළත් කරන්න"
 							value={finalResult}
 							onChange={(event) => {
-								const value = event.target.value.replace(/\D/g, "").slice(0, width);
+								const value = event.target.value
+									.replace(/\D/g, "")
+									.slice(0, width);
 								setFinalResult(value);
 								emitExpanded(terms, value, { digitEntries: 1 });
 							}}
@@ -805,8 +857,15 @@ export function SubtractionMechanic({
 								<tr className="adjusted-digits">
 									{adjusted.map((digit, index) => (
 										<td key={places[index]}>
-											{exchanges.length > 0 && digit !== minuendDigits[index] ? (
-												<strong className={moving && !reducedMotion ? "exchange-token is-moving" : "exchange-token"}>
+											{exchanges.length > 0 &&
+											digit !== minuendDigits[index] ? (
+												<strong
+													className={
+														moving && !reducedMotion
+															? "exchange-token is-moving"
+															: "exchange-token"
+													}
+												>
 													{digit}
 												</strong>
 											) : null}
@@ -839,20 +898,29 @@ export function SubtractionMechanic({
 												aria-label={resultDigitLabel(place)}
 												value={digits[index]}
 												onChange={(event) => {
-													const value = event.target.value.replace(/\D/g, "").slice(0, 1);
+													const value = event.target.value
+														.replace(/\D/g, "")
+														.slice(0, 1);
 													const next = digits.map((digit, digitIndex) =>
 														digitIndex === index ? value : digit,
 													);
 													setDigits(next);
-													const firstFilled = next.findIndex((digit) => digit !== "");
+													const firstFilled = next.findIndex(
+														(digit) => digit !== "",
+													);
 													const startedFromOnes =
-														firstFilled === -1 || firstFilled === next.length - 1;
+														firstFilled === -1 ||
+														firstFilled === next.length - 1;
 													if (quantities) {
 														emitStory(next, minuendSource, subtrahendSource, {
 															digitEntries: 1,
 															startedFromOnes,
 														});
-													} else emitColumn(next, exchanges, { digitEntries: 1, startedFromOnes });
+													} else
+														emitColumn(next, exchanges, {
+															digitEntries: 1,
+															startedFromOnes,
+														});
 												}}
 											/>
 										</td>
@@ -909,7 +977,10 @@ export function SubtractionMechanic({
 									setExchanges([]);
 									setMoving(null);
 									setNotice("");
-									if (quantities) emitStory(digits, minuendSource, subtrahendSource, { cleared: 1 });
+									if (quantities)
+										emitStory(digits, minuendSource, subtrahendSource, {
+											cleared: 1,
+										});
 									else emitColumn(digits, [], { cleared: 1 });
 								}}
 							>

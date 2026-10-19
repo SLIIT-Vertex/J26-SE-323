@@ -1,0 +1,327 @@
+.classroom-action-quest {
+	width: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	padding: clamp(8px, 4vw, 22px);
+	box-sizing: border-box;
+	color: #214b4b;
+	overflow-x: clip;
+}
+.caq-header {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-bottom: 14px;
+	padding: 14px;
+	border-radius: 24px;
+	background: rgba(255, 253, 247, 0.96);
+}
+.caq-header p,
+.caq-header h1,
+.caq-position {
+	margin: 0;
+}
+.caq-header p {
+	color: #7e617b;
+	font-weight: 850;
+}
+.caq-header h1 {
+	font-size: clamp(1.45rem, 7vw, 2.1rem);
+}
+.caq-game-list,
+.caq-play {
+	display: grid;
+	gap: 14px;
+}
+.caq-game-card {
+	width: 100%;
+	min-height: 116px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	text-align: left;
+	padding: 10px;
+	border: 2px solid #8c62b6;
+	border-radius: 22px;
+	background: #fffdf7;
+	color: inherit;
+	box-shadow: 0 7px 0 #d1b6e7;
+}
+.caq-game-card img {
+	width: 92px;
+	height: 92px;
+	object-fit: contain;
+	flex: none;
+}
+.caq-game-card span {
+	display: grid;
+	gap: 5px;
+}
+.caq-game-card strong {
+	font-size: 1.08rem;
+}
+.caq-game-card small {
+	line-height: 1.35;
+}
+.caq-game-card em {
+	font-size: 0.78rem;
+	color: #8a5d28;
+	font-weight: 800;
+	font-style: normal;
+}
+.caq-command {
+	position: sticky;
+	top: max(6px, env(safe-area-inset-top));
+	z-index: 2;
+	display: grid;
+	gap: 3px;
+	text-align: center;
+	padding: 12px;
+	border: 2px solid #6c4da1;
+	border-radius: 18px;
+	background: #fff9d8;
+	box-shadow: 0 5px 14px rgba(65, 44, 82, 0.15);
+}
+.caq-command span {
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-weight: 800;
+	color: #7a657d;
+}
+.caq-command strong {
+	font-size: clamp(1.5rem, 8vw, 2.25rem);
+	color: #563a88;
+}
+.action-mirror {
+	display: grid;
+	gap: 12px;
+}
+.caq-stage {
+	min-height: 270px;
+	display: grid;
+	place-items: center;
+	border-radius: 22px;
+	background: linear-gradient(#dff8f4, #fff4cf);
+	overflow: hidden;
+}
+.caq-stage > img {
+	width: min(67%, 260px);
+	height: 260px;
+	object-fit: contain;
+}
+.pose-controls {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+.pose-controls button {
+	min-width: 0;
+	min-height: 112px;
+	padding: 5px;
+	border: 2px solid #a9c9c4;
+	border-radius: 14px;
+	background: #fff;
+	color: #254b4b;
+	font: inherit;
+	font-weight: 800;
+}
+.pose-controls button.selected {
+	border-color: #7c4bad;
+	background: #efe1ff;
+	box-shadow: inset 0 0 0 2px #7c4bad;
+}
+.pose-controls img {
+	display: block;
+	width: 100%;
+	height: 70px;
+	object-fit: contain;
+}
+.pose-controls span {
+	display: block;
+	font-size: 0.72rem;
+	line-height: 1.15;
+}
+.classroom-dash {
+	position: relative;
+	min-height: 520px;
+	border-radius: 24px;
+	background-size: cover;
+	background-position: center;
+	overflow: hidden;
+	border: 3px solid #7f60a8;
+}
+.destination {
+	position: absolute;
+	z-index: 2;
+	min-width: 72px;
+	min-height: 58px;
+	border: 3px solid #fff;
+	border-radius: 14px;
+	background: rgba(83, 53, 124, 0.88);
+	color: #fff;
+	font: inherit;
+	font-weight: 850;
+}
+.destination.wall {
+	left: 3%;
+	top: 28%;
+}
+.destination.blackboard {
+	right: 4%;
+	top: 16%;
+}
+.destination.origin {
+	left: 50%;
+	bottom: 5%;
+	transform: translateX(-50%);
+	display: grid;
+	place-items: center;
+}
+.destination.origin img {
+	width: 58px;
+	height: 35px;
+	object-fit: contain;
+}
+.destination span {
+	display: block;
+}
+.runner {
+	position: absolute;
+	z-index: 1;
+	width: 110px;
+	height: 160px;
+	object-fit: contain;
+	transition:
+		left 0.45s ease,
+		top 0.45s ease,
+		bottom 0.45s ease;
+}
+.runner.at-start-a {
+	left: calc(50% - 55px);
+	bottom: 12%;
+}
+.runner.at-wall-zone {
+	left: 7%;
+	top: 37%;
+}
+.runner.at-blackboard-zone {
+	right: 10%;
+	top: 25%;
+}
+.caq-primary {
+	min-height: 52px;
+	border: 0;
+	border-radius: 16px;
+	background: #6c43a0;
+	color: #fff;
+	font: inherit;
+	font-weight: 900;
+	padding: 12px 18px;
+}
+.caq-primary:disabled {
+	opacity: 0.45;
+}
+.classroom-action-quest button:focus-visible {
+	outline: 4px solid #e56d4d;
+	outline-offset: 3px;
+}
+.caq-support {
+	display: grid;
+	gap: 12px;
+	padding: 14px;
+	border: 2px solid #d0ab58;
+	border-radius: 20px;
+	background: #fffdf5;
+}
+.caq-support > p {
+	margin: 0;
+	color: #9a4d36;
+	font-weight: 900;
+}
+.caq-support h2 {
+	margin: 0;
+}
+.caq-support ol {
+	margin: 0;
+	padding-left: 28px;
+	display: grid;
+	gap: 8px;
+}
+.caq-support li {
+	opacity: 0.55;
+}
+.caq-support li.done {
+	opacity: 1;
+	font-weight: 800;
+}
+.caq-worked {
+	min-height: 260px;
+	display: grid;
+	place-items: center;
+	gap: 8px;
+	padding: 10px;
+	border-radius: 18px;
+	background: #e8f8f3;
+	text-align: center;
+}
+.classroom-action-quest .caq-worked img {
+	width: min(66%, 220px);
+	height: 210px;
+	object-fit: contain;
+}
+.caq-worked.route span {
+	font-weight: 900;
+	text-transform: capitalize;
+}
+.caq-status,
+.caq-feedback {
+	text-align: center;
+	padding: 20px;
+	border-radius: 18px;
+	background: #fffdf5;
+}
+.caq-feedback {
+	display: grid;
+	gap: 14px;
+}
+.classroom-action-quest .caq-result img {
+	width: min(66%, 280px);
+	margin: auto;
+}
+.caq-result p {
+	margin: 0;
+}
+.caq-position {
+	font-weight: 800;
+	color: #6d7772;
+}
+@media (max-width: 360px) {
+	.classroom-action-quest {
+		padding: 7px;
+	}
+	.caq-game-card img {
+		width: 76px;
+		height: 76px;
+	}
+	.pose-controls {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.classroom-dash {
+		min-height: 460px;
+	}
+	.runner {
+		width: 88px;
+		height: 132px;
+	}
+	.destination {
+		min-width: 64px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.classroom-action-quest * {
+		animation: none;
+		transition: none;
+		scroll-behavior: auto;
+	}
+}

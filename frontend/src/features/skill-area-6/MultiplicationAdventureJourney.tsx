@@ -28,7 +28,13 @@ import {
 	type MultiplicationChapter,
 } from "./manifest";
 
-type Step = "chapters" | "question" | "feedback" | "support" | "withdrawing" | "result";
+type Step =
+	| "chapters"
+	| "question"
+	| "feedback"
+	| "support"
+	| "withdrawing"
+	| "result";
 
 export function MultiplicationAdventureJourney({
 	api,
@@ -73,8 +79,13 @@ export function MultiplicationAdventureJourney({
 		() => MULTIPLICATION_SKILLS.filter((skill) => skill.chapter === chapter),
 		[chapter],
 	);
-	const activeChallengeIndex = Math.max(0, skills.findIndex((skill) => skill.id === activeSkillId));
-	const activeChapterIndex = MULTIPLICATION_CHAPTERS.findIndex((item) => item.id === chapter);
+	const activeChallengeIndex = Math.max(
+		0,
+		skills.findIndex((skill) => skill.id === activeSkillId),
+	);
+	const activeChapterIndex = MULTIPLICATION_CHAPTERS.findIndex(
+		(item) => item.id === chapter,
+	);
 	const isLastChallenge = activeChallengeIndex === skills.length - 1;
 	const resetWork = useCallback(() => {
 		setResponse(null);
@@ -118,7 +129,9 @@ export function MultiplicationAdventureJourney({
 				),
 			);
 			if (!withdrawn || cancelled) return;
-			const next = await run(() => api.presentAfter(episodeId, crypto.randomUUID()));
+			const next = await run(() =>
+				api.presentAfter(episodeId, crypto.randomUUID()),
+			);
 			if (!next || cancelled) return;
 			setManifest(next.manifest);
 			setSupport(null);
@@ -171,7 +184,9 @@ export function MultiplicationAdventureJourney({
 				item_revision_id: manifest.revision_id,
 				interaction_version: "constructed-response-v1" as const,
 			},
-			response_time_ms: reducedMotion ? null : Math.max(0, Date.now() - startedAt),
+			response_time_ms: reducedMotion
+				? null
+				: Math.max(0, Date.now() - startedAt),
 			interaction_summary: {
 				digit_entry_count: digitEntries,
 				attempt_count: 1,
@@ -193,13 +208,19 @@ export function MultiplicationAdventureJourney({
 		const correct = next.server_score.correct === true;
 		setAnsweredCorrectly(correct);
 		setMessage(correct ? "ක්‍රියාව සම්පූර්ණයි!" : "නැවත බලමු.");
-		if (next.status === "support_active" && next.support) setSupport(next.support);
+		if (next.status === "support_active" && next.support)
+			setSupport(next.support);
 		else setSupport(null);
 		setStep(next.status === "support_active" ? "feedback" : "result");
 	};
 
 	const finishSupport = async () => {
-		if (!episodeId || !support || support.game_manifest.schema_version === "half-set-manifest-v1") return;
+		if (
+			!episodeId ||
+			!support ||
+			support.game_manifest.schema_version === "half-set-manifest-v1"
+		)
+			return;
 		const completed = await run(() =>
 			api.completeSupport(
 				episodeId,
@@ -236,27 +257,39 @@ export function MultiplicationAdventureJourney({
 			data-reduced-motion={reducedMotion ? "true" : "false"}
 		>
 			<header className="adventure-header">
-				<AdventureBackButton onClick={step === "chapters" ? onBack : () => setStep("chapters")} />
+				<AdventureBackButton
+					onClick={step === "chapters" ? onBack : () => setStep("chapters")}
+				/>
 				<h1>ගුණ කිරීම</h1>
 			</header>
 			{step === "chapters" && (
 				<div className="adventure-cards">
 					{MULTIPLICATION_CHAPTERS.map((item, index) => {
-						const count = MULTIPLICATION_SKILLS.filter((skill) => skill.chapter === item.id).length;
+						const count = MULTIPLICATION_SKILLS.filter(
+							(skill) => skill.chapter === item.id,
+						).length;
 						return (
 							<button
 								type="button"
 								key={item.id}
-								style={{ "--card-tone": ["#54CBAB", "#E6A23C", "#7B61E8"][index] } as CSSProperties}
+								style={
+									{
+										"--card-tone": ["#54CBAB", "#E6A23C", "#7B61E8"][index],
+									} as CSSProperties
+								}
 								onClick={() => {
-									const first = MULTIPLICATION_SKILLS.find((skill) => skill.chapter === item.id);
+									const first = MULTIPLICATION_SKILLS.find(
+										(skill) => skill.chapter === item.id,
+									);
 									if (first) void openSkill(first.id, item.id);
 								}}
 							>
 								<img src={item.asset} alt="" />
 								<span>
 									<strong>{item.title}</strong>
-									<small>අභියෝග {count}ක් · {item.difficulty}</small>
+									<small>
+										අභියෝග {count}ක් · {item.difficulty}
+									</small>
 								</span>
 							</button>
 						);
@@ -265,9 +298,13 @@ export function MultiplicationAdventureJourney({
 			)}
 			{(step === "question" || step === "feedback") && manifest && (
 				<div className="adventure-play">
-					<ChallengeProgress index={activeChallengeIndex} count={skills.length} />
+					<ChallengeProgress
+						index={activeChallengeIndex}
+						count={skills.length}
+					/>
 					<p className="game-round-label">
-						ක්‍රීඩාව {activeChapterIndex + 1} · අභියෝගය {activeChallengeIndex + 1}/{skills.length}
+						ක්‍රීඩාව {activeChapterIndex + 1} · අභියෝගය {activeChallengeIndex + 1}/
+						{skills.length}
 					</p>
 					<h2>{manifest.prompt_si}</h2>
 					<MultiplicationMechanic
@@ -283,28 +320,46 @@ export function MultiplicationAdventureJourney({
 						type="button"
 						className="primary-action"
 						disabled={step === "question" && (!response || busy)}
-						onClick={step === "feedback" ? () => setStep(support ? "support" : "result") : () => void answer()}
+						onClick={
+							step === "feedback"
+								? () => setStep(support ? "support" : "result")
+								: () => void answer()
+						}
 					>
-						{step === "feedback" ? (support ? "උදව්ව බලන්න" : "ඊළඟට") : "තහවුරු කරන්න"}
+						{step === "feedback"
+							? support
+								? "උදව්ව බලන්න"
+								: "ඊළඟට"
+							: "තහවුරු කරන්න"}
 					</button>
 				</div>
 			)}
 			{step === "support" && support && (
 				<div className="adventure-play" data-support-visible="true">
-					<p className="support-badge" data-support-type={support.scaffold_type}>
+					<p
+						className="support-badge"
+						data-support-type={support.scaffold_type}
+					>
 						උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
 					</p>
 					<h2>{support.title_si}</h2>
-					{support.game_manifest.schema_version !== "half-set-manifest-v1" && (
-						<AdaptiveSupportActivity
-							manifest={support.game_manifest}
-							onProgress={(actions, complete) => {
-								setSupportActions(actions);
-								setSupportComplete(complete);
-							}}
-						/>
-					)}
-					<button type="button" className="primary-action" disabled={busy || !supportComplete} onClick={() => void finishSupport()}>
+					{support.game_manifest.schema_version !== "half-set-manifest-v1" &&
+						support.game_manifest.schema_version !==
+							"classroom-action-support-v1" && (
+							<AdaptiveSupportActivity
+								manifest={support.game_manifest}
+								onProgress={(actions, complete) => {
+									setSupportActions(actions);
+									setSupportComplete(complete);
+								}}
+							/>
+						)}
+					<button
+						type="button"
+						className="primary-action"
+						disabled={busy || !supportComplete}
+						onClick={() => void finishSupport()}
+					>
 						උදව්ව අවසන් කරන්න
 					</button>
 				</div>
@@ -315,8 +370,14 @@ export function MultiplicationAdventureJourney({
 				</div>
 			)}
 			{step === "result" && (
-				<div className={`adventure-result${answeredCorrectly ? " is-success" : ""}`} data-answer-result={answeredCorrectly ? "correct" : "incorrect"}>
-					<ChallengeProgress index={activeChallengeIndex} count={skills.length} />
+				<div
+					className={`adventure-result${answeredCorrectly ? " is-success" : ""}`}
+					data-answer-result={answeredCorrectly ? "correct" : "incorrect"}
+				>
+					<ChallengeProgress
+						index={activeChallengeIndex}
+						count={skills.length}
+					/>
 					{answeredCorrectly && isLastChallenge && <SuccessCelebration />}
 					<h2>
 						{answeredCorrectly
@@ -325,8 +386,20 @@ export function MultiplicationAdventureJourney({
 								: `අභියෝගය ${activeChallengeIndex + 1} සම්පූර්ණයි!`
 							: message}
 					</h2>
-					<button type="button" className="primary-action" onClick={answeredCorrectly ? advance : () => activeSkillId && void openSkill(activeSkillId)}>
-						{answeredCorrectly ? (isLastChallenge ? "ක්‍රීඩා තේරීමට" : "ඊළඟ අභියෝගය") : "නැවත උත්සාහ කරන්න"}
+					<button
+						type="button"
+						className="primary-action"
+						onClick={
+							answeredCorrectly
+								? advance
+								: () => activeSkillId && void openSkill(activeSkillId)
+						}
+					>
+						{answeredCorrectly
+							? isLastChallenge
+								? "ක්‍රීඩා තේරීමට"
+								: "ඊළඟ අභියෝගය"
+							: "නැවත උත්සාහ කරන්න"}
 					</button>
 				</div>
 			)}
@@ -336,9 +409,19 @@ export function MultiplicationAdventureJourney({
 
 function ChallengeProgress({ index, count }: { index: number; count: number }) {
 	return (
-		<ol className="multiplication-progress" data-progress-count={count} aria-label={`අභියෝග ${count}ක්`}>
+		<ol
+			className="multiplication-progress"
+			data-progress-count={count}
+			aria-label={`අභියෝග ${count}ක්`}
+		>
 			{["අභියෝග 1", "අභියෝග 2", "අභියෝග 3"].slice(0, count).map((label, item) => (
-				<li key={label} className={item < index ? "is-done" : item === index ? "is-current" : undefined} aria-current={item === index ? "step" : undefined}>
+				<li
+					key={label}
+					className={
+						item < index ? "is-done" : item === index ? "is-current" : undefined
+					}
+					aria-current={item === index ? "step" : undefined}
+				>
 					{item + 1}
 				</li>
 			))}
@@ -374,7 +457,11 @@ export function MultiplicationMechanic({
 							<tr>
 								<th scope="col">×</th>
 								{factors.map((factor) => (
-									<th key={factor} scope="col" className={factor === multiplier ? "is-active" : undefined}>
+									<th
+										key={factor}
+										scope="col"
+										className={factor === multiplier ? "is-active" : undefined}
+									>
 										{factor}
 									</th>
 								))}
@@ -382,11 +469,19 @@ export function MultiplicationMechanic({
 						</thead>
 						<tbody>
 							{factors.map((row) => (
-								<tr key={row} className={row === multiplicand ? "is-active" : undefined}>
+								<tr
+									key={row}
+									className={row === multiplicand ? "is-active" : undefined}
+								>
 									<th scope="row">{row}</th>
 									{factors.map((column) => {
-										const selected = row === multiplicand && column === multiplier;
-										return <td key={`${row}-${column}`}>{selected ? "" : row * column}</td>;
+										const selected =
+											row === multiplicand && column === multiplier;
+										return (
+											<td key={`${row}-${column}`}>
+												{selected ? "" : row * column}
+											</td>
+										);
 									})}
 								</tr>
 							))}
@@ -405,7 +500,12 @@ export function MultiplicationMechanic({
 							setProduct(value);
 							onChange(
 								value
-									? { kind: "multiplication_fact", multiplicand, multiplier, product: Number(value) }
+									? {
+											kind: "multiplication_fact",
+											multiplicand,
+											multiplier,
+											product: Number(value),
+										}
 									: null,
 								1,
 							);
@@ -422,7 +522,11 @@ export function MultiplicationMechanic({
 		const width = Number(game.blank_count ?? labels.length);
 		const top = String(multiplicand).padStart(width, " ");
 		return (
-			<div className="written-multiplication" data-kind="written" data-multiplier={multiplier}>
+			<div
+				className="written-multiplication"
+				data-kind="written"
+				data-multiplier={multiplier}
+			>
 				<table className="multiplication-columns">
 					<caption>තීරු ගුණන පුවරුව</caption>
 					<thead>
@@ -442,7 +546,9 @@ export function MultiplicationMechanic({
 						</tr>
 						<tr>
 							{labels.map((label, index) => (
-								<td key={label}>{index === labels.length - 1 ? `× ${multiplier}` : ""}</td>
+								<td key={label}>
+									{index === labels.length - 1 ? `× ${multiplier}` : ""}
+								</td>
 							))}
 						</tr>
 						<tr className="result-digits">
@@ -454,9 +560,15 @@ export function MultiplicationMechanic({
 										aria-label={`${label} තැනේ පිළිතුරු ඉලක්කම ඇතුළත් කරන්න`}
 										value={digits[index] ?? ""}
 										onChange={(event) => {
-											const value = event.target.value.replace(/\D/g, "").slice(0, 1);
-											const next = Array.from({ length: width }, (_, digitIndex) =>
-												digitIndex === index ? value : (digits[digitIndex] ?? ""),
+											const value = event.target.value
+												.replace(/\D/g, "")
+												.slice(0, 1);
+											const next = Array.from(
+												{ length: width },
+												(_, digitIndex) =>
+													digitIndex === index
+														? value
+														: (digits[digitIndex] ?? ""),
 											);
 											setDigits(next);
 											if (next.every((digit) => digit !== "")) {
@@ -502,9 +614,15 @@ export function MultiplicationMechanic({
 			<img src={String(game.asset ?? "")} alt="" />
 			<p>{String(game.label_si ?? "")}</p>
 			<ul className="equal-groups" aria-label="සමාන කණ්ඩායම්">
-				{Array.from({ length: groupCount }, (_, group) => `group-${group + 1}`).map((groupId) => (
+				{Array.from(
+					{ length: groupCount },
+					(_, group) => `group-${group + 1}`,
+				).map((groupId) => (
 					<li key={groupId}>
-						{Array.from({ length: groupSize }, (_, item) => `${groupId}-item-${item + 1}`).map((itemId) => (
+						{Array.from(
+							{ length: groupSize },
+							(_, item) => `${groupId}-item-${item + 1}`,
+						).map((itemId) => (
 							<span key={itemId} aria-hidden="true" />
 						))}
 					</li>
@@ -512,9 +630,29 @@ export function MultiplicationMechanic({
 			</ul>
 			<fieldset className="story-expression">
 				<legend>ගුණන වාක්‍යය සාදන්න</legend>
-				<input className="touch-target" inputMode="numeric" aria-label="කණ්ඩායමේ ප්‍රමාණය" value={size} onChange={(event) => { const value = event.target.value.replace(/\D/g, "").slice(0, 2); setSize(value); emit(value, count, product); }} />
+				<input
+					className="touch-target"
+					inputMode="numeric"
+					aria-label="කණ්ඩායමේ ප්‍රමාණය"
+					value={size}
+					onChange={(event) => {
+						const value = event.target.value.replace(/\D/g, "").slice(0, 2);
+						setSize(value);
+						emit(value, count, product);
+					}}
+				/>
 				<span aria-hidden="true">×</span>
-				<input className="touch-target" inputMode="numeric" aria-label="කණ්ඩායම් ගණන" value={count} onChange={(event) => { const value = event.target.value.replace(/\D/g, "").slice(0, 2); setCount(value); emit(size, value, product); }} />
+				<input
+					className="touch-target"
+					inputMode="numeric"
+					aria-label="කණ්ඩායම් ගණන"
+					value={count}
+					onChange={(event) => {
+						const value = event.target.value.replace(/\D/g, "").slice(0, 2);
+						setCount(value);
+						emit(size, value, product);
+					}}
+				/>
 				<span aria-hidden="true">=</span>
 				<input
 					className="touch-target product-input"
