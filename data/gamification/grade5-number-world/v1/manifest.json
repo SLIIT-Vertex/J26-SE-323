@@ -1,0 +1,38 @@
+{
+  "area_id": "G5-AREA-MAT-01",
+  "package_version": "g5-mat-number-world-draft-v1",
+  "grade": 5,
+  "medium": "si",
+  "source_id": "SRC-G5-MAT-TG-01",
+  "source_nodes": [
+    "G5-MAT-C01-L01-O01",
+    "G5-MAT-C01-L01-O02",
+    "G5-MAT-C01-L01-O03",
+    "G5-MAT-C01-L01-O04",
+    "G5-MAT-C01-L01-K02",
+    "G5-MAT-C01-L02"
+  ],
+  "atomic_skill_ids": [
+    "G5-MAT-NUM-POSITION-01",
+    "G5-MAT-NUM-REPRESENTED-01",
+    "G5-MAT-NUM-100000-01",
+    "G5-MAT-NUM-ABACUS-01",
+    "G5-MAT-NUM-EXPAND-01",
+    "G5-MAT-NUM-EXTREME-01",
+    "G5-MAT-NUM-LEADING-ZERO-01",
+    "G5-MAT-NUM-ORDER-01"
+  ],
+  "review_status": "draft_blocked",
+  "production_child_delivery": false,
+  "human_review_required": [
+    "curriculum",
+    "usage_rights",
+    "sinhala_language",
+    "educator_content",
+    "accessibility",
+    "answer_leakage",
+    "ethics_privacy",
+    "model_safety",
+    "release"
+  ]
+}
