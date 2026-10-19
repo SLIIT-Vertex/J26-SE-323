@@ -1,0 +1,36 @@
+{
+  "area_id": "G5-AREA-MAT-03",
+  "experience_id": "number_pattern_adventure",
+  "package_version": "g5-mat-number-patterns-draft-v1",
+  "scoring_version": "g5-mat-number-patterns-scoring-v1",
+  "equivalence_version": "g5-mat-number-patterns-parallel-v1",
+  "grade": 5,
+  "medium": "si",
+  "universal_skill_id": "APT-PAT",
+  "source_id": "SRC-G5-MAT-TG-01",
+  "source_parents": ["G5-MAT-C02-L01", "G5-MAT-C02-L02"],
+  "provisional_atomic_skill_ids": [
+    "G5-MAT-PAT-DIFF-ASC-01",
+    "G5-MAT-PAT-DIFF-DESC-01",
+    "G5-MAT-PAT-RATIO-2-01",
+    "G5-MAT-PAT-RATIO-3-01",
+    "G5-MAT-PAT-RATIO-4-01",
+    "G5-MAT-PAT-RATIO-5-01"
+  ],
+  "misconception_catalogue_version": "g5-mat-number-patterns-misconceptions-v1",
+  "scaffold_catalogue_version": "g5-mat-number-patterns-scaffolds-v1",
+  "policy_version": "g5-mat-number-patterns-raw-ig-shadow-v1",
+  "review_status": "draft_blocked",
+  "production_child_delivery": false,
+  "human_review_required": [
+    "curriculum",
+    "usage_rights",
+    "sinhala_language",
+    "educator_content",
+    "accessibility",
+    "answer_leakage",
+    "ethics_privacy",
+    "model_safety",
+    "release"
+  ]
+}
