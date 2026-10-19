@@ -1,0 +1,443 @@
+.shape-adventure {
+	width: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	padding: clamp(12px, 4vw, 24px);
+	box-sizing: border-box;
+	color: #203e45;
+	overflow-x: clip;
+}
+.shape-header {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 16px;
+	padding: 1rem;
+	border-radius: 2rem;
+	background: rgba(255, 253, 247, 0.96);
+}
+.shape-header p,
+.shape-position {
+	margin: 0;
+	color: #66787b;
+	font-weight: 700;
+}
+.shape-header h1 {
+	margin: 2px 0;
+	font-size: clamp(1.45rem, 7vw, 2.1rem);
+}
+.shape-game-list {
+	display: grid;
+	gap: 14px;
+}
+.shape-game-card {
+	width: 100%;
+	min-height: 108px;
+	border: 2px solid #d8c88e;
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.92);
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 12px;
+	text-align: left;
+	box-shadow: 0 7px 0 #d7c374;
+	cursor: pointer;
+}
+.shape-game-card:focus-visible,
+.shape-adventure button:focus-visible,
+.shape-adventure select:focus-visible {
+	outline: 4px solid #166b77;
+	outline-offset: 3px;
+}
+.shape-game-card .shape-icon,
+.shape-game-card .orientation-picture {
+	width: 92px;
+	height: 76px;
+	flex: none;
+}
+.shape-game-card span {
+	display: grid;
+	gap: 7px;
+}
+.shape-game-card strong {
+	font-size: 1.12rem;
+}
+.shape-game-card small {
+	color: #6b6554;
+	font-weight: 800;
+}
+.shape-play {
+	display: grid;
+	gap: 14px;
+}
+.shape-play > h2,
+.shape-support > h2 {
+	font-size: 1.15rem;
+	line-height: 1.5;
+	margin: 0;
+}
+.shape-primary {
+	min-height: 52px;
+	border: 0;
+	border-radius: 16px;
+	background: #176f68;
+	color: #fff;
+	font: inherit;
+	font-weight: 900;
+	padding: 12px 18px;
+}
+.shape-primary:disabled {
+	opacity: 0.45;
+}
+.shape-help,
+.cylinder-note {
+	margin: 0;
+	padding: 9px 10px;
+	border-radius: 12px;
+	background: #fff8d8;
+	font-weight: 700;
+	line-height: 1.45;
+}
+.shape-table-wrap {
+	display: grid;
+	gap: 12px;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.shape-table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 3px;
+	background: #fff9e9;
+	border: 2px solid #d2bb73;
+	border-radius: 14px;
+	padding: 3px;
+}
+.shape-table th,
+.shape-table td {
+	text-align: center;
+	padding: 2px;
+	overflow-wrap: anywhere;
+}
+.shape-table thead th {
+	font-size: 0.72rem;
+	line-height: 1.2;
+	background: #f2dd9c;
+	border-radius: 7px;
+}
+.shape-table thead th:first-child {
+	width: 34%;
+}
+.shape-table tbody th {
+	font-size: 0.7rem;
+	background: #fff;
+	border-radius: 9px;
+}
+.shape-table tbody th span {
+	display: block;
+}
+.shape-table .shape-icon {
+	width: 64px;
+	height: 50px;
+}
+.shape-table td button {
+	width: 100%;
+	min-width: 48px;
+	min-height: 48px;
+	border: 2px solid #b5a676;
+	border-radius: 10px;
+	background: #fff;
+	font: 900 1.12rem system-ui;
+}
+.shape-table td button.selected {
+	border-color: #126f75;
+	background: #dcf5f1;
+	box-shadow: inset 0 0 0 2px #126f75;
+}
+.shape-keypad {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 6px;
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: keypad controls intentionally follow table controls */
+.shape-keypad button {
+	min-width: 48px;
+	min-height: 48px;
+	border: 2px solid #24777c;
+	border-radius: 10px;
+	background: #fff;
+	font: 900 1rem system-ui;
+}
+.cylinder-note {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.cylinder-note .shape-icon {
+	width: 48px;
+	height: 48px;
+	flex: none;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: shared icon base follows contextual sizes */
+.shape-icon {
+	display: block;
+	max-width: 100%;
+	stroke: #4d4435;
+	stroke-width: 2.2;
+	stroke-linejoin: round;
+}
+.net-lines > * {
+	fill: #fff5ca;
+	stroke: #4d4435;
+	stroke-width: 2;
+}
+.shape-numbers text {
+	font: bold 12px system-ui;
+	fill: #134f59;
+	stroke: none;
+}
+.orientation-list {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+.orientation-card {
+	display: grid;
+	gap: 7px;
+	justify-items: center;
+	background: #fff;
+	border: 2px solid #ddca8b;
+	border-radius: 16px;
+	padding: 9px;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: shared illustration base follows card sizes */
+.orientation-picture {
+	width: 100%;
+	max-width: 180px;
+	height: 94px;
+	color: #30484d;
+}
+.orientation-card label {
+	font-size: 0.84rem;
+	font-weight: 800;
+	text-align: center;
+}
+.orientation-card select {
+	width: 100%;
+	min-height: 48px;
+	border: 2px solid #24777c;
+	border-radius: 10px;
+	background: #fff;
+	padding: 5px;
+	font: inherit;
+	font-weight: 800;
+}
+.net-match {
+	display: grid;
+	gap: 16px;
+}
+.net-match section {
+	background: #fff8df;
+	border: 2px solid #dbc47d;
+	border-radius: 16px;
+	padding: 10px;
+}
+.net-match h3 {
+	font-size: 0.96rem;
+	margin: 0 0 9px;
+}
+.shape-choice-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: matching controls intentionally follow table controls */
+.shape-choice-grid button {
+	min-height: 104px;
+	border: 2px solid #b9aa7b;
+	border-radius: 12px;
+	background: #fff;
+	padding: 5px;
+	display: grid;
+	place-items: center;
+	font-weight: 800;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: selected state is local to the matching grid */
+.shape-choice-grid button.selected {
+	border-color: #126f75;
+	background: #daf5ef;
+	box-shadow: inset 0 0 0 2px #126f75;
+}
+.shape-choice-grid button.matched {
+	border-color: #4f8d50;
+}
+.shape-choice-grid button:disabled {
+	opacity: 0.55;
+}
+.shape-choice-grid .shape-icon {
+	width: 90px;
+	height: 68px;
+}
+.match-results {
+	margin: 0;
+	padding: 10px 10px 10px 28px;
+	background: #e9f7e9;
+	border-radius: 12px;
+}
+.shape-support,
+.shape-feedback {
+	display: grid;
+	gap: 14px;
+	background: rgba(255, 255, 255, 0.94);
+	border: 2px solid #d2bb73;
+	border-radius: 20px;
+	padding: 14px;
+}
+.support-type {
+	margin: 0;
+	color: #126f75;
+	font-weight: 900;
+}
+.shape-support ol {
+	margin: 0;
+	padding-left: 28px;
+	display: grid;
+	gap: 8px;
+}
+.shape-support li.done {
+	font-weight: 800;
+	color: #176f68;
+}
+.support-picture-pair {
+	min-height: 142px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	background: #fff7d5;
+	border-radius: 14px;
+	padding: 10px;
+}
+.support-picture-pair .shape-icon,
+.support-picture-pair .orientation-picture {
+	width: 130px;
+	max-width: 42%;
+	height: 104px;
+}
+.worked-shape-table {
+	display: grid;
+	gap: 7px;
+}
+.worked-shape-table article {
+	display: grid;
+	grid-template-columns: 62px repeat(3, 1fr);
+	align-items: center;
+	gap: 4px;
+	min-height: 64px;
+	background: #fff8da;
+	border-radius: 10px;
+	padding: 5px;
+}
+.worked-shape-table .shape-icon {
+	width: 60px;
+	height: 54px;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: support labels are scoped to the worked table */
+.worked-shape-table span {
+	text-align: center;
+	font-size: 0.75rem;
+}
+.worked-shape-table b {
+	display: block;
+	font-size: 1.15rem;
+	color: #126f75;
+}
+.worked-orientations {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 8px;
+}
+.worked-orientations article {
+	display: grid;
+	place-items: center;
+	background: #fff8da;
+	border-radius: 12px;
+}
+.worked-orientations .orientation-picture {
+	height: 82px;
+}
+.worked-net-matches {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 8px;
+}
+.worked-net-matches article {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	background: #fff8da;
+	border-radius: 12px;
+	padding: 5px;
+}
+.worked-net-matches .shape-icon {
+	width: 64px;
+	height: 58px;
+}
+.worked-net-matches strong {
+	grid-column: 1 / -1;
+	text-align: center;
+	font-size: 0.75rem;
+}
+.hidden-net {
+	display: grid;
+	place-items: center;
+	width: 48px;
+	height: 48px;
+	border: 2px dashed #756f5a;
+	border-radius: 9px;
+	font-weight: 900;
+}
+@media (max-width: 360px) {
+	.shape-adventure {
+		padding: 10px;
+	}
+	.shape-table {
+		border-spacing: 2px;
+	}
+	.shape-table thead th {
+		font-size: 0.64rem;
+	}
+	.shape-table .shape-icon {
+		width: 55px;
+	}
+	.shape-keypad {
+		grid-template-columns: repeat(4, 1fr);
+	}
+	.orientation-list {
+		grid-template-columns: 1fr;
+	}
+	.orientation-card {
+		grid-template-columns: 110px 1fr;
+		align-items: center;
+	}
+	.orientation-card .orientation-picture {
+		grid-row: 1 / 3;
+	}
+	.worked-shape-table article {
+		grid-template-columns: 55px repeat(3, 1fr);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.shape-adventure * {
+		scroll-behavior: auto;
+		animation: none;
+		transition: none;
+	}
+}
