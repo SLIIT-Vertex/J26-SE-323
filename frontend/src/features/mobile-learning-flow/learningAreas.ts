@@ -27,8 +27,8 @@ export const LEARNING_AREA_NAMES: Record<string, string> = {
 	"G5-AREA-SIN-08": "ඉඟි වැකි",
 	"G5-AREA-SIN-09": "ආප්තෝපදේශ",
 	"G5-AREA-SIN-10": "උපමා",
-	"G5-AREA-SIN-11": "පොදුලිංග ලිපි",
-	"G5-AREA-SIN-12": "ආඛ්‍යාති පද",
+	"G5-AREA-SIN-11": "පොදු ලිංග පද",
+	"G5-AREA-SIN-12": "ක්‍රියා පද හා ආඛ්‍යාත",
 	"G5-AREA-SIN-13": "ආරාධනා පත්‍ර",
 	"G5-AREA-SIN-14": "ස්ත්‍රී ලිංග හා පුරුෂ ලිංග පද",
 	"G5-AREA-SIN-15": "ඒකවචන හා බහුවචන පද",
@@ -59,6 +59,35 @@ export const LEARNING_AREA_NAMES: Record<string, string> = {
 	"G5-AREA-ENV-15": "මිනිසා සහ තොරතුරු",
 	"G5-AREA-ENV-16": "අපේ අතීත විත්ති",
 };
+
+/** English learning areas named by the teacher, in the given order. */
+export const ENGLISH_LEARNING_AREAS: Array<{
+	areaId: string;
+	title: string;
+}> = [
+	{ areaId: "G5-AREA-ENG-01", title: "Our Good Behaviour" },
+	{ areaId: "G5-AREA-ENG-02", title: "We are Sri Lankans" },
+	{ areaId: "G5-AREA-ENG-03", title: "Plants, Trees and Creepers" },
+	{ areaId: "G5-AREA-ENG-04", title: "Animals around us" },
+	{ areaId: "G5-AREA-ENG-05", title: "What we use" },
+	{ areaId: "G5-AREA-ENG-06", title: "Our food" },
+	{ areaId: "G5-AREA-ENG-07", title: "Safety & protection" },
+	{ areaId: "G5-AREA-ENG-08", title: "Water" },
+	{ areaId: "G5-AREA-ENG-09", title: "Transport" },
+	{ areaId: "G5-AREA-ENG-10", title: "Home Garden" },
+	{ areaId: "G5-AREA-ENG-11", title: "Ways of Making work Easy" },
+	{ areaId: "G5-AREA-ENG-12", title: "Human Behaviour" },
+	{ areaId: "G5-AREA-ENG-13", title: "Earth & Sky" },
+	{ areaId: "G5-AREA-ENG-14", title: "Changes we can do" },
+	{ areaId: "G5-AREA-ENG-15", title: "Man & Information" },
+	{ areaId: "G5-AREA-ENG-16", title: "Our Past" },
+	{ areaId: "G5-AREA-ENG-17", title: "Classroom Language" },
+	{ areaId: "G5-AREA-ENG-18", title: "Useful Expressions & Conversation Language" },
+];
+
+for (const area of ENGLISH_LEARNING_AREAS) {
+	LEARNING_AREA_NAMES[area.areaId] = area.title;
+}
 
 export function learningAreaName(areaId: string): string {
 	return LEARNING_AREA_NAMES[areaId] ?? "ඉගෙනුම් ක්ෂේත්‍ර";

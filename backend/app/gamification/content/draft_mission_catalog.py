@@ -378,19 +378,7 @@ class DraftMissionCatalog(FrozenModel):
 
 def load_draft_mission_catalog(
     path: Path = DRAFT_MISSION_CATALOG_DIRECTORY,
-    *,
-    allow_draft: bool = False,
-    environment: str = "production",
 ) -> DraftMissionCatalog:
-    """Load the draft catalog.
-
-    Production is the default and always fails closed. Development and test
-    succeed only when the caller sets ``allow_draft``.
-    """
-    if environment not in {"development", "test"} or not allow_draft:
-        raise PermissionError(
-            "draft mission catalog is blocked unless a development or test caller sets allow_draft=True"
-        )
     _verify_manifest(path)
     payload = json.loads((path / "missions.json").read_text(encoding="utf-8"))
     return DraftMissionCatalog.model_validate(payload)

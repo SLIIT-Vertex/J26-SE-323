@@ -7,11 +7,37 @@
         "AnswerRequest": {
           "additionalProperties": false,
           "properties": {
+            "constructed_response": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "maxProperties": 20,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Constructed Response"
+            },
+            "interaction_summary": {
+              "additionalProperties": true,
+              "maxProperties": 12,
+              "title": "Interaction Summary",
+              "type": "object"
+            },
             "option_id": {
-              "maxLength": 32,
-              "minLength": 1,
-              "title": "Option Id",
-              "type": "string"
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Option Id"
             },
             "response_time_ms": {
               "anyOf": [
@@ -27,9 +53,6 @@
               "title": "Response Time Ms"
             }
           },
-          "required": [
-            "option_id"
-          ],
           "title": "AnswerRequest",
           "type": "object"
         },
@@ -60,6 +83,16 @@
                 }
               ]
             },
+            "server_score": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ServerScore"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
             "status": {
               "title": "Status",
               "type": "string"
@@ -82,87 +115,117 @@
           "title": "ChildEpisodeResponse",
           "type": "object"
         },
-        "DraftMissionCatalog": {
+        "FixtureReward": {
           "additionalProperties": false,
           "properties": {
-            "development_only": {
-              "const": true,
-              "title": "Development Only",
-              "type": "boolean"
+            "points": {
+              "title": "Points",
+              "type": "integer"
             },
-            "missions": {
-              "items": {
-                "$ref": "#/components/schemas/DraftMissionRecord"
-              },
-              "maxItems": 55,
-              "minItems": 55,
-              "title": "Missions",
-              "type": "array"
-            },
-            "package_version": {
-              "const": "grade5-draft-mission-catalog-v1",
-              "title": "Package Version",
-              "type": "string"
-            },
-            "publication_status": {
-              "const": "blocked",
-              "title": "Publication Status",
+            "reason_code": {
+              "title": "Reason Code",
               "type": "string"
             }
           },
           "required": [
-            "package_version",
-            "development_only",
-            "publication_status",
-            "missions"
+            "points",
+            "reason_code"
           ],
-          "title": "DraftMissionCatalog",
+          "title": "FixtureReward",
           "type": "object"
         },
-        "DraftMissionRecord": {
+        "FixtureRoundResponse": {
           "additionalProperties": false,
           "properties": {
             "area_id": {
               "title": "Area Id",
               "type": "string"
             },
-            "cited_node_id": {
-              "title": "Cited Node Id",
+            "assistance_state": {
+              "enum": [
+                "none",
+                "scaffold_active"
+              ],
+              "title": "Assistance State",
               "type": "string"
             },
-            "development_only": {
-              "const": true,
-              "title": "Development Only",
-              "type": "boolean"
-            },
-            "draft_item_slots": {
-              "default": [],
-              "items": {
-                "$ref": "#/components/schemas/SinhalaDraftItemSlot"
-              },
-              "title": "Draft Item Slots",
-              "type": "array"
-            },
-            "held_slots": {
-              "default": [],
-              "items": {
-                "$ref": "#/components/schemas/HeldOutcomeSlot"
-              },
-              "title": "Held Slots",
-              "type": "array"
-            },
-            "outcome_slots": {
-              "default": [],
-              "items": {
-                "$ref": "#/components/schemas/MathematicsOutcomeSlot"
-              },
-              "title": "Outcome Slots",
-              "type": "array"
-            },
-            "publication_status": {
-              "const": "blocked",
-              "title": "Publication Status",
+            "episode_id": {
+              "format": "uuid",
+              "title": "Episode Id",
               "type": "string"
+            },
+            "notice_si": {
+              "title": "Notice Si",
+              "type": "string"
+            },
+            "options": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/PublicOption"
+              },
+              "title": "Options",
+              "type": "array"
+            },
+            "phase": {
+              "enum": [
+                "unsupported_before",
+                "support",
+                "supported_practice",
+                "withdraw",
+                "unsupported_after",
+                "completed"
+              ],
+              "title": "Phase",
+              "type": "string"
+            },
+            "prompt_si": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Prompt Si"
+            },
+            "reward": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/FixtureReward"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "server_score": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ServerScore"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "server_scores": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/ServerScore"
+              },
+              "title": "Server Scores",
+              "type": "array"
+            },
+            "support": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/FixtureSupportView"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "template_id": {
               "enum": [
@@ -179,13 +242,44 @@
             }
           },
           "required": [
+            "episode_id",
             "area_id",
-            "cited_node_id",
             "template_id",
-            "development_only",
-            "publication_status"
+            "phase",
+            "notice_si",
+            "assistance_state"
           ],
-          "title": "DraftMissionRecord",
+          "title": "FixtureRoundResponse",
+          "type": "object"
+        },
+        "FixtureSupportView": {
+          "additionalProperties": false,
+          "properties": {
+            "assistance_state": {
+              "const": "scaffold_active",
+              "title": "Assistance State",
+              "type": "string"
+            },
+            "body_si": {
+              "title": "Body Si",
+              "type": "string"
+            },
+            "support_type": {
+              "enum": [
+                "visual_guidance",
+                "worked_parallel_example",
+                "step_by_step_guidance"
+              ],
+              "title": "Support Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "support_type",
+            "body_si",
+            "assistance_state"
+          ],
+          "title": "FixtureSupportView",
           "type": "object"
         },
         "HTTPValidationError": {
@@ -254,111 +348,6 @@
           "title": "HalfSetGameManifest",
           "type": "object"
         },
-        "HeldOutcomeSlot": {
-          "additionalProperties": false,
-          "properties": {
-            "child_question": {
-              "title": "Child Question",
-              "type": "null"
-            },
-            "confidence": {
-              "const": "low",
-              "title": "Confidence",
-              "type": "string"
-            },
-            "draft_item": {
-              "const": false,
-              "title": "Draft Item",
-              "type": "boolean"
-            },
-            "held": {
-              "const": true,
-              "title": "Held",
-              "type": "boolean"
-            },
-            "node_id": {
-              "title": "Node Id",
-              "type": "string"
-            },
-            "parent_area_id": {
-              "title": "Parent Area Id",
-              "type": "string"
-            },
-            "publication_status": {
-              "const": "blocked",
-              "title": "Publication Status",
-              "type": "string"
-            },
-            "traced_text": {
-              "title": "Traced Text",
-              "type": "string"
-            }
-          },
-          "required": [
-            "node_id",
-            "parent_area_id",
-            "confidence",
-            "held",
-            "draft_item",
-            "publication_status",
-            "traced_text",
-            "child_question"
-          ],
-          "title": "HeldOutcomeSlot",
-          "type": "object"
-        },
-        "MathematicsOutcomeSlot": {
-          "additionalProperties": false,
-          "properties": {
-            "confidence": {
-              "const": "medium",
-              "title": "Confidence",
-              "type": "string"
-            },
-            "draft_item": {
-              "const": true,
-              "title": "Draft Item",
-              "type": "boolean"
-            },
-            "item_text": {
-              "title": "Item Text",
-              "type": "string"
-            },
-            "node_id": {
-              "title": "Node Id",
-              "type": "string"
-            },
-            "parent_area_id": {
-              "title": "Parent Area Id",
-              "type": "string"
-            },
-            "publication_status": {
-              "const": "blocked",
-              "title": "Publication Status",
-              "type": "string"
-            },
-            "supplied_area_match": {
-              "title": "Supplied Area Match",
-              "type": "boolean"
-            },
-            "trace_competency_id": {
-              "title": "Trace Competency Id",
-              "type": "string"
-            }
-          },
-          "required": [
-            "node_id",
-            "parent_area_id",
-            "trace_competency_id",
-            "supplied_area_match",
-            "confidence",
-            "draft_item",
-            "publication_status",
-            "item_text"
-          ],
-          "title": "MathematicsOutcomeSlot",
-          "type": "object"
-        },
         "OpenEpisodeRequest": {
           "additionalProperties": false,
           "properties": {
@@ -366,6 +355,30 @@
               "const": true,
               "title": "Allow Draft",
               "type": "boolean"
+            },
+            "area_id": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Area Id"
+            },
+            "atomic_skill_id": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Atomic Skill Id"
             },
             "condition": {
               "enum": [
@@ -416,6 +429,46 @@
           "title": "OpenEpisodeRequest",
           "type": "object"
         },
+        "OpenFixtureRoundRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "area_id": {
+              "maxLength": 32,
+              "minLength": 1,
+              "title": "Area Id",
+              "type": "string"
+            },
+            "grade": {
+              "const": 5,
+              "title": "Grade",
+              "type": "integer"
+            },
+            "learner_id": {
+              "format": "uuid",
+              "title": "Learner Id",
+              "type": "string"
+            },
+            "medium": {
+              "const": "si",
+              "title": "Medium",
+              "type": "string"
+            },
+            "session_id": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "area_id",
+            "learner_id",
+            "session_id",
+            "grade",
+            "medium"
+          ],
+          "title": "OpenFixtureRoundRequest",
+          "type": "object"
+        },
         "ParticipationReward": {
           "additionalProperties": false,
           "properties": {
@@ -456,6 +509,18 @@
             "content_version": {
               "title": "Content Version",
               "type": "string"
+            },
+            "game": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Game"
             },
             "measurement_role": {
               "enum": [
@@ -502,6 +567,231 @@
           "title": "PresentationManifest",
           "type": "object"
         },
+        "PublicAreaSupportRow": {
+          "additionalProperties": false,
+          "properties": {
+            "area_id": {
+              "title": "Area Id",
+              "type": "string"
+            },
+            "authoring_basis": {
+              "title": "Authoring Basis",
+              "type": "string"
+            },
+            "eligible_support_types": {
+              "items": {
+                "enum": [
+                  "visual_guidance",
+                  "worked_parallel_example",
+                  "step_by_step_guidance"
+                ],
+                "type": "string"
+              },
+              "title": "Eligible Support Types",
+              "type": "array"
+            },
+            "name_en": {
+              "title": "Name En",
+              "type": "string"
+            },
+            "rendering_constraint": {
+              "title": "Rendering Constraint",
+              "type": "string"
+            },
+            "rule": {
+              "title": "Rule",
+              "type": "string"
+            },
+            "subject": {
+              "enum": [
+                "MAT",
+                "SIN",
+                "ENV"
+              ],
+              "title": "Subject",
+              "type": "string"
+            },
+            "template_id": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "area_id",
+            "name_en",
+            "subject",
+            "template_id",
+            "eligible_support_types",
+            "rule",
+            "rendering_constraint",
+            "authoring_basis"
+          ],
+          "title": "PublicAreaSupportRow",
+          "type": "object"
+        },
+        "PublicDraftMissionCatalog": {
+          "additionalProperties": false,
+          "properties": {
+            "missions": {
+              "items": {
+                "$ref": "#/components/schemas/PublicDraftMissionRecord"
+              },
+              "title": "Missions",
+              "type": "array"
+            },
+            "package_version": {
+              "title": "Package Version",
+              "type": "string"
+            }
+          },
+          "required": [
+            "package_version",
+            "missions"
+          ],
+          "title": "PublicDraftMissionCatalog",
+          "type": "object"
+        },
+        "PublicDraftMissionRecord": {
+          "additionalProperties": false,
+          "properties": {
+            "area_id": {
+              "title": "Area Id",
+              "type": "string"
+            },
+            "cited_node_id": {
+              "title": "Cited Node Id",
+              "type": "string"
+            },
+            "draft_item_slots": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/PublicSinhalaDraftItemSlot"
+              },
+              "title": "Draft Item Slots",
+              "type": "array"
+            },
+            "held_slots": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/PublicHeldOutcomeSlot"
+              },
+              "title": "Held Slots",
+              "type": "array"
+            },
+            "outcome_slots": {
+              "default": [],
+              "items": {
+                "$ref": "#/components/schemas/PublicMathematicsOutcomeSlot"
+              },
+              "title": "Outcome Slots",
+              "type": "array"
+            },
+            "template_id": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "area_id",
+            "cited_node_id",
+            "template_id"
+          ],
+          "title": "PublicDraftMissionRecord",
+          "type": "object"
+        },
+        "PublicHeldOutcomeSlot": {
+          "additionalProperties": false,
+          "properties": {
+            "child_question": {
+              "title": "Child Question",
+              "type": "null"
+            },
+            "confidence": {
+              "const": "low",
+              "title": "Confidence",
+              "type": "string"
+            },
+            "draft_item": {
+              "const": false,
+              "title": "Draft Item",
+              "type": "boolean"
+            },
+            "held": {
+              "const": true,
+              "title": "Held",
+              "type": "boolean"
+            },
+            "node_id": {
+              "title": "Node Id",
+              "type": "string"
+            },
+            "parent_area_id": {
+              "title": "Parent Area Id",
+              "type": "string"
+            },
+            "traced_text": {
+              "title": "Traced Text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "node_id",
+            "parent_area_id",
+            "confidence",
+            "held",
+            "draft_item",
+            "traced_text",
+            "child_question"
+          ],
+          "title": "PublicHeldOutcomeSlot",
+          "type": "object"
+        },
+        "PublicMathematicsOutcomeSlot": {
+          "additionalProperties": false,
+          "properties": {
+            "confidence": {
+              "const": "medium",
+              "title": "Confidence",
+              "type": "string"
+            },
+            "draft_item": {
+              "const": true,
+              "title": "Draft Item",
+              "type": "boolean"
+            },
+            "item_text": {
+              "title": "Item Text",
+              "type": "string"
+            },
+            "node_id": {
+              "title": "Node Id",
+              "type": "string"
+            },
+            "parent_area_id": {
+              "title": "Parent Area Id",
+              "type": "string"
+            },
+            "supplied_area_match": {
+              "title": "Supplied Area Match",
+              "type": "boolean"
+            },
+            "trace_competency_id": {
+              "title": "Trace Competency Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "node_id",
+            "parent_area_id",
+            "trace_competency_id",
+            "supplied_area_match",
+            "confidence",
+            "draft_item",
+            "item_text"
+          ],
+          "title": "PublicMathematicsOutcomeSlot",
+          "type": "object"
+        },
         "PublicOption": {
           "additionalProperties": false,
           "properties": {
@@ -521,7 +811,7 @@
           "title": "PublicOption",
           "type": "object"
         },
-        "SinhalaDraftItemSlot": {
+        "PublicSinhalaDraftItemSlot": {
           "additionalProperties": false,
           "properties": {
             "area_match": {
@@ -549,11 +839,6 @@
             "parent_area_id": {
               "title": "Parent Area Id",
               "type": "string"
-            },
-            "publication_status": {
-              "const": "blocked",
-              "title": "Publication Status",
-              "type": "string"
             }
           },
           "required": [
@@ -561,11 +846,113 @@
             "parent_area_id",
             "confidence",
             "draft_item",
-            "publication_status",
             "area_match",
             "item_text"
           ],
-          "title": "SinhalaDraftItemSlot",
+          "title": "PublicSinhalaDraftItemSlot",
+          "type": "object"
+        },
+        "ServerScore": {
+          "additionalProperties": false,
+          "properties": {
+            "attempt_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Attempt Id"
+            },
+            "correct": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Correct"
+            },
+            "earned_score": {
+              "title": "Earned Score",
+              "type": "string"
+            },
+            "feedback_column": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Feedback Column"
+            },
+            "feedback_step_index": {
+              "anyOf": [
+                {
+                  "maximum": 2.0,
+                  "minimum": 0.0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Feedback Step Index"
+            },
+            "item_revision_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Revision Id"
+            },
+            "maximum_score": {
+              "title": "Maximum Score",
+              "type": "string"
+            },
+            "measurement_role": {
+              "title": "Measurement Role",
+              "type": "string"
+            },
+            "presentation_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Presentation Id"
+            },
+            "scoring_version": {
+              "title": "Scoring Version",
+              "type": "string"
+            },
+            "server_authoritative": {
+              "const": true,
+              "title": "Server Authoritative",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "earned_score",
+            "maximum_score",
+            "scoring_version",
+            "server_authoritative",
+            "measurement_role"
+          ],
+          "title": "ServerScore",
           "type": "object"
         },
         "SupportCompleteRequest": {
@@ -578,24 +965,38 @@
               "type": "integer"
             },
             "group_sizes": {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "integer"
-                }
-              ],
+              "default": [],
+              "items": {
+                "type": "integer"
+              },
+              "maxItems": 6,
               "title": "Group Sizes",
               "type": "array"
             },
             "grouped_count": {
-              "maximum": 40.0,
-              "minimum": 2.0,
+              "default": 0,
+              "maximum": 100000.0,
+              "minimum": 0.0,
               "title": "Grouped Count",
               "type": "integer"
+            },
+            "interaction_summary": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "maxProperties": 12,
+              "title": "Interaction Summary",
+              "type": "object"
             },
             "manifest_revision_id": {
               "maxLength": 128,
@@ -613,9 +1014,7 @@
           "required": [
             "duration_ms",
             "steps_viewed",
-            "manifest_revision_id",
-            "grouped_count",
-            "group_sizes"
+            "manifest_revision_id"
           ],
           "title": "SupportCompleteRequest",
           "type": "object"
@@ -631,7 +1030,16 @@
               "type": "array"
             },
             "game_manifest": {
-              "$ref": "#/components/schemas/HalfSetGameManifest"
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/HalfSetGameManifest"
+                },
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                }
+              ],
+              "title": "Game Manifest"
             },
             "maximum_steps": {
               "title": "Maximum Steps",
@@ -886,195 +1294,6 @@
     },
     "openapi": "3.1.0",
     "paths": {
-      "/api/v1/development/learning-flow/draft-missions": {
-        "get": {
-          "description": "Read the development mission catalog. Child delivery stays blocked.",
-          "operationId": "list_draft_missions_api_v1_development_learning_flow_draft_missions_get",
-          "parameters": [
-            {
-              "in": "query",
-              "name": "allow_draft",
-              "required": false,
-              "schema": {
-                "default": false,
-                "title": "Allow Draft",
-                "type": "boolean"
-              }
-            },
-            {
-              "in": "header",
-              "name": "X-Dev-Principal",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "X-Dev-Principal"
-              }
-            },
-            {
-              "in": "header",
-              "name": "X-Dev-Role",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "X-Dev-Role"
-              }
-            },
-            {
-              "in": "header",
-              "name": "X-Learner-Id",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "format": "uuid",
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "X-Learner-Id"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/DraftMissionCatalog"
-                  }
-                }
-              },
-              "description": "Successful Response"
-            },
-            "422": {
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
-                }
-              },
-              "description": "Validation Error"
-            }
-          },
-          "summary": "List Draft Missions"
-        }
-      },
-      "/api/v1/development/learning-flow/draft-missions/{area_id}": {
-        "get": {
-          "description": "Read one development mission by its G5-AREA id.",
-          "operationId": "fetch_draft_mission_api_v1_development_learning_flow_draft_missions__area_id__get",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "area_id",
-              "required": true,
-              "schema": {
-                "title": "Area Id",
-                "type": "string"
-              }
-            },
-            {
-              "in": "query",
-              "name": "allow_draft",
-              "required": false,
-              "schema": {
-                "default": false,
-                "title": "Allow Draft",
-                "type": "boolean"
-              }
-            },
-            {
-              "in": "header",
-              "name": "X-Dev-Principal",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "X-Dev-Principal"
-              }
-            },
-            {
-              "in": "header",
-              "name": "X-Dev-Role",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "X-Dev-Role"
-              }
-            },
-            {
-              "in": "header",
-              "name": "X-Learner-Id",
-              "required": false,
-              "schema": {
-                "anyOf": [
-                  {
-                    "format": "uuid",
-                    "type": "string"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "X-Learner-Id"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/DraftMissionRecord"
-                  }
-                }
-              },
-              "description": "Successful Response"
-            },
-            "422": {
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/HTTPValidationError"
-                  }
-                }
-              },
-              "description": "Validation Error"
-            }
-          },
-          "summary": "Fetch Draft Mission"
-        }
-      },
       "/api/v1/development/learning-flow/episodes": {
         "post": {
           "operationId": "open_episode_api_v1_development_learning_flow_episodes_post",
@@ -2066,6 +2285,612 @@
           "summary": "Ingest Telemetry",
           "tags": [
             "gamification-learning-flow-development"
+          ]
+        }
+      },
+      "/api/v1/development/learning-flow/learners/{learner_id}/skills/{atomic_skill_id}/available": {
+        "get": {
+          "operationId": "learner_skill_available_api_v1_development_learning_flow_learners__learner_id__skills__atomic_skill_id__available_get",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "learner_id",
+              "required": true,
+              "schema": {
+                "format": "uuid",
+                "title": "Learner Id",
+                "type": "string"
+              }
+            },
+            {
+              "in": "path",
+              "name": "atomic_skill_id",
+              "required": true,
+              "schema": {
+                "title": "Atomic Skill Id",
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "additionalProperties": {
+                      "type": "boolean"
+                    },
+                    "title": "Response Learner Skill Available Api V1 Development Learning Flow Learners  Learner Id  Skills  Atomic Skill Id  Available Get",
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Learner Skill Available",
+          "tags": [
+            "gamification-learning-flow-development"
+          ]
+        }
+      },
+      "/api/v1/learning-flow/draft-missions": {
+        "get": {
+          "operationId": "list_draft_missions_api_v1_learning_flow_draft_missions_get",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicDraftMissionCatalog"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "List Draft Missions",
+          "tags": [
+            "gamification-learning-flow"
+          ]
+        }
+      },
+      "/api/v1/learning-flow/draft-missions/{area_id}": {
+        "get": {
+          "operationId": "fetch_draft_mission_api_v1_learning_flow_draft_missions__area_id__get",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "area_id",
+              "required": true,
+              "schema": {
+                "title": "Area Id",
+                "type": "string"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicDraftMissionRecord"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Fetch Draft Mission",
+          "tags": [
+            "gamification-learning-flow"
+          ]
+        }
+      },
+      "/api/v1/learning-flow/draft-missions/{area_id}/support-types": {
+        "get": {
+          "operationId": "fetch_area_support_types_api_v1_learning_flow_draft_missions__area_id__support_types_get",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "area_id",
+              "required": true,
+              "schema": {
+                "title": "Area Id",
+                "type": "string"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/PublicAreaSupportRow"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Fetch Area Support Types",
+          "tags": [
+            "gamification-learning-flow"
+          ]
+        }
+      },
+      "/api/v1/learning-flow/fixture-rounds": {
+        "post": {
+          "operationId": "open_fixture_round_api_v1_learning_flow_fixture_rounds_post",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenFixtureRoundRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/FixtureRoundResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Open Fixture Round",
+          "tags": [
+            "gamification-learning-flow"
+          ]
+        }
+      },
+      "/api/v1/learning-flow/fixture-rounds/{episode_id}/answer": {
+        "post": {
+          "operationId": "answer_fixture_round_api_v1_learning_flow_fixture_rounds__episode_id__answer_post",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "episode_id",
+              "required": true,
+              "schema": {
+                "format": "uuid",
+                "title": "Episode Id",
+                "type": "string"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/FixtureRoundResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Answer Fixture Round",
+          "tags": [
+            "gamification-learning-flow"
+          ]
+        }
+      },
+      "/api/v1/learning-flow/fixture-rounds/{episode_id}/continue": {
+        "post": {
+          "operationId": "continue_fixture_round_api_v1_learning_flow_fixture_rounds__episode_id__continue_post",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "episode_id",
+              "required": true,
+              "schema": {
+                "format": "uuid",
+                "title": "Episode Id",
+                "type": "string"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/FixtureRoundResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Continue Fixture Round",
+          "tags": [
+            "gamification-learning-flow"
           ]
         }
       }

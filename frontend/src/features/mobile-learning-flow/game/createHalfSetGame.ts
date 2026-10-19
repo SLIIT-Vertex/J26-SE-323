@@ -102,7 +102,7 @@ export async function createHalfSetGame(
 			parent: host,
 			width: Math.max(280, host.clientWidth),
 			height: Math.max(320, host.clientHeight),
-			backgroundColor: "#fff9ec",
+			transparent: true,
 			scene: [HalfSetScene],
 			banner: false,
 			audio: { noAudio: true },

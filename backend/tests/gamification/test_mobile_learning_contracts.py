@@ -5,7 +5,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 
-from app.gamification.api.learning_flow_router import legacy_router, router
+from app.gamification.api.learning_flow_router import development_router, legacy_router, router
 
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACT = ROOT / "docs" / "adaptive-gamified-learning" / "mobile-learning-contracts-v1.json"
@@ -14,6 +14,7 @@ CONTRACT = ROOT / "docs" / "adaptive-gamified-learning" / "mobile-learning-contr
 def test_learning_flow_openapi_and_frontend_json_schema_are_current() -> None:
     app = FastAPI(title="MindBridge development contract", version="1.0.0")
     app.include_router(router, prefix="/api/v1")
+    app.include_router(development_router, prefix="/api/v1")
     assert json.loads(CONTRACT.read_text(encoding="utf-8")) == {
         "contract_version": "mobile-learning-contracts-v1",
         "development_only": True,

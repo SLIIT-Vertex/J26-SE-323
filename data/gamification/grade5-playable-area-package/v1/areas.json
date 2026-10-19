@@ -1,0 +1,4195 @@
+{
+  "package_version": "grade5-playable-area-package-v1",
+  "authoring_basis": "package_contract_only",
+  "areas": [
+    {
+      "area_id": "G5-AREA-MAT-01",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-01-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-01-FIX-PF",
+          "prompt_si": "සංඛ්‍යාව 4827 හි දහයේ ස්ථානයේ ඉලක්කම තෝරන්න.",
+          "surface_form": "market-before|තුන|දෙක|හතර",
+          "correct_response": "දෙක",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-01-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-01-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-01-FIX-PF",
+          "prompt_si": "සංඛ්‍යාව 1356 හි සියේ ස්ථානයේ ඉලක්කම තෝරන්න.",
+          "surface_form": "market-practice|පහ|තුන|හය",
+          "correct_response": "තුන",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-01-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-01-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-01-FIX-PF",
+          "prompt_si": "සංඛ්‍යාව 7094 හි දහසේ ස්ථානයේ ඉලක්කම තෝරන්න.",
+          "surface_form": "market-after|අට|හත|නවය",
+          "correct_response": "හත",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-01-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "ස්ථාන පිළිවෙළ දකුණේ සිට බලන්න. ඒකකයෙන් පටන් ගෙන එක් එක් ස්ථානය වෙන් කරන්න. වෙනත් සංඛ්‍යාවකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-NUM",
+      "no_universal_parent": false,
+      "prompt_si": "ඉලක්කම් හතරේ සංඛ්‍යාවල ස්ථානීය අගය දක්වයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-02",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-02-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-02-MARKET-PF",
+          "prompt_si": "රු. 2468 සහ රු. 1575 එකතු කළ විට මුළු මුදල කීයද?",
+          "surface_form": "market-add-before|රු. 3943|රු. 4043|රු. 4143",
+          "correct_response": "රු. 4043",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-02-unsupported_before-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-02-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-02-MARKET-PF",
+          "prompt_si": "රු. 1846 සහ රු. 2375 එකතු කළ විට මුළු මුදල කීයද?",
+          "surface_form": "market-add-practice|රු. 4121|රු. 4221|රු. 4321",
+          "correct_response": "රු. 4221",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-02-supported_practice-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-02-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-02-MARKET-PF",
+          "prompt_si": "රු. 3257 සහ රු. 2686 එකතු කළ විට මුළු මුදල කීයද?",
+          "surface_form": "market-add-after|රු. 5843|රු. 5943|රු. 6043",
+          "correct_response": "රු. 5943",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-02-unsupported_after-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් මිල දෙකක් එකතු කරන විට ඒකකයෙන් පටන් ගෙන ස්ථාන අගය අනුව එකතු කර ගෙනයාම සටහන් කරන්න. අවසාන එකතුව ඔබම සොයන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-OPS",
+      "no_universal_parent": false,
+      "prompt_si": "ගෙනයාම අවස්ථා දෙකක් සහිත ඉලක්කම් හතරේ සංඛ්‍යා දෙකක් එකතු කරයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-04",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-04-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-04-MARKET-PF",
+          "prompt_si": "රු. 5324කින් රු. 1786ක් ගෙවූ පසු ඉතිරි මුදල කීයද?",
+          "surface_form": "market-subtract-before|රු. 3438|රු. 3538|රු. 3638",
+          "correct_response": "රු. 3538",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-04-unsupported_before-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-04-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-04-MARKET-PF",
+          "prompt_si": "රු. 6412කින් රු. 2567ක් ගෙවූ පසු ඉතිරි මුදල කීයද?",
+          "surface_form": "market-subtract-practice|රු. 3745|රු. 3845|රු. 3945",
+          "correct_response": "රු. 3845",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-04-supported_practice-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-04-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-04-MARKET-PF",
+          "prompt_si": "රු. 7043කින් රු. 2856ක් ගෙවූ පසු ඉතිරි මුදල කීයද?",
+          "surface_form": "market-subtract-after|රු. 4087|රු. 4187|රු. 4287",
+          "correct_response": "රු. 4187",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-04-unsupported_after-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "ඒකක ස්ථානයෙන් අඩු කිරීම අරඹන්න. අවශ්‍ය විට වම් පැත්තේ ස්ථානයෙන් එකක් ගෙන, එක් එක් ස්ථානය වෙන වෙනම සලකා අවසාන පිළිතුර ඔබම තෝරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-OPS",
+      "no_universal_parent": false,
+      "prompt_si": "ඉලක්කම් හතර තෙක් වූ සංඛ්‍යාවකින් තවත් සංඛ්‍යාවක් අඩු කිරීමේ ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-05",
+      "template_id": "half_set",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-05-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-05-HALF-PF",
+          "prompt_si": "බෝල 8ක් සමාන කාණ්ඩ දෙකකට බෙදූ විට එක් කාණ්ඩයේ බෝල කීයක්ද?",
+          "surface_form": "half-before|තුන|හතර|පහ",
+          "correct_response": "හතර",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-05-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-05-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-05-HALF-PF",
+          "prompt_si": "පෑන් 10ක් සමාන කාණ්ඩ දෙකකට බෙදූ විට එක් කාණ්ඩයේ පෑන් කීයක්ද?",
+          "surface_form": "half-practice|හතර|පහ|හය",
+          "correct_response": "පහ",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-05-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-05-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-05-HALF-PF",
+          "prompt_si": "පොත් 6ක් සමාන කාණ්ඩ දෙකකට බෙදූ විට එක් කාණ්ඩයේ පොත් කීයක්ද?",
+          "surface_form": "half-after|දෙක|තුන|හතර",
+          "correct_response": "තුන",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-05-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "සමූහය සමාන කොටස් දෙකකට වෙන් කරන්න. එක් කොටසක වස්තු ගණන් කරන්න. වෙනත් සමූහයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-FRC",
+      "no_universal_parent": false,
+      "prompt_si": "සමාන කාණ්ඩ දෙකකට බෙදූ සමූහයක එක් කාණ්ඩයේ ගණන ප්‍රකාශ කරයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-06",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-06-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-06-MARKET-PF",
+          "prompt_si": "එකකට රු. 124 බැගින් භාණ්ඩ 3ක මුළු මිල කීයද?",
+          "surface_form": "market-multiply-before|රු. 362|රු. 372|රු. 382",
+          "correct_response": "රු. 372",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-06-unsupported_before-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-06-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-06-MARKET-PF",
+          "prompt_si": "එකකට රු. 131 බැගින් භාණ්ඩ 4ක මුළු මිල කීයද?",
+          "surface_form": "market-multiply-practice|රු. 514|රු. 524|රු. 534",
+          "correct_response": "රු. 524",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-06-supported_practice-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-06-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-06-MARKET-PF",
+          "prompt_si": "එකකට රු. 132 බැගින් භාණ්ඩ 4ක මුළු මිල කීයද?",
+          "surface_form": "market-multiply-after|රු. 518|රු. 528|රු. 538",
+          "correct_response": "රු. 528",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-06-unsupported_after-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "සමාන මිල ඇති භාණ්ඩ කණ්ඩායම් ලෙස සිතන්න. එක් කණ්ඩායමේ මිල භාණ්ඩ ගණන වාරයක් එකතු වන බව බලන්න; නිවැරදි එකතුව ඔබම තෝරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-OPS",
+      "no_universal_parent": false,
+      "prompt_si": "ඉලක්කම් තුනකට නොවැඩි සංඛ්‍යා ගෙනයාම එක් අවස්ථාවක් සහිත ව 2, 3, 4 සහ 5න් ගුණ කිරීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-08",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-08-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-08-MARKET-PF",
+          "prompt_si": "භාණ්ඩ 324ක් කූඩ 3කට සමානව බෙදූ විට එක් කූඩයකට කීයක් ලැබේද?",
+          "surface_form": "market-divide-before|98|108|118",
+          "correct_response": "108",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-08-unsupported_before-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-08-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-08-MARKET-PF",
+          "prompt_si": "භාණ්ඩ 444ක් කූඩ 4කට සමානව බෙදූ විට එක් කූඩයකට කීයක් ලැබේද?",
+          "surface_form": "market-divide-practice|101|111|121",
+          "correct_response": "111",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-08-supported_practice-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-08-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-08-MARKET-PF",
+          "prompt_si": "භාණ්ඩ 672ක් කූඩ 3කට සමානව බෙදූ විට එක් කූඩයකට කීයක් ලැබේද?",
+          "surface_form": "market-divide-after|214|224|234",
+          "correct_response": "224",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-08-unsupported_after-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් භාණ්ඩ තොගයක් සමාන කණ්ඩායම්වලට බෙදන ආකාරය සිතන්න. බෙදුමෙන් ලැබෙන ගණන නැවත කණ්ඩායම් ගණනෙන් ගුණ කර මුල් තොගය ලැබේදැයි බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-OPS",
+      "no_universal_parent": false,
+      "prompt_si": "ඉලක්කම් තුනේ සංඛ්‍යා 2න්, 3න් සහ 4න් බෙදීමේ සරල ගැටලු විසඳයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-10",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-10-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-10-MARKET-PF",
+          "prompt_si": "රු. 125ක පැන්සල් පෙට්ටියක් සහ රු. 275ක පොතක් මිල දී ගත් විට ගෙවිය යුතු මුදල කීයද?",
+          "surface_form": "market-money-before|රු. 390|රු. 400|රු. 410",
+          "correct_response": "රු. 400",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-10-unsupported_before-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-10-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-10-MARKET-PF",
+          "prompt_si": "රු. 160ක පැන් පෙට්ටියක් සහ රු. 230ක පොතක් මිල දී ගත් විට ගෙවිය යුතු මුදල කීයද?",
+          "surface_form": "market-money-practice|රු. 380|රු. 390|රු. 400",
+          "correct_response": "රු. 390",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-10-supported_practice-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-10-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-10-MARKET-PF",
+          "prompt_si": "රු. 145ක පැන්සල් පෙට්ටියක් සහ රු. 310ක පොතක් මිල දී ගත් විට ගෙවිය යුතු මුදල කීයද?",
+          "surface_form": "market-money-after|රු. 445|රු. 455|රු. 465",
+          "correct_response": "රු. 455",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-10-unsupported_after-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "භාණ්ඩ දෙකේ මිල වෙන් කර ලියන්න. ඒකක ස්ථානයෙන් පටන් ගෙන ස්ථාන අගය අනුව එකතු කර මුළු මුදල ඔබම තෝරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-MON",
+      "no_universal_parent": false,
+      "prompt_si": "භාණ්ඩ කිහිපයක් මිල දී ගත් විට ගෙවිය යුතු මුදල ගණනය කරයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-15",
+      "template_id": "market_mission",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-15-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-15-MARKET-PF",
+          "prompt_si": "0.7 දහයෙන් පංගු ලෙස තෝරන්න.",
+          "surface_form": "market-decimal-before|6/10|7/10|8/10",
+          "correct_response": "7/10",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-15-unsupported_before-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-15-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-15-MARKET-PF",
+          "prompt_si": "0.9 දහයෙන් පංගු ලෙස තෝරන්න.",
+          "surface_form": "market-decimal-practice|8/10|9/10|10/10",
+          "correct_response": "9/10",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-15-supported_practice-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-15-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-15-MARKET-PF",
+          "prompt_si": "0.4 දහයෙන් පංගු ලෙස තෝරන්න.",
+          "surface_form": "market-decimal-after|3/10|4/10|5/10",
+          "correct_response": "4/10",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-15-unsupported_after-rubric",
+            "rubric_version": "market-rubric-v1",
+            "scoring_version": "market-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "එක සම්පූර්ණයක් සමාන කොටස් දහයකට බෙදා ඇතැයි සිතන්න. දශමස්ථානයේ ඉලක්කම කොටස් කීයක්දැයි පෙන්වන නමුත් නිවැරදි විකල්පය ඔබම තෝරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-FRC",
+      "no_universal_parent": false,
+      "prompt_si": "එක් දශමස්ථානයක් සහිත දශම සංඛ්‍යා දහයෙන් පංගු ලෙස දක්වයි. Medium-confidence trace. This sentence is not an approved question.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-03",
+      "template_id": "pattern_temple",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-03-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-03-FIX-PF",
+          "prompt_si": "2, 4, 6, 8 යන රටාවේ ඊළඟ සංඛ්‍යාව තෝරන්න.",
+          "surface_form": "pattern-before|අට|දහය|දොළහ",
+          "correct_response": "දහය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-03-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-03-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-03-FIX-PF",
+          "prompt_si": "3, 6, 9, 12 යන රටාවේ ඊළඟ සංඛ්‍යාව තෝරන්න.",
+          "surface_form": "pattern-practice|දොළහ|පහළොව|දහඅට",
+          "correct_response": "පහළොව",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-03-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-03-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-03-FIX-PF",
+          "prompt_si": "5, 10, 15, 20 යන රටාවේ ඊළඟ සංඛ්‍යාව තෝරන්න.",
+          "surface_form": "pattern-after|විස්ස|විසිපහ|තිහ",
+          "correct_response": "විසිපහ",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-03-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "රටාවේ සමාන පියවර බලන්න. අවසාන සංඛ්‍යාවට එම පියවර එකතු කරන්න. වෙනත් රටාවකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "APT-PAT",
+      "no_universal_parent": false,
+      "prompt_si": "සංඛ්‍යා රටා",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-13",
+      "template_id": "pattern_temple",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-13-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-13-FIX-PF",
+          "prompt_si": "පැති හතරක් සමාන හැඩයේ නම කුමක්ද?",
+          "surface_form": "shape-before|ත්‍රිකෝණය|සමචතුරස්‍රය|වෘත්තය",
+          "correct_response": "සමචතුරස්‍රය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-13-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-13-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-13-FIX-PF",
+          "prompt_si": "පැති තුනක් ඇති හැඩයේ නම කුමක්ද?",
+          "surface_form": "shape-practice|සමචතුරස්‍රය|ත්‍රිකෝණය|ඍජුකෝණාස්‍රය",
+          "correct_response": "ත්‍රිකෝණය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-13-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-13-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-13-FIX-PF",
+          "prompt_si": "පැති හයක් ඇති හැඩයේ නම කුමක්ද?",
+          "surface_form": "shape-after|පංචාස්‍රය|ෂඩස්‍රය|අෂ්ටාස්‍රය",
+          "correct_response": "ෂඩස්‍රය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-13-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "පැති ගණන බලන්න. සමාන පැති ඇත්නම් එම හැඩය වෙන් කරන්න. වෙනත් රූපයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-GEO",
+      "no_universal_parent": false,
+      "prompt_si": "හැඩතල හා ඝන වස්තු",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-14",
+      "template_id": "pattern_temple",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-14-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-14-FIX-PF",
+          "prompt_si": "හිරු උදාවන දිශාව කුමක්ද?",
+          "surface_form": "direction-before|බස්නාහිර|නැගෙනහිර|දකුණ",
+          "correct_response": "නැගෙනහිර",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-14-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-14-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-14-FIX-PF",
+          "prompt_si": "හිරු බසින දිශාව කුමක්ද?",
+          "surface_form": "direction-practice|උතුර|බස්නාහිර|නැගෙනහිර",
+          "correct_response": "බස්නාහිර",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-14-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-14-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-14-FIX-PF",
+          "prompt_si": "නැගෙනහිරට මුහුණලා සිටින විට වම් පස දිශාව කුමක්ද?",
+          "surface_form": "direction-after|දකුණ|උතුර|නැගෙනහිර",
+          "correct_response": "උතුර",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-14-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "සිතියමේ ඉහළ පැත්ත එක් දිශාවකි. දකුණු වම් පස් ඒ අනුව සොයන්න. වෙනත් ස්ථානයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "APT-DIR",
+      "no_universal_parent": false,
+      "prompt_si": "දිශා",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-07",
+      "template_id": "parcel_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-07-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-07-FIX-PF",
+          "prompt_si": "පැය 2 සහ මිනිත්තු 30 යනු මිනිත්තු කීයද?",
+          "surface_form": "parcel-before|අනූව|එකසිය පනහ|දෙසිය",
+          "correct_response": "එකසිය පනහ",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-07-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-07-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-07-FIX-PF",
+          "prompt_si": "පැය 1 සහ මිනිත්තු 15 යනු මිනිත්තු කීයද?",
+          "surface_form": "parcel-practice|හැට|හැත්තෑපහ|අනූව",
+          "correct_response": "හැත්තෑපහ",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-07-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-07-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-07-FIX-PF",
+          "prompt_si": "පැය 3 සහ මිනිත්තු 10 යනු මිනිත්තු කීයද?",
+          "surface_form": "parcel-after|එකසිය අසූව|එකසිය අනූව|දෙසිය",
+          "correct_response": "එකසිය අනූව",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-07-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "පැයක් මිනිත්තු හැටකි. පැය ගණන හැටෙන් ගුණ කර ඉතිරි මිනිත්තු එකතු කරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-TIM",
+      "no_universal_parent": false,
+      "prompt_si": "කාලය",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-09",
+      "template_id": "parcel_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-09-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-09-FIX-PF",
+          "prompt_si": "මීටර් 2 ක් සෙන්ටිමීටර් කීයද?",
+          "surface_form": "length-before|සියය|දෙසිය|තුන්සිය",
+          "correct_response": "දෙසිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-09-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-09-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-09-FIX-PF",
+          "prompt_si": "මීටර් 3 ක් සෙන්ටිමීටර් කීයද?",
+          "surface_form": "length-practice|දෙසිය|තුන්සිය|හාරසිය",
+          "correct_response": "තුන්සිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-09-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-09-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-09-FIX-PF",
+          "prompt_si": "මීටර් 4 ක් සෙන්ටිමීටර් කීයද?",
+          "surface_form": "length-after|තුන්සිය|හාරසිය|පන්සිය",
+          "correct_response": "හාරසිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-09-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "මීටරයක් සෙන්ටිමීටර් සියයකි. මීටර ගණන සියයෙන් වැඩි කරන්න. වෙනත් දිගකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-LEN",
+      "no_universal_parent": false,
+      "prompt_si": "දිග හා දුර",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-11",
+      "template_id": "parcel_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-11-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-11-FIX-PF",
+          "prompt_si": "ලීටර් 1 ක් මිලිලීටර් කීයද?",
+          "surface_form": "volume-before|පන්සිය|එක්දහස|දෙදහස",
+          "correct_response": "එක්දහස",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-11-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-11-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-11-FIX-PF",
+          "prompt_si": "ලීටර් 2 ක් මිලිලීටර් කීයද?",
+          "surface_form": "volume-practice|එක්දහස|දෙදහස|තුන්දහස",
+          "correct_response": "දෙදහස",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-11-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-11-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-11-FIX-PF",
+          "prompt_si": "ලීටර් 3 ක් මිලිලීටර් කීයද?",
+          "surface_form": "volume-after|දෙදහස|තුන්දහස|හාරදහස",
+          "correct_response": "තුන්දහස",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-11-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "ලීටරයක් මිලිලීටර් දහසකි. ලීටර ගණන දහසින් වැඩි කරන්න. වෙනත් භාජනයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-MAS",
+      "no_universal_parent": false,
+      "prompt_si": "පරිමාව හා ධාරිතාව",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-12",
+      "template_id": "parcel_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-12-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-12-FIX-PF",
+          "prompt_si": "කිලෝග්‍රෑම් 1 ග්‍රෑම් කීයද?",
+          "surface_form": "weight-before|ග්‍රෑම් පන්සිය|ග්‍රෑම් දහස|ග්‍රෑම් දෙදහස",
+          "correct_response": "ග්‍රෑම් දහස",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-12-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-12-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-12-FIX-PF",
+          "prompt_si": "කිලෝග්‍රෑම් 2 ග්‍රෑම් කීයද?",
+          "surface_form": "weight-practice|ග්‍රෑම් දහස|ග්‍රෑම් දෙදහස|ග්‍රෑම් තුන්දහස",
+          "correct_response": "ග්‍රෑම් දෙදහස",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-12-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-12-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-12-FIX-PF",
+          "prompt_si": "කිලෝග්‍රෑම් 5 ග්‍රෑම් කීයද?",
+          "surface_form": "weight-after|ග්‍රෑම් තුන්දහස|ග්‍රෑම් පන්දහස|ග්‍රෑම් හයදහස",
+          "correct_response": "ග්‍රෑම් පන්දහස",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-12-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "කිලෝග්‍රෑමයක් ග්‍රෑම් එකදහසකි. කිලෝ ගණන එම ප්‍රමාණයෙන් වැඩි කරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-MAS",
+      "no_universal_parent": false,
+      "prompt_si": "බර මැනීම",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-MAT-16",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-16-unsupported_before@v1",
+          "parallel_family_id": "G5-MAT-16-FIX-PF",
+          "prompt_si": "රෝම ඉලක්කම VI යනු කුමන සංඛ්‍යාවද?",
+          "surface_form": "roman-before|අංක හතර|අංක හය|අංක අට",
+          "correct_response": "අංක හය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-16-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-MAT-16-supported_practice@v1",
+          "parallel_family_id": "G5-MAT-16-FIX-PF",
+          "prompt_si": "රෝම ඉලක්කම IV යනු කුමන සංඛ්‍යාවද?",
+          "surface_form": "roman-practice|අංක තුන|අංක හතර|අංක පහ",
+          "correct_response": "අංක හතර",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-16-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-MAT-16-unsupported_after@v1",
+          "parallel_family_id": "G5-MAT-16-FIX-PF",
+          "prompt_si": "රෝම ඉලක්කම IX යනු කුමන සංඛ්‍යාවද?",
+          "surface_form": "roman-after|අංක අට|අංක නවය|අංක දහය",
+          "correct_response": "අංක නවය",
+          "rubric": {
+            "rubric_id": "G5-AREA-MAT-16-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "I යනු එකයි. V යනු පහයි. V ට පසුව ලකුණ එකතු වේ. V ට පෙර ලකුණ අඩු වේ.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "MAT-NUM",
+      "no_universal_parent": false,
+      "prompt_si": "රෝම සංඛ්‍යාංක",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-03",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-03-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-03-FIX-PF",
+          "prompt_si": "දවල් නිදියි, රෑට ඇහැරෙයි. ඒ කවුද?",
+          "surface_form": "word-03-before|වවුලා|සමනලයා|මී මැස්සා",
+          "correct_response": "වවුලා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-03-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-03-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-03-FIX-PF",
+          "prompt_si": "කකුල් නැතිව ගලා යයි. ඒ කුමක්ද?",
+          "surface_form": "word-03-practice|ගඟ|ගල|ගස",
+          "correct_response": "ගඟ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-03-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-03-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-03-FIX-PF",
+          "prompt_si": "කොළ ඇඳුමක් ඇඳගෙන ගෙඩි ගොඩක් දරයි. ඒ කුමක්ද?",
+          "surface_form": "word-03-after|ගස|වලාකුළ|පාර",
+          "correct_response": "ගස",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-03-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “අතු අතර ගෙයක්, දොරක් නැත” යන තේරවිල්ලේ එක් එක් ඉඟිය වෙන් කර බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "තේරවිලි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-04",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-04-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-04-FIX-PF",
+          "prompt_si": "“ලස්සන” යන පදයට සමානාර්ථ පදය තෝරන්න.",
+          "surface_form": "word-04-before|සුන්දර|අඳුරු|දැඩි",
+          "correct_response": "සුන්දර",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-04-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-04-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-04-FIX-PF",
+          "prompt_si": "“ඉක්මන්” යන පදයට සමානාර්ථ පදය තෝරන්න.",
+          "surface_form": "word-04-practice|ශීඝ්‍ර|මන්ද|නිහඬ",
+          "correct_response": "ශීඝ්‍ර",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-04-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-04-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-04-FIX-PF",
+          "prompt_si": "“සතුට” යන පදයට සමානාර්ථ පදය තෝරන්න.",
+          "surface_form": "word-04-after|ප්‍රීතිය|බිය|කෝපය",
+          "correct_response": "ප්‍රීතිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-04-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “නිවස” හා “ගෙදර” යන පද දෙක සමාන අදහසක් දක්වයි.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "සමානාර්ථ පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-05",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-05-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-05-FIX-PF",
+          "prompt_si": "“උණුසුම්” යන පදයට විරුද්ධාර්ථ පදය තෝරන්න.",
+          "surface_form": "word-05-before|සීතල|මෘදු|පැහැදිලි",
+          "correct_response": "සීතල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-05-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-05-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-05-FIX-PF",
+          "prompt_si": "“ඉහළ” යන පදයට විරුද්ධාර්ථ පදය තෝරන්න.",
+          "surface_form": "word-05-practice|පහළ|ළඟ|දුර",
+          "correct_response": "පහළ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-05-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-05-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-05-FIX-PF",
+          "prompt_si": "“ආරම්භය” යන පදයට විරුද්ධාර්ථ පදය තෝරන්න.",
+          "surface_form": "word-05-after|අවසානය|මැද|ගමන",
+          "correct_response": "අවසානය",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-05-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “දිගු” සහ “කෙටි” යන පද විරුද්ධ අදහස් දක්වයි.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "විරුද්ධාර්ථ පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-06",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-06-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-06-FIX-PF",
+          "prompt_si": "“අත ___” යුගල පදය සම්පූර්ණ කරන්න.",
+          "surface_form": "word-06-before|හිස|පය|කන",
+          "correct_response": "පය",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-06-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-06-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-06-FIX-PF",
+          "prompt_si": "“දුක ___” යුගල පදය සම්පූර්ණ කරන්න.",
+          "surface_form": "word-06-practice|සැප|බිය|කඳුළ",
+          "correct_response": "සැප",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-06-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-06-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-06-FIX-PF",
+          "prompt_si": "“ගහ ___” යුගල පදය සම්පූර්ණ කරන්න.",
+          "surface_form": "word-06-after|කොළ|මල්|මුල්",
+          "correct_response": "කොළ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-06-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක් ලෙස “යන එන” යුගලය බලන්න. එහි වචන දෙකේ සම්බන්ධය හඳුනා ගන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "යුගල පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-07",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-07-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-07-FIX-PF",
+          "prompt_si": "“අටුව කඩා පුටුව ___” යන පිරුළ සම්පූර්ණ කරන්න.",
+          "surface_form": "word-07-before|හදනවා|බලනවා|ගන්නවා",
+          "correct_response": "හදනවා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-07-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-07-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-07-FIX-PF",
+          "prompt_si": "“ගහේ කටු උල් කරන්න ___” යන පිරුළ සම්පූර්ණ කරන්න.",
+          "surface_form": "word-07-practice|ඕනෑ නැහැ|ඉක්මන් වෙයි|කල් යයි",
+          "correct_response": "ඕනෑ නැහැ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-07-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-07-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-07-FIX-PF",
+          "prompt_si": "“වක්කඩේ හකුරු ___” යන පිරුළ සම්පූර්ණ කරන්න.",
+          "surface_form": "word-07-after|හැංගුවා වගේ|තැබුවා වගේ|බෙදුවා වගේ",
+          "correct_response": "හැංගුවා වගේ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-07-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “කල දේ පල දේ” යන පිරුළේ කොටස් දෙකේ ශබ්දය හා අදහස සසඳන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ප්‍රස්තාව පිරුළු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-08",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-08-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-08-FIX-PF",
+          "prompt_si": "“අත හිත දෙනවා” යන ඉඟි වැකියේ අර්ථය තෝරන්න.",
+          "surface_form": "word-08-before|උදව් කරනවා|අත සෝදනවා|ලියනවා",
+          "correct_response": "උදව් කරනවා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-08-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-08-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-08-FIX-PF",
+          "prompt_si": "“කටේ කිරි සුවඳ යන්න නෑ” යන ඉඟි වැකියේ අර්ථය තෝරන්න.",
+          "surface_form": "word-08-practice|අත්දැකීම් අඩුයි|ඉතා වයස්ගතයි|බඩගිනියි",
+          "correct_response": "අත්දැකීම් අඩුයි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-08-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-08-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-08-FIX-PF",
+          "prompt_si": "“ඇඟිල්ලේ තරමට ඉදිමෙන්න” යන ඉඟි වැකියේ අර්ථය තෝරන්න.",
+          "surface_form": "word-08-after|හැකියාවට අනුව කටයුතු කරන්න|ඉක්මනින් දුවන්න|නිහඬව සිටින්න",
+          "correct_response": "හැකියාවට අනුව කටයුතු කරන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-08-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “කන් දෙනවා” යනු අවධානයෙන් අසනවා යන ඉඟි වැකියකි.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ඉඟි වැකි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-09",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-09-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-09-FIX-PF",
+          "prompt_si": "“උත්සාහවන්තයා ___” යන ආප්තෝපදේශය සම්පූර්ණ කරන්න.",
+          "surface_form": "word-09-before|ජය ගනී|නතර වෙයි|නිදියි",
+          "correct_response": "ජය ගනී",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-09-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-09-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-09-FIX-PF",
+          "prompt_si": "“අද කළ යුතු දේ ___” යන ආප්තෝපදේශය සම්පූර්ණ කරන්න.",
+          "surface_form": "word-09-practice|අදම කරන්න|හෙට කරන්න|අමතක කරන්න",
+          "correct_response": "අදම කරන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-09-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-09-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-09-FIX-PF",
+          "prompt_si": "“දැනුම ___” යන ආප්තෝපදේශය සම්පූර්ණ කරන්න.",
+          "surface_form": "word-09-after|බලය වේ|බරක් වේ|දුර වේ",
+          "correct_response": "බලය වේ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-09-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “කාලය රන් හා සමානයි” යන කියමනේ ප්‍රධාන අදහස හඳුනා ගන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ආප්තෝපදේශ. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-10",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-10-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-10-FIX-PF",
+          "prompt_si": "“___ මෙන් සුදු” යන උපමාව සම්පූර්ණ කරන්න.",
+          "surface_form": "word-10-before|කිරි|ගල්|කොළ",
+          "correct_response": "කිරි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-10-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-10-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-10-FIX-PF",
+          "prompt_si": "“___ මෙන් ලස්සන” යන උපමාව සම්පූර්ණ කරන්න.",
+          "surface_form": "word-10-practice|මලක්|වැලි|ගින්න",
+          "correct_response": "මලක්",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-10-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-10-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-10-FIX-PF",
+          "prompt_si": "“___ මෙන් නිර්භීත” යන උපමාව සම්පූර්ණ කරන්න.",
+          "surface_form": "word-10-after|සිංහයෙකු|මුවෙකු|සමනලයෙකු",
+          "correct_response": "සිංහයෙකු",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-10-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: “මී පැණි මෙන් මිහිරි” යන උපමාවේ සසඳන දේ දෙක හඳුනා ගන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "උපමා. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-11",
+      "template_id": "word_workshop",
+      "source_status": "no_grade5_source",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-11-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-11-PLACEHOLDER-PF",
+          "prompt_si": "පවුලේ දරුවන් ගැන කියන විට ස්ත්‍රී හෝ පුරුෂ දෙපාර්ශ්වයටම යෙදිය හැකි පදය තෝරන්න.",
+          "surface_form": "word-11-before|දරුවා|පුතා|දුව",
+          "correct_response": "දරුවා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-11-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-11-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-11-PLACEHOLDER-PF",
+          "prompt_si": "හඳුනා නොගත් අයෙකු ගැන කියන විට ස්ත්‍රී හෝ පුරුෂ දෙපාර්ශ්වයටම යෙදිය හැකි පදය තෝරන්න.",
+          "surface_form": "word-11-practice|මව|කෙනා|පියා",
+          "correct_response": "කෙනා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-11-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-11-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-11-PLACEHOLDER-PF",
+          "prompt_si": "යම් අයෙකු පොදුවේ හඳුන්වන විට ස්ත්‍රී හෝ පුරුෂ දෙපාර්ශ්වයටම යෙදිය හැකි පදය තෝරන්න.",
+          "surface_form": "word-11-after|සහෝදරයා|සහෝදරිය|පුද්ගලයා",
+          "correct_response": "පුද්ගලයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-11-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "ස්ත්‍රී ↔ එකම පදය ↔ පුරුෂ. රූප සටහන දෙපාර්ශ්වයටම යෙදෙන පදයක රටාව පමණක් පෙන්වයි.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "පොදු ලිංග පද. මෙම ක්ෂේත්‍රයට 5 ශ්‍රේණියේ මූලාශ්‍රයක් නොමැත. මෙය සමාලෝචනය නොකළ සංවර්ධක කෙටුම්පතකි.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-12",
+      "template_id": "word_workshop",
+      "source_status": "no_grade5_source",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-12-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-12-PLACEHOLDER-PF",
+          "prompt_si": "“නිමාලි පොත කියවයි.” වාක්‍යයේ ආඛ්‍යාතය තෝරන්න.",
+          "surface_form": "word-12-before|නිමාලි|පොත|කියවයි",
+          "correct_response": "කියවයි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-12-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-12-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-12-PLACEHOLDER-PF",
+          "prompt_si": "“ළමයි පිටියේ දුවති.” වාක්‍යයේ ආඛ්‍යාතය තෝරන්න.",
+          "surface_form": "word-12-practice|ළමයි|පිටියේ|දුවති",
+          "correct_response": "දුවති",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-12-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-12-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-12-PLACEHOLDER-PF",
+          "prompt_si": "“අපි ගසක් සිටවමු.” වාක්‍යයේ ආඛ්‍යාතය තෝරන්න.",
+          "surface_form": "word-12-after|අපි|ගසක්|සිටවමු",
+          "correct_response": "සිටවමු",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-12-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "වාක්‍යයේ කරන දෙය පවසන කොටස සොයන්න. පළමුව කවුරුන්ද බලන්න; පසුව කරන දෙය හඳුනා ගන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ක්‍රියා පද හා ආඛ්‍යාත. මෙම ක්ෂේත්‍රයට 5 ශ්‍රේණියේ මූලාශ්‍රයක් නොමැත. මෙය සමාලෝචනය නොකළ සංවර්ධක කෙටුම්පතකි.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-13",
+      "template_id": "story_studio",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-13-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-13-FIX-PF",
+          "prompt_si": "ආරාධනා පත්‍රයක පළමුව ලියන්නේ කුමක්ද?",
+          "surface_form": "story-before|ස්ථානයේ නම|උත්සවයේ නම|වේලාව",
+          "correct_response": "උත්සවයේ නම",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-13-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-13-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-13-FIX-PF",
+          "prompt_si": "ආරාධනා පත්‍රයක වේලාව ලියන්නේ කොතැනද?",
+          "surface_form": "story-practice|මුලින්ම|දිනයට පසුව|අවසානයේ",
+          "correct_response": "දිනයට පසුව",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-13-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-13-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-13-FIX-PF",
+          "prompt_si": "ආරාධනා පත්‍රයක අවසානට ලියන්නේ කුමක්ද?",
+          "surface_form": "story-after|උත්සවයේ නම|ආරාධනා කරන්නාගේ නම|ස්ථානයේ නම",
+          "correct_response": "ආරාධනා කරන්නාගේ නම",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-13-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "ආචාරය → පණිවිඩය → අවසාන ආචාරය. මෙම රූප සටහන පත්‍රයේ කොටස් පමණක් පෙන්වයි.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ආරාධනා පත්‍ර",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-01",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-01-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-01-FIX-PF",
+          "prompt_si": "ගී යන වචනයේ ඇති පිල්ල කුමක්ද?",
+          "surface_form": "vowel-before|ඉස්පිල්ල|දිග ඉස්පිල්ල|පාපිල්ල",
+          "correct_response": "දිග ඉස්පිල්ල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-01-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-01-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-01-FIX-PF",
+          "prompt_si": "මී යන වචනයේ ඇති පිල්ල කුමක්ද?",
+          "surface_form": "vowel-practice|ඉස්පිල්ල|දිග ඉස්පිල්ල|පාපිල්ල",
+          "correct_response": "දිග ඉස්පිල්ල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-01-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-01-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-01-FIX-PF",
+          "prompt_si": "කු යන වචනයේ ඇති පිල්ල කුමක්ද?",
+          "surface_form": "vowel-after|කොම්බුව|පාපිල්ල|ඇලපිල්ල",
+          "correct_response": "පාපිල්ල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-01-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "මී තුළ ඉහළ ඇති ලකුණ බලන්න. එම ලකුණ වෙනත් අකුරක තබා බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "පිල්ලම් හඳුනාගනිමු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-02",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-02-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-02-FIX-PF",
+          "prompt_si": "මම පාසල් යමි. යන වාක්‍යය අවසානයේ ඇති ලකුණ කුමක්ද?",
+          "surface_form": "punct-before|කොමාව|තිත|ප්‍රශ්නාර්ථ ලකුණ",
+          "correct_response": "තිත",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-02-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-02-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-02-FIX-PF",
+          "prompt_si": "ඔබ කොහෙද? යන වාක්‍යය අවසානයේ ඇති ලකුණ කුමක්ද?",
+          "surface_form": "punct-practice|තිත|ප්‍රශ්නාර්ථ ලකුණ|කොමාව",
+          "correct_response": "ප්‍රශ්නාර්ථ ලකුණ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-02-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-02-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-02-FIX-PF",
+          "prompt_si": "අම්මා, මම එන්නම්. යන වාක්‍යයේ පළමු වචනයෙන් පසු ඇති ලකුණ කුමක්ද?",
+          "surface_form": "punct-after|තිත|ප්‍රශ්නාර්ථ ලකුණ|කොමාව",
+          "correct_response": "කොමාව",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-02-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "ඔහු ගමට ගියේය! යන වෙනත් වාක්‍යය අවසානයේ විස්මය දක්වන ලකුණ ඇත. වෙනත් වාක්‍යයක අවසාන ලකුණ බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "විරාම ලක්ෂණ හඳුනාගනිමු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-14",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-14-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-14-FIX-PF",
+          "prompt_si": "ගුරුවරිය යන වචනයේ අවසාන කොටස කුමන ලිංගය දක්වයිද?",
+          "surface_form": "gender-before|පුරුෂ ලිංගය|ස්ත්‍රී ලිංගය|පොදු ලිංගය",
+          "correct_response": "ස්ත්‍රී ලිංගය",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-14-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-14-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-14-FIX-PF",
+          "prompt_si": "ශිෂ්‍යාව යන වචනයේ අවසාන කොටස කුමන ලිංගය දක්වයිද?",
+          "surface_form": "gender-practice|පුරුෂ ලිංගය|ස්ත්‍රී ලිංගය|පොදු ලිංගය",
+          "correct_response": "ස්ත්‍රී ලිංගය",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-14-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-14-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-14-FIX-PF",
+          "prompt_si": "ගුරුවරයා යන වචනයේ අවසාන කොටස කුමන ලිංගය දක්වයිද?",
+          "surface_form": "gender-after|ස්ත්‍රී ලිංගය|පුරුෂ ලිංගය|පොදු ලිංගය",
+          "correct_response": "පුරුෂ ලිංගය",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-14-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "වචනයේ අවසාන කොටස බලන්න. ඉය හෝ ආව අවසන් වන වචනය වෙන් කරන්න. යා අවසන් වන වචනය වෙන් කරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ස්ත්‍රී ලිංග හා පුරුෂ ලිංග පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-15",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-15-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-15-FIX-PF",
+          "prompt_si": "බල්ලෝ යන වචනය ඒකවචනද බහුවචනද?",
+          "surface_form": "number-before|ඒකවචන|බහුවචන|ද්විවචන",
+          "correct_response": "බහුවචන",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-15-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-15-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-15-FIX-PF",
+          "prompt_si": "ගස් යන වචනය ඒකවචනද බහුවචනද?",
+          "surface_form": "number-practice|ඒකවචන|බහුවචන|ද්විවචන",
+          "correct_response": "බහුවචන",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-15-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-15-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-15-FIX-PF",
+          "prompt_si": "පොත යන වචනය ඒකවචනද බහුවචනද?",
+          "surface_form": "number-after|බහුවචන|ඒකවචන|ද්විවචන",
+          "correct_response": "ඒකවචන",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-15-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "ගස් යන වචනයේ අවසාන ලකුණ බලන්න. එම අවසානය වෙනත් වචනයක තබා බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ඒකවචන හා බහුවචන පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-16",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-16-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-16-FIX-PF",
+          "prompt_si": "පා__ල යන රටාවේ නිවැරදි අක්ෂර වින්‍යාසය තෝරන්න.",
+          "surface_form": "spell-before|පාසළ|පාසල|පාශල",
+          "correct_response": "පාසල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-16-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-16-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-16-FIX-PF",
+          "prompt_si": "ගුරුවර__ යන රටාවේ නිවැරදි අක්ෂර වින්‍යාසය තෝරන්න.",
+          "surface_form": "spell-practice|ගුරුවරියා|ගුරුවරයා|ගුරුවරය",
+          "correct_response": "ගුරුවරයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-16-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-16-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-16-FIX-PF",
+          "prompt_si": "පො__ යන රටාවේ නිවැරදි අක්ෂර වින්‍යාසය තෝරන්න.",
+          "surface_form": "spell-after|පොත්ත|පොත|පොථ",
+          "correct_response": "පොත",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-16-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "අම්මා යන වෙනත් වචනය ම අකුර දෙවරක් යෙදී ලියයි. වෙනත් වචනයක අකුරු පිළිවෙළ බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "අක්ෂර වින්‍යාසයේ නිවැරදි භාවිතය ප්‍රදර්ශනය කරයි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-17",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-17-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-17-FIX-PF",
+          "prompt_si": "ගමන යන වචනයේ මැද ඇති අකුර කුමක්ද?",
+          "surface_form": "n-before|දන්තජ න|මූර්ධජ ණ|සඤ්ඤක ඤ",
+          "correct_response": "දන්තජ න",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-17-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-17-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-17-FIX-PF",
+          "prompt_si": "වනය යන වචනයේ මැද ඇති අකුර කුමක්ද?",
+          "surface_form": "n-practice|මූර්ධජ ණ|දන්තජ න|සඤ්ඤක ඤ",
+          "correct_response": "දන්තජ න",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-17-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-17-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-17-FIX-PF",
+          "prompt_si": "ගණිතය යන වචනයේ මැද ඇති අකුර කුමක්ද?",
+          "surface_form": "n-after|දන්තජ න|සඤ්ඤක ඤ|මූර්ධජ ණ",
+          "correct_response": "මූර්ධජ ණ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-17-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "වචනයේ මැද ලකුණ බලන්න. එක් රේඛාවක් පමණක් ඇති ලකුණ වෙන් කරන්න. වෙනත් වචනයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "න, ණ යෙදීම. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-18",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-18-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-18-FIX-PF",
+          "prompt_si": "ගල යන වචනයේ ඇති අකුර කුමක්ද?",
+          "surface_form": "l-before|දන්තජ ල|මූර්ධජ ළ|දන්තජ න",
+          "correct_response": "දන්තජ ල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-18-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-18-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-18-FIX-PF",
+          "prompt_si": "මල යන වචනයේ ඇති අකුර කුමක්ද?",
+          "surface_form": "l-practice|මූර්ධජ ළ|දන්තජ ල|දන්තජ න",
+          "correct_response": "දන්තජ ල",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-18-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-18-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-18-FIX-PF",
+          "prompt_si": "කොළ යන වචනයේ ඇති අකුර කුමක්ද?",
+          "surface_form": "l-after|දන්තජ ල|දන්තජ න|මූර්ධජ ළ",
+          "correct_response": "මූර්ධජ ළ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-18-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "මල තුළ ඇති ලකුණ බලන්න. එම ලකුණ වෙනත් වචනයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ල, ළ යෙදීම. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-19",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-19-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-19-FIX-PF",
+          "prompt_si": "පාසල යන වචනයේ ඇති අකුර කුමක්ද?",
+          "surface_form": "s-before|දන්තජ ස|තාලුජ ශ|මූර්ධජ ෂ",
+          "correct_response": "දන්තජ ස",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-19-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-19-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-19-FIX-PF",
+          "prompt_si": "වසන්තය යන වචනයේ ඇති අකුර කුමක්ද?",
+          "surface_form": "s-practice|තාලුජ ශ|දන්තජ ස|මූර්ධජ ෂ",
+          "correct_response": "දන්තජ ස",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-19-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-19-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-19-FIX-PF",
+          "prompt_si": "විශාල යන වචනයේ ඇති අකුර කුමක්ද?",
+          "surface_form": "s-after|දන්තජ ස|මූර්ධජ ෂ|තාලුජ ශ",
+          "correct_response": "තාලුජ ශ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-19-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "කස යන වෙනත් වචනයේ එම ලකුණ ඇත. පුහුණු වචනයේ ලකුණ ඒ හා සසඳන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "ස, ශ, ෂ යෙදීම. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-20",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-20-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-20-FIX-PF",
+          "prompt_si": "කම යන වචනයේ පළමු අකුර කුමන වර්ගයද?",
+          "surface_form": "aspirate-before|අල්පප්‍රාණ|මහාප්‍රාණ|මූර්ධජ",
+          "correct_response": "අල්පප්‍රාණ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-20-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-20-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-20-FIX-PF",
+          "prompt_si": "ගම යන වචනයේ පළමු අකුර කුමන වර්ගයද?",
+          "surface_form": "aspirate-practice|මහාප්‍රාණ|අල්පප්‍රාණ|මූර්ධජ",
+          "correct_response": "අල්පප්‍රාණ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-20-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-20-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-20-FIX-PF",
+          "prompt_si": "ධනය යන වචනයේ පළමු අකුර කුමන වර්ගයද?",
+          "surface_form": "aspirate-after|අල්පප්‍රාණ|මූර්ධජ|මහාප්‍රාණ",
+          "correct_response": "මහාප්‍රාණ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-20-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "ගම තුළ පළමු ලකුණ බලන්න. එම ලකුණ වෙනත් වචනයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "අල්පප්‍රාණ සහ මහාප්‍රාණ අක්ෂර. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-21",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-21-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-21-FIX-PF",
+          "prompt_si": "ළමයා දුවයි. යන වාක්‍යයේ නාම පදය කුමක්ද?",
+          "surface_form": "noun-before|ළමයා|දුවයි|ඉක්මනින්",
+          "correct_response": "ළමයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-21-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-21-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-21-FIX-PF",
+          "prompt_si": "පූසා නිදයි. යන වාක්‍යයේ නාම පදය කුමක්ද?",
+          "surface_form": "noun-practice|නිදයි|පූසා|හෙමින්",
+          "correct_response": "පූසා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-21-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-21-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-21-FIX-PF",
+          "prompt_si": "ගස වැවේ. යන වාක්‍යයේ නාම පදය කුමක්ද?",
+          "surface_form": "noun-after|වැවේ|උසට|ගස",
+          "correct_response": "ගස",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-21-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "වාක්‍යයේ පළමු වචනය බලන්න. අවසාන වචනය වෙන් කරන්න. පළමු වචනය තෝරන්නට පෙර නවතින්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "නාම පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-22",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-22-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-22-FIX-PF",
+          "prompt_si": "ළමයා ___ . හිස්තැනට ගැළපෙන ක්‍රියා පදය තෝරන්න.",
+          "surface_form": "verb-before|දුවයි|පෙරළේ|වැටේ",
+          "correct_response": "දුවයි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-22-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-22-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-22-FIX-PF",
+          "prompt_si": "පූසා ___ . හිස්තැනට ගැළපෙන ක්‍රියා පදය තෝරන්න.",
+          "surface_form": "verb-practice|පෙරළේ|නිදයි|වැටේ",
+          "correct_response": "නිදයි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-22-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-22-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-22-FIX-PF",
+          "prompt_si": "සීනුව ___ . හිස්තැනට ගැළපෙන ක්‍රියා පදය තෝරන්න.",
+          "surface_form": "verb-after|කතා කරයි|දුවයි|නාද වේ",
+          "correct_response": "නාද වේ",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-22-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "බල්ලා බුරයි. පොත වැටෙයි. වෙනත් වාක්‍යයේ හිස්තැන බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "වාක්‍යයක උක්තයෙහි ප්‍රාණවාචී සහ අප්‍රාණවාචී භේදය සලකා ක්‍රියා පදය යොදයි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-23",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-23-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-23-FIX-PF",
+          "prompt_si": "___ පාසලට යයි. හිස්තැනට ගැළපෙන උක්ත පදය තෝරන්න.",
+          "surface_form": "case-before|ළමයා|ළමයාට|ළමයාගේ",
+          "correct_response": "ළමයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-23-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-23-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-23-FIX-PF",
+          "prompt_si": "___ ගීතයක් ගයයි. හිස්තැනට ගැළපෙන උක්ත පදය තෝරන්න.",
+          "surface_form": "case-practice|ගුරුවරයාට|ගුරුවරයා|ගුරුවරයාගේ",
+          "correct_response": "ගුරුවරයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-23-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-23-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-23-FIX-PF",
+          "prompt_si": "මම ___ පොතක් දුන්නෙමි. හිස්තැනට ගැළපෙන අනුක්ත පදය තෝරන්න.",
+          "surface_form": "case-after|යාළුවා|යාළුවාගේ|යාළුවාට",
+          "correct_response": "යාළුවාට",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-23-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "___ ගීතයක් ගයයි. යන වාක්‍යයේ හිස්තැන බලන්න. එම තැන වෙනත් වචනයකින් පුරවා බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "උක්ත පද සහ අනුක්ත පද වාක්‍යයක නිවැරදි ව යොදයි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-24",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-24-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-24-FIX-PF",
+          "prompt_si": "ළමයා පොත ___ . හිස්තැනට ගැළපෙන ක්‍රියාව තෝරන්න.",
+          "surface_form": "simple-before|කියවයි|පොත|ළමයා",
+          "correct_response": "කියවයි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-24-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-24-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-24-FIX-PF",
+          "prompt_si": "අම්මා බත් ___ . හිස්තැනට ගැළපෙන ක්‍රියාව තෝරන්න.",
+          "surface_form": "simple-practice|බත්|උයයි|අම්මා",
+          "correct_response": "උයයි",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-24-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-24-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-24-FIX-PF",
+          "prompt_si": "___ පන්දුව විසි කරයි. හිස්තැනට ගැළපෙන උක්තය තෝරන්න.",
+          "surface_form": "simple-after|විසි කරයි|පන්දුව|සොයුරා",
+          "correct_response": "සොයුරා",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-24-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "වාක්‍යයේ පළමු තැන බලන්න. දෙවන තැන බලන්න. හිස්තැන පුරවන්නට පෙර නවතින්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "උක්තය, කර්මය සහ ක්‍රියාව නිවැරදි ව යොදමින් සරල වාක්‍ය ලියයි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-SIN-25",
+      "template_id": "word_workshop",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-25-unsupported_before@v1",
+          "parallel_family_id": "G5-SIN-25-FIX-PF",
+          "prompt_si": "නිමල් සහ කමල් ___ . හිස්තැනට ගැළපෙන ක්‍රියා පදය තෝරන්න.",
+          "surface_form": "join-before|යති|යයි|යමි",
+          "correct_response": "යති",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-25-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-SIN-25-supported_practice@v1",
+          "parallel_family_id": "G5-SIN-25-FIX-PF",
+          "prompt_si": "අම්මා හා තාත්තා ___ . හිස්තැනට ගැළපෙන ක්‍රියා පදය තෝරන්න.",
+          "surface_form": "join-practice|එයි|එති|එමි",
+          "correct_response": "එති",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-25-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-SIN-25-unsupported_after@v1",
+          "parallel_family_id": "G5-SIN-25-FIX-PF",
+          "prompt_si": "සීතා ද ගීතා ද ___ . හිස්තැනට ගැළපෙන ක්‍රියා පදය තෝරන්න.",
+          "surface_form": "join-after|ගයයි|ගයමි|ගයති",
+          "correct_response": "ගයති",
+          "rubric": {
+            "rubric_id": "G5-AREA-SIN-25-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "සුනිල් සහ කුමාර දුවති. වෙනත් නම් දෙකක හිස්තැන බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "‘ද/ත්/යි/හා/සහ’ යන්න යොදා එකතු වන නාමපද කිහිපයක් උක්තය ලෙස යෙදුණු වාක්‍යවල ක්‍රියා පදය නිවැරදි ව යොදයි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-01",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-01-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-01-FIX-PF",
+          "prompt_si": "දත් ආරක්ෂා කිරීමට දිනකට කළ යුතු එක් දෙයක් කුමක්ද?",
+          "surface_form": "eco-before|දත් මැදීම|රාත්‍රිය පුරා ක්‍රීඩාව|අධික රසකැවිලි",
+          "correct_response": "දත් මැදීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-01-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-01-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-01-FIX-PF",
+          "prompt_si": "අත් පිරිසිදුව තබා ගැනීමට කළ යුතු දෙය කුමක්ද?",
+          "surface_form": "eco-practice|අත් නොසේදීම|සබන් යෙදීම|කුණු සැඟවීම",
+          "correct_response": "සබන් යෙදීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-01-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-01-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-01-FIX-PF",
+          "prompt_si": "නිරෝගීව සිටීමට දිනපතා කළ යුතු එක් දෙයක් කුමක්ද?",
+          "surface_form": "eco-after|පිරිසිදු ජලය බීම|වැලි කෑම|දූවිලි ආශ්වාසය",
+          "correct_response": "පිරිසිදු ජලය බීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-01-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "රූපය: පාසල් යාමට සූදානම් වන දරුවෙකුගේ දෛනික දර්ශනයක්. කිසිදු ක්‍රියාවක් හෝ පිළිතුරක් ලකුණු කර නැත.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "අපේ යහපැවැත්ම. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-02",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-02-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-02-FIX-PF",
+          "prompt_si": "ශ්‍රී ලංකාවේ ජාතික කොඩියේ දැක්වෙන සතා තෝරන්න.",
+          "surface_form": "eco-02-before|සිංහයා|අලියා|මුවා",
+          "correct_response": "සිංහයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-02-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-02-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-02-FIX-PF",
+          "prompt_si": "ශ්‍රී ලංකාවේ ජාතික පුෂ්පය තෝරන්න.",
+          "surface_form": "eco-02-practice|නිල් මානෙල්|රෝස|සූරියකාන්ත",
+          "correct_response": "නිල් මානෙල්",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-02-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-02-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-02-FIX-PF",
+          "prompt_si": "ශ්‍රී ලංකාවේ ජාතික ක්‍රීඩාව තෝරන්න.",
+          "surface_form": "eco-02-after|වොලිබෝල්|ක්‍රිකට්|පාපන්දු",
+          "correct_response": "වොලිබෝල්",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-02-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: ජාතික වෘක්ෂය හඳුනාගැනීමට වෘක්ෂ වර්ග සසඳන්න. මෙම උදාහරණය වෙනත් ජාතික සංකේතයක් ගැනයි.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "අපි ලක් වැසියෝ. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-03",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-03-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-03-FIX-PF",
+          "prompt_si": "පසෙන් ජලය උරා ගන්නා ශාක කොටස තෝරන්න.",
+          "surface_form": "eco-03-before|මුල්|මල්|ගෙඩි",
+          "correct_response": "මුල්",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-03-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-03-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-03-FIX-PF",
+          "prompt_si": "පැළයක් වැඩීමට අවශ්‍ය දෙයක් තෝරන්න.",
+          "surface_form": "eco-03-practice|ජලය|ප්ලාස්ටික්|ගල් කැබලි",
+          "correct_response": "ජලය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-03-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-03-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-03-FIX-PF",
+          "prompt_si": "මලකින් පසුව බොහෝ විට සෑදෙන කොටස තෝරන්න.",
+          "surface_form": "eco-03-after|ගෙඩිය|මුල|පොත්ත",
+          "correct_response": "ගෙඩිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-03-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "ශාකය හොඳින් බලන්න. අසන කොටස කරන කාර්යය සිතන්න. විකල්ප සසඳා පිළිතුර ඔබම තෝරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-BIO",
+      "no_universal_parent": false,
+      "prompt_si": "පැළෑටි හා ගස්වැල්. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-04",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-04-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-04-FIX-PF",
+          "prompt_si": "ජලයේ ජීවත් වන සතා තෝරන්න.",
+          "surface_form": "eco-04-before|මාළුවා|බළලා|කුකුළා",
+          "correct_response": "මාළුවා",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-04-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-04-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-04-FIX-PF",
+          "prompt_si": "පියාසර කළ හැකි සතා තෝරන්න.",
+          "surface_form": "eco-04-practice|සමනලයා|හාවා|ගොළුබෙල්ලා",
+          "correct_response": "සමනලයා",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-04-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-04-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-04-FIX-PF",
+          "prompt_si": "පැටවාට කිරි දෙන සතා තෝරන්න.",
+          "surface_form": "eco-04-after|එළදෙන|කුකුළා|මාළුවා",
+          "correct_response": "එළදෙන",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-04-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "රූපය: වත්තක සතුන් කිහිපයක් සිටින දර්ශනයක්. කිසිදු සතෙකු හෝ පිළිතුරක් ලකුණු කර නැත.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-BIO",
+      "no_universal_parent": false,
+      "prompt_si": "අප අවට සත්තු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-05",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-05-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-05-FIX-PF",
+          "prompt_si": "කඩදාසි කැපීමට සුදුසු උපකරණය තෝරන්න.",
+          "surface_form": "eco-05-before|කතුර|කෝප්පය|කොට්ටය",
+          "correct_response": "කතුර",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-05-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-05-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-05-FIX-PF",
+          "prompt_si": "දිග මැනීමට සුදුසු උපකරණය තෝරන්න.",
+          "surface_form": "eco-05-practice|රූල|පිඟාන|බෝලය",
+          "correct_response": "රූල",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-05-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-05-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-05-FIX-PF",
+          "prompt_si": "බිම අතුගෑමට සුදුසු උපකරණය තෝරන්න.",
+          "surface_form": "eco-05-after|කොස්ස|පෑන|බෝතලය",
+          "correct_response": "කොස්ස",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-05-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: හැන්ද ආහාර ගැනීමට භාවිත කරන උපකරණයකි. එලෙස කාර්යයට ගැළපෙන වෙනත් උපකරණය සොයන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": null,
+      "no_universal_parent": true,
+      "prompt_si": "අප පරිහරණය කරන දේ. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-06",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-06-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-06-FIX-PF",
+          "prompt_si": "පෝෂ්‍යදායී කෙටි ආහාරයක් තෝරන්න.",
+          "surface_form": "eco-06-before|පලතුරක්|ටොෆියක්|පාට කළ සීනි",
+          "correct_response": "පලතුරක්",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-06-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-06-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-06-FIX-PF",
+          "prompt_si": "ශරීරයට ප්‍රෝටීන් ලබාදෙන ආහාරයක් තෝරන්න.",
+          "surface_form": "eco-06-practice|පරිප්පු|ලුණු|සීනි",
+          "correct_response": "පරිප්පු",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-06-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-06-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-06-FIX-PF",
+          "prompt_si": "සෞඛ්‍යයට හිතකර පානයක් තෝරන්න.",
+          "surface_form": "eco-06-after|පිරිසිදු ජලය|අධික සීනි පානය|පාට දියර",
+          "correct_response": "පිරිසිදු ජලය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-06-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "ආහාරය බලන්න. එය ශරීරයට දෙන ප්‍රයෝජනය සිතන්න. විකල්ප සසඳා අවසන් තේරීම ඔබම කරන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-HLT",
+      "no_universal_parent": false,
+      "prompt_si": "අපේ ආහාර. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-07",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-07-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-07-FIX-PF",
+          "prompt_si": "මාර්ගය හරහා යාමට ආරක්ෂිත ස්ථානය තෝරන්න.",
+          "surface_form": "eco-07-before|පදික මාරුව|වංගුව|වාහන අතර",
+          "correct_response": "පදික මාරුව",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-07-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-07-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-07-FIX-PF",
+          "prompt_si": "තියුණු උපකරණයක් භාවිත කරන විට කළ යුතු දෙය තෝරන්න.",
+          "surface_form": "eco-07-practice|වැඩිහිටි උපදෙස් ගන්න|දුවමින් භාවිත කරන්න|අන් අයට දිගු කරන්න",
+          "correct_response": "වැඩිහිටි උපදෙස් ගන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-07-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-07-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-07-FIX-PF",
+          "prompt_si": "දුමක් හෝ ගින්නක් දුටු විට කළ යුතු දෙය තෝරන්න.",
+          "surface_form": "eco-07-after|ආරක්ෂිත තැනකට ගොස් වැඩිහිටියෙකුට කියන්න|ළඟට ගොස් අල්ලන්න|සැඟවී සිටින්න",
+          "correct_response": "ආරක්ෂිත තැනකට ගොස් වැඩිහිටියෙකුට කියන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-07-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "වෙනත් උදාහරණයක්: තෙත් බිමක සෙමින් ඇවිදීම ආරක්ෂිත ක්‍රියාවකි. දැන් වෙනත් අවස්ථාවක සුදුසු ක්‍රියාව සොයන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-HLT",
+      "no_universal_parent": false,
+      "prompt_si": "ආරක්ෂාව සහ පරිස්සම. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-08",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-08-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-08-FIX-PF",
+          "prompt_si": "දත් මදින අතර ජලය ඉතිරි කිරීමට කළ යුතු දෙය තෝරන්න.",
+          "surface_form": "eco-08-before|ටැප් එක වසන්න|ටැප් එක විවෘතව තබන්න|ජලය විසුරුවන්න",
+          "correct_response": "ටැප් එක වසන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-08-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-08-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-08-FIX-PF",
+          "prompt_si": "පානයට ජලය සුරක්ෂිත කරගැනීමට සුදුසු ක්‍රියාවක් තෝරන්න.",
+          "surface_form": "eco-08-practice|උණුකර නිවා ගන්න|විවෘත බඳුනක තබන්න|කසළ එක් කරන්න",
+          "correct_response": "උණුකර නිවා ගන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-08-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-08-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-08-FIX-PF",
+          "prompt_si": "ජල දූෂණය අඩු කිරීමට කළ යුතු දෙය තෝරන්න.",
+          "surface_form": "eco-08-after|කසළ ජලයට නොදමන්න|තෙල් ජලයට දමන්න|ප්ලාස්ටික් ඇළට දමන්න",
+          "correct_response": "කසළ ජලයට නොදමන්න",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-08-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "රූපය: වැසි ජලය පිරිසිදු බඳුනකට එකතු වන දර්ශනයක්. කිසිදු විකල්පයකට ලකුණක් යොදා නැත.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-PHY",
+      "no_universal_parent": false,
+      "prompt_si": "ජලය. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-09",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-09-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-09-FIX-PF",
+          "prompt_si": "බර පහසුවෙන් එසවීමට යොදා ගන්නා උපකරණය කුමක්ද?",
+          "surface_form": "eco-09-before|උත්තෝලකය|බුරුසුව|කොට්ටය",
+          "correct_response": "උත්තෝලකය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-09-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-09-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-09-FIX-PF",
+          "prompt_si": "බර ගෙනයාම පහසු කරන වටකුරු කොටස කුමක්ද?",
+          "surface_form": "eco-09-practice|පෑන|රෝදය|පොත",
+          "correct_response": "රෝදය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-09-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-09-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-09-FIX-PF",
+          "prompt_si": "බෑවුමකින් බර ගෙනයාම පහසු කරන දෙය කුමක්ද?",
+          "surface_form": "eco-09-after|කුෂන්|ලාම්පුව|ආනත තලය",
+          "correct_response": "ආනත තලය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-09-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "රූපය: මිදුලක තිබෙන උපකරණ කිහිපයක දර්ශනයක්. කිසිදු උපකරණයක් ලකුණු කර නැත.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-PHY",
+      "no_universal_parent": false,
+      "prompt_si": "වැඩ පහසු කිරීමේ මං. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-10",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-10-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-10-FIX-PF",
+          "prompt_si": "ගෙවත්තක එළවළු වැවීමට පළමුව කළ යුතු දෙය කුමක්ද?",
+          "surface_form": "eco-10-before|පස සකස් කිරීම|කුණු වල දැමීම|පස පාගා දැමීම",
+          "correct_response": "පස සකස් කිරීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-10-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-10-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-10-FIX-PF",
+          "prompt_si": "පැළයකට දිනපතා අවශ්‍ය එක් දෙයක් කුමක්ද?",
+          "surface_form": "eco-10-practice|තෙල්|ජලය|වැලි පමණක්",
+          "correct_response": "ජලය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-10-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-10-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-10-FIX-PF",
+          "prompt_si": "ගෙවත්තක වල් පැළෑටි ඉවත් කිරීමෙන් සිදුවන්නේ කුමක්ද?",
+          "surface_form": "eco-10-after|පස වියළී යයි|පැළ වැඩීමට ඉඩ ලැබේ|බීජ නැති වේ",
+          "correct_response": "පැළ වැඩීමට ඉඩ ලැබේ",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-10-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "මල් පෝච්චියක් හිරු එළිය ඇති තැන තබයි. වෙනත් පැළයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-AGR",
+      "no_universal_parent": false,
+      "prompt_si": "ගෙවත්ත. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-11",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-11-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-11-FIX-PF",
+          "prompt_si": "නගරය තුළ බොහෝ දෙනෙකුට එකවර ගමන් කළ හැකි වාහනය කුමක්ද?",
+          "surface_form": "eco-11-before|බස් රථය|බයිසිකලය|රළු බෝට්ටුව",
+          "correct_response": "බස් රථය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-11-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-11-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-11-FIX-PF",
+          "prompt_si": "පීලි මත ගමන් කරන වාහනය කුමක්ද?",
+          "surface_form": "eco-11-practice|යතුරුපැදිය|දුම්රිය|ගව කරත්තය",
+          "correct_response": "දුම්රිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-11-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-11-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-11-FIX-PF",
+          "prompt_si": "මුහුද හරහා ගමන් කිරීමට යොදන වාහනය කුමක්ද?",
+          "surface_form": "eco-11-after|බස් රථය|දුම්රිය|නැව",
+          "correct_response": "නැව",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-11-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "ගමන් කරන තැන බලන්න. පාර, පීලි, සහ ජලය වෙන් කරන්න. වාහනය තෝරන්නට පෙර නවතින්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "ගමනාගමනය. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-12",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-12-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-12-FIX-PF",
+          "prompt_si": "පෝලිමේ සිටින විට නිවැරදි හැසිරීම කුමක්ද?",
+          "surface_form": "eco-12-before|වාරය බලා සිටීම|ඉදිරියට තල්ලු කිරීම|හඬ නගා කෑගැසීම",
+          "correct_response": "වාරය බලා සිටීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-12-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-12-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-12-FIX-PF",
+          "prompt_si": "යාළුවෙකුගේ දේවල් ගැන නිවැරදි දෙය කුමක්ද?",
+          "surface_form": "eco-12-practice|සැඟවීම|අවසරයෙන් ඉල්ලීම|බිඳ දැමීම",
+          "correct_response": "අවසරයෙන් ඉල්ලීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-12-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-12-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-12-FIX-PF",
+          "prompt_si": "ගුරුවරයා කතා කරන විට නිවැරදි දෙය කුමක්ද?",
+          "surface_form": "eco-12-after|කතා බහ කිරීම|පන්තියෙන් පිටවීම|සවන් දීම",
+          "correct_response": "සවන් දීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-12-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "රූපය: පන්ති කාමරයක ළමයි කිහිප දෙනෙකු සිටින දර්ශනයක්. කිසිදු හැසිරීමක් ලකුණු කර නැත.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "මිනිස් හැසිරීම්. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-13",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-13-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-13-FIX-PF",
+          "prompt_si": "දිවා කාලයේ අහසේ දිස්වන එළියේ ප්‍රභවය කුමක්ද?",
+          "surface_form": "eco-13-before|හිරු|සඳ|තරු",
+          "correct_response": "හිරු",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-13-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-13-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-13-FIX-PF",
+          "prompt_si": "රාත්‍රියේ අහසේ දිස්වන එළියේ ප්‍රභවයක් කුමක්ද?",
+          "surface_form": "eco-13-practice|හිරු|සඳ|වලාකුළ",
+          "correct_response": "සඳ",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-13-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-13-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-13-FIX-PF",
+          "prompt_si": "පොළොව වටා ඇති වායු ආවරණය කුමක්ද?",
+          "surface_form": "eco-13-after|සාගරය|පස|වායුගෝලය",
+          "correct_response": "වායුගෝලය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-13-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "පහනක් කාමරය ආලෝකවත් කරයි. වෙනත් ආලෝකයකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-GEO",
+      "no_universal_parent": false,
+      "prompt_si": "පොළොව හා අහස. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-14",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-14-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-14-FIX-PF",
+          "prompt_si": "පරිසරය පිරිසිදුව තැබීමට අපට කළ හැකි දෙයක් කුමක්ද?",
+          "surface_form": "eco-14-before|කුණු වෙන් කිරීම|කුණු විසි කිරීම|ගස් කැපීම",
+          "correct_response": "කුණු වෙන් කිරීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-14-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-14-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-14-FIX-PF",
+          "prompt_si": "ජලය ඉතිරි කිරීමට කළ හැකි දෙයක් කුමක්ද?",
+          "surface_form": "eco-14-practice|කරාමය ඇරීම|කරාමය වසා දැමීම|ජලය විසි කිරීම",
+          "correct_response": "කරාමය වසා දැමීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-14-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-14-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-14-FIX-PF",
+          "prompt_si": "සෙවන සඳහා අපට කළ හැකි දෙයක් කුමක්ද?",
+          "surface_form": "eco-14-after|ගස් දහනය|පස ඉවත් කිරීම|ගස් සිටුවීම",
+          "correct_response": "ගස් සිටුවීම",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-14-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "step_by_step_guidance",
+        "body_si": "පරිසරයට හිතකර ක්‍රියාව සහ හානිකර ක්‍රියාව වෙන් කරන්න. පිළිතුර තෝරන්නට පෙර නවතින්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "අපට කළ හැකි වෙනස්කම්. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-15",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-15-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-15-FIX-PF",
+          "prompt_si": "ප්‍රවෘත්තියක් දැනගැනීමට යොදා ගන්නා එක් මාධ්‍යයක් කුමක්ද?",
+          "surface_form": "eco-15-before|පුවත්පත|සෙරෙප්පුව|කූඩය",
+          "correct_response": "පුවත්පත",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-15-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-15-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-15-FIX-PF",
+          "prompt_si": "ශබ්දයෙන් පණිවිඩයක් ලබා දෙන මාධ්‍යය කුමක්ද?",
+          "surface_form": "eco-15-practice|පොතේ කවරය|ගුවන්විදුලිය|පාට පැන්සල",
+          "correct_response": "ගුවන්විදුලිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-15-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-15-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-15-FIX-PF",
+          "prompt_si": "චලන රූප සහ ශබ්ද එකට පෙන්වන මාධ්‍යය කුමක්ද?",
+          "surface_form": "eco-15-after|ලියුම|පුවරුව|රූපවාහිනිය",
+          "correct_response": "රූපවාහිනිය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-15-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "visual_guidance",
+        "body_si": "රූපය: මේසයක් මත තැබූ උපකරණ කිහිපයක දර්ශනයක්. කිසිදු උපකරණයක් ලකුණු කර නැත.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "මිනිසා සහ තොරතුරු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    },
+    {
+      "area_id": "G5-AREA-ENV-16",
+      "template_id": "eco_explorer",
+      "source_status": "mapped_draft",
+      "items": [
+        {
+          "measurement_role": "unsupported_before",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-16-unsupported_before@v1",
+          "parallel_family_id": "G5-ENV-16-FIX-PF",
+          "prompt_si": "අතීතයේ සිදුවීම් දැනගැනීමට යොදා ගන්නා එක් මූලාශ්‍රයක් කුමක්ද?",
+          "surface_form": "eco-16-before|පුරාවෘත්තය|හෙට දිනය|අනාගත සිහිනය",
+          "correct_response": "පුරාවෘත්තය",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-16-unsupported_before-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "supported_practice",
+          "assistance_state": "scaffold_active",
+          "item_revision_id": "G5-AREA-ENV-16-supported_practice@v1",
+          "parallel_family_id": "G5-ENV-16-FIX-PF",
+          "prompt_si": "පැරණි ගොඩනැගිලි දැක දැනගන්නේ කුමක්ද?",
+          "surface_form": "eco-16-practice|හෙට කාලගුණය|අතීත ජීවන රටාව|අලුත් සෙල්ලම්",
+          "correct_response": "අතීත ජීවන රටාව",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-16-supported_practice-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        },
+        {
+          "measurement_role": "unsupported_after",
+          "assistance_state": "none",
+          "item_revision_id": "G5-AREA-ENV-16-unsupported_after@v1",
+          "parallel_family_id": "G5-ENV-16-FIX-PF",
+          "prompt_si": "වැඩිහිටියන්ගේ මතකයන්ගෙන් දැනගන්නේ කුමක්ද?",
+          "surface_form": "eco-16-after|අලුත් පාඩම|හෙට චාරිකාව|පැරණි කතා",
+          "correct_response": "පැරණි කතා",
+          "rubric": {
+            "rubric_id": "G5-AREA-ENV-16-unsupported_after-rubric",
+            "rubric_version": "fixture-rubric-v1",
+            "scoring_version": "fixture-rubric-v1",
+            "maximum_score": 1,
+            "server_authoritative": true,
+            "correct_only_when_every_part_correct": true
+          }
+        }
+      ],
+      "eligible_support_types": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "scaffold": {
+        "support_type": "worked_parallel_example",
+        "body_si": "පැරණි කාසියකින් වෙනත් යුගයක් ගැන සිතිය හැක. වෙනත් සලකුණකින් බලන්න.",
+        "answer_leakage_rule": "no_probe_values_or_answers"
+      },
+      "universal_skill_id": "ENV-CIV",
+      "no_universal_parent": false,
+      "prompt_si": "අපේ අතීත විත්ති. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "curriculum_source_id": null
+    }
+  ],
+  "component_places": {
+    "shared_learner": {
+      "learner_id_column": "id",
+      "grade": 5,
+      "preferred_language": "si",
+      "curriculum_medium": "si",
+      "duplicates_learner_profile": false
+    },
+    "curriculum_retrieval": {
+      "purpose": "CONTENT_AUTHORING",
+      "skill_id_field": "universal_skill_id",
+      "missing_passage_blocks_play": false,
+      "absence_statuses": [
+        "NO_RELEVANT_PASSAGES",
+        "NO_APPROVED_SOURCE",
+        "PROVIDER_UNAVAILABLE",
+        "PROVIDER_ERROR"
+      ],
+      "index_as_curriculum_evidence": false
+    },
+    "knowledge_tracing": {
+      "mastery_reader": "MasteryProvider",
+      "writes_tables": false,
+      "event_type": "gamification_item_scored",
+      "model_ingestion_eligible": false,
+      "hint_count": [
+        0,
+        1
+      ],
+      "evidence_fields": [
+        "attempt_id",
+        "correct",
+        "difficulty",
+        "response_time_ms",
+        "supported",
+        "hint_count",
+        "environment",
+        "model_ingestion_eligible",
+        "skill_id",
+        "universal_skill_id",
+        "measurement_role",
+        "assistance_state",
+        "earned_score",
+        "maximum_score",
+        "scoring_version",
+        "difficulty_source",
+        "difficulty_mapping_version",
+        "session_id",
+        "episode_id",
+        "presentation_id"
+      ]
+    },
+    "learner_state": {
+      "visual_fields": [
+        "mean_eye_openness",
+        "std_eye_openness",
+        "mean_gaze_ratio",
+        "std_gaze_ratio",
+        "mean_pitch",
+        "mean_yaw",
+        "mean_roll",
+        "mean_abs_pitch",
+        "mean_abs_yaw",
+        "mean_abs_roll",
+        "face_visibility_ratio"
+      ],
+      "face_visibility_ratio_min": 0,
+      "face_visibility_ratio_max": 1,
+      "consent_purpose": "learner_state_camera",
+      "request_tutor_support": "request_tutor_support",
+      "request_reengagement_support": "request_reengagement_support",
+      "missing_result_rejects_answer": false,
+      "prohibited_fields": [
+        "overlap_time",
+        "first_action",
+        "position",
+        "original",
+        "task_progress"
+      ]
+    },
+    "adaptive_tutor": {
+      "chooses_scaffold": false,
+      "records_recommendation": "request_tutor_support",
+      "generates_tutor_text": false
+    },
+    "participation_reward": {
+      "academic_mastery_evidence": false,
+      "points_field": "points",
+      "reason_code_field": "reason_code",
+      "counts_toward_unsupported_score": false,
+      "counts_toward_independence_gain": false
+    }
+  }
+}

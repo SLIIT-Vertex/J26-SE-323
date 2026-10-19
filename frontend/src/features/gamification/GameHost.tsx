@@ -197,7 +197,7 @@ export function GameHost({
   const support = state.status === "support" ? state.step.support : null;
 
   return (
-    <section className="game-host" data-motion={reducedMotion ? "reduced" : "full"}>
+    <section className="game-host game-backdrop" data-motion={reducedMotion ? "reduced" : "full"}>
       <p className="eyebrow">Adult tester · NOT_FOR_PRODUCTION</p>
       <h2>Pilot episode</h2>
       {state.status === "idle" || state.status === "error" ? (

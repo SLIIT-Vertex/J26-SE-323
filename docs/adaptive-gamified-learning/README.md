@@ -125,6 +125,8 @@ backend/app/gamification/
   content/        draft content registry
   infrastructure/ persistence and the curriculum, mastery, and learner-state adapters
 frontend/src/features/mobile-learning-flow/   React client, Phaser half-set scene, event queue
+frontend/src/features/skill-area-1/           Number World React/Phaser draft client
+frontend/src/features/skill-area-2/           Addition Adventure mobile-first draft client
 data/gamification/               draft content and synthetic development data
 ```
 
@@ -151,6 +153,20 @@ documented in [Learner-state integration at answer submission](learner-state-ans
 The first complete loop is one reviewed Grade 5 Sinhala skill, one reusable template, and the
 three scaffold types, in baseline and proposed modes, on the phone. The first skill area is
 Grade 5 Mathematics fractions (`MAT-FRC`). A larger skill inventory is not that loop.
+
+`G5-AREA-MAT-01` (`සංඛ්‍යා`) also has a development-only Number World package covering eight
+atomic draft skills in four chapters. It uses the same durable development endpoint and the
+unsupported-before → Model 1 → Model 2 → support → acknowledged withdrawal → fresh
+unsupported-after → raw Independence Gain sequence. Its content, misconception catalogue,
+scaffold mappings, and production release remain blocked pending the named human reviews and
+the mobile-slice and pilot-readiness exit gates; engineering tests do not make it child-ready or
+research-ready.
+
+`G5-AREA-MAT-02` (`එකතු කිරීම`) is a development-only Addition Adventure package with five
+textbook-derived interactive game families and nine atomic draft skills. It preserves exact-task
+support, deterministic activity-specific escalation, full support withdrawal, and fresh
+unsupported-after measurement. Its photographed school-name transcriptions and all curriculum
+mappings remain pending human review.
 
 A named reviewer approves content, ethics, and release. Passing tests do not approve those
 decisions. Draft content loads only when development mode explicitly allows it. The draft

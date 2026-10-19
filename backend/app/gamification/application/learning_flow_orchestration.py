@@ -16,6 +16,23 @@ from decimal import Decimal
 from typing import Literal, Protocol
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
+from app.gamification.application.adaptive_game_flow import AdaptiveGameFlow
+from app.gamification.application.addition_adventure_flow import AdditionAdventureFlow
+from app.gamification.application.capacity_adventure_flow import CapacityAdventureFlow
+from app.gamification.application.decimal_adventure_flow import DecimalAdventureFlow
+from app.gamification.application.direction_adventure_flow import DirectionAdventureFlow
+from app.gamification.application.distance_adventure_flow import DistanceAdventureFlow
+from app.gamification.application.division_adventure_flow import DivisionAdventureFlow
+from app.gamification.application.fraction_adventure_flow import FractionAdventureFlow
+from app.gamification.application.mass_adventure_flow import MassAdventureFlow
+from app.gamification.application.money_adventure_flow import MoneyAdventureFlow
+from app.gamification.application.multiplication_adventure_flow import MultiplicationAdventureFlow
+from app.gamification.application.number_patterns_flow import NumberPatternsFlow
+from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.roman_adventure_flow import RomanAdventureFlow
+from app.gamification.application.shape_adventure_flow import ShapeAdventureFlow
+from app.gamification.application.subtraction_adventure_flow import SubtractionAdventureFlow
+from app.gamification.application.time_adventure_flow import TimeAdventureFlow
 from app.gamification.content.curriculum_registry import (
     ItemRevision,
     PublicCurriculumPackage,
@@ -117,6 +134,10 @@ class LearningFlowStore(Protocol):
 
     def export_manifest(self, episode_id: UUID) -> dict[str, object]: ...
 
+    def support_history(
+        self, *, learner_id: UUID, skill_id: str
+    ) -> tuple[Mapping[str, object], ...]: ...
+
     def commit(self) -> None: ...
 
     def rollback(self) -> None: ...
@@ -200,6 +221,26 @@ class LearningFlowOrchestrator:
         self._probe = probe_gateway
         self._publisher = evidence_publisher
         self._now = now or (lambda: datetime.now(UTC))
+        flows: tuple[AdaptiveGameFlow, ...] = (
+            NumberWorldFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            AdditionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            NumberPatternsFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            SubtractionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            FractionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            MultiplicationAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            TimeAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            DivisionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            DistanceAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            MoneyAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            CapacityAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            MassAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            ShapeAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            DirectionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            DecimalAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+            RomanAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
+        )
+        self._area_flows = {flow.area_id: flow for flow in flows}
+        self._experience_flows = {flow.experience_id: flow for flow in flows}
 
     def open_episode(
         self,
@@ -212,7 +253,27 @@ class LearningFlowOrchestrator:
         environment: str,
         allow_draft: bool,
         idempotency_key: str,
+        area_id: str | None = None,
+        atomic_skill_id: str | None = None,
     ) -> dict[str, object]:
+        adaptive_flow = self._area_flows.get(area_id or "")
+        if adaptive_flow is not None:
+            if grade != 5 or medium != "si":
+                raise LearningFlowOrchestrationError("GRADE5_SINHALA_REQUIRED")
+            if atomic_skill_id is None:
+                raise LearningFlowOrchestrationError("ATOMIC_SKILL_REQUIRED")
+            try:
+                return adaptive_flow.open(
+                    learner_id=learner_id,
+                    session_id=session_id,
+                    condition=condition,
+                    environment=environment,
+                    allow_draft=allow_draft,
+                    atomic_skill_id=atomic_skill_id,
+                    idempotency_key=idempotency_key,
+                )
+            except NumberWorldFlowError as error:
+                raise LearningFlowOrchestrationError(error.code, **error.context) from error
         request: dict[str, object] = {
             "op": "open",
             "learner_id": str(learner_id),
@@ -286,9 +347,7 @@ class LearningFlowOrchestrator:
             },
             "probe_reservation_id": reservation_id,
             "probe_reservation_uuid": str(reservation_uuid),
-            "presentations": [
-                _presentation_record(before, before_presentation_id, "none", 1)
-            ],
+            "presentations": [_presentation_record(before, before_presentation_id, "none", 1)],
             "attempts": [],
             "model1": None,
             "model2": None,
@@ -320,10 +379,27 @@ class LearningFlowOrchestrator:
         self,
         episode_id: UUID,
         *,
-        option_id: str,
+        option_id: str | None,
+        constructed_response: Mapping[str, object] | None = None,
         response_time_ms: int | None = None,
+        interaction_summary: Mapping[str, object] | None = None,
         idempotency_key: str,
     ) -> dict[str, object]:
+        adaptive_flow = self._adaptive_flow(episode_id)
+        if adaptive_flow is not None:
+            try:
+                return adaptive_flow.submit_before(
+                    episode_id,
+                    option_id=option_id,
+                    constructed_response=constructed_response,
+                    response_time_ms=response_time_ms,
+                    interaction_summary=interaction_summary,
+                    idempotency_key=idempotency_key,
+                )
+            except NumberWorldFlowError as error:
+                raise LearningFlowOrchestrationError(error.code, **error.context) from error
+        if option_id is None:
+            raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
         return self._mutate(
             episode_id,
             idempotency_key,
@@ -349,7 +425,21 @@ class LearningFlowOrchestrator:
         grouped_count: int,
         group_sizes: tuple[int, int],
         idempotency_key: str,
+        interaction_summary: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
+        adaptive_flow = self._adaptive_flow(episode_id)
+        if adaptive_flow is not None:
+            try:
+                return adaptive_flow.complete_support(
+                    episode_id,
+                    duration_ms=duration_ms,
+                    steps_viewed=steps_viewed,
+                    manifest_revision_id=manifest_revision_id,
+                    interaction_summary=interaction_summary or {"completed": False},
+                    idempotency_key=idempotency_key,
+                )
+            except NumberWorldFlowError as error:
+                raise LearningFlowOrchestrationError(error.code, **error.context) from error
         if (
             duration_ms < 0
             or steps_viewed < 1
@@ -394,6 +484,21 @@ class LearningFlowOrchestrator:
         input_handlers_cleared: bool,
         idempotency_key: str,
     ) -> dict[str, object]:
+        adaptive_flow = self._adaptive_flow(episode_id)
+        if adaptive_flow is not None:
+            try:
+                return adaptive_flow.withdraw(
+                    episode_id,
+                    request_id=request_id,
+                    support_revision_id=support_revision_id,
+                    manifest_revision_id=manifest_revision_id,
+                    all_support_removed=all_support_removed,
+                    answer_revealing_state_cleared=answer_revealing_state_cleared,
+                    input_handlers_cleared=input_handlers_cleared,
+                    idempotency_key=idempotency_key,
+                )
+            except NumberWorldFlowError as error:
+                raise LearningFlowOrchestrationError(error.code, **error.context) from error
         return self._mutate(
             episode_id,
             idempotency_key,
@@ -420,9 +525,13 @@ class LearningFlowOrchestrator:
             ),
         )
 
-    def present_after(
-        self, episode_id: UUID, *, idempotency_key: str
-    ) -> dict[str, object]:
+    def present_after(self, episode_id: UUID, *, idempotency_key: str) -> dict[str, object]:
+        adaptive_flow = self._adaptive_flow(episode_id)
+        if adaptive_flow is not None:
+            try:
+                return adaptive_flow.present_after(episode_id, idempotency_key=idempotency_key)
+            except NumberWorldFlowError as error:
+                raise LearningFlowOrchestrationError(error.code, **error.context) from error
         return self._mutate(
             episode_id,
             idempotency_key,
@@ -435,10 +544,25 @@ class LearningFlowOrchestrator:
         self,
         episode_id: UUID,
         *,
-        option_id: str,
+        option_id: str | None,
+        constructed_response: Mapping[str, object] | None = None,
         response_time_ms: int | None = None,
         idempotency_key: str,
     ) -> dict[str, object]:
+        adaptive_flow = self._adaptive_flow(episode_id)
+        if adaptive_flow is not None:
+            try:
+                return adaptive_flow.submit_after(
+                    episode_id,
+                    option_id=option_id,
+                    constructed_response=constructed_response,
+                    response_time_ms=response_time_ms,
+                    idempotency_key=idempotency_key,
+                )
+            except NumberWorldFlowError as error:
+                raise LearningFlowOrchestrationError(error.code, **error.context) from error
+        if option_id is None:
+            raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
         return self._mutate(
             episode_id,
             idempotency_key,
@@ -551,9 +675,7 @@ class LearningFlowOrchestrator:
         ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
             state["status"] = "invalidated"
             state["validity"] = "invalid"
-            state["exclusion_reasons"] = sorted(
-                {*state.get("exclusion_reasons", []), reason}
-            )
+            state["exclusion_reasons"] = sorted({*state.get("exclusion_reasons", []), reason})
             state["policy_update_status"] = "not_authorized_invalid"
             _append_event(state, "episode_invalidated", at, None, {"reason": reason})
             return state, self._summary(state), "episode_invalidated", (reason,)
@@ -574,9 +696,7 @@ class LearningFlowOrchestrator:
         at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
         before = _item(package, "unsupported_before")
-        scored = self._score(
-            state, before, option_id, AssistanceState.NONE, response_time_ms, at
-        )
+        scored = self._score(state, before, option_id, AssistanceState.NONE, response_time_ms, at)
         state["attempts"].append(scored)  # type: ignore[union-attr]
         _append_event(state, "unsupported_before_scored", at, UUID(scored["presentation_id"]))
         self._publish_score(state, scored)
@@ -664,9 +784,7 @@ class LearningFlowOrchestrator:
         scaffolds = development_curriculum_scaffolds(allow_draft=True)
         after = _item(package, "unsupported_after")
         experiment_mode = (
-            ExperimentMode.BASELINE
-            if state["condition"] == "baseline"
-            else ExperimentMode.PROPOSED
+            ExperimentMode.BASELINE if state["condition"] == "baseline" else ExperimentMode.PROPOSED
         )
         difficulty_event_id = uuid4()
         context_input = Model2ContextInput(
@@ -740,9 +858,7 @@ class LearningFlowOrchestrator:
             mode=policy_mode,
             context_input=context_input,
             candidates=scaffolds,
-            eligibility=EligibilityInput(
-                accommodations=(), allow_draft=True, child_facing=False
-            ),
+            eligibility=EligibilityInput(accommodations=(), allow_draft=True, child_facing=False),
             seed=31,
             assignment_token=f"{state['episode_id']}:{state['condition']}",
         )
@@ -906,7 +1022,9 @@ class LearningFlowOrchestrator:
             state["validity"] = "invalid"
             state["exclusion_reasons"] = ["PRIOR_PROBE_EXPOSURE"]
             state["policy_update_status"] = "not_authorized_invalid"
-            _append_event(state, "episode_invalidated", at, None, {"reason": "PRIOR_PROBE_EXPOSURE"})
+            _append_event(
+                state, "episode_invalidated", at, None, {"reason": "PRIOR_PROBE_EXPOSURE"}
+            )
             return state, self._summary(state), "episode_invalidated", ("PRIOR_PROBE_EXPOSURE",)
         after = _item(package, "unsupported_after")
         presentation_id = uuid4()
@@ -930,9 +1048,7 @@ class LearningFlowOrchestrator:
         at: datetime,
     ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
         after = _item(package, "unsupported_after")
-        scored = self._score(
-            state, after, option_id, AssistanceState.NONE, response_time_ms, at
-        )
+        scored = self._score(state, after, option_id, AssistanceState.NONE, response_time_ms, at)
         state["attempts"].append(scored)  # type: ignore[union-attr]
         _append_event(state, "unsupported_after_scored", at, UUID(scored["presentation_id"]))
         self._publish_score(state, scored)
@@ -952,7 +1068,9 @@ class LearningFlowOrchestrator:
         state["policy_update_status"] = measurement.policy_update_status.value
         state["measurement"] = {
             "measurement_id": str(measurement.measurement_id),
-            "before_presentation_ids": [str(value) for value in measurement.before.presentation_ids],
+            "before_presentation_ids": [
+                str(value) for value in measurement.before.presentation_ids
+            ],
             "after_presentation_ids": [str(value) for value in measurement.after.presentation_ids],
             "before_earned": str(measurement.before.earned),
             "before_maximum": str(measurement.before.maximum),
@@ -970,7 +1088,9 @@ class LearningFlowOrchestrator:
         }
         state["status"] = "completed" if measurement.valid else "invalidated"
         _append_event(state, "independence_gain_recorded", at)
-        _append_event(state, "episode_completed" if measurement.valid else "episode_invalidated", at)
+        _append_event(
+            state, "episode_completed" if measurement.valid else "episode_invalidated", at
+        )
         return (
             state,
             self._summary(state),
@@ -1037,7 +1157,11 @@ class LearningFlowOrchestrator:
         presentations = tuple(
             _independence_gain_presentation(
                 state,
-                next(item for item in package.item_revisions if item.revision_id == row["revision_id"]),
+                next(
+                    item
+                    for item in package.item_revisions
+                    if item.revision_id == row["revision_id"]
+                ),
                 UUID(str(row["presentation_id"])),
                 datetime.fromisoformat(str(row["created_at"])),
             )
@@ -1209,6 +1333,13 @@ class LearningFlowOrchestrator:
         except LearningFlowPersistenceError as error:
             raise LearningFlowOrchestrationError(str(error)) from error
 
+    def _adaptive_flow(self, episode_id: UUID) -> AdaptiveGameFlow | None:
+        try:
+            experience_id = self._store.get(episode_id).state.get("experience_id")
+            return self._experience_flows.get(str(experience_id))
+        except LearningFlowPersistenceError as error:
+            raise LearningFlowOrchestrationError(str(error)) from error
+
     def _atomic(self, operation: Callable[[], None]) -> None:
         try:
             operation()
@@ -1222,6 +1353,7 @@ class LearningFlowOrchestrator:
         return {
             "episode_id": state["episode_id"],
             "status": state["status"],
+            "server_score": _server_score(state),
             "manifest": {
                 "presentation_id": state["presentations"][-1]["presentation_id"],  # type: ignore[index]
                 "revision_id": item.revision_id,
@@ -1240,6 +1372,7 @@ class LearningFlowOrchestrator:
         return {
             "episode_id": state["episode_id"],
             "status": state["status"],
+            "server_score": _server_score(state),
             "validity": state.get("validity"),
             "raw_independence_gain": state.get("raw_independence_gain"),
             "percentage_point_value": state.get("percentage_point_value"),
@@ -1248,6 +1381,22 @@ class LearningFlowOrchestrator:
             "reward": state.get("reward"),
             "support": None,
         }
+
+
+def _server_score(state: dict[str, object]) -> dict[str, object] | None:
+    attempts = state.get("attempts")
+    if not isinstance(attempts, list) or not attempts:
+        return None
+    latest = attempts[-1]
+    if not isinstance(latest, dict):
+        return None
+    return {
+        "earned_score": str(latest["earned_score"]),
+        "maximum_score": str(latest["maximum_score"]),
+        "scoring_version": str(latest["scoring_version"]),
+        "server_authoritative": True,
+        "measurement_role": str(latest["role"]),
+    }
 
 
 def _item(package: PublicCurriculumPackage, role: str) -> ItemRevision:

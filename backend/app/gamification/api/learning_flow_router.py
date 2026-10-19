@@ -7,15 +7,22 @@ from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.gamification.api.dependencies import NOT_FOR_PRODUCTION
 from app.gamification.application.delivery import RateLimiter, get_rate_limiter
+from app.gamification.application.fixture_round import FixtureRoundError, FixtureRoundService
 from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrationError,
     LearningFlowOrchestrator,
+)
+from app.gamification.content.area_support_catalog import (
+    AreaSupportCatalog,
+    AreaSupportRow,
+    load_area_support_catalog,
 )
 from app.gamification.content.draft_mission_catalog import (
     DraftMissionCatalog,
@@ -29,6 +36,7 @@ from app.gamification.infrastructure.db.learning_flow_gateways import (
 from app.gamification.infrastructure.db.learning_flow_store import (
     SqlAlchemyLearningFlowStore,
 )
+from app.gamification.infrastructure.db.models import LearningFlowProbeReservationModel
 from app.shared.database.session import get_db
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
 
@@ -47,19 +55,24 @@ class OpenEpisodeRequest(Boundary):
     condition: Literal["baseline", "proposed"]
     environment: Literal["development", "test"]
     allow_draft: Literal[True]
+    area_id: str | None = Field(default=None, max_length=32)
+    atomic_skill_id: str | None = Field(default=None, max_length=64)
 
 
 class AnswerRequest(Boundary):
-    option_id: str = Field(min_length=1, max_length=32)
+    option_id: str | None = Field(default=None, min_length=1, max_length=32)
+    constructed_response: dict[str, object] | None = Field(default=None, max_length=20)
     response_time_ms: int | None = Field(default=None, ge=0, le=86_400_000)
+    interaction_summary: dict[str, object] = Field(default_factory=dict, max_length=12)
 
 
 class SupportCompleteRequest(Boundary):
     duration_ms: int = Field(ge=0, le=86_400_000)
     steps_viewed: int = Field(ge=1, le=8)
     manifest_revision_id: str = Field(min_length=1, max_length=128)
-    grouped_count: int = Field(ge=2, le=40)
-    group_sizes: tuple[int, int]
+    grouped_count: int = Field(default=0, ge=0, le=100_000)
+    group_sizes: tuple[int, ...] = Field(default=(), max_length=6)
+    interaction_summary: dict[str, str | int | bool] = Field(default_factory=dict, max_length=12)
 
 
 class WithdrawalAcknowledgementRequest(Boundary):
@@ -101,6 +114,7 @@ class PresentationManifest(Boundary):
     accessibility_label_si: str
     options: tuple[PublicOption, ...]
     content_version: str
+    game: dict[str, object] | None = None
 
 
 class HalfSetGameManifest(Boundary):
@@ -117,19 +131,31 @@ class HalfSetGameManifest(Boundary):
 class SupportView(Boundary):
     scaffold_id: str
     revision_id: str
-    scaffold_type: Literal[
-        "visual_guidance", "worked_parallel_example", "step_by_step_guidance"
-    ]
+    scaffold_type: Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
     title_si: str
     body_si: tuple[str, ...]
     visual_alt_text_si: str | None
     maximum_steps: int
-    game_manifest: HalfSetGameManifest
+    game_manifest: HalfSetGameManifest | dict[str, object]
 
 
 class ParticipationReward(Boundary):
     points: int
     reason: str
+
+
+class ServerScore(Boundary):
+    earned_score: str
+    maximum_score: str
+    scoring_version: str
+    server_authoritative: Literal[True]
+    measurement_role: str
+    correct: bool | None = Field(default=None, exclude_if=lambda value: value is None)
+    attempt_id: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    presentation_id: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    item_revision_id: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    feedback_step_index: int | None = Field(default=None, ge=0, le=2, exclude_if=lambda value: value is None)
+    feedback_column: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class ChildEpisodeResponse(Boundary):
@@ -140,12 +166,133 @@ class ChildEpisodeResponse(Boundary):
     manifest: PresentationManifest | None = None
     support: SupportView | None = None
     reward: ParticipationReward | None = None
+    server_score: ServerScore | None = None
 
 
 class TelemetryAcknowledgement(Boundary):
     accepted: int
     duplicates: int
     next_sequence: int
+
+
+class FixtureSupportView(Boundary):
+    support_type: Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
+    body_si: str
+    assistance_state: Literal["scaffold_active"]
+
+
+class FixtureReward(Boundary):
+    points: int
+    reason_code: str
+
+
+class FixtureRoundResponse(Boundary):
+    episode_id: UUID
+    area_id: str
+    template_id: Literal[
+        "market_mission",
+        "half_set",
+        "pattern_temple",
+        "parcel_workshop",
+        "word_workshop",
+        "story_studio",
+        "eco_explorer",
+    ]
+    phase: Literal[
+        "unsupported_before",
+        "support",
+        "supported_practice",
+        "withdraw",
+        "unsupported_after",
+        "completed",
+    ]
+    notice_si: str
+    prompt_si: str | None = None
+    assistance_state: Literal["none", "scaffold_active"]
+    options: tuple[PublicOption, ...] = ()
+    support: FixtureSupportView | None = None
+    server_score: ServerScore | None = None
+    server_scores: tuple[ServerScore, ...] = ()
+    reward: FixtureReward | None = None
+
+
+class OpenFixtureRoundRequest(Boundary):
+    area_id: str = Field(min_length=1, max_length=32)
+    learner_id: UUID
+    session_id: UUID
+    grade: Literal[5]
+    medium: Literal["si"]
+
+
+class PublicMathematicsOutcomeSlot(Boundary):
+    node_id: str
+    parent_area_id: str
+    trace_competency_id: str
+    supplied_area_match: bool
+    confidence: Literal["medium"]
+    draft_item: Literal[True]
+    item_text: str
+
+
+class PublicSinhalaDraftItemSlot(Boundary):
+    node_id: str
+    parent_area_id: str
+    confidence: Literal["high"]
+    draft_item: Literal[True]
+    area_match: bool
+    item_text: str
+
+
+class PublicHeldOutcomeSlot(Boundary):
+    node_id: str
+    parent_area_id: str
+    confidence: Literal["low"]
+    held: Literal[True]
+    draft_item: Literal[False]
+    traced_text: str
+    child_question: None
+
+
+class PublicDraftMissionRecord(Boundary):
+    area_id: str
+    cited_node_id: str
+    template_id: str
+    outcome_slots: tuple[PublicMathematicsOutcomeSlot, ...] = ()
+    draft_item_slots: tuple[PublicSinhalaDraftItemSlot, ...] = ()
+    held_slots: tuple[PublicHeldOutcomeSlot, ...] = ()
+
+
+class PublicDraftMissionCatalog(Boundary):
+    package_version: str
+    missions: tuple[PublicDraftMissionRecord, ...]
+
+
+class PublicAreaSupportRow(Boundary):
+    area_id: str
+    name_en: str
+    subject: Literal["MAT", "SIN", "ENV"]
+    template_id: str
+    eligible_support_types: tuple[
+        Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"], ...
+    ]
+    rule: str
+    rendering_constraint: str
+    authoring_basis: str
+
+
+_fixture_rounds = FixtureRoundService()
+
+
+def _fixture_call(operation):
+    try:
+        return operation()
+    except FixtureRoundError as error:
+        status = 409
+        if error.code in {"FIXTURE_NOT_FOUND", "EPISODE_NOT_FOUND"}:
+            status = 404
+        if error.code == "HUMAN_APPROVAL_REQUIRED":
+            status = 403
+        raise HTTPException(status_code=status, detail={"code": error.code}) from error
 
 
 def get_learning_flow_orchestrator(db: Session = Depends(get_db)) -> LearningFlowOrchestrator:
@@ -229,6 +376,30 @@ def open_episode(
     return _call(lambda: orchestrator.open_episode(**body.model_dump(), idempotency_key=key))
 
 
+@routes.get("/learners/{learner_id}/skills/{atomic_skill_id}/available")
+def learner_skill_available(
+    learner_id: UUID,
+    atomic_skill_id: str,
+    db: Session = Depends(get_db),
+) -> dict[str, bool]:
+    profile = SqlAlchemyLearnerRepository(db).get(learner_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail={"code": "LEARNER_NOT_FOUND"})
+    if profile.grade != 5 or profile.preferred_language != "si":
+        return {"available": False}
+    prior_probe = db.scalar(
+        select(LearningFlowProbeReservationModel.reservation_id)
+        .where(
+            LearningFlowProbeReservationModel.learner_id == learner_id,
+            LearningFlowProbeReservationModel.item_revision_id.like(
+                f"{atomic_skill_id}:A:%"
+            ),
+        )
+        .limit(1)
+    )
+    return {"available": prior_probe is None}
+
+
 @routes.post("/episodes/{episode_id}/before", response_model=ChildEpisodeResponse)
 def answer_before(
     episode_id: UUID,
@@ -242,7 +413,9 @@ def answer_before(
         lambda: orchestrator.submit_before(
             episode_id,
             option_id=body.option_id,
+            constructed_response=body.constructed_response,
             response_time_ms=body.response_time_ms,
+            interaction_summary=body.interaction_summary,
             idempotency_key=key,
         )
     )
@@ -265,6 +438,7 @@ def complete_support(
             manifest_revision_id=body.manifest_revision_id,
             grouped_count=body.grouped_count,
             group_sizes=body.group_sizes,
+            interaction_summary=body.interaction_summary,
             idempotency_key=key,
         )
     )
@@ -317,6 +491,7 @@ def answer_after(
         lambda: orchestrator.submit_after(
             episode_id,
             option_id=body.option_id,
+            constructed_response=body.constructed_response,
             response_time_ms=body.response_time_ms,
             idempotency_key=key,
         )
@@ -361,38 +536,90 @@ def export_manifest(
     return _call(lambda: orchestrator.export_manifest(episode_id))
 
 
-def _draft_catalog(allow_draft: bool) -> DraftMissionCatalog:
-    try:
-        return load_draft_mission_catalog(allow_draft=allow_draft, environment="development")
-    except PermissionError as error:
-        raise HTTPException(status_code=403, detail={"code": "DRAFT_CATALOG_BLOCKED"}) from error
+def _support_catalog() -> AreaSupportCatalog:
+    return load_area_support_catalog()
 
 
-router = APIRouter(prefix="/development/learning-flow")
-router.include_router(routes)
+def _draft_catalog() -> DraftMissionCatalog:
+    return load_draft_mission_catalog()
 
 
-@router.get("/draft-missions", response_model=DraftMissionCatalog)
+development_router = APIRouter(prefix="/development/learning-flow")
+development_router.include_router(routes)
+router = APIRouter(prefix="/learning-flow", tags=["gamification-learning-flow"])
+
+
+@router.get("/draft-missions", response_model=PublicDraftMissionCatalog)
 def list_draft_missions(
-    allow_draft: Annotated[bool, Query()] = False,
     _role: None = Depends(_researcher),
 ) -> DraftMissionCatalog:
-    """Read the development mission catalog. Child delivery stays blocked."""
-    return _draft_catalog(allow_draft)
+    return _draft_catalog()
 
 
-@router.get("/draft-missions/{area_id}", response_model=DraftMissionRecord)
+@router.get(
+    "/draft-missions/{area_id}/support-types",
+    response_model=PublicAreaSupportRow,
+)
+def fetch_area_support_types(
+    area_id: str,
+    _role: None = Depends(_researcher),
+) -> AreaSupportRow:
+    catalog = _support_catalog()
+    try:
+        return catalog.row(area_id)
+    except KeyError as error:
+        raise HTTPException(status_code=404, detail={"code": "AREA_SUPPORT_NOT_FOUND"}) from error
+
+
+@router.get("/draft-missions/{area_id}", response_model=PublicDraftMissionRecord)
 def fetch_draft_mission(
     area_id: str,
-    allow_draft: Annotated[bool, Query()] = False,
     _role: None = Depends(_researcher),
 ) -> DraftMissionRecord:
-    """Read one development mission by its G5-AREA id."""
-    catalog = _draft_catalog(allow_draft)
+    catalog = _draft_catalog()
     try:
         return catalog.mission(area_id)
     except KeyError as error:
         raise HTTPException(status_code=404, detail={"code": "DRAFT_MISSION_NOT_FOUND"}) from error
+
+
+def _grade5_sinhala_learner(learner_id: UUID, db: Session) -> None:
+    profile = SqlAlchemyLearnerRepository(db).get(learner_id)
+    if profile is None:
+        raise HTTPException(status_code=404, detail={"code": "LEARNER_NOT_FOUND"})
+    if profile.grade != 5 or profile.preferred_language != "si":
+        raise HTTPException(status_code=409, detail={"code": "GRADE5_SINHALA_REQUIRED"})
+
+
+@router.post("/fixture-rounds", response_model=FixtureRoundResponse)
+def open_fixture_round(
+    body: OpenFixtureRoundRequest,
+    learner_id: UUID = Depends(_learner),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    if learner_id != body.learner_id:
+        raise HTTPException(status_code=404, detail={"code": "LEARNER_NOT_FOUND"})
+    _grade5_sinhala_learner(learner_id, db)
+    return _fixture_call(lambda: _fixture_rounds.open_round(**body.model_dump()))
+
+
+@router.post("/fixture-rounds/{episode_id}/answer", response_model=FixtureRoundResponse)
+def answer_fixture_round(
+    episode_id: UUID,
+    body: AnswerRequest,
+    learner_id: UUID = Depends(_learner),
+) -> dict[str, object]:
+    return _fixture_call(
+        lambda: _fixture_rounds.answer(episode_id, option_id=body.option_id, learner_id=learner_id)
+    )
+
+
+@router.post("/fixture-rounds/{episode_id}/continue", response_model=FixtureRoundResponse)
+def continue_fixture_round(
+    episode_id: UUID,
+    learner_id: UUID = Depends(_learner),
+) -> dict[str, object]:
+    return _fixture_call(lambda: _fixture_rounds.continue_round(episode_id, learner_id=learner_id))
 
 
 # Keep previously shipped development clients working during the terminology migration. The
