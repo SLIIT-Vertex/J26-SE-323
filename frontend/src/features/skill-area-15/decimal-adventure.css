@@ -1,0 +1,402 @@
+.decimal-adventure {
+	width: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	padding: clamp(10px, 4vw, 24px);
+	box-sizing: border-box;
+	color: #25464a;
+	overflow-x: clip;
+}
+.decimal-header {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 16px;
+	padding: 1rem;
+	border-radius: 2rem;
+	background: rgba(255, 253, 247, 0.96);
+}
+.decimal-header p,
+.decimal-position {
+	margin: 0;
+	color: #687b7d;
+	font-weight: 800;
+}
+.decimal-header h1 {
+	margin: 2px 0;
+	font-size: clamp(1.55rem, 8vw, 2.2rem);
+}
+.decimal-game-list,
+.decimal-play {
+	display: grid;
+	gap: 14px;
+}
+.decimal-game-card {
+	width: 100%;
+	min-height: 112px;
+	border: 2px solid #d8c37c;
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.94);
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 11px;
+	text-align: left;
+	box-shadow: 0 7px 0 #d7c374;
+	cursor: pointer;
+}
+.decimal-guide-fallback {
+	display: grid;
+	place-items: center;
+	border-radius: 24px;
+	background: #fff2bc;
+	color: #b95e40;
+	font-size: 2rem;
+}
+.decimal-game-card img,
+.decimal-game-card .decimal-guide-fallback {
+	width: 86px;
+	height: 86px;
+	flex: none;
+}
+.decimal-game-card img {
+	object-fit: contain;
+}
+.decimal-game-card span {
+	display: grid;
+	gap: 7px;
+}
+.decimal-game-card strong {
+	font-size: 1.06rem;
+	line-height: 1.35;
+}
+.decimal-game-card small {
+	color: #6b6554;
+	font-weight: 800;
+}
+.decimal-play > h2,
+.decimal-support > h2 {
+	margin: 0;
+	font-size: 1.15rem;
+	line-height: 1.5;
+}
+.decimal-primary {
+	min-height: 52px;
+	border: 0;
+	border-radius: 16px;
+	background: #176f68;
+	color: #fff;
+	font: inherit;
+	font-weight: 900;
+	padding: 12px 18px;
+	cursor: pointer;
+}
+.decimal-primary:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+.decimal-adventure button:focus-visible,
+.decimal-adventure [role="button"]:focus-visible {
+	outline: 4px solid #ad593e;
+	outline-offset: 3px;
+}
+.decimal-matcher {
+	display: grid;
+	gap: 13px;
+}
+.decimal-matcher section {
+	padding: 11px;
+	border: 2px solid #dac681;
+	border-radius: 17px;
+	background: #fffaf0;
+}
+.decimal-matcher h3 {
+	margin: 0 0 9px;
+	font-size: 0.98rem;
+}
+.decimal-tile-grid,
+.reading-tile-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+.decimal-tile-grid button,
+.reading-tile-grid button {
+	min-height: 56px;
+	border: 2px solid #4b8d88;
+	border-radius: 13px;
+	background: #fff;
+	color: #25464a;
+	font: inherit;
+	font-weight: 850;
+	padding: 7px;
+}
+.decimal-tile-grid button {
+	font-size: 1.35rem;
+}
+.decimal-tile-grid button.selected {
+	background: #fff0ae;
+	border-color: #b05b3d;
+	box-shadow: inset 0 0 0 2px #b05b3d;
+}
+.decimal-tile-grid button.matched {
+	background: #dff4e7;
+	border-color: #488b55;
+}
+.reading-tile-grid button:disabled {
+	opacity: 0.55;
+}
+.shading-activity {
+	display: grid;
+	gap: 15px;
+	justify-items: center;
+}
+.decimal-sequence {
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 7px;
+	justify-content: center;
+	align-items: center;
+	padding: 9px;
+	border-radius: 13px;
+	background: #fff2bc;
+	font-weight: 850;
+}
+.decimal-sequence strong {
+	font-size: 1.35rem;
+}
+.tenths-frame {
+	width: min(100%, 520px);
+	min-inline-size: 0;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(5, minmax(48px, 1fr));
+	border: 3px solid #5d5140;
+	border-radius: 12px;
+	overflow: hidden;
+	background: #fffdf6;
+}
+.tenths-frame button {
+	min-height: 48px;
+	aspect-ratio: 1;
+	border: 1px solid #5d5140;
+	border-radius: 0;
+	background: #fffdf6;
+	padding: 0;
+}
+.tenths-frame button.shaded,
+.tenths-circle path.shaded {
+	background: #229486;
+	fill: #229486;
+}
+.tenths-circle-wrap {
+	position: relative;
+	width: min(100%, 270px);
+	min-inline-size: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.tenths-circle {
+	width: min(100%, 270px);
+	height: auto;
+	overflow: visible;
+}
+.tenths-circle path {
+	fill: #fffdf6;
+	stroke: #5d5140;
+	stroke-width: 2.5;
+}
+.tenths-circle path[aria-pressed="true"] {
+	fill: #229486;
+}
+.tenths-circle-controls {
+	position: absolute;
+	inset: 0;
+}
+.tenths-circle-controls button {
+	position: absolute;
+	width: 48px;
+	height: 48px;
+	transform: translate(-50%, -50%);
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	padding: 0;
+}
+.tenths-circle-controls button[aria-pressed="true"] {
+	box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.72);
+}
+.conversion-equation {
+	min-width: 0;
+	display: grid;
+	gap: 18px;
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+.equation-row {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(10px, 5vw, 28px);
+	padding: 16px 8px;
+	border: 2px solid #dac681;
+	border-radius: 18px;
+	background: #fffaf0;
+	font-size: clamp(1.45rem, 8vw, 2.25rem);
+	font-weight: 900;
+}
+.fraction-display {
+	min-width: 70px;
+	display: inline-grid;
+	grid-template-rows: minmax(48px, auto) 4px minmax(48px, auto);
+	align-items: center;
+	justify-items: center;
+	vertical-align: middle;
+}
+.fraction-numerator,
+.fraction-denominator {
+	min-height: 48px;
+	display: grid;
+	place-items: center;
+}
+.fraction-bar {
+	width: 100%;
+	height: 4px;
+	background: #5d5140;
+	border-radius: 4px;
+}
+.fraction-display button,
+.decimal-input button {
+	border: 3px solid #3e8b84;
+	border-radius: 12px;
+	background: #fff;
+	color: #25464a;
+	font: 900 1.35rem system-ui;
+}
+.fraction-display button.selected {
+	border-color: #b95e40;
+	background: #fff0b2;
+	box-shadow: inset 0 0 0 2px #b95e40;
+}
+.decimal-input {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+.decimal-point {
+	color: #b95e40;
+}
+.fixed-decimal {
+	white-space: nowrap;
+}
+.decimal-keypad {
+	display: grid;
+	grid-template-columns: repeat(5, minmax(48px, 1fr));
+	gap: 7px;
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+.decimal-keypad button {
+	min-height: 48px;
+	border: 2px solid #347e79;
+	border-radius: 11px;
+	background: #fff;
+	color: #25464a;
+	font: 900 1.05rem system-ui;
+}
+.decimal-support,
+.decimal-feedback {
+	display: grid;
+	gap: 14px;
+	padding: 14px;
+	border: 2px solid #d2bb73;
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.94);
+}
+.decimal-support .support-type {
+	margin: 0;
+	color: #126f75;
+	font-weight: 900;
+}
+.decimal-support ol {
+	margin: 0;
+	padding-left: 28px;
+	display: grid;
+	gap: 8px;
+}
+.decimal-support li.done {
+	color: #176f68;
+	font-weight: 900;
+}
+.decimal-visual-cue {
+	min-height: 190px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px;
+	border-radius: 15px;
+	background: #fff4c9;
+}
+.decimal-visual-cue img,
+.decimal-visual-cue .decimal-guide-fallback {
+	width: 45%;
+	max-width: 190px;
+	height: 180px;
+	flex: none;
+}
+.decimal-visual-cue img {
+	object-fit: contain;
+}
+.decimal-visual-cue strong {
+	max-width: 50%;
+	color: #975039;
+}
+.worked-matches {
+	display: grid;
+	gap: 7px;
+}
+.worked-matches p {
+	margin: 0;
+	padding: 9px;
+	border-radius: 10px;
+	background: #e8f5ee;
+}
+.worked-shading {
+	display: grid;
+	gap: 9px;
+	justify-items: center;
+}
+.worked-shading .tenths-frame {
+	max-width: 420px;
+}
+@media (max-width: 380px) {
+	.decimal-adventure {
+		padding: 9px;
+	}
+	.decimal-game-card img,
+	.decimal-game-card .decimal-guide-fallback {
+		width: 72px;
+		height: 72px;
+	}
+	.reading-tile-grid button {
+		font-size: 0.78rem;
+	}
+	.tenths-frame {
+		grid-template-columns: repeat(5, minmax(48px, 1fr));
+		transform: scale(0.94);
+	}
+	.equation-row {
+		gap: 9px;
+		padding-inline: 5px;
+	}
+	.decimal-keypad {
+		grid-template-columns: repeat(5, minmax(48px, 1fr));
+	}
+}
