@@ -1,0 +1,37 @@
+{
+  "source_record_version": "g5-eng-earth-sky-source-v1",
+  "theme_heading": "Theme 13: Earth & Sky",
+  "screenshots": ["Screenshot 2026-10-20 at 11.48.19.png", "Screenshot 2026-10-20 at 11.48.55.png"],
+  "continuation_evidence": "The second screenshot continues the Theme 13 vocabulary list after Rain drops.",
+  "entries": [
+    {"order": 1, "english": "Sky", "sinhala": "අහස", "confidence": "high"},
+    {"order": 2, "english": "Sun", "sinhala": "ඉර", "confidence": "high"},
+    {"order": 3, "english": "Moon", "sinhala": "සඳ", "confidence": "high"},
+    {"order": 4, "english": "Stars", "sinhala": "තරු", "confidence": "high"},
+    {"order": 5, "english": "Rainbow", "sinhala": "දේදුන්න", "confidence": "high"},
+    {"order": 6, "english": "Wind", "sinhala": "සුළග", "confidence": "medium_pending_review"},
+    {"order": 7, "english": "Clouds", "sinhala": "වලාකුළු", "confidence": "high"},
+    {"order": 8, "english": "Rain", "sinhala": "වැස්ස", "confidence": "high"},
+    {"order": 9, "english": "River", "sinhala": "ගඟ", "confidence": "high"},
+    {"order": 10, "english": "Hill", "sinhala": "කන්ද", "confidence": "medium_pending_review"},
+    {"order": 11, "english": "Mountain", "sinhala": "කන්ද", "confidence": "medium_pending_review"},
+    {"order": 12, "english": "Rain drops", "sinhala": "වැහි බිංදු", "confidence": "high"},
+    {"order": 13, "english": "Lightening", "sinhala": "විදුලි කෙටීම", "confidence": "high"},
+    {"order": 14, "english": "Floods", "sinhala": "ගංවතුර", "confidence": "high"},
+    {"order": 15, "english": "Thunder", "sinhala": "ගිගුරුම්", "confidence": "high"},
+    {"order": 16, "english": "Sea", "sinhala": "මුහුද", "confidence": "high"},
+    {"order": 17, "english": "Beach", "sinhala": "වෙරළ", "confidence": "high"},
+    {"order": 18, "english": "Mist", "sinhala": "මීදුම", "confidence": "high"},
+    {"order": 19, "english": "Waterfall", "sinhala": "දිය ඇල්ල", "confidence": "high"},
+    {"order": 20, "english": "Well", "sinhala": "ළිඳ", "confidence": "high"},
+    {"order": 21, "english": "Pond", "sinhala": "පොකුණ", "confidence": "high"},
+    {"order": 22, "english": "Tank", "sinhala": "වැව", "confidence": "medium_pending_review"}
+  ],
+  "blocked": {
+    "all_scored_content": ["Lightening"],
+    "bilingual_close_contrast": ["Hill", "Mountain", "Tank"],
+    "visual_scoring": ["Lightening", "Thunder", "Tank", "Hill", "Mountain", "Wind", "Mist"]
+  },
+  "review_issues": ["Lightening likely intends Lightning", "Rain drops spacing must remain unchanged", "Tank likely means a Sri Lankan irrigation reservoir", "Hill and Mountain show the same or very similar Sinhala term", "Thunder requires approved audio for non-bilingual assessment", "Wind and Mist need renderer clarity review", "Plural source forms must remain unchanged", "Natural-feature scenes are representations rather than unique real-world appearances"],
+  "approved_normalizations": []
+}
