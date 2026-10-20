@@ -1,0 +1,33 @@
+.family-word-constellation .star-rail,
+.family-word-constellation .sinhala-sheet {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+}
+.family-word-constellation .sinhala-sheet {
+	padding: 12px;
+	border-radius: 24px;
+	background: #0b1d36;
+}
+.family-word-constellation button {
+	min-width: 48px;
+	min-height: 48px;
+}
+.family-word-constellation .selected {
+	outline: 3px solid #f4d35e;
+}
+.family-word-constellation .locked {
+	opacity: 0.7;
+}
+.constellation-badge {
+	width: 88px;
+	height: 88px;
+	margin: 0 auto;
+	display: grid;
+	place-items: center;
+	border: 4px solid #f4d35e;
+	border-radius: 50%;
+	background: #0b1d36;
+	font-size: 2rem;
+}
