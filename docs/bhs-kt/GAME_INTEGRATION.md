@@ -51,7 +51,7 @@ parts of our 30 (`MAT-DIV` is a part of `MAT-OPS`), and she keeps all of them as
 
 * `sub_skills`: her skill label -> ours (`MAT-DIV` -> `MAT-OPS`, `MAT-TIME` -> `MAT-TIM`, ...). A label that
   is already one of our 30 passes through unchanged.
-* `item_skills`: her item skill id -> ours (87 items today, covering 11 of our skills).
+* `item_skills`: her item skill id -> ours (126 items today, covering 11 of our skills; the English games all map to `LAN-BIL`).
 
 The file is **generated**, not typed: `python -m scripts.build_game_skill_map` reads her flows and her own
 `areas.json` (which names the parent skill of every area). The reader only reads the file and never
@@ -82,8 +82,8 @@ The game's adventure flows now set `model_ingestion_eligible` with a rule, in
 
 Every adventure answer also carries a `difficulty` (easy, medium or hard), a `difficulty_source` and the
 mapping version `gamification-skill-level-v1`. The game's skills keep their own finer level; `evidence_difficulty`
-reads it as: easy -> easy, medium -> medium, hard -> hard, and the two in-between levels (`easy_medium`,
-`medium_hard`) -> medium. A skill with no level of its own gets `medium`, marked `default_unlabelled`, so
+reads it as: easy -> easy, medium -> medium, hard -> hard, and the in-between or wide levels (`easy_medium`,
+`medium_hard`, `easy-to-hard`) -> medium. A skill with no level of its own gets `medium`, marked `default_unlabelled`, so
 the research can leave those answers out later. Today that is addition, subtraction, fractions, number
 world, number patterns and time.
 

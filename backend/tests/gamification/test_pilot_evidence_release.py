@@ -200,7 +200,8 @@ def test_every_published_answer_has_a_difficulty_the_model_can_use(session) -> N
 @pytest.mark.parametrize(
     ("level", "band"),
     [("easy", "easy"), ("easy_medium", "medium"), ("easy-medium", "medium"), ("medium", "medium"),
-     ("medium_hard", "medium"), ("medium-hard", "medium"), ("hard", "hard"), (" Hard ", "hard")],
+     ("medium_hard", "medium"), ("medium-hard", "medium"), ("hard", "hard"), (" Hard ", "hard"),
+     ("easy-to-hard", "medium"), ("easy_to_hard", "medium")],
 )
 def test_a_declared_level_becomes_one_of_the_three_bands(level, band) -> None:
     skill = type("Skill", (), {"difficulty": level})()
