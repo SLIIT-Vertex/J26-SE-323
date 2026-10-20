@@ -127,6 +127,23 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
+	it("does not report a lost connection in settings when no game is open", async () => {
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		await act(async () =>
+			root.render(<MobileLearningApp service={fakeService()} />),
+		);
+		await click(container, "මගේ පැතිකඩට");
+		await click(container, "පැතිකඩ බලන්න");
+		await click(container, "යෙදුම් සැකසුම්");
+		await click(container, "දැන් සමමුහුර්ත කරන්න");
+
+		expect(container.textContent).toContain("සමමුහුර්තයි");
+		expect(container.textContent).not.toContain("අන්තර්ජාලය නොමැත");
+		await act(async () => root.unmount());
+	});
+
 	it("renders an interactive home and profile, opens Tutor from Mindy and papers from practice", async () => {
 		const container = document.createElement("div");
 		document.body.append(container);

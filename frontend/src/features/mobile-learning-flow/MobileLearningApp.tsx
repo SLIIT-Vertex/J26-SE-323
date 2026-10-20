@@ -1033,8 +1033,14 @@ export function MobileLearningApp({
 
 	const sync = useCallback(async () => {
 		if (busy) return false;
-		if (!episode || !navigator.onLine) {
+		if (!navigator.onLine) {
 			setSyncState("offline");
+			return false;
+		}
+		if (!episode) {
+			// No game is open, so there is nothing of this episode to send. This is not a lost
+			// connection: show events of earlier episodes as still waiting, otherwise synced.
+			setSyncState(queue.pendingCount ? "pending" : "synced");
 			return false;
 		}
 		const batch = queue.takeBatch(episode.episode_id);
