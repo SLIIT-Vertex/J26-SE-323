@@ -19,6 +19,14 @@ import { go, usePapersRoute } from "../papers/router";
 import { CameraConsentCard } from "../learner-state/game/CameraConsentCard";
 import { CameraStatusBadge } from "../learner-state/game/CameraStatusBadge";
 import type { CameraProblem } from "../learner-state/game/cameraText";
+import { LearnerSupportPrompt } from "../learner-state/game/LearnerSupportPrompt";
+import {
+	learnerStatePromptsEnabled,
+	NO_PROMPT_YET,
+	nextSupportPrompt,
+	type PromptMemory,
+	type SupportPrompt,
+} from "../learner-state/game/supportPrompts";
 import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
 import {
 	createFixtureRoundClient,
@@ -29,6 +37,7 @@ import type {
 	DraftMissionRecord,
 	DraftTemplateId,
 	ExperimentCondition,
+	LearnerStateAction,
 	PresentationManifest,
 	SupportView,
 } from "./api/generated";
@@ -513,14 +522,27 @@ export function MobileLearningApp({
 	}, [camera.status]);
 	const visualFeatures = useRef(camera.visualFeatures);
 	visualFeatures.current = camera.visualFeatures;
+	// Gentle learner-state prompts after scored answers (off in silent mode).
+	const [supportPrompt, setSupportPrompt] = useState<SupportPrompt | null>(null);
+	const promptMemory = useRef<PromptMemory>(NO_PROMPT_YET);
+	const reactToLearnerState = useCallback((action: LearnerStateAction) => {
+		if (!learnerStatePromptsEnabled()) return;
+		const next = nextSupportPrompt(promptMemory.current, action, Date.now());
+		promptMemory.current = next.memory;
+		if (next.prompt) setSupportPrompt(next.prompt);
+	}, []);
+	useEffect(() => {
+		if (!GAME_SCREENS.has(screen)) setSupportPrompt(null);
+	}, [screen]);
 	const api = useMemo(
 		() =>
 			service ??
 			createLearningFlowClient({
 				learnerId,
 				visualFeatures: () => visualFeatures.current(),
+				onLearnerStateAction: reactToLearnerState,
 			}),
-		[learnerId, service],
+		[learnerId, service, reactToLearnerState],
 	);
 	useEffect(() => {
 		api.cameraConsent?.().then(setCameraConsent, () => setCameraConsent(false));
@@ -1156,6 +1178,12 @@ export function MobileLearningApp({
 			data-game={GAME_SCREENS.has(screen) ? "true" : undefined}
 		>
 			{cameraEnabled && <CameraStatusBadge status={camera.status} />}
+			{supportPrompt && GAME_SCREENS.has(screen) && (
+				<LearnerSupportPrompt
+					prompt={supportPrompt}
+					onDismiss={() => setSupportPrompt(null)}
+				/>
+			)}
 			<Suspense fallback={<p role="status">ක්‍රීඩාව පූරණය වෙමින්…</p>}>
 				{screen === "splash" && (
 					<Splash

@@ -183,7 +183,11 @@ def test_each_scored_adventure_answer_is_recorded_once(adventure) -> None:
     first = submit()
     replay = submit()
 
-    assert replay == first
+    # The answer response carries the learner-state action once; a replay returns the stored
+    # receipt without it, so the app never acts twice on one answer.
+    assert first["learner_state_action"] == "monitor"
+    assert "learner_state_action" not in replay
+    assert {k: v for k, v in first.items() if k != "learner_state_action"} == replay
     assert len(gateway.calls) == 1
     call = gateway.calls[0]
     assert call["session_id"] == app_session
@@ -298,6 +302,13 @@ def test_an_adventure_answer_reaches_learner_state_end_to_end(client: TestClient
     )
 
     assert answered.status_code == 200, answered.text
+    assert answered.json()["learner_state_action"] in {
+        "none",
+        "monitor",
+        "request_tutor_support",
+        "request_reengagement_support",
+        "collect_more_evidence",
+    }
     session = next(app.dependency_overrides[get_db]())
     stored = SqlAlchemyLearnerSkillStateRepository(session).get(UUID(learner), "MAT-FRC")
     assert stored is not None

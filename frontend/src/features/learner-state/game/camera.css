@@ -96,3 +96,62 @@
 .camera-consent-message--error {
 	background: #ffe4e4;
 }
+
+/* Gentle learner-state prompt after an answer: above the game, never a blocking dialog. */
+.learner-support-prompt {
+	position: fixed;
+	right: 0.75rem;
+	bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+	left: 0.75rem;
+	z-index: 45;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.4rem 0.75rem;
+	align-items: center;
+	max-width: 28rem;
+	margin: 0 auto;
+	padding: 1rem;
+	border: 2px solid var(--purple-soft);
+	border-radius: 24px;
+	background: #fff;
+	box-shadow: var(--shadow);
+	animation: learner-support-prompt-in 0.3s ease-out;
+}
+
+.learner-support-prompt--take-a-break {
+	border-color: var(--teal-soft);
+}
+
+.learner-support-prompt__icon {
+	font-size: 2rem;
+}
+
+.learner-support-prompt h2 {
+	margin: 0;
+	font-size: 1rem;
+}
+
+.learner-support-prompt p {
+	margin: 0.2rem 0 0;
+	color: var(--muted);
+	font-size: 0.82rem;
+	line-height: 1.5;
+}
+
+.learner-support-prompt button {
+	grid-column: 1 / -1;
+	min-height: 48px;
+}
+
+@keyframes learner-support-prompt-in {
+	from {
+		opacity: 0;
+		transform: translateY(1rem);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.learner-support-prompt {
+		animation: none;
+	}
+}

@@ -207,6 +207,17 @@ class ChildEpisodeResponse(Boundary):
     support: SupportView | None = None
     reward: ParticipationReward | None = None
     server_score: ServerScore | None = None
+    # Learner-state decision for this scored answer; absent on replays and without learner-state.
+    learner_state_action: (
+        Literal[
+            "none",
+            "monitor",
+            "request_tutor_support",
+            "request_reengagement_support",
+            "collect_more_evidence",
+        ]
+        | None
+    ) = None
 
 
 class TelemetryAcknowledgement(Boundary):
