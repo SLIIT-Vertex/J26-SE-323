@@ -37,6 +37,8 @@ class ClassroomActionQuestFlow(NumberWorldFlow):
     area_id = AREA_ID
     experience_id = "classroom_action_quest"
     universal_skill_id = "LAN-BIL"
+    # Learner-state behaviour models were trained on mathematics answers only.
+    records_learner_state = False
     contract_version = "classroom-action-quest-learning-flow-v1"
     context_version = "g5-eng-action-command-context-v1"
     measurement_version = "classroom-action-independence-measurement-v1"

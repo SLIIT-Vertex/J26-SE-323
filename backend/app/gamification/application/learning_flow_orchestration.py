@@ -30,7 +30,9 @@ from app.gamification.application.money_adventure_flow import MoneyAdventureFlow
 from app.gamification.application.multiplication_adventure_flow import MultiplicationAdventureFlow
 from app.gamification.application.number_patterns_flow import NumberPatternsFlow
 from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.ports import ConsentStore
 from app.gamification.application.roman_adventure_flow import RomanAdventureFlow
+from app.gamification.application.session_play import LearnerStateAnswerGateway
 from app.gamification.application.shape_adventure_flow import ShapeAdventureFlow
 from app.gamification.application.subtraction_adventure_flow import SubtractionAdventureFlow
 from app.gamification.application.time_adventure_flow import TimeAdventureFlow
@@ -217,29 +219,42 @@ class LearningFlowOrchestrator:
         probe_gateway: ProbeGateway,
         evidence_publisher: EvidencePublisher,
         now: Callable[[], datetime] | None = None,
+        learner_state: LearnerStateAnswerGateway | None = None,
+        camera_consent: ConsentStore | None = None,
     ) -> None:
         self._store = store
         self._probe = probe_gateway
         self._publisher = evidence_publisher
         self._now = now or (lambda: datetime.now(UTC))
-        flows: tuple[AdaptiveGameFlow, ...] = (
-            NumberWorldFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            AdditionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            NumberPatternsFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            SubtractionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            FractionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            MultiplicationAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            TimeAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            DivisionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            DistanceAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            MoneyAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            CapacityAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            MassAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            ShapeAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            DirectionAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            DecimalAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            RomanAdventureFlow(store, probe_gateway, evidence_publisher, now=self._now),
-            ClassroomActionQuestFlow(store, probe_gateway, evidence_publisher, now=self._now),
+        flow_types: tuple[type[NumberWorldFlow], ...] = (
+            NumberWorldFlow,
+            AdditionAdventureFlow,
+            NumberPatternsFlow,
+            SubtractionAdventureFlow,
+            FractionAdventureFlow,
+            MultiplicationAdventureFlow,
+            TimeAdventureFlow,
+            DivisionAdventureFlow,
+            DistanceAdventureFlow,
+            MoneyAdventureFlow,
+            CapacityAdventureFlow,
+            MassAdventureFlow,
+            ShapeAdventureFlow,
+            DirectionAdventureFlow,
+            DecimalAdventureFlow,
+            RomanAdventureFlow,
+            ClassroomActionQuestFlow,
+        )
+        flows: tuple[AdaptiveGameFlow, ...] = tuple(
+            flow_type(
+                store,
+                probe_gateway,
+                evidence_publisher,
+                now=self._now,
+                learner_state=learner_state,
+                camera_consent=camera_consent,
+            )
+            for flow_type in flow_types
         )
         self._area_flows = {flow.area_id: flow for flow in flows}
         self._experience_flows = {flow.experience_id: flow for flow in flows}
@@ -386,6 +401,8 @@ class LearningFlowOrchestrator:
         response_time_ms: int | None = None,
         interaction_summary: Mapping[str, object] | None = None,
         idempotency_key: str,
+        visual: Mapping[str, float] | None = None,
+        learner_state_session_id: UUID | None = None,
     ) -> dict[str, object]:
         adaptive_flow = self._adaptive_flow(episode_id)
         if adaptive_flow is not None:
@@ -397,6 +414,8 @@ class LearningFlowOrchestrator:
                     response_time_ms=response_time_ms,
                     interaction_summary=interaction_summary,
                     idempotency_key=idempotency_key,
+                    visual=visual,
+                    learner_state_session_id=learner_state_session_id,
                 )
             except NumberWorldFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
@@ -550,6 +569,8 @@ class LearningFlowOrchestrator:
         constructed_response: Mapping[str, object] | None = None,
         response_time_ms: int | None = None,
         idempotency_key: str,
+        visual: Mapping[str, float] | None = None,
+        learner_state_session_id: UUID | None = None,
     ) -> dict[str, object]:
         adaptive_flow = self._adaptive_flow(episode_id)
         if adaptive_flow is not None:
@@ -560,6 +581,8 @@ class LearningFlowOrchestrator:
                     constructed_response=constructed_response,
                     response_time_ms=response_time_ms,
                     idempotency_key=idempotency_key,
+                    visual=visual,
+                    learner_state_session_id=learner_state_session_id,
                 )
             except NumberWorldFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error

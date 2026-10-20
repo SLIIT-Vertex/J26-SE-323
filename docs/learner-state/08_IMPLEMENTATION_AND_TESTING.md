@@ -23,6 +23,7 @@ one depended on it. The order follows the repository history.
 | 14 | `feat: retrain behaviour models without ASSISTments-only fields` | Behaviour models retrained without `position` and `first_action` (ablation on Kaggle); confusion behaviour threshold 0.78; both fields removed from the API, which now rejects unknown behaviour fields | `infrastructure/models/`, `infrastructure/model_loader.py`, `infrastructure/feature_builder.py`, `domain/confusion.py`, `api/`, `research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py`, docs 01–07, 11 |
 | 15 | `feat: add learner-state adapter for scored game answers` | `GameAnswerRecorder`, the adapter behind the game's `LearnerStateAnswerGateway`; doc 11 updated for the game side built in #26 | `infrastructure/game_answers.py`, `tests/learner_state/test_game_answers.py`, docs 08, 11 |
 | 16 | `fix: treat negative response times as missing, as in training` | `recent_log_rt` skips negative response times and needs 5 valid values; `rt_deviation` is missing for a negative current time | `infrastructure/feature_builder.py`, `tests/learner_state/test_feature_builder.py`, docs 02, 08 |
+| 17 | `feat: record learner-state evidence from Grade 5 adventure answers` | Every scored mathematics adventure answer recorded through the published `answer_recording` contract (silent mode); learning-session id and optional camera snapshot on answers; guardian camera consent (`consent_decisions`, Settings switch); `window_id` widened to 64 bits (migration `20261020_02`). Game-side changes made with the game owner's agreement | `application/answer_recording.py`, `infrastructure/db/models.py`, `backend/app/gamification/` (flows, orchestrator, router, consent store, adapter), `frontend/src/features/mobile-learning-flow/`, migrations `gam_20261020_01` and `20261020_02`, docs 08, 10, 11 |
 
 ## 2. How the modules interact
 
@@ -83,7 +84,8 @@ Learner-state tests live in two places:
 | `tests/learner_state/test_game_answers.py` | Unit + repository | Game adapter: same signature as the game's `LearnerStateAnswerGateway`; game answer → behavioural fields; missing camera → zero visual reliability and confidence equal to behavioural reliability; unknown response time records nothing; stored state and returned action with the real models; errors logged and raised |
 | `tests/learner_state/test_recording.py` | Unit + API | Recording use case: stores the latest skill state, rejects an unknown learner or invalid Universal Skill ID without changing history, `WindowOrderError`; HTTP and in-process windows share one session history |
 | `tests/learner_state/test_support_need.py` | Unit + repository | Support need = confusion `temporal_score`, none when `uncertain`; provider statuses `AVAILABLE` / `UNCERTAIN` / `NOT_FOUND`; request and result validation; repository keeps the latest row per learner and skill; freshness: same session, maximum age, `STALE` before `UNCERTAIN`, naive database times |
-| `tests/learner_state/test_migration.py` | Migration | Migration `20261014_01` creates exactly the `learner_skill_states` table the model describes, and its downgrade removes it |
+| `tests/learner_state/test_migration.py` | Migration | Migrations `20261014_01` and `20261020_02` together create exactly the `learner_skill_states` table the model describes, including the 64-bit `window_id`, and their downgrades remove it |
+| `tests/gamification/test_learner_state_answers.py` | Unit + API | Game integration: camera values only with current consent, behaviour recorded without it; each scored adventure answer recorded once (not on idempotent replay); app session id used, episode session as fallback; gateway failure never fails the answer; English quest not recorded; consent endpoints; an adventure answer stored end to end with the real models; invalid camera snapshot dropped |
 | `tests/test_learner_state.py` | API | 200 response with all fields including `skill_id` and the temporal values; 409 on a duplicate window; gaps in `window_id` allowed; 422 for an out-of-range field or missing `skill_id`; 404 for an unknown learner; 422 for the removed ASSISTments-only fields; latest state stored and readable per skill |
 
 The service tests use a small fake model object that returns fixed probabilities. This checks the
@@ -99,14 +101,15 @@ module added a table.
 
 ### 3.2 Current coverage gaps
 
-- No test checks model outputs against expected values, because no reference outputs from the
-  training environment are stored in the repository.
 - Concurrent requests to the same session (the service lock) are not tested.
+- The tests use SQLite, which does not enforce PostgreSQL integer sizes; the 32-bit `window_id`
+  overflow was found in a manual run on PostgreSQL. The migration test now compares column types.
 
 ### 3.3 Full repository suite
 
-As of 2026-10-18, the learner-state tests (`tests/learner_state` and `tests/test_learner_state.py`)
-report 146 passed. The full repository suite also passed locally on Windows on the same date.
+As of 2026-10-20, the learner-state tests (`tests/learner_state` and `tests/test_learner_state.py`)
+report 147 passed. The full repository suite also passed locally on Windows on the same date
+(2160 passed, 4 skipped).
 
 Rerun `pytest` (see §4.3) to get the current result, because the count can change as the
 repository evolves.

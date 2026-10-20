@@ -32,6 +32,8 @@ class AdaptiveGameFlow(Protocol):
         response_time_ms: int | None,
         interaction_summary: Mapping[str, object] | None,
         idempotency_key: str,
+        visual: Mapping[str, float] | None = None,
+        learner_state_session_id: UUID | None = None,
     ) -> dict[str, object]: ...
 
     def complete_support(
@@ -68,4 +70,6 @@ class AdaptiveGameFlow(Protocol):
         constructed_response: Mapping[str, object] | None,
         response_time_ms: int | None,
         idempotency_key: str,
+        visual: Mapping[str, float] | None = None,
+        learner_state_session_id: UUID | None = None,
     ) -> dict[str, object]: ...

@@ -14,6 +14,9 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
+from app.gamification.application.learner_state_answers import record_scored_answer
+from app.gamification.application.ports import ConsentStore
+from app.gamification.application.session_play import LearnerStateAnswerGateway
 from app.gamification.content.number_world import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -269,6 +272,8 @@ class NumberWorldFlow:
     support_sequences: Mapping[str, tuple[str, ...]] = _NUMBER_WORLD_SUPPORT_SEQUENCE
     activity_support_memory = True
     answer_revealing_support = True
+    # The learner-state behaviour models were trained on mathematics answers (ASSISTments).
+    records_learner_state = True
 
     def __init__(
         self,
@@ -277,11 +282,15 @@ class NumberWorldFlow:
         publisher: EvidencePublisher,
         *,
         now: Callable[[], datetime] | None = None,
+        learner_state: LearnerStateAnswerGateway | None = None,
+        camera_consent: ConsentStore | None = None,
     ) -> None:
         self._store = store
         self._probe = probe
         self._publisher = publisher
         self._now = now or (lambda: datetime.now(UTC))
+        self._learner_state = learner_state
+        self._camera_consent = camera_consent
 
     def open(
         self,
@@ -388,8 +397,11 @@ class NumberWorldFlow:
         response_time_ms: int | None,
         interaction_summary: Mapping[str, object] | None = None,
         idempotency_key: str,
+        visual: Mapping[str, float] | None = None,
+        learner_state_session_id: UUID | None = None,
     ) -> dict[str, object]:
         interaction_summary = self._validate_interaction_summary(interaction_summary)
+        scored: dict[str, object] = {}
 
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             item = self._stored_item(state, "unsupported_before")
@@ -399,6 +411,7 @@ class NumberWorldFlow:
             state["attempts"].append(score)  # type: ignore[union-attr]
             _event(state, "unsupported_before_scored", at, presentation_id=score["presentation_id"])
             self._publish(state, score)
+            scored.update(state=state, score=score, at=at)
             if score["correct"]:
                 state.update(
                     status="completed",
@@ -524,19 +537,25 @@ class NumberWorldFlow:
             response["support"] = self._support(state)
             return response
 
-        return self._mutate(
+        response = self._mutate(
             episode_id,
             idempotency_key,
-            {
-                "op": f"{self.operation_prefix}_before",
-                "option_id": option_id,
-                "constructed_response": dict(constructed_response or {}),
-                "response_time_ms": response_time_ms,
-                "interaction_summary": dict(interaction_summary or {}),
-            },
+            self._with_learner_state_request(
+                {
+                    "op": f"{self.operation_prefix}_before",
+                    "option_id": option_id,
+                    "constructed_response": dict(constructed_response or {}),
+                    "response_time_ms": response_time_ms,
+                    "interaction_summary": dict(interaction_summary or {}),
+                },
+                visual,
+                learner_state_session_id,
+            ),
             "before_presented",
             transition,
         )
+        self._record_learner_state(scored, visual, learner_state_session_id)
+        return response
 
     def complete_support(
         self,
@@ -682,7 +701,11 @@ class NumberWorldFlow:
         constructed_response: Mapping[str, object] | None = None,
         response_time_ms: int | None,
         idempotency_key: str,
+        visual: Mapping[str, float] | None = None,
+        learner_state_session_id: UUID | None = None,
     ) -> dict[str, object]:
+        scored: dict[str, object] = {}
+
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             item = self._stored_item(state, "unsupported_after")
             score = self._score(
@@ -691,6 +714,7 @@ class NumberWorldFlow:
             state["attempts"].append(score)  # type: ignore[union-attr]
             _event(state, "unsupported_after_scored", at, presentation_id=score["presentation_id"])
             self._publish(state, score)
+            scored.update(state=state, score=score, at=at)
             before = next(row for row in state["attempts"] if row["role"] == "unsupported_before")  # type: ignore[index]
             exclusions = []
             exposure = state.get("scaffold_exposure")
@@ -791,17 +815,62 @@ class NumberWorldFlow:
             _event(state, "episode_completed" if valid else "episode_invalidated", at)
             return self._summary(state)
 
-        return self._mutate(
+        response = self._mutate(
             episode_id,
             idempotency_key,
-            {
-                "op": f"{self.operation_prefix}_after",
-                "option_id": option_id,
-                "constructed_response": dict(constructed_response or {}),
-                "response_time_ms": response_time_ms,
-            },
+            self._with_learner_state_request(
+                {
+                    "op": f"{self.operation_prefix}_after",
+                    "option_id": option_id,
+                    "constructed_response": dict(constructed_response or {}),
+                    "response_time_ms": response_time_ms,
+                },
+                visual,
+                learner_state_session_id,
+            ),
             "after_presented",
             transition,
+        )
+        self._record_learner_state(scored, visual, learner_state_session_id)
+        return response
+
+    @staticmethod
+    def _with_learner_state_request(
+        request: dict[str, object],
+        visual: Mapping[str, float] | None,
+        learner_state_session_id: UUID | None,
+    ) -> dict[str, object]:
+        # Part of the idempotency fingerprint, but only when sent, so requests without them keep
+        # their earlier fingerprint.
+        if visual is not None:
+            request["visual"] = dict(visual)
+        if learner_state_session_id is not None:
+            request["learner_state_session_id"] = str(learner_state_session_id)
+        return request
+
+    def _record_learner_state(
+        self,
+        scored: Mapping[str, object],
+        visual: Mapping[str, float] | None,
+        learner_state_session_id: UUID | None,
+    ) -> None:
+        # Nothing was scored when the request replayed a stored receipt.
+        if not scored or not self.records_learner_state:
+            return
+        state, score, at = scored["state"], scored["score"], scored["at"]
+        assert isinstance(state, dict) and isinstance(score, dict) and isinstance(at, datetime)
+        record_scored_answer(
+            self._learner_state,
+            self._camera_consent,
+            # One learner-state session spans the episodes of one app session; each episode has
+            # its own game session id.
+            session_id=learner_state_session_id or UUID(str(state["session_id"])),
+            learner_id=UUID(str(state["learner_id"])),
+            skill_id=self.universal_skill_id,
+            at=at,
+            correct=bool(score["correct"]),
+            response_time_ms=score["response_time_ms"],  # type: ignore[arg-type]
+            visual=visual,
         )
 
     def _score(

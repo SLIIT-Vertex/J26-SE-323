@@ -26,6 +26,18 @@
               "title": "Interaction Summary",
               "type": "object"
             },
+            "learner_state_session_id": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Learner State Session Id"
+            },
             "option_id": {
               "anyOf": [
                 {
@@ -51,9 +63,60 @@
                 }
               ],
               "title": "Response Time Ms"
+            },
+            "visual": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/VisualFeatureWindow"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "title": "AnswerRequest",
+          "type": "object"
+        },
+        "CameraConsentRequest": {
+          "additionalProperties": false,
+          "properties": {
+            "granted": {
+              "title": "Granted",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "granted"
+          ],
+          "title": "CameraConsentRequest",
+          "type": "object"
+        },
+        "CameraConsentResponse": {
+          "additionalProperties": false,
+          "properties": {
+            "decided_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Decided At"
+            },
+            "granted": {
+              "title": "Granted",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "granted",
+            "decided_at"
+          ],
+          "title": "CameraConsentResponse",
           "type": "object"
         },
         "ChildEpisodeResponse": {
@@ -1239,6 +1302,72 @@
           "title": "ValidationError",
           "type": "object"
         },
+        "VisualFeatureWindow": {
+          "additionalProperties": false,
+          "properties": {
+            "face_visibility_ratio": {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "title": "Face Visibility Ratio",
+              "type": "number"
+            },
+            "mean_abs_pitch": {
+              "title": "Mean Abs Pitch",
+              "type": "number"
+            },
+            "mean_abs_roll": {
+              "title": "Mean Abs Roll",
+              "type": "number"
+            },
+            "mean_abs_yaw": {
+              "title": "Mean Abs Yaw",
+              "type": "number"
+            },
+            "mean_eye_openness": {
+              "title": "Mean Eye Openness",
+              "type": "number"
+            },
+            "mean_gaze_ratio": {
+              "title": "Mean Gaze Ratio",
+              "type": "number"
+            },
+            "mean_pitch": {
+              "title": "Mean Pitch",
+              "type": "number"
+            },
+            "mean_roll": {
+              "title": "Mean Roll",
+              "type": "number"
+            },
+            "mean_yaw": {
+              "title": "Mean Yaw",
+              "type": "number"
+            },
+            "std_eye_openness": {
+              "title": "Std Eye Openness",
+              "type": "number"
+            },
+            "std_gaze_ratio": {
+              "title": "Std Gaze Ratio",
+              "type": "number"
+            }
+          },
+          "required": [
+            "mean_eye_openness",
+            "std_eye_openness",
+            "mean_gaze_ratio",
+            "std_gaze_ratio",
+            "mean_pitch",
+            "mean_yaw",
+            "mean_roll",
+            "mean_abs_pitch",
+            "mean_abs_yaw",
+            "mean_abs_roll",
+            "face_visibility_ratio"
+          ],
+          "title": "VisualFeatureWindow",
+          "type": "object"
+        },
         "WithdrawalAcknowledgementRequest": {
           "additionalProperties": false,
           "properties": {
@@ -1294,6 +1423,179 @@
     },
     "openapi": "3.1.0",
     "paths": {
+      "/api/v1/development/learning-flow/consents/learner-state-camera": {
+        "get": {
+          "operationId": "read_camera_consent_api_v1_development_learning_flow_consents_learner_state_camera_get",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CameraConsentResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Read Camera Consent",
+          "tags": [
+            "gamification-learning-flow-development"
+          ]
+        },
+        "put": {
+          "description": "Development stand-in for the guardian's camera decision; production needs guardian auth.",
+          "operationId": "record_camera_consent_api_v1_development_learning_flow_consents_learner_state_camera_put",
+          "parameters": [
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CameraConsentRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CameraConsentResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Record Camera Consent",
+          "tags": [
+            "gamification-learning-flow-development"
+          ]
+        }
+      },
       "/api/v1/development/learning-flow/episodes": {
         "post": {
           "operationId": "open_episode_api_v1_development_learning_flow_episodes_post",

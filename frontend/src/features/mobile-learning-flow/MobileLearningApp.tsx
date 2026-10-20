@@ -28,6 +28,7 @@ import { DirectionAdventureJourney } from "../skill-area-14/DirectionAdventureJo
 import { DecimalAdventureJourney } from "../skill-area-15/DecimalAdventureJourney";
 import { RomanAdventureJourney } from "../skill-area-16/RomanAdventureJourney";
 import { ClassroomActionQuest } from "../english-area-1/ClassroomActionQuest";
+import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
 import {
 	createFixtureRoundClient,
 	type FixtureRoundClient,
@@ -147,7 +148,8 @@ export interface MobileLearningService
 		| "presentAfter"
 		| "answerAfter"
 		| "telemetry"
-	> {}
+	>,
+	Partial<Pick<LearningFlowClient, "cameraConsent" | "setCameraConsent">> {}
 
 const DEV_LEARNER = "00000000-0000-4000-8000-000000000721";
 const FIXTURE_LOOPS: Partial<Record<string, DraftTemplateId>> = {
@@ -307,9 +309,36 @@ export function MobileLearningApp({
 		() => fixtureRounds ?? createFixtureRoundClient({ learnerId }),
 		[fixtureRounds, learnerId],
 	);
+	const [cameraConsent, setCameraConsent] = useState(false);
+	// Learner-state camera: only with the guardian's consent, and only while a mathematics game
+	// screen is open. Frames stay on the device; only 11 numbers go with each answer.
+	const camera = useGameVisualFeatures({
+		enabled:
+			cameraConsent &&
+			GAME_SCREENS.has(screen) &&
+			screen !== "classroom-action-quest",
+	});
+	const visualFeatures = useRef(camera.visualFeatures);
+	visualFeatures.current = camera.visualFeatures;
 	const api = useMemo(
-		() => service ?? createLearningFlowClient({ learnerId }),
+		() =>
+			service ??
+			createLearningFlowClient({
+				learnerId,
+				visualFeatures: () => visualFeatures.current(),
+			}),
 		[learnerId, service],
+	);
+	useEffect(() => {
+		api
+			.cameraConsent?.()
+			.then(setCameraConsent, () => setCameraConsent(false));
+	}, [api]);
+	const changeCameraConsent = useCallback(
+		(granted: boolean) => {
+			api.setCameraConsent?.(granted).then(setCameraConsent, () => undefined);
+		},
+		[api],
 	);
 	const runApi = useCallback(<T,>(operation: () => Promise<T>): Promise<T> => {
 		const result = apiTail.current.then(operation, operation);
@@ -857,7 +886,18 @@ export function MobileLearningApp({
 					onContinue={() => setScreen(papersRoute ? "practice" : "home")}
 				/>
 			)}
-			{screen === "home" && <PlannedPage title="මුල් පිටුව" />}
+			{screen === "home" && (
+				<PlannedPage title="මුල් පිටුව">
+					{/* The bottom navigation has no account tab, so the guardian reaches settings,
+					    including the learner-state camera decision, from here. */}
+					<button
+						className="secondary-action"
+						onClick={() => setScreen("settings")}
+					>
+						<AppIcon name="settings" size={19} /> වැඩිහිටි සැකසුම්
+					</button>
+				</PlannedPage>
+			)}
 			{screen === "learn" && (
 				<GamesHome
 					onPlay={() => setScreen("mission")}
@@ -968,6 +1008,8 @@ export function MobileLearningApp({
 					onSync={sync}
 					reducedMotion={reducedMotion}
 					setReducedMotion={setReducedMotion}
+					cameraConsent={cameraConsent}
+					onCameraConsent={changeCameraConsent}
 					onBack={() => setScreen("home")}
 				/>
 			)}
@@ -1445,11 +1487,18 @@ function ProfileSetup({
 	);
 }
 
-function PlannedPage({ title }: { title: string }) {
+function PlannedPage({
+	title,
+	children,
+}: {
+	title: string;
+	children?: ReactNode;
+}) {
 	return (
 		<section className="tab-screen planned-page" data-planned-page={title}>
 			<h1>{title}</h1>
 			<p className="planned-mark">To be implemented</p>
+			{children}
 		</section>
 	);
 }
@@ -1909,12 +1958,16 @@ function Settings({
 	onSync,
 	reducedMotion,
 	setReducedMotion,
+	cameraConsent,
+	onCameraConsent,
 	onBack,
 }: {
 	syncState: SyncState;
 	onSync(): void;
 	reducedMotion: boolean;
 	setReducedMotion(value: boolean): void;
+	cameraConsent: boolean;
+	onCameraConsent(granted: boolean): void;
 	onBack(): void;
 }) {
 	return (
@@ -1930,6 +1983,19 @@ function Settings({
 				/>{" "}
 				චලනය අඩු කරන්න
 			</label>
+			<label className="toggle">
+				<input
+					type="checkbox"
+					checked={cameraConsent}
+					onChange={(event) => onCameraConsent(event.target.checked)}
+				/>{" "}
+				ඉගෙනීමට උදව් වීමට කැමරාව භාවිත කරන්න
+			</label>
+			<p className="camera-consent-note">
+				කැමරා රූප මෙම උපාංගයෙන් පිටතට නොයයි, ගබඩා කරන්නේද නැත. ඉගෙනුම්
+				ක්‍රීඩා අතරතුර ඇස් සහ හිසෙහි පිහිටීම පිළිබඳ අංක කිහිපයක් පමණක් භාවිත
+				වේ. ඕනෑම වේලාවක මෙය අක්‍රිය කළ හැක.
+			</p>
 			<p role="status">
 				සමමුහුර්ත තත්ත්වය: <strong>{labels[syncState]}</strong>
 			</p>

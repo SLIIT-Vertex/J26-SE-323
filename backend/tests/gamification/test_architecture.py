@@ -24,6 +24,7 @@ PUBLISHED_CONTRACT_MODULES = (
     "app.curriculum.application",
     "app.knowledge_tracing.application.mastery",
     "app.learner_state.application.support_need",
+    "app.learner_state.application.answer_recording",
 )
 ADAPTER_LAYER = "infrastructure"
 DATA_FILE_SUFFIXES = {".csv", ".json", ".jsonl", ".xlsx"}

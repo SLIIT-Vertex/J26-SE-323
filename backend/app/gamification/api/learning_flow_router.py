@@ -8,17 +8,23 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.gamification.api.dependencies import NOT_FOR_PRODUCTION
+from app.gamification.api.router import VisualFeatureWindow
 from app.gamification.application.delivery import RateLimiter, get_rate_limiter
 from app.gamification.application.fixture_round import FixtureRoundError, FixtureRoundService
+from app.gamification.application.learner_state_answers import (
+    LEARNER_STATE_CAMERA_CONSENT_VERSION,
+    LEARNER_STATE_CAMERA_PURPOSE,
+)
 from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrationError,
     LearningFlowOrchestrator,
 )
+from app.gamification.application.records import ConsentDecision
 from app.gamification.content.area_support_catalog import (
     AreaSupportCatalog,
     AreaSupportRow,
@@ -29,6 +35,10 @@ from app.gamification.content.draft_mission_catalog import (
     DraftMissionRecord,
     load_draft_mission_catalog,
 )
+from app.gamification.infrastructure.db.consent_store import (
+    CONSENT_CONTRACT,
+    SqlAlchemyConsentStore,
+)
 from app.gamification.infrastructure.db.learning_flow_gateways import (
     SqlAlchemyLearningFlowEvidencePublisher,
     SqlAlchemyProbeGateway,
@@ -37,6 +47,9 @@ from app.gamification.infrastructure.db.learning_flow_store import (
     SqlAlchemyLearningFlowStore,
 )
 from app.gamification.infrastructure.db.models import LearningFlowProbeReservationModel
+from app.gamification.infrastructure.gateways.learner_state_answers import (
+    learner_state_answer_gateway,
+)
 from app.shared.database.session import get_db
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
 
@@ -64,6 +77,33 @@ class AnswerRequest(Boundary):
     constructed_response: dict[str, object] | None = Field(default=None, max_length=20)
     response_time_ms: int | None = Field(default=None, ge=0, le=86_400_000)
     interaction_summary: dict[str, object] = Field(default_factory=dict, max_length=12)
+    # Optional learner-state evidence: the 11 on-device camera numbers of the last 10 seconds
+    # (used only with camera consent) and the app session the answer belongs to.
+    visual: VisualFeatureWindow | None = None
+    learner_state_session_id: UUID | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def discard_invalid_optional_visual(cls, value: object) -> object:
+        """Optional camera evidence can never turn a valid answer into a 422."""
+        if not isinstance(value, dict) or value.get("visual") is None:
+            return value
+        try:
+            VisualFeatureWindow.model_validate(value["visual"])
+        except ValidationError:
+            cleaned = dict(value)
+            cleaned.pop("visual")
+            return cleaned
+        return value
+
+
+class CameraConsentRequest(Boundary):
+    granted: bool
+
+
+class CameraConsentResponse(Boundary):
+    granted: bool
+    decided_at: datetime | None
 
 
 class SupportCompleteRequest(Boundary):
@@ -296,10 +336,17 @@ def _fixture_call(operation):
 
 
 def get_learning_flow_orchestrator(db: Session = Depends(get_db)) -> LearningFlowOrchestrator:
+    engine = db.get_bind()
     return LearningFlowOrchestrator(
         SqlAlchemyLearningFlowStore(db),
         probe_gateway=SqlAlchemyProbeGateway(db),
         evidence_publisher=SqlAlchemyLearningFlowEvidencePublisher(db),
+        # Learner-state records in its own session on the same database, after the answer is
+        # committed, so it never commits or rolls back the game's transaction.
+        learner_state=learner_state_answer_gateway(
+            lambda: Session(bind=engine, autoflush=False, expire_on_commit=False)
+        ),
+        camera_consent=SqlAlchemyConsentStore(db),
     )
 
 
@@ -417,6 +464,8 @@ def answer_before(
             response_time_ms=body.response_time_ms,
             interaction_summary=body.interaction_summary,
             idempotency_key=key,
+            visual=None if body.visual is None else body.visual.model_dump(),
+            learner_state_session_id=body.learner_state_session_id,
         )
     )
 
@@ -494,8 +543,46 @@ def answer_after(
             constructed_response=body.constructed_response,
             response_time_ms=body.response_time_ms,
             idempotency_key=key,
+            visual=None if body.visual is None else body.visual.model_dump(),
+            learner_state_session_id=body.learner_state_session_id,
         )
     )
+
+
+@routes.get("/consents/learner-state-camera", response_model=CameraConsentResponse)
+def read_camera_consent(
+    learner_id: UUID = Depends(_learner),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    try:
+        decision = SqlAlchemyConsentStore(db).get_consent(
+            learner_id=learner_id, purpose=LEARNER_STATE_CAMERA_PURPOSE
+        )
+    except LookupError:
+        return {"granted": False, "decided_at": None}
+    return {"granted": decision.granted, "decided_at": decision.decided_at}
+
+
+@routes.put("/consents/learner-state-camera", response_model=CameraConsentResponse)
+def record_camera_consent(
+    body: CameraConsentRequest,
+    learner_id: UUID = Depends(_learner),
+    db: Session = Depends(get_db),
+) -> dict[str, object]:
+    """Development stand-in for the guardian's camera decision; production needs guardian auth."""
+    if SqlAlchemyLearnerRepository(db).get(learner_id) is None:
+        raise HTTPException(status_code=404, detail={"code": "LEARNER_NOT_FOUND"})
+    decision = ConsentDecision(
+        learner_id=learner_id,
+        purpose=LEARNER_STATE_CAMERA_PURPOSE,
+        granted=body.granted,
+        consent_version=LEARNER_STATE_CAMERA_CONSENT_VERSION,
+        decided_at=datetime.now(UTC),
+        expires_at=None,
+        contract_version=CONSENT_CONTRACT,
+    )
+    SqlAlchemyConsentStore(db).record(decision)
+    return {"granted": decision.granted, "decided_at": decision.decided_at}
 
 
 @routes.post("/episodes/{episode_id}/telemetry", response_model=TelemetryAcknowledgement)
