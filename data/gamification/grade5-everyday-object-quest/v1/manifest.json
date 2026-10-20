@@ -1,0 +1,13 @@
+{
+  "area_id": "G5-AREA-ENG-05",
+  "title": "What we use",
+  "package_version": "g5-eng-everyday-object-quest-draft-v1",
+  "status": "draft_human_review_required",
+  "curriculum_medium": "si",
+  "target_language": "en",
+  "instruction_language": "si",
+  "atomic_skills": ["G5-ENG-OBJECT-VOCAB-01", "G5-ENG-OBJECT-PLACE-02", "G5-ENG-OBJECT-NAME-03"],
+  "visual_system": "emoji_css_code_only",
+  "raster_assets_allowed": false,
+  "production_release": false
+}

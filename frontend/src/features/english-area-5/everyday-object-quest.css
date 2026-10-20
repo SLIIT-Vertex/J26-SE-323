@@ -1,0 +1,142 @@
+.everyday-object-quest .object-icon {
+	display: grid;
+	place-items: center;
+	width: 82px;
+	height: 72px;
+	border-radius: 20px;
+	background: linear-gradient(145deg, #fff8dc, #e8f7ff);
+	font-size: 2.8rem;
+	box-shadow:
+		inset 0 0 0 2px #ffffffb8,
+		0 5px 12px #26465320;
+}
+.everyday-object-quest .caq-game-card > .object-icon {
+	flex: 0 0 82px;
+}
+.object-board {
+	display: grid;
+	gap: 14px;
+}
+.object-workbench {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+	padding: 14px;
+	border: 2px solid #d7b35c;
+	border-radius: 24px;
+	background: repeating-linear-gradient(
+		90deg,
+		#f7dda1 0 24px,
+		#f2cf82 24px 48px
+	);
+}
+.object-word-rail,
+.chunk-rail,
+.phrase-slots {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+}
+.object-word-rail button,
+.chunk-rail button,
+.phrase-slots button {
+	min-height: 50px;
+	padding: 10px 15px;
+	border: 2px solid #6da88b;
+	border-radius: 15px;
+	background: white;
+	color: #1f3c31;
+	font: inherit;
+	font-weight: 850;
+}
+.object-word-rail button.selected,
+.chunk-rail button.selected {
+	border-color: #7252c7;
+	background: #eee8ff;
+	transform: translateY(-2px);
+}
+.object-word-rail button:disabled,
+.chunk-rail button:disabled {
+	opacity: 0.45;
+}
+.object-target {
+	display: grid;
+	place-items: center;
+	gap: 6px;
+	min-height: 124px;
+	border: 2px dashed #6da88b;
+	border-radius: 20px;
+	background: #fffcf0;
+	color: #1f3c31;
+	font: inherit;
+	font-weight: 800;
+}
+.everyday-object-quest .object-target .object-icon {
+	width: 64px;
+	height: 56px;
+	font-size: 2.25rem;
+}
+.room-zones {
+	display: grid;
+	gap: 12px;
+}
+.room-zone {
+	min-height: 112px;
+	border: 3px dashed #79a7d3;
+	border-radius: 22px;
+	padding: 12px;
+	background: #eaf5ff;
+	color: #193d5a;
+	font: inherit;
+	font-weight: 900;
+}
+.room-zone:nth-child(2) {
+	border-color: #d89778;
+	background: #fff0e7;
+	color: #673822;
+}
+.room-zone span {
+	display: block;
+	margin-top: 8px;
+	font-size: 0.8rem;
+}
+.name-builder {
+	display: grid;
+	gap: 16px;
+	justify-items: center;
+	padding: 18px;
+	border-radius: 24px;
+	background: #f2f8e9;
+}
+.phrase-slots {
+	width: 100%;
+}
+.phrase-slots button {
+	min-width: 42%;
+	border-style: dashed;
+	background: #fff;
+}
+.code-companion {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 1.4rem;
+	animation: object-bob 2.4s ease-in-out infinite;
+}
+@keyframes object-bob {
+	50% {
+		transform: translateY(-4px) rotate(2deg);
+	}
+}
+[data-reduced-motion] .code-companion {
+	animation: none;
+}
+@media (min-width: 520px) {
+	.object-workbench {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	.room-zones {
+		grid-template-columns: 1fr 1fr;
+	}
+}
