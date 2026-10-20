@@ -1,0 +1,28 @@
+{
+  "area_id": "G5-AREA-ENG-06",
+  "registered_title": "Our food",
+  "theme_heading": "Theme 6: Our Food",
+  "package_version": "g5-eng-island-food-festival-draft-v1",
+  "status": "draft_human_review_required",
+  "curriculum_medium": "si",
+  "target_language": "en",
+  "instruction_language": "si",
+  "atomic_skills": [
+    "G5-ENG-FOOD-VOCAB-01",
+    "G5-ENG-FOOD-GROUP-02",
+    "G5-ENG-FOOD-NAME-03"
+  ],
+  "visual_system": "emoji_css_code_only",
+  "raster_assets_allowed": false,
+  "production_release": false,
+  "review_gates_open": [
+    "curriculum_fidelity",
+    "english",
+    "sinhala",
+    "glyph_clarity",
+    "accessibility",
+    "culture_context",
+    "answer_leakage",
+    "parallel_equivalence"
+  ]
+}
