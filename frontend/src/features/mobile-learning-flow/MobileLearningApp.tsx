@@ -1837,14 +1837,12 @@ function Onboarding({
 		);
 	};
 	return (
+		// Swiping is a touch shortcut; the previous/next buttons give keyboard and screen-reader
+		// users the same navigation.
 		<section
 			className="onboarding-screen"
 			aria-roledescription="carousel"
-			tabIndex={0}
-			onKeyDown={(event) => {
-				if (event.key === "ArrowLeft") moveSlide(-1);
-				if (event.key === "ArrowRight") moveSlide(1);
-			}}
+			aria-label="MindBridge හඳුන්වාදීම"
 			onPointerDown={(event) => {
 				pointerStart.current = event.clientX;
 			}}
@@ -1956,14 +1954,13 @@ function LanguageSetup({
 			<p className="eyebrow">ඉගෙනුම් භාෂාව</p>
 			<h1>සිංහල මාධ්‍ය ඉගෙනීම</h1>
 			<p className="quiet">මෙම ඉගෙනුම් ගමන 5 ශ්‍රේණිය සඳහා සිංහලෙන් සකස් කර ඇත.</p>
-			<div className="language-list" role="radiogroup" aria-label="ඉගෙනුම් භාෂාව">
+			<div className="language-list">
 				<button
 					type="button"
 					className={
 						selected ? "language-card language-card--selected" : "language-card"
 					}
-					role="radio"
-					aria-checked={selected}
+					aria-pressed={selected}
 					onClick={() => setSelected((value) => !value)}
 				>
 					<span className="language-sample">ආයුබෝවන්</span>
@@ -2975,7 +2972,8 @@ function ProgressScreen({
 				</div>
 			</header>
 
-			<div className="progress-range" role="group" aria-label="ප්‍රගති කාල පරාසය">
+			<fieldset className="progress-range">
+				<legend className="sr-only">ප්‍රගති කාල පරාසය</legend>
 				<button
 					type="button"
 					className={range === "week" ? "is-active" : ""}
@@ -2998,7 +2996,7 @@ function ProgressScreen({
 				>
 					මෙම මාසය
 				</button>
-			</div>
+			</fieldset>
 
 			<article className="progress-overview-card">
 				<div
@@ -3043,7 +3041,7 @@ function ProgressScreen({
 					</div>
 					<span>{activity[activeIndex].xp} XP</span>
 				</div>
-				<div
+				<figure
 					className={`activity-chart activity-chart--${range}`}
 					aria-label="ඉගෙනුම් ක්‍රියාකාරීත්ව සටහන"
 				>
@@ -3062,7 +3060,7 @@ function ProgressScreen({
 							<small>{day.label}</small>
 						</button>
 					))}
-				</div>
+				</figure>
 			</article>
 
 			<div className="section-heading progress-section-heading">
@@ -3325,11 +3323,11 @@ function Account({
 			</div>
 
 			{editing && (
-				<div className="profile-edit-panel" aria-label="පැතිකඩ සංස්කරණය">
+				<section className="profile-edit-panel" aria-labelledby="profile-edit-title">
 					<div className="profile-edit-heading">
 						<div>
 							<p className="eyebrow">පුද්ගලීකරණය</p>
-							<h2>ඔබේ පැතිකඩ වෙනස් කරන්න</h2>
+							<h2 id="profile-edit-title">ඔබේ පැතිකඩ වෙනස් කරන්න</h2>
 						</div>
 						<button
 							type="button"
@@ -3385,7 +3383,7 @@ function Account({
 							වෙනස්කම් සුරකින්න
 						</button>
 					</div>
-				</div>
+				</section>
 			)}
 			<div className="profile-stats">
 				<div>

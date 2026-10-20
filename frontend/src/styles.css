@@ -757,13 +757,6 @@ p {
 	align-items: center;
 	justify-content: space-between;
 }
-.field-card > span small {
-	color: var(--faint);
-	font-size: 0.6rem;
-	font-weight: 750;
-	letter-spacing: 0;
-	text-transform: none;
-}
 .field-card input {
 	min-height: 34px;
 	padding: 0;
@@ -4656,4 +4649,13 @@ p {
 	.mindy-scroll {
 		scroll-behavior: auto;
 	}
+}
+
+/* Kept last: more specific than the generic "... small" rules above (Biome noDescendingSpecificity). */
+.field-card > span small {
+	color: var(--faint);
+	font-size: 0.6rem;
+	font-weight: 750;
+	letter-spacing: 0;
+	text-transform: none;
 }

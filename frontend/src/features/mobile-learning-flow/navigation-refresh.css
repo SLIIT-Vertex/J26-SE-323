@@ -135,7 +135,7 @@
 .progress-streak { display: flex; align-items: center; gap: .3rem; padding: .55rem .75rem; border-radius: 999px; color: #b65b1d; background: var(--orange-soft); }
 .progress-streak strong { font-size: .9rem; }
 .progress-streak small { font-size: .62rem; font-weight: 800; }
-.progress-range { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; margin-bottom: 1rem; padding: .25rem; border-radius: 17px; background: #e9e4f3; }
+.progress-range { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; min-width: 0; margin: 0 0 1rem; padding: .25rem; border: 0; border-radius: 17px; background: #e9e4f3; }
 .progress-range button { min-height: 42px; border: 0; border-radius: 13px; color: var(--muted); background: transparent; font-size: .75rem; font-weight: 850; }
 .progress-range button.is-active { color: var(--purple-dark); background: #fff; box-shadow: 0 4px 12px rgba(46,42,69,.08); }
 .progress-overview-card { position: relative; display: grid; grid-template-columns: 102px minmax(0,1fr); align-items: center; gap: 1rem; padding: 1.2rem; overflow: hidden; border-radius: 28px; color: #fff; background: linear-gradient(140deg,#7868ec,#5842cd); box-shadow: 0 18px 34px rgba(91,72,211,.24); }
@@ -157,7 +157,7 @@
 .progress-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .progress-card-heading h2 { margin: 0; font-size: 1rem; }
 .progress-card-heading > span { padding: .35rem .6rem; border-radius: 999px; color: var(--purple-dark); background: var(--purple-soft); font-size: .65rem; font-weight: 900; }
-.activity-chart { display: grid; grid-template-columns: repeat(7,1fr); align-items: end; gap: .35rem; height: 164px; margin-top: .8rem; padding-top: 1rem; }
+.activity-chart { display: grid; grid-template-columns: repeat(7,1fr); align-items: end; gap: .35rem; height: 164px; margin: .8rem 0 0; padding-top: 1rem; }
 .activity-chart--month { grid-template-columns: repeat(4,1fr); }
 .activity-chart button { display: grid; grid-template-rows: 1fr auto; align-items: end; justify-items: center; gap: .4rem; min-width: 0; min-height: 0; height: 100%; padding: 0; border: 0; color: var(--muted); background: transparent; }
 .activity-chart button > i { position: relative; display: block; width: min(30px,80%); min-height: 18px; border-radius: 10px 10px 5px 5px; background: #dcd6f6; transition: height .25s ease,background .2s ease; }
