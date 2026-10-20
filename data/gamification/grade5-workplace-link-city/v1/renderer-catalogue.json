@@ -1,0 +1,7 @@
+{
+  "catalogue_version": "g5-eng-work-renderers-v1",
+  "public_descriptor_type": "opaque_integer_variant",
+  "worker_representation": "neutral_css_silhouette_plus_reviewed_context_cue",
+  "relationship_destinations": [{"variant": 0, "cue": "crop rows"}, {"variant": 1, "cue": "stall counter"}, {"variant": 2, "cue": "neutral facade with book"}, {"variant": 3, "cue": "neutral care facade"}, {"variant": 4, "cue": "multiple generic structures"}, {"variant": 5, "cue": "workbench"}],
+  "review_state": "open"
+}

@@ -1,0 +1,20 @@
+{
+  "screenshot_identity": ["theme-11-ways-of-making-work-easy-places"],
+  "transcription_status": "draft_from_supplied_screenshot",
+  "review_state": "unresolved",
+  "theme_heading": {"english": "Theme 11: Ways of Making Work Easy", "sinhala": "වැඩ පහසු කිරීමේ මං"},
+  "subheading": {"english": "Places Where People Work", "sinhala": "මිනිසුන් වැඩ කරන ස්ථාන"},
+  "pairs": [
+    {"english": "Farmer - Paddy Field", "sinhala": "ගොවියා - කුඹුර", "confidence": "high"},
+    {"english": "Fisherman - Sea", "sinhala": "ධීවරයා - මුහුද", "confidence": "medium_pending_review"},
+    {"english": "Fish monger - Fish Stall", "sinhala": "මාළු වෙළෙන්දා - මාළු අලෙවිසැල", "confidence": "medium_pending_review"},
+    {"english": "Teacher - School", "sinhala": "ගුරුවරයා - පාසල", "confidence": "high"},
+    {"english": "Doctor - Hospital", "sinhala": "වෛද්‍යවරයා - රෝහල", "confidence": "high"},
+    {"english": "Electrician - Buildings", "sinhala": "විදුලි කාර්මිකයා - ගොඩනැගිලි", "confidence": "high"},
+    {"english": "Mason - Buildings", "sinhala": "පෙදරේරුවා - ගොඩනැගිලි", "confidence": "high"},
+    {"english": "Carpenter - Workshop", "sinhala": "වඩුවා - වැඩපොළ", "confidence": "medium_pending_review"}
+  ],
+  "approved_normalizations": [],
+  "excluded_from_scored_content": [{"english": "Fisherman - Sea", "reason": "gendered source term pending curriculum, English, inclusion, and Sinhala review"}],
+  "review_issues": ["Registered-title capitalization differs from source", "Retain two-word Fish monger pending English review", "Buildings is plural and shared by Electrician and Mason", "Sea and Workshop are simplified lesson associations, not exclusive workplace claims", "Worker renderers must not encode gender, skin colour, disability, wealth, ethnicity, or status"]
+}

@@ -1,0 +1,23 @@
+.workplace-link-city { --caq-accent:#2563eb; --caq-deep:#1e3a8a; background:linear-gradient(160deg,#eff6ff,#f0fdfa 48%,#fff7ed); }
+.city-skyline { display:grid; grid-template-columns:repeat(3,1fr); gap:.4rem; margin:.5rem 0 1rem; }
+.city-chip { min-width:0; text-align:center; padding:.55rem .2rem; background:#fff; border-radius:1rem; color:#1e40af; box-shadow:0 3px 0 #bfdbfe; font-size:.7rem; }
+.city-chip strong { display:block; overflow-wrap:anywhere; }
+.badge-tray,.occupation-tray { display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; padding:.7rem; border-radius:1.1rem; background:#dbeafe; }
+.work-label { min-height:3rem; border:2px solid #2563eb; border-radius:.8rem; background:#fff; padding:.6rem .8rem; color:#1e3a8a; font:inherit; font-weight:850; box-shadow:0 3px 0 #93c5fd; }
+.work-label[aria-pressed="true"] { outline:4px solid #0f766e; transform:translateY(2px); }
+.work-label:disabled { opacity:.5; box-shadow:none; }
+.work-card-grid,.route-hubs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; margin:1rem 0; }
+.work-card,.place-hub { min-height:8rem; border:2px dashed #3b82f6; border-radius:1.1rem; background:rgba(255,255,255,.95); padding:.55rem; display:grid; place-items:center; align-content:center; gap:.3rem; color:#1e3a8a; }
+.work-card[data-selected="true"],.place-hub[data-count]:not([data-count="0"]) { border-style:solid; box-shadow:0 0 0 4px #bfdbfe; }
+.neutral-worker { position:relative; width:4.4rem; height:4.5rem; display:block; }
+.neutral-worker::before { content:""; position:absolute; width:1.35rem; height:1.35rem; border-radius:50%; top:.1rem; left:1.52rem; background:#94a3b8; }
+.neutral-worker::after { content:""; position:absolute; width:2.8rem; height:2.55rem; border-radius:1.2rem .95rem .5rem .5rem; top:1.45rem; left:.8rem; background:linear-gradient(135deg,#60a5fa,#0f766e); }
+.neutral-worker span { position:absolute; z-index:2; right:.05rem; bottom:.15rem; width:2rem; height:2rem; display:grid; place-items:center; border-radius:50%; background:#fef3c7; font-size:1.25rem; }
+.place-mark { width:4.5rem; height:3.7rem; display:grid; place-items:center; font-size:2.7rem; border-radius:.8rem; background:linear-gradient(#bae6fd 0 45%,#bbf7d0 46%); }
+.place-hub { position:relative; min-height:7.5rem; border-color:#0f766e; }
+.capacity-meter { display:flex; gap:.25rem; }
+.capacity-meter i { width:.75rem; height:.75rem; border-radius:50%; border:2px solid #0f766e; background:#fff; }
+.capacity-meter i[data-filled="true"] { background:#0f766e; box-shadow:inset 0 0 0 2px #fff; }
+.clear-links { min-height:3rem; width:100%; border:2px solid #64748b; border-radius:.8rem; background:#fff; color:#334155; font-weight:800; }
+.city-instruction { text-align:center; color:#1e3a8a; font-weight:750; font-size:.84rem; }
+@media (min-width:500px) { .work-card-grid,.route-hubs { grid-template-columns:repeat(3,minmax(0,1fr)); } }
