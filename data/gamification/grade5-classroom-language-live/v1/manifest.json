@@ -1,0 +1,15 @@
+{
+  "package_id": "grade5-classroom-language-live",
+  "version": "g5-eng-classroom-language-live-draft-v1",
+  "area_id": "G5-AREA-ENG-17",
+  "title": "Classroom Language",
+  "working_title": "Classroom Language Live",
+  "status": "development_draft_fail_closed_in_production",
+  "skills": [
+    {"skill_id": "G5-ENG-CLASS-FUNCTION-01", "response_kind": "classroom_function_sort"},
+    {"skill_id": "G5-ENG-CLASS-COMMAND-02", "response_kind": "classroom_command_action"},
+    {"skill_id": "G5-ENG-CLASS-CONTEXT-03", "response_kind": "classroom_context_expression_links"},
+    {"skill_id": "G5-ENG-CLASS-QUESTION-04", "response_kind": "classroom_question_sequence"}
+  ],
+  "review_gates": ["curriculum", "english", "sinhala", "functional_context", "inclusion", "physical_safety", "accessibility", "answer_leakage", "parallel_equivalence"]
+}
