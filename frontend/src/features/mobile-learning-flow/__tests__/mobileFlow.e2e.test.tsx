@@ -127,7 +127,7 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("opens Tutor from Mindy while leaving planned tabs and practice intact", async () => {
+	it("renders an interactive home and profile, opens Tutor from Mindy and papers from practice", async () => {
 		const container = document.createElement("div");
 		document.body.append(container);
 		const root = createRoot(container);
@@ -135,24 +135,60 @@ describe("baseline mobile flow", () => {
 			root.render(<MobileLearningApp service={fakeService()} />),
 		);
 		await click(container, "මගේ පැතිකඩට");
-		for (const [tab, title] of [
-			["මුල් පිටුව", "මුල් පිටුව"],
-			["ප්‍රගතිය", "ප්‍රගතිය"],
-		] as const) {
-			await click(container, tab);
-			expect(
-				container
-					.querySelector("[data-planned-page]")
-					?.getAttribute("data-planned-page"),
-			).toBe(title);
-			expect(container.textContent).toContain("To be implemented");
-		}
+		expect(container.querySelector(".home-screen")).not.toBeNull();
+		expect(container.textContent).toContain("අද මෙහෙයුම");
+		expect(container.textContent).toContain("Mindyගෙන් උදව්වක් ඕනෑ ද?");
+		expect(container.textContent).not.toContain("To be implemented");
+
+		await click(container, "නව දැනුම්දීම් 1ක්");
+		expect(container.textContent).toContain("අද මෙහෙයුම සූදානම්!");
+		await click(container, "දැනුම්දීම කියවූ ලෙස සලකුණු කරන්න");
+		expect(container.textContent).not.toContain("අද මෙහෙයුම සූදානම්!");
+
+		await click(container, "පැතිකඩ බලන්න");
+		expect(container.querySelector(".account-screen")).not.toBeNull();
+		expect(container.textContent).toContain("පුංචි ගවේෂකයා");
+		await click(container, "වෙනස් කරන්න");
+		expect(container.textContent).toContain("ඔබේ පැතිකඩ වෙනස් කරන්න");
+		const nameInput = container.querySelector<HTMLInputElement>(
+			".profile-edit-panel input",
+		);
+		expect(nameInput).not.toBeNull();
+		await act(async () => {
+			const valueSetter = Object.getOwnPropertyDescriptor(
+				HTMLInputElement.prototype,
+				"value",
+			)?.set;
+			valueSetter?.call(nameInput, "නෙතුමි");
+			nameInput?.dispatchEvent(new Event("input", { bubbles: true }));
+		});
+		await click(container, "නිල් වර්ණය");
+		await click(container, "වෙනස්කම් සුරකින්න");
+		expect(container.querySelector(".profile-hero h1")?.textContent).toBe(
+			"නෙතුමි",
+		);
+		await click(container, "මුල් පිටුවට ආපසු");
 		await click(container, "Mindy");
 		await waitForSelector(container, ".tutor-workspace");
 		expect(container.querySelector(".mindy-chat")).not.toBeNull();
 		expect(container.querySelector("[data-planned-page]")).toBeNull();
 		expect(container.querySelectorAll("main.mobile-shell")).toHaveLength(1);
-		await click(container, "පුහුණුව");
+		await click(container, "ප්‍රගතිය");
+		expect(container.querySelector(".progress-screen")).not.toBeNull();
+		expect(container.textContent).toContain("ඔබ හොඳින් ඉදිරියට යනවා!");
+		expect(container.textContent).not.toContain("To be implemented");
+		await click(container, "මෙම මාසය");
+		expect(container.textContent).toContain("228");
+		await click(container, "පරිසරය");
+		expect(container.textContent).toContain("සත්ව ලෝකය");
+		const practiceTab = [
+			...container.querySelectorAll(".bottom-navigation button"),
+		].find((button) => button.textContent?.trim() === "පුහුණුව");
+		expect(practiceTab).toBeTruthy();
+		await act(async () => {
+			practiceTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+			await new Promise((resolve) => setTimeout(resolve, 5));
+		});
 		// the practice tab hosts the papers screens, which use the shared learner (no picker)
 		expect(container.querySelector(".papers-tab .mb")).not.toBeNull();
 		expect(container.querySelector("[data-planned-page]")).toBeNull();
@@ -173,12 +209,35 @@ describe("baseline mobile flow", () => {
 			),
 		);
 		await click(container, "මගේ පැතිකඩට");
+		expect(container.textContent).toContain("කුඩා පියවර, ලොකු දියුණුව");
+		await click(container, "ඊළඟ විනිවිදකය");
+		expect(container.textContent).toContain("සෙල්ලම් කරන අතරතුර ඉගෙන ගන්න");
+		await click(container, "ඊළඟ විනිවිදකය");
+		expect(container.textContent).toContain("Mindy හැම පියවරකම ඔබ සමඟයි");
 		await click(container, "මඟ හරින්න");
 		expect(container.textContent).toContain("සිංහල මාධ්‍ය ඉගෙනීම");
 		expect(container.textContent).not.toMatch(/Tamil|English|தமிழ்/);
+		await click(container, "භාෂා පෙරදසුන");
+		expect(container.textContent).toContain("අප වටා ලෝකය");
+		await click(container, "ආයුබෝවන්");
+		expect(
+			container.querySelector<HTMLButtonElement>(".setup-continue")?.disabled,
+		).toBe(true);
+		await click(container, "ආයුබෝවන්");
 		await click(container, "ඉදිරියට යමු");
 		expect(container.textContent).toContain("5 ශ්‍රේණිය");
 		expect(container.textContent).not.toContain("4 ශ්‍රේණිය");
+		expect(
+			container
+				.querySelector(".setup-progress-track")
+				?.getAttribute("aria-valuenow"),
+		).toBe("3");
+		await click(container, "නිල් වර්ණය");
+		expect(
+			container
+				.querySelector('[aria-label="නිල් වර්ණය"]')
+				?.getAttribute("aria-pressed"),
+		).toBe("true");
 		await act(async () => root.unmount());
 	});
 
