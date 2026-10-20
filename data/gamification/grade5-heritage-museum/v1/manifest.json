@@ -1,0 +1,13 @@
+{
+  "package_id": "grade5-heritage-museum",
+  "version": "g5-eng-heritage-museum-draft-v1",
+  "area_id": "G5-AREA-ENG-16",
+  "title": "Our Past",
+  "working_title": "Heritage Museum Quest",
+  "status": "development_draft_fail_closed_in_production",
+  "skills": [
+    {"skill_id": "G5-ENG-PAST-BILINGUAL-01", "modality": "bilingual_reading", "response_kind": "past_bilingual_links"},
+    {"skill_id": "G5-ENG-PAST-VISUAL-02", "modality": "schematic_visual_reading", "response_kind": "heritage_exhibit_mapping"}
+  ],
+  "review_gates": ["curriculum", "english", "sinhala", "cultural_historical", "renderer_clarity", "accessibility", "answer_leakage", "parallel_equivalence"]
+}
