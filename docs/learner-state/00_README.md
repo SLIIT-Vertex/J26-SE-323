@@ -85,6 +85,7 @@ The fusion weights, reliability rules and temporal thresholds are design decisio
 | [`09_TUTOR_HANDOFF.md`](09_TUTOR_HANDOFF.md) | Skill-specific `support_need` contract for the AI Tutor, stored skill state, open questions |
 | [`10_FRONTEND_INTEGRATION.md`](10_FRONTEND_INTEGRATION.md) | On-device visual features in the browser: camera, MediaPipe, privacy, permissions, browser vs Python equivalence test |
 | [`11_GAME_INTEGRATION.md`](11_GAME_INTEGRATION.md) | Option B game integration: integration point, data and identifier flow, behavioural-field compatibility gaps, consumption of the result |
+| [`12_PILOT_STUDY_PLAN.md`](12_PILOT_STUDY_PLAN.md) | Draft plan for the synchronized multimodal pilot: questions, labels, data, analysis, ethics, prerequisites |
 
 ## 6. Code map
 

@@ -15,6 +15,12 @@
 
 Level A is software correctness. Level B is per-model performance. Neither is evidence for level C.
 
+Level A also includes a local engineering equivalence test: given the same frames, the browser
+pipeline reproduces the training notebook's 11 visual features well within tolerances fixed before
+the run (9 developer-owned clips; [`10` §9](10_FRONTEND_INTEGRATION.md#9-local-equivalence-test-browser-vs-python-mediapipe)).
+It shows that the app computes the features the visual models were trained on; it is not learner
+data and says nothing about detection quality.
+
 ## 2. Unimodal model results (level B)
 
 The four models were trained and evaluated on Kaggle. The notebooks, with their saved outputs, are in
@@ -81,7 +87,8 @@ Other facts that can be verified from the repository:
 
 ## 3. Required multimodal validation (future work)
 
-Final validation of the research contribution needs a **synchronized MindBridge pilot**:
+Final validation of the research contribution needs a **synchronized MindBridge pilot**. A draft
+plan is in [`12_PILOT_STUDY_PLAN.md`](12_PILOT_STUDY_PLAN.md). It needs:
 
 - the same learner, in the same session, with webcam-derived visual features and in-app
   behavioural logs aligned to the same windows;
