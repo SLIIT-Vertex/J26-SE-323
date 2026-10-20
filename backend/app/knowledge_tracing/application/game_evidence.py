@@ -25,6 +25,7 @@ from collections import Counter
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 from uuid import UUID
@@ -117,6 +118,51 @@ def default_crosswalk_path() -> Path:
     return root / "skill-catalogue-review" / "v1" / "universal-skill-crosswalk.jsonl"
 
 
+# ---- the game's own (finer) skills ------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class GameSkillMap:
+    """The game keeps finer skills that are parts of our 30. This says which of our skills each is.
+
+    `sub_skills`: the game's skill label (for example MAT-DIV) -> our skill (MAT-OPS).
+    `item_skills`: the game's item skill id (G5-MAT-DIV-WRITTEN-01) -> our skill.
+    Generated from the game's own data by `scripts/build_game_skill_map.py`; nothing of the game's
+    is changed.
+    """
+
+    sub_skills: Mapping[str, str]
+    item_skills: Mapping[str, str]
+
+
+def default_skill_map_path() -> Path:
+    from app.config import get_settings
+
+    return Path(get_settings().feature_spec_path).parent / "game_skill_map.json"
+
+
+def load_game_skill_map(path: Path | None = None) -> GameSkillMap:
+    path = path or default_skill_map_path()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return GameSkillMap(
+            sub_skills={str(k): str(v) for k, v in data["sub_skills"].items()},
+            item_skills={str(k): str(v) for k, v in data["item_skills"].items()},
+        )
+    except (OSError, ValueError, KeyError, AttributeError) as error:
+        raise CrosswalkUnavailable(f"cannot read the game skill map at {path}") from error
+
+
+@lru_cache
+def _default_skill_map() -> GameSkillMap:
+    return load_game_skill_map()
+
+
+def checked_skills(crosswalk: Mapping[str, str], skill_map: GameSkillMap) -> dict[str, str]:
+    """The skill check used on every record: the game's older crosswalk plus its item skills."""
+    return {**crosswalk, **skill_map.item_skills}
+
+
 def load_crosswalk(path: Path | None = None) -> dict[str, str]:
     """The game's own skill id -> one of our 30 skills."""
     path = path or default_crosswalk_path()
@@ -156,6 +202,7 @@ def evidence_to_command(
     learner_language: str | None,
     *,
     include_development: bool = False,
+    sub_skills: Mapping[str, str] | None = None,
 ) -> DigitalAttemptCommand | str:
     """The answer to save, or the reason this record is not used."""
     if evidence.event_type != EVENT_TYPE:
@@ -172,7 +219,8 @@ def evidence_to_command(
     if not eligible and not (include_development and development):
         return NOT_ELIGIBLE
 
-    skill = evidence.universal_skill_id
+    own_labels = _default_skill_map().sub_skills if sub_skills is None else sub_skills
+    skill = own_labels.get(evidence.universal_skill_id, evidence.universal_skill_id)  # a finer skill -> ours
     if skill not in spec.skills:
         return UNKNOWN_SKILL
     if crosswalk is not None:
@@ -222,6 +270,7 @@ class GameEvidenceIngestor:
         *,
         include_development: bool = False,
         batch_size: int = 500,
+        sub_skills: Mapping[str, str] | None = None,
     ) -> None:
         self.source = source
         self.attempts = attempts
@@ -230,6 +279,7 @@ class GameEvidenceIngestor:
         self.crosswalk = crosswalk
         self.include_development = include_development
         self.batch_size = batch_size
+        self.sub_skills = sub_skills
 
     def run(self, *, dry_run: bool = False) -> IngestReport:
         """Save every usable record that is not saved yet. With dry_run, only report."""
@@ -248,6 +298,7 @@ class GameEvidenceIngestor:
             self.crosswalk,
             language,
             include_development=self.include_development,
+            sub_skills=self.sub_skills,
         )
         if isinstance(outcome, str):
             report.skipped[UNKNOWN_LEARNER if outcome == NO_LANGUAGE and language is None else outcome] += 1

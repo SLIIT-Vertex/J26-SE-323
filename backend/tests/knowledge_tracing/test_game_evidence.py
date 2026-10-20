@@ -159,6 +159,48 @@ def test_a_skill_that_is_not_one_of_the_30_is_skipped() -> None:
     assert command_for(ready(skill="G5-MAT-C03")) == ge.UNKNOWN_SKILL
 
 
+def test_the_games_finer_skills_are_parts_of_ours_and_are_never_changed() -> None:
+    skill_map = ge.load_game_skill_map()
+
+    assert set(skill_map.sub_skills.values()) <= set(SPEC.skills)  # every parent is one of our 30
+    assert set(skill_map.item_skills.values()) <= set(SPEC.skills)
+    assert not set(skill_map.sub_skills) & set(SPEC.skills)  # a finer label never hides a real skill
+    assert skill_map.sub_skills["MAT-DIV"] == "MAT-OPS" and skill_map.sub_skills["MAT-TIME"] == "MAT-TIM"
+
+
+def test_a_finer_skill_with_its_item_skill_is_saved_under_our_parent_skill() -> None:
+    skill_map = ge.load_game_skill_map()
+    checks = ge.checked_skills(CROSSWALK, skill_map)
+    item = ready(game_skill="G5-MAT-DIV-WRITTEN-01", skill="MAT-DIV")  # as her division flow publishes it
+
+    assert evidence_to_command(item, SPEC, checks, "si").skill_code == "MAT-OPS"
+    # a skill of ours that she already uses as it is passes through unchanged
+    own = ready(game_skill="G5-MAT-ADD-MENTAL-01", skill="MAT-OPS")
+    assert evidence_to_command(own, SPEC, checks, "si").skill_code == "MAT-OPS"
+
+
+def test_a_finer_skill_still_has_to_agree_with_its_item_skill() -> None:
+    skill_map = ge.load_game_skill_map()
+    checks = ge.checked_skills(CROSSWALK, skill_map)
+    wrong = ready(game_skill="G5-MAT-DIV-WRITTEN-01", skill="MAT-FRC")  # a division item labelled fractions
+
+    assert evidence_to_command(wrong, SPEC, checks, "si") == ge.SKILL_MISMATCH
+
+
+def test_an_item_skill_that_is_in_no_table_is_still_skipped() -> None:
+    checks = ge.checked_skills(CROSSWALK, ge.load_game_skill_map())
+
+    assert evidence_to_command(ready(game_skill="G5-NEW-GAME-01", skill="MAT-OPS"), SPEC, checks, "si") == ge.NOT_IN_CROSSWALK
+
+
+def test_the_skill_map_file_is_up_to_date_with_the_games_current_skills() -> None:
+    """If this fails, the game added or renamed a skill: run  python -m scripts.build_game_skill_map."""
+    import importlib
+
+    builder = importlib.import_module("scripts.build_game_skill_map")
+    assert builder.main(["--check"]) == 0
+
+
 def test_a_wrong_skill_label_never_reaches_the_model() -> None:
     """The game's publisher once labelled every answer MAT-FRC. The crosswalk says better."""
     environment_answer = ready(game_skill="G5-ENV-C01", skill="MAT-FRC")  # it is an ENV skill

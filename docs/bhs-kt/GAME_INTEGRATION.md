@@ -43,24 +43,47 @@ defaults ever differ. The learner must exist in the database: `python -m scripts
 creates it (once; running it again changes nothing). When there is a login, both should take the
 signed-in child's id instead.
 
+## Her skills are parts of our 30 (nothing of hers is changed)
+
+The game keeps finer skills, for example `MAT-DIV` or the item skill `G5-MAT-DIV-WRITTEN-01`. They are
+parts of our 30 (`MAT-DIV` is a part of `MAT-OPS`), and she keeps all of them as they are.
+`shared/game_skill_map.json` says which of our skills each one belongs to:
+
+* `sub_skills`: her skill label -> ours (`MAT-DIV` -> `MAT-OPS`, `MAT-TIME` -> `MAT-TIM`, ...). A label that
+  is already one of our 30 passes through unchanged.
+* `item_skills`: her item skill id -> ours (87 items today, covering 11 of our skills).
+
+The file is **generated**, not typed: `python -m scripts.build_game_skill_map` reads her flows and her own
+`areas.json` (which names the parent skill of every area). The reader only reads the file and never
+imports the game. A test fails if the file is out of date, so when she adds a game or a skill, run the
+command once and commit the file. Her data is the only source; if `areas.json` names a different parent,
+the file follows it.
+
+The reader still checks every record: the skill on it, after translation, must agree with the one the map
+gives for its item skill. A skill in neither table is skipped, so a wrong or new label cannot slip in.
+
 ## What the game still has to do
 
-1. **Fix `universal_skill_id` in the durable flow.** `_publish_score` writes `"MAT-FRC"` on every
-   record. It should use the skill of the question that was played. Until then, every record for a
-   skill other than fractions is refused.
-2. **Decide when `model_ingestion_eligible` becomes `true`.** It is always `false` today, and the
-   flow only runs in `development` or `test`. Tell us who decides, and how it is switched on
-   (real children, parent consent, approval). Until it is, nothing real is read.
-3. **Send the real difficulty.** `difficulty` is a fixed `"easy"` today. Send `easy`, `medium` or
-   `hard`, converted from the question's own level.
-4. **Send `response_time_ms`.** The mobile app sends no response time, so it is always empty.
-5. **More questions, with variety.** The flow that writes the records has 3 questions in total (one
-   before help, one practice, one after help), all for one fractions skill, so every episode scores
-   the same two. It needs a bank of questions per skill and a way to pick different ones, for as many
-   of our 30 skills as possible. The questions are still `draft`.
-6. **Review the skill crosswalk.** All 548 rows are `draft`, none reviewed. It reaches 25 of our 30
-   skills; the five aptitude skills (APT-LOG, APT-REL, APT-SPA, APT-VIS, APT-WRD) have no game skill.
-   Confirm that is intended.
+Checked on 2026-10-20 by running the game's real division flow through its own publisher and then
+through our reader (17 playable areas publish through the same code).
+
+1. **`model_ingestion_eligible` is still always `false`**, in every publisher, and
+   `playable_area_package.py` types it as `Literal[False]`. Tell us who decides, and how it is switched
+   on (real children, parent consent, approval). Until then nothing real is read.
+2. **`difficulty` is missing.** The adventure flows send no `difficulty` (it is `null`), so every record
+   is skipped as `unknown_difficulty`. Send `easy`, `medium` or `hard`, converted from the item's own
+   level (the older flow's `_difficulty_band` does this).
+3. **The Sinhala language areas and one environment area have no parent skill** (26 of 57 areas are
+   `no_universal_parent` in `areas.json`), and the five aptitude skills (APT-LOG, APT-REL, APT-SPA,
+   APT-VIS, APT-WRD) have no game. Decide whether they get skills of ours or stay outside the model.
+4. **Optional, later:** the old durable fractions flow (`_publish_score`) writes `MAT-FRC` on every
+   record; give it the area's skill. Not needed for the adventure flows.
+
+Done on her side: real `response_time_ms`, and 17 playable areas (16 mathematics, 1 English) with generated
+items instead of 3 questions for one skill.
+
+Result today: `python -m scripts.ingest_game_evidence` still skips every record, for items 1 and 2.
+With both set, her division answers are saved under `MAT-OPS` with their real times (tried on her real flow).
 
 Not needed from the game: a `language` field (the learner's language is used) and any "published"
 marking of outbox rows (the reader does not need it).
