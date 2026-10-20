@@ -16,6 +16,9 @@ import {
 } from "react";
 import { PapersApp } from "../papers/PapersApp";
 import { go, usePapersRoute } from "../papers/router";
+import { CameraConsentCard } from "../learner-state/game/CameraConsentCard";
+import { CameraStatusBadge } from "../learner-state/game/CameraStatusBadge";
+import type { CameraProblem } from "../learner-state/game/cameraText";
 import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
 import {
 	createFixtureRoundClient,
@@ -493,14 +496,21 @@ export function MobileLearningApp({
 		[fixtureRounds, learnerId],
 	);
 	const [cameraConsent, setCameraConsent] = useState(false);
+	const [cameraConsentSaving, setCameraConsentSaving] = useState(false);
+	const [cameraConsentFailed, setCameraConsentFailed] = useState(false);
+	const [cameraProblem, setCameraProblem] = useState<CameraProblem | null>(null);
 	// Learner-state camera: only with the guardian's consent, and only while a mathematics game
 	// screen is open. Frames stay on the device; only 11 numbers go with each answer.
-	const camera = useGameVisualFeatures({
-		enabled:
-			cameraConsent &&
-			GAME_SCREENS.has(screen) &&
-			screen !== "classroom-action-quest",
-	});
+	const cameraEnabled =
+		cameraConsent &&
+		GAME_SCREENS.has(screen) &&
+		screen !== "classroom-action-quest";
+	const camera = useGameVisualFeatures({ enabled: cameraEnabled });
+	// Remember the last camera problem so settings can explain it after the game is closed.
+	useEffect(() => {
+		if (camera.status.state === "error") setCameraProblem(camera.status.kind);
+		if (camera.status.state === "running") setCameraProblem(null);
+	}, [camera.status]);
 	const visualFeatures = useRef(camera.visualFeatures);
 	visualFeatures.current = camera.visualFeatures;
 	const api = useMemo(
@@ -517,7 +527,19 @@ export function MobileLearningApp({
 	}, [api]);
 	const changeCameraConsent = useCallback(
 		(granted: boolean) => {
-			api.setCameraConsent?.(granted).then(setCameraConsent, () => undefined);
+			if (!api.setCameraConsent) return;
+			setCameraConsentSaving(true);
+			setCameraConsentFailed(false);
+			api.setCameraConsent(granted).then(
+				(saved) => {
+					setCameraConsent(saved);
+					setCameraConsentSaving(false);
+				},
+				() => {
+					setCameraConsentFailed(true);
+					setCameraConsentSaving(false);
+				},
+			);
 		},
 		[api],
 	);
@@ -1133,6 +1155,7 @@ export function MobileLearningApp({
 			data-screen={screen}
 			data-game={GAME_SCREENS.has(screen) ? "true" : undefined}
 		>
+			{cameraEnabled && <CameraStatusBadge status={camera.status} />}
 			<Suspense fallback={<p role="status">ක්‍රීඩාව පූරණය වෙමින්…</p>}>
 				{screen === "splash" && (
 					<Splash
@@ -1310,6 +1333,9 @@ export function MobileLearningApp({
 						reducedMotion={reducedMotion}
 						setReducedMotion={setReducedMotion}
 						cameraConsent={cameraConsent}
+						cameraConsentSaving={cameraConsentSaving}
+						cameraConsentFailed={cameraConsentFailed}
+						cameraProblem={cameraProblem}
 						onCameraConsent={changeCameraConsent}
 						onBack={() => setScreen("home")}
 					/>
@@ -2791,6 +2817,9 @@ function Settings({
 	reducedMotion,
 	setReducedMotion,
 	cameraConsent,
+	cameraConsentSaving,
+	cameraConsentFailed,
+	cameraProblem,
 	onCameraConsent,
 	onBack,
 }: {
@@ -2799,6 +2828,9 @@ function Settings({
 	reducedMotion: boolean;
 	setReducedMotion(value: boolean): void;
 	cameraConsent: boolean;
+	cameraConsentSaving: boolean;
+	cameraConsentFailed: boolean;
+	cameraProblem: CameraProblem | null;
 	onCameraConsent(granted: boolean): void;
 	onBack(): void;
 }) {
@@ -2815,18 +2847,13 @@ function Settings({
 				/>{" "}
 				චලනය අඩු කරන්න
 			</label>
-			<label className="toggle">
-				<input
-					type="checkbox"
-					checked={cameraConsent}
-					onChange={(event) => onCameraConsent(event.target.checked)}
-				/>{" "}
-				ඉගෙනීමට උදව් වීමට කැමරාව භාවිත කරන්න
-			</label>
-			<p className="camera-consent-note">
-				කැමරා රූප මෙම උපාංගයෙන් පිටතට නොයයි, ගබඩා කරන්නේද නැත. ඉගෙනුම් ක්‍රීඩා අතරතුර ඇස් සහ
-				හිසෙහි පිහිටීම පිළිබඳ අංක කිහිපයක් පමණක් භාවිත වේ. ඕනෑම වේලාවක මෙය අක්‍රිය කළ හැක.
-			</p>
+			<CameraConsentCard
+				granted={cameraConsent}
+				saving={cameraConsentSaving}
+				saveFailed={cameraConsentFailed}
+				problem={cameraProblem}
+				onChange={onCameraConsent}
+			/>
 			<p role="status">
 				සමමුහුර්ත තත්ත්වය: <strong>{labels[syncState]}</strong>
 			</p>
