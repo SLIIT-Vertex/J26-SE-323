@@ -24,8 +24,10 @@ class BehaviorObservation:
     original: float
 
 
-def _safe_log_response_time(value: float) -> float:
-    return log1p(max(0.0, value))
+def _log_response_time(value: float) -> float | None:
+    # Training treated a negative response time as missing (NaN), not as 0
+    # (research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py).
+    return None if value < 0 else log1p(value)
 
 
 def build_confusion_behavior_features(
@@ -81,10 +83,18 @@ def build_disengagement_behavior_features(
             "baseline_available": 0.0,
         }
 
-    recent_log_rt = sum(
-        _safe_log_response_time(item.ms_first_response)
+    # Like the training rolling mean, missing (negative) response times are
+    # skipped, and at least MIN_BASELINE_HISTORY valid values are required.
+    valid_log_rts = [
+        log_rt
         for item in recent_history
-    ) / history_count
+        if (log_rt := _log_response_time(item.ms_first_response)) is not None
+    ]
+    recent_log_rt = (
+        sum(valid_log_rts) / len(valid_log_rts)
+        if len(valid_log_rts) >= MIN_BASELINE_HISTORY
+        else None
+    )
 
     recent_accuracy = sum(
         item.correct
@@ -101,8 +111,11 @@ def build_disengagement_behavior_features(
         for item in recent_history
     ) / history_count
 
-    current_log_rt = _safe_log_response_time(
-        observation.ms_first_response
+    current_log_rt = _log_response_time(observation.ms_first_response)
+    rt_deviation = (
+        None
+        if current_log_rt is None or recent_log_rt is None
+        else current_log_rt - recent_log_rt
     )
 
     return {
@@ -111,7 +124,7 @@ def build_disengagement_behavior_features(
         "recent_accuracy": recent_accuracy,
         "recent_attempts": recent_attempts,
         "recent_hints": recent_hints,
-        "rt_deviation": current_log_rt - recent_log_rt,
+        "rt_deviation": rt_deviation,
         "attempt_deviation": (
             observation.attempt_count - recent_attempts
         ),

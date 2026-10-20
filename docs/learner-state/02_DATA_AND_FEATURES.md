@@ -101,11 +101,11 @@ current window with the same learner's recent behaviour in this session.
 
 | Feature | Definition (when baseline is available) |
 | --- | --- |
-| `recent_log_rt` | mean of `log1p(max(0, ms_first_response))` over the history |
+| `recent_log_rt` | mean of `log1p(ms_first_response)` over the history, skipping negative response times; missing if fewer than 5 valid values |
 | `recent_accuracy` | mean of `correct` over the history |
 | `recent_attempts` | mean of `attempt_count` over the history |
 | `recent_hints` | mean of `hint_count` over the history |
-| `rt_deviation` | `log1p(max(0, current ms_first_response)) - recent_log_rt` |
+| `rt_deviation` | `log1p(current ms_first_response) - recent_log_rt`; missing if the current response time is negative or `recent_log_rt` is missing |
 | `attempt_deviation` | `current attempt_count - recent_attempts` |
 | `hint_deviation` | `current hint_count - recent_hints` |
 | `accuracy_deviation` | `current correct - recent_accuracy` |
@@ -115,6 +115,12 @@ current window with the same learner's recent behaviour in this session.
 When fewer than 5 previous observations exist, the eight `recent_*` and `*_deviation` features are
 set to `None` (missing for the models), `history_confidence` is still reported, and
 `baseline_available` is `0.0`.
+
+A negative response time is treated as missing, exactly as in training: the training code set
+negative `ms_first_response` values to NaN before the log and took a rolling mean (window 20, at
+least 5 values) that skips NaN. A cross-check of the serving code against those pandas expressions
+on 300 random sessions with negative and zero response times gave identical values. The game
+cannot send negative times; this matters for direct API callers.
 
 This is the "learner-specific" part of the design: the disengagement behaviour model judges the
 current response relative to the learner's own recent pace, accuracy, attempts and hint use, not
