@@ -22,6 +22,7 @@ one depended on it. The order follows the repository history.
 | 13 | `feat: prepare learner-state for in-process game integration` | `LearnerStateRecorder` use case and shared service instance; `WindowOrderError`, `UnknownLearnerError`; `session_id`, `STALE` and freshness rules on the support-need contract; Option B integration design | `application/recording.py`, `application/service.py`, `application/support_need.py`, `api/router.py`, docs 01, 07, 09, 11 |
 | 14 | `feat: retrain behaviour models without ASSISTments-only fields` | Behaviour models retrained without `position` and `first_action` (ablation on Kaggle); confusion behaviour threshold 0.78; both fields removed from the API, which now rejects unknown behaviour fields | `infrastructure/models/`, `infrastructure/model_loader.py`, `infrastructure/feature_builder.py`, `domain/confusion.py`, `api/`, `research/learner-state/notebooks/kaggle_behaviour_ablation_cells.py`, docs 01–07, 11 |
 | 15 | `feat: add learner-state adapter for scored game answers` | `GameAnswerRecorder`, the adapter behind the game's `LearnerStateAnswerGateway`; doc 11 updated for the game side built in #26 | `infrastructure/game_answers.py`, `tests/learner_state/test_game_answers.py`, docs 08, 11 |
+| 16 | `fix: treat negative response times as missing, as in training` | `recent_log_rt` skips negative response times and needs 5 valid values; `rt_deviation` is missing for a negative current time | `infrastructure/feature_builder.py`, `tests/learner_state/test_feature_builder.py`, docs 02, 08 |
 
 ## 2. How the modules interact
 
@@ -74,7 +75,7 @@ Learner-state tests live in two places:
 | --- | --- | --- |
 | `tests/learner_state/test_fusion.py` | Unit | Threshold-centred evidence (0, threshold, 1, clipping, invalid thresholds); reliability weights; one unreliable modality; both reliabilities 0; agreement; conflict penalty; the documented worked example |
 | `tests/learner_state/test_reliability.py` | Unit | Visual reliability for normal pose, extreme pose, linear decrease between quantiles and hidden face; behavioural data-quality penalties and history factor |
-| `tests/learner_state/test_feature_builder.py` | Unit | Feature order matches each model; missing `bottom_hint` filled with the training median and flagged; no baseline below 5 windows; deviation values; only the last 20 windows used; negative response time |
+| `tests/learner_state/test_feature_builder.py` | Unit | Feature order matches each model; missing `bottom_hint` filled with the training median and flagged; no baseline below 5 windows; deviation values; only the last 20 windows used; negative response times treated as missing as in training, zero valid |
 | `tests/learner_state/test_temporal.py` | Unit | Every confusion and disengagement state; low-confidence windows not counted as persistent; progress-gain rule (rising, stuck, falling, unknown, configurable); confidence-weighted summary; history validation |
 | `tests/learner_state/test_learner_state_service.py` | Service | Action priority (every combination order); confusion reliability independent of session length; persistent disengagement; re-engagement before tutor support; productive vs intervention-worthy confusion; duplicate/older windows; rejected windows not changing history; session isolation; `clear_session` |
 | `tests/learner_state/test_model_loader.py` | Unit | Four fixed predictions; every named feature required |
@@ -105,7 +106,7 @@ module added a table.
 ### 3.3 Full repository suite
 
 As of 2026-10-18, the learner-state tests (`tests/learner_state` and `tests/test_learner_state.py`)
-report 143 passed. The full repository suite also passed locally on Windows on the same date.
+report 146 passed. The full repository suite also passed locally on Windows on the same date.
 
 Rerun `pytest` (see §4.3) to get the current result, because the count can change as the
 repository evolves.

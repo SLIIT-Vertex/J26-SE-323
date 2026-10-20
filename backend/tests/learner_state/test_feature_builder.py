@@ -111,10 +111,48 @@ def test_baseline_uses_only_most_recent_history_window() -> None:
     assert features["recent_accuracy"] == 0.0
 
 
-def test_negative_response_time_is_treated_as_zero_in_log_features() -> None:
+# Training masked negative response times to NaN before the log and took a pandas rolling mean
+# (window 20, min_periods 5), which skips NaN; serving must give the same features.
+
+
+def test_negative_current_response_time_has_no_rt_deviation() -> None:
     history = [observation()] * MIN_BASELINE_HISTORY
-    current = replace(observation(), ms_first_response=-50.0)
+    current = replace(observation(), ms_first_response=-50.0, correct=0.0)
 
     features = build_disengagement_behavior_features(current, history)
 
-    assert features["rt_deviation"] == pytest.approx(-log(1000.0))
+    assert features["recent_log_rt"] == pytest.approx(log(1000.0))
+    assert features["rt_deviation"] is None
+    assert features["accuracy_deviation"] == pytest.approx(-1.0)
+    assert features["baseline_available"] == 1.0
+
+
+def test_negative_response_times_in_history_are_skipped() -> None:
+    history = [observation()] * MIN_BASELINE_HISTORY + [observation(ms_first_response=-1.0)] * 3
+
+    features = build_disengagement_behavior_features(observation(ms_first_response=9999.0), history)
+
+    assert features["recent_log_rt"] == pytest.approx(log(1000.0))
+    assert features["rt_deviation"] == pytest.approx(log(10.0))
+    # The other baselines still count every window, as in training.
+    assert features["history_confidence"] == pytest.approx(8 / HISTORY_WINDOW)
+
+
+def test_response_time_baseline_needs_enough_valid_values() -> None:
+    history = [observation()] * (MIN_BASELINE_HISTORY - 1) + [observation(ms_first_response=-1.0)]
+
+    features = build_disengagement_behavior_features(observation(), history)
+
+    assert features["baseline_available"] == 1.0
+    assert features["recent_log_rt"] is None
+    assert features["rt_deviation"] is None
+    assert features["recent_accuracy"] == 1.0
+
+
+def test_zero_response_time_is_valid() -> None:
+    history = [observation(ms_first_response=0.0)] * MIN_BASELINE_HISTORY
+
+    features = build_disengagement_behavior_features(observation(ms_first_response=0.0), history)
+
+    assert features["recent_log_rt"] == 0.0
+    assert features["rt_deviation"] == 0.0
