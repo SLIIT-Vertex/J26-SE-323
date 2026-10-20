@@ -1,0 +1,9 @@
+{
+  "source_record_version":"g5-eng-blueprint-source-v1","screenshot":"Screenshot 2026-10-20 at 11.49.50.png","registered_title":"Changes we can do","source_heading":"Theme 14: Changes We can do","status":"draft_review_gated",
+  "groups":[
+    {"heading_en":"Places in the School","heading_si":"පාසලේ ඇති ස්ථාන","entries":[["Laboratory","විද්‍යාගාරය"],["Shrine room","බුදු මැදුර"],["Staff room","ගුරු විවේකාගාරය"],["Sick room","ගිලන් කාමරය"],["Library","පුස්තකාලය"],["Computer room","පරිගණක කාමරය"],["Classroom","පන්ති කාමරය"],["Toilet","වැසිකිළිය"],["Canteen","ආපනශාලාව"],["Office","කාර්යාලය"],["Playground","ක්‍රීඩා පිටිය"]]},
+    {"heading_en":"Parts of a House","heading_si":"නිවසක කොටස්","entries":[["Door","දොර"],["Window","ජනේලය"],["Roof","වහලය"],["Wall","බිත්තිය"]]},
+    {"heading_en":"Rooms of a House","heading_si":"නිවසක කාමර","entries":[["Kitchen","කුස්සිය"],["Living Room","සාලය"],["Bathroom","නාන කාමරය"],["Bedroom","නිදන කාමරය"],["Store room","ගබඩා කාමරය"]]}
+  ],
+  "blocked_from_affected_scoring":["Shrine room","Sick room"],"approved_normalizations":[],"review_issues":["Registered/source title capitalization differs","Shrine room requires cultural and inclusion review","Sick room requires English/context review","Retain Staff room and Store room spacing","Retain Living Room capitalization","Lesson headings are not universal exclusivity claims"]
+}

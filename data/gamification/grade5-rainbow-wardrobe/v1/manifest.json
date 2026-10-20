@@ -1,0 +1,23 @@
+{
+  "area_id": "G5-AREA-ENG-07",
+  "registered_title": "Safety & protection",
+  "theme_heading": "Theme 7: Safety & Protection",
+  "package_version": "g5-eng-rainbow-wardrobe-draft-v1",
+  "status": "draft_human_review_required",
+  "curriculum_medium": "si",
+  "target_language": "en",
+  "instruction_language": "si",
+  "atomic_skills": ["G5-ENG-CLOTHES-VOCAB-01"],
+  "visual_system": "emoji_css_code_only",
+  "raster_assets_allowed": false,
+  "production_release": false,
+  "review_gates_open": [
+    "curriculum_fidelity",
+    "english",
+    "sinhala",
+    "glyph_clarity",
+    "accessibility",
+    "answer_leakage",
+    "parallel_equivalence"
+  ]
+}

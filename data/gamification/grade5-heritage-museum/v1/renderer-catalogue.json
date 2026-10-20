@@ -1,0 +1,13 @@
+{
+  "catalogue_version": "g5-eng-past-renderers-v1",
+  "public_descriptor_policy": "opaque_numeric_variant",
+  "authenticity_claim": false,
+  "renderers": [
+    {"variant": 0, "status": "draft_reviewed", "non_colour_cues": ["parallel grain", "end rings", "fibre edge"]},
+    {"variant": 1, "status": "draft_reviewed", "non_colour_cues": ["speckles", "chisel facets", "block depth"]},
+    {"variant": 2, "status": "draft_reviewed", "non_colour_cues": ["symmetric facade", "roof tiers", "door openings"]},
+    {"variant": 3, "status": "draft_reviewed", "non_colour_cues": ["raised seat", "high back", "ceremonial base"]},
+    {"variant": 4, "status": "draft_reviewed", "non_colour_cues": ["schematic band", "neutral peaks", "central inset"]}
+  ],
+  "forbidden_claims": ["authentic", "ancient", "royal artefact", "Sri Lankan replica", "museum record"]
+}

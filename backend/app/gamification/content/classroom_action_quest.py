@@ -25,7 +25,15 @@ Role = Literal["unsupported_before", "unsupported_after"]
 
 BODY_COMMANDS = (
     ("bend", "Bend", "නැමෙන්න", "bent", "down", "front", "standing"),
-    ("stretch_arms", "Stretch your arms", "ඔබේ අත් දිගහරින්න", "upright", "stretched", "front", "standing"),
+    (
+        "stretch_arms",
+        "Stretch your arms",
+        "ඔබේ අත් දිගහරින්න",
+        "upright",
+        "stretched",
+        "front",
+        "standing",
+    ),
     ("arms_down", "Put your arms down", "ඔබේ අත් පහළට දමන්න", "upright", "down", "front", "standing"),
     ("stand_straight", "Stand straight", "කෙළින් සිටගන්න", "straight", "down", "front", "standing"),
     ("turn_around", "Turn around", "වටයකට හැරෙන්න", "upright", "down", "back", "standing"),
@@ -115,6 +123,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomActionItem
         raise ValueError("CLASSROOM_ACTION_ITEM_REQUEST_INVALID")
     skill = SKILLS[skill_id]
     rng = _rng(skill_id, role, seed)
+    command_token = hashlib.sha256(f"{skill_id}:{role}:{seed}:command".encode()).hexdigest()[:16]
     if skill.chapter == "action_mirror":
         command = rng.choice(BODY_COMMANDS)
         action_id, command_en, _translation, posture, arms, orientation, seat = command
@@ -122,6 +131,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomActionItem
             "response_kind": "body_state",
             "activity_id": "action_mirror",
             "command_id": action_id,
+            "command_token": command_token,
             "command_text_en": command_en,
             "scene_variant": f"mirror-{seed % 3}",
             "character_start_state": {
@@ -145,6 +155,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomActionItem
             "response_kind": "classroom_navigation",
             "activity_id": "classroom_dash",
             "command_id": command_id,
+            "command_token": command_token,
             "command_text_en": command_en,
             "scene_variant": f"dash-{seed % 3}",
             "origin_id": "start-a",
@@ -159,6 +170,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomActionItem
             "response_kind": "classroom_navigation",
             "activity_id": "come_back",
             "command_id": "come_back",
+            "command_token": command_token,
             "command_text_en": "Come back",
             "scene_variant": f"return-{seed % 3}",
             "origin_id": "start-a",
@@ -184,7 +196,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomActionItem
 
 
 def _public_game(game: Mapping[str, object]) -> dict[str, object]:
-    hidden = {"target_body_state", "target_location_id"}
+    hidden = {"command_id", "target_body_state", "target_location_id"}
     return {key: value for key, value in game.items() if key not in hidden}
 
 
@@ -192,7 +204,7 @@ def correct_response(game: Mapping[str, object]) -> dict[str, object]:
     if game["response_kind"] == "body_state":
         return {
             "kind": "body_state",
-            "command_id": str(game["command_id"]),
+            "command_id": str(game["command_token"]),
             "final_body_state": dict(game["target_body_state"]),  # type: ignore[arg-type]
             "semantic_action_id": str(game["command_id"]),
             "interaction_trace": [f"pose:{game['command_id']}"],
@@ -201,7 +213,7 @@ def correct_response(game: Mapping[str, object]) -> dict[str, object]:
     target = str(game["target_location_id"])
     return {
         "kind": "classroom_navigation",
-        "command_id": str(game["command_id"]),
+        "command_id": str(game["command_token"]),
         "origin_id": str(game["origin_id"]),
         "movement_path": [{"sequence": 1, "action": "move", "destination_id": target}],
         "final_location_id": target,
@@ -223,7 +235,7 @@ def validate_constructed_response(
         raise ValueError("WRONG_RESPONSE_KIND")
     if set(response) != set(expected):
         raise ValueError("MALFORMED_CLASSROOM_ACTION_RESPONSE")
-    if response.get("command_id") != game["command_id"]:
+    if response.get("command_id") != game["command_token"]:
         raise ValueError("STALE_CLASSROOM_ACTION_COMMAND")
     trace = response.get("interaction_trace")
     if not isinstance(trace, list) or not trace or not all(isinstance(x, str) for x in trace):
@@ -232,7 +244,10 @@ def validate_constructed_response(
     if kind == "body_state":
         state = response.get("final_body_state")
         if not isinstance(state, Mapping) or set(state) != {
-            "posture", "arm_position", "orientation", "seat_state"
+            "posture",
+            "arm_position",
+            "orientation",
+            "seat_state",
         }:
             raise ValueError("INVALID_BODY_STATE")
         allowed = {
@@ -248,10 +263,14 @@ def validate_constructed_response(
         selected = str(response.get("semantic_action_id"))
         command = str(game["command_id"])
         error = (
-            "bend_vs_sit_confusion" if {selected, command} == {"bend", "sit_down"}
-            else "stand_vs_sit_confusion" if {selected, command} == {"stand_straight", "sit_down"}
-            else "stretch_vs_arms_down_confusion" if {selected, command} == {"stretch_arms", "arms_down"}
-            else "turn_vs_move_confusion" if command == "turn_around"
+            "bend_vs_sit_confusion"
+            if {selected, command} == {"bend", "sit_down"}
+            else "stand_vs_sit_confusion"
+            if {selected, command} == {"stand_straight", "sit_down"}
+            else "stretch_vs_arms_down_confusion"
+            if {selected, command} == {"stretch_arms", "arms_down"}
+            else "turn_vs_move_confusion"
+            if command == "turn_around"
             else "verb_action_semantic_confusion"
         )
         return correct, "correct" if correct else error, normalized
@@ -267,15 +286,24 @@ def validate_constructed_response(
     final = str(response["final_location_id"])
     correct = final == target
     if game["command_id"] == "come_back":
-        error = "correct" if correct else (
-            "stops_before_origin" if final not in {"wall-zone", "blackboard-zone"}
-            else "return_to_origin_concept_confusion"
+        error = (
+            "correct"
+            if correct
+            else (
+                "stops_before_origin"
+                if final not in {"wall-zone", "blackboard-zone"}
+                else "return_to_origin_concept_confusion"
+            )
         )
     else:
-        error = "correct" if correct else (
-            "wall_vs_blackboard_noun_confusion"
-            if final in {"wall-zone", "blackboard-zone"}
-            else "destination_ignored"
+        error = (
+            "correct"
+            if correct
+            else (
+                "wall_vs_blackboard_noun_confusion"
+                if final in {"wall-zone", "blackboard-zone"}
+                else "destination_ignored"
+            )
         )
     return correct, error, normalized
 

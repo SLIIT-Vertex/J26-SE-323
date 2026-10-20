@@ -1,0 +1,7 @@
+{
+  "catalogue_version": "g5-eng-classroom-language-renderers-v1",
+  "public_descriptor_policy": "opaque_numeric_variant",
+  "renderers": {"function_portals": 6, "safe_command_states": 11, "fictional_situations": 6, "question_tile_styles": 1},
+  "privacy": {"camera": false, "microphone": false, "gaze_tracking": false, "device_motion": false, "personal_data": false},
+  "physical_safety": "All command actions occur only on fictional code characters."
+}

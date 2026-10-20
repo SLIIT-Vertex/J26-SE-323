@@ -1,0 +1,64 @@
+{
+  "screenshot_identity": ["theme-6-our-food-list-a", "theme-6-our-food-list-b"],
+  "transcription_status": "draft_from_implementation_prompt",
+  "review_state": "unresolved",
+  "theme_heading": "Theme 6: Our Food",
+  "registered_title": "Our food",
+  "sections": {
+    "Food": [
+      "Healthy Food",
+      "Fatty Food",
+      "Spicy Food",
+      "Homemade Food",
+      "Junk Food",
+      "Rice and Curry",
+      "String Hoppers",
+      "Egg",
+      "Fish",
+      "Meat",
+      "Coconut",
+      "Bread",
+      "Hoppers",
+      "Buns",
+      "Ice Cream"
+    ],
+    "Yams": ["Manioc", "Sweet Potatoes"],
+    "Drinks": ["Fruit Juice", "Tea", "Milk", "Water"],
+    "Fruits": [
+      "Banana",
+      "Pineapple",
+      "Mango",
+      "Rose Apple",
+      "Pawpaw / Papaya",
+      "Woodapple",
+      "Olive",
+      "Watermelon",
+      "Custard Apple",
+      "Guava"
+    ],
+    "Vegetables": [
+      "Potato",
+      "Cabbage",
+      "Tomato",
+      "Jak",
+      "Carrot",
+      "Beet root",
+      "Drumsticks",
+      "Brinjal",
+      "Cucumber",
+      "Curry Leaves",
+      "Beans"
+    ]
+  },
+  "review_issues": [
+    "Our Food versus registered title Our food",
+    "Manioc retained; cassava not substituted",
+    "Woodapple retained; wood apple not substituted",
+    "Jak blocked from scored content until English and curriculum review",
+    "Beet root spacing retained",
+    "Drumsticks blocked; never use poultry emoji",
+    "Pawpaw / Papaya blocked until alternative-form scoring is approved",
+    "Hoppers and String Hoppers blocked until a reviewed code glyph exists",
+    "Category phrases stay entries under Food and are not destination zones"
+  ]
+}

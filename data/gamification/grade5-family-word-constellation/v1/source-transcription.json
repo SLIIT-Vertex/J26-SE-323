@@ -1,0 +1,27 @@
+{
+  "screenshot_identity": ["theme-12-family-members"],
+  "transcription_status": "english_from_implementation_prompt",
+  "sinhala_status": "candidates_not_taken_from_screenshot",
+  "review_state": "unresolved",
+  "theme_heading": "Theme 12: Human Behaviour",
+  "subheading": "Family Members",
+  "registered_title": "Human Behaviour",
+  "entries": [
+    {"english": "Father", "sinhala": null, "candidate_si": "පියා", "scored_draft": true},
+    {"english": "Mother", "sinhala": null, "candidate_si": "මව", "scored_draft": true},
+    {"english": "Sister", "sinhala": null, "candidate_si": "සහෝදරිය", "scored_draft": true},
+    {"english": "Brother", "sinhala": null, "candidate_si": "සහෝදරයා", "scored_draft": true},
+    {"english": "Grandfather", "sinhala": null, "candidate_si": "මුත්තා", "scored_draft": true},
+    {"english": "Grandmother", "sinhala": null, "candidate_si": "ආච්චි", "scored_draft": true},
+    {"english": "Aunt", "sinhala": null, "candidate_si": "නැන්දා", "scored_draft": true},
+    {"english": "Uncle", "sinhala": null, "candidate_si": "මාමා", "scored_draft": true},
+    {"english": "Grand - son", "sinhala": null, "scored_draft": false},
+    {"english": "Grand - daughter", "sinhala": null, "scored_draft": false}
+  ],
+  "review_issues": [
+    "Grand - son and Grand - daughter stay out of scored content until English and Sinhala review",
+    "grandson and granddaughter are not approved normalizations",
+    "Candidate Sinhala strings are not screenshot transcriptions and must be replaced before learner use",
+    "Instructions refer to words from this lesson, not the learner's family"
+  ]
+}

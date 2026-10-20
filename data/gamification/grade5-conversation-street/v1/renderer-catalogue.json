@@ -1,0 +1,12 @@
+{
+  "schema_version": "conversation-code-renderers-v1",
+  "assets": "emoji_css_html_only",
+  "remote_dependencies": [],
+  "raster_dependencies": [],
+  "renderers": [
+    {"id": "venue-0", "kind": "club_desk", "non_colour_cues": ["speaker_label", "avatar_shape", "bubble_border"]},
+    {"id": "venue-1", "kind": "classroom_doorway", "non_colour_cues": ["speaker_label", "avatar_shape", "bubble_border"]},
+    {"id": "venue-2", "kind": "object_sharing_table", "non_colour_cues": ["speaker_label", "avatar_shape", "bubble_border"]},
+    {"id": "venue-3", "kind": "show_and_tell", "non_colour_cues": ["scene_label", "object_shape", "text_fact"]}
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "area_id": "G5-AREA-ENG-02",
+  "title": "We are Sri Lankans",
+  "package_version": "g5-eng-sri-lanka-discovery-draft-v1",
+  "status": "draft",
+  "source": "Theme 2 textbook screenshot supplied by teacher on 2026-10-20",
+  "atomic_skills": [
+    "G5-ENG-SL-VOCAB-RECOGNITION-01",
+    "G5-ENG-SL-NATIONAL-PAIR-01",
+    "G5-ENG-SL-CULTURAL-GROUP-01"
+  ],
+  "review_gates": {
+    "curriculum_fidelity": "pending",
+    "english_language": "pending",
+    "sinhala_support": "pending",
+    "cultural_religious_sensitivity": "pending",
+    "answer_leakage": "pending",
+    "accessibility": "pending",
+    "parallel_equivalence": "pending"
+  },
+  "unsupported_claims": [
+    "listening mastery",
+    "pronunciation mastery",
+    "spontaneous speaking mastery",
+    "free-writing mastery"
+  ]
+}

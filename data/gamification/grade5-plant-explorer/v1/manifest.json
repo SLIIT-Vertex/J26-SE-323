@@ -1,0 +1,19 @@
+{
+  "area_id": "G5-AREA-ENG-03",
+  "title": "Plants, Trees and Creepers",
+  "package_version": "g5-eng-plant-explorer-draft-v1",
+  "status": "draft",
+  "source": "Theme 3 textbook screenshot supplied by teacher on 2026-10-20",
+  "atomic_skills": ["G5-ENG-PLANT-VOCAB-01", "G5-ENG-PLANT-PARTS-02", "G5-ENG-PLANT-NUMBER-03"],
+  "review_gates": {
+    "curriculum_fidelity": "pending",
+    "english_language": "pending",
+    "sinhala_support": "pending",
+    "visual_biological_accuracy": "pending",
+    "answer_leakage": "pending",
+    "accessibility": "pending",
+    "parallel_equivalence": "pending"
+  },
+  "source_issues": ["Stem and Trunk share the Sinhala gloss කඳ", "Bud/Buds Sinhala alternatives require language review"],
+  "unsupported_claims": ["listening mastery", "pronunciation mastery", "speaking mastery", "free-writing mastery", "botanical science mastery"]
+}

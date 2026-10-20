@@ -1,0 +1,18 @@
+{
+  "area_id": "G5-AREA-ENG-10",
+  "registered_title": "Home Garden",
+  "theme_heading": "Theme 10: Home Garden",
+  "package_version": "g5-eng-bloom-builder-draft-v1",
+  "status": "draft_human_review_required",
+  "curriculum_medium": "si",
+  "target_language": "en",
+  "instruction_language": "si",
+  "atomic_skills": ["G5-ENG-FLOWER-VOCAB-01"],
+  "visual_system": "deterministic_css_code_only",
+  "raster_assets_allowed": false,
+  "production_release": false,
+  "review_gates_open": [
+    "curriculum_fidelity", "english", "sinhala", "botanical_renderer_clarity",
+    "accessibility", "cultural_context", "answer_leakage", "parallel_equivalence"
+  ]
+}

@@ -13,6 +13,8 @@ def test_each_skill_has_answer_free_public_item_and_valid_constructed_response()
     for skill_id in SKILLS:
         item = generate_item(skill_id, role="unsupported_before", seed=31)
         public = public_game_data(item)
+        assert "command_id" not in public
+        assert public["command_token"] != item.game_data["command_id"]
         assert "target_body_state" not in public
         assert "target_location_id" not in public
         response = correct_response(item.game_data)
@@ -21,7 +23,12 @@ def test_each_skill_has_answer_free_public_item_and_valid_constructed_response()
 
 def test_body_command_family_is_complete() -> None:
     assert {row[0] for row in BODY_COMMANDS} == {
-        "bend", "stretch_arms", "arms_down", "stand_straight", "turn_around", "sit_down"
+        "bend",
+        "stretch_arms",
+        "arms_down",
+        "stand_straight",
+        "turn_around",
+        "sit_down",
     }
 
 

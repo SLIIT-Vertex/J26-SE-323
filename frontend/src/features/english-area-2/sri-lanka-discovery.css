@@ -1,0 +1,308 @@
+.sri-lanka-discovery {
+	width: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	padding: clamp(8px, 4vw, 22px);
+	box-sizing: border-box;
+	color: #214b4b;
+	overflow-x: clip;
+}
+
+.sld-header {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-bottom: 14px;
+	padding: 14px;
+	border-radius: 24px;
+	background: rgba(255, 253, 247, 0.96);
+}
+
+.sld-header > div:last-child {
+	min-width: 0;
+}
+.sld-header p,
+.sld-header h1,
+.sld-position {
+	margin: 0;
+}
+.sld-header p {
+	color: #7e617b;
+	font-weight: 850;
+}
+.sld-header h1 {
+	font-size: clamp(1.45rem, 7vw, 2.1rem);
+}
+
+.sld-game-list,
+.sld-play {
+	display: grid;
+	gap: 14px;
+}
+
+.sld-game-card {
+	width: 100%;
+	min-height: 116px;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	text-align: left;
+	padding: 10px;
+	border: 2px solid #8c62b6;
+	border-radius: 22px;
+	background: #fffdf7;
+	color: inherit;
+	box-shadow: 0 7px 0 #d1b6e7;
+}
+
+.sld-icon {
+	display: grid;
+	place-items: center;
+	width: 92px;
+	height: 92px;
+	flex: none;
+	border-radius: 20px;
+	background: linear-gradient(145deg, #e8f8f3, #fff4cf);
+	color: #6c43a0;
+	font-size: 1.9rem;
+	font-weight: 900;
+}
+
+.sld-game-card > span:last-child {
+	display: grid;
+	gap: 5px;
+}
+.sld-game-card strong {
+	font-size: 1.08rem;
+}
+.sld-game-card small {
+	line-height: 1.35;
+}
+.sld-game-card em {
+	font-size: 0.78rem;
+	color: #8a5d28;
+	font-weight: 800;
+	font-style: normal;
+}
+.sld-position {
+	font-weight: 800;
+	color: #6d7772;
+}
+
+.sld-command {
+	position: sticky;
+	top: max(6px, env(safe-area-inset-top));
+	z-index: 2;
+	display: grid;
+	gap: 3px;
+	text-align: center;
+	padding: 12px;
+	border: 2px solid #6c4da1;
+	border-radius: 18px;
+	background: #fff9d8;
+	box-shadow: 0 5px 14px rgba(65, 44, 82, 0.15);
+}
+
+.sld-command span {
+	font-size: 0.78rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-weight: 800;
+	color: #7a657d;
+}
+.sld-command strong {
+	font-size: clamp(1rem, 5vw, 1.35rem);
+	color: #563a88;
+}
+
+.sld-board {
+	display: grid;
+	gap: 12px;
+	padding: 14px;
+	border: 2px solid #8c62b6;
+	border-radius: 22px;
+	background: linear-gradient(#dff8f4, #fff4cf);
+	overflow: hidden;
+}
+
+.sld-source-rail,
+.sld-destinations,
+.sld-group-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.sld-source-rail button {
+	min-width: 0;
+	min-height: 58px;
+	padding: 8px;
+	border: 2px solid #a9c9c4;
+	border-radius: 14px;
+	background: #fff;
+	color: #254b4b;
+	font: inherit;
+	font-weight: 800;
+}
+
+.sld-source-rail button.selected {
+	border-color: #7c4bad;
+	background: #efe1ff;
+	box-shadow: inset 0 0 0 2px #7c4bad;
+}
+.sld-source-rail button:disabled {
+	opacity: 0.45;
+}
+
+.sld-destination,
+.sld-group {
+	min-width: 0;
+	min-height: 92px;
+	display: grid;
+	align-content: center;
+	gap: 6px;
+	padding: 10px;
+	border: 2px dashed #d0ab58;
+	border-radius: 14px;
+	background: #fffdf5;
+	color: #254b4b;
+	font: inherit;
+	text-align: left;
+}
+
+.sld-destination strong,
+.sld-group strong {
+	color: #563a88;
+}
+.sld-destination span,
+.sld-group span {
+	font-size: 0.78rem;
+	line-height: 1.25;
+	color: #8a5d28;
+}
+
+.sld-primary {
+	min-height: 52px;
+	border: 0;
+	border-radius: 16px;
+	background: #6c43a0;
+	color: #fff;
+	font: inherit;
+	font-weight: 900;
+	padding: 12px 18px;
+}
+
+.sld-primary:disabled {
+	opacity: 0.45;
+}
+.sri-lanka-discovery button:focus-visible {
+	outline: 4px solid #e56d4d;
+	outline-offset: 3px;
+}
+
+.sld-support {
+	display: grid;
+	gap: 12px;
+	padding: 14px;
+	border: 2px solid #d0ab58;
+	border-radius: 20px;
+	background: #fffdf5;
+}
+
+.sld-support > p,
+.sld-support h2,
+.sld-support ol {
+	margin: 0;
+}
+.sld-support > p {
+	color: #9a4d36;
+	font-weight: 900;
+}
+.sld-support ol {
+	padding-left: 28px;
+	display: grid;
+	gap: 8px;
+}
+.sld-support li {
+	opacity: 0.55;
+}
+.sld-support li.done {
+	opacity: 1;
+	font-weight: 800;
+}
+
+.sld-worked {
+	min-height: 260px;
+	display: grid;
+	place-items: center;
+	gap: 8px;
+	padding: 10px;
+	border-radius: 18px;
+	background: #e8f8f3;
+	text-align: center;
+}
+
+.sld-worked div {
+	min-width: min(100%, 220px);
+	min-height: 80px;
+	display: grid;
+	place-items: center;
+	padding: 10px;
+	border: 2px dashed #7c4bad;
+	border-radius: 14px;
+	background: #fffdf7;
+	font-weight: 900;
+}
+
+.sld-status,
+.sld-feedback {
+	text-align: center;
+	padding: 20px;
+	border-radius: 18px;
+	background: #fffdf5;
+}
+.sld-feedback {
+	display: grid;
+	gap: 14px;
+}
+.sld-feedback h2,
+.sld-result p {
+	margin: 0;
+}
+
+.sld-medal {
+	width: 120px;
+	height: 120px;
+	display: grid;
+	place-items: center;
+	margin: auto;
+	border: 3px solid #8c62b6;
+	border-radius: 50%;
+	background: linear-gradient(#fff4cf, #e8f8f3);
+	color: #6c43a0;
+	font-size: 3rem;
+	box-shadow: 0 7px 0 #d1b6e7;
+}
+
+@media (max-width: 360px) {
+	.sri-lanka-discovery {
+		padding: 7px;
+	}
+	.sld-icon {
+		width: 76px;
+		height: 76px;
+	}
+	.sld-source-rail,
+	.sld-destinations,
+	.sld-group-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sri-lanka-discovery * {
+		animation: none;
+		transition: none;
+		scroll-behavior: auto;
+	}
+}

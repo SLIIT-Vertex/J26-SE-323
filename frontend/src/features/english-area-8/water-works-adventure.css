@@ -1,0 +1,45 @@
+.water-works-adventure .scene-card {
+	display: grid;
+	gap: 6px;
+	place-items: center;
+	min-width: 48px;
+	min-height: 96px;
+	padding: 8px;
+	border-radius: 20px;
+	border: 2px solid #7eb6d9;
+	background: linear-gradient(#e8f6ff, #d4ecff);
+}
+.water-works-adventure .scene-mark {
+	font-size: 2rem;
+}
+.water-works-adventure .droplet-rail,
+.water-works-adventure .scene-grid {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+}
+.water-works-adventure .scene-grid {
+	padding: 12px;
+	border-radius: 24px;
+	background:
+		linear-gradient(#9fd0ea, #9fd0ea) center / 8px 100% no-repeat,
+		#f4fbff;
+}
+.water-works-adventure button {
+	min-width: 48px;
+	min-height: 48px;
+}
+.water-works-adventure .selected {
+	outline: 3px solid #0b6e4f;
+}
+.water-badge {
+	width: 88px;
+	height: 88px;
+	margin: 0 auto;
+	display: grid;
+	place-items: center;
+	border: 4px solid #2a6f97;
+	border-radius: 50%;
+	font-size: 2.2rem;
+}

@@ -1,0 +1,11 @@
+{
+  "area_id": "G5-AREA-ENG-18",
+  "package_version": "g5-eng-conversation-street-draft-v1",
+  "status": "draft",
+  "production_enabled": false,
+  "atomic_skills": ["G5-ENG-CONV-PAIR-01", "G5-ENG-CONV-TURN-02", "G5-ENG-CONV-FRAME-03", "G5-ENG-CONV-DESCRIBE-04"],
+  "profile_policy_version": "fictional-profile-only-v1",
+  "fragment_policy_version": "reviewed-source-fragments-v1",
+  "blocked_reviews": ["curriculum_fidelity", "english", "sinhala", "privacy", "functional_context", "inclusion", "accessibility", "answer_leakage", "parallel_equivalence"],
+  "active_content_policy": "Only reviewed forms and versioned fictional profiles; unresolved source errors fail closed."
+}

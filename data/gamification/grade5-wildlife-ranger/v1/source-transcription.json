@@ -1,0 +1,21 @@
+{
+  "area_id": "G5-AREA-ENG-04",
+  "source_kind": "user_supplied_textbook_screenshots",
+  "theme_heading": "Theme 4: Animals around Us",
+  "transcription_version": "g5-eng-animal-source-transcription-v1",
+  "status": "draft_human_review_required",
+  "sections": {
+    "Animals": ["Squirrel", "Snail", "Monkey", "Dog", "Cat", "Elephant", "Cow", "Goat", "Rabbit", "Buffalo", "Rat"],
+    "Reptiles": ["Rattle Snake", "Iguana", "Shake"],
+    "Birds": ["Parrot", "Peacock", "Sparrow", "Woodpecker", "Crane", "Crow", "Hen", "Cock", "Owl", "Humming bird"],
+    "Insects": ["Caterpillar", "Spider", "Ant", "Butterfly", "Bees", "Mosquito", "Worm", "Centipede", "Millipede", "Cockroach", "Fly", "Dragon fly", "Grasshopper", "Fire fly", "Moth"],
+    "Parts of the Body": ["Beak", "Horns", "Fins", "Tail", "Whiskers", "Trunk", "Wings", "Eyes", "Nose", "Mouth", "Tongue", "Antenna", "Fur", "Claws", "Hoof", "Cockscomb", "Crest", "Hump"]
+  },
+  "review_issues": [
+    { "source_form": "Shake", "issue": "Likely intended to be Snake; excluded from active scored content pending review." },
+    { "source_form": "Rattle Snake", "issue": "Standard spelling is normally rattlesnake; preserve source form pending review." },
+    { "source_form": "Humming bird", "issue": "Standard spelling is normally hummingbird; preserve source form pending review." },
+    { "source_form": "Dragon fly / Fire fly", "issue": "Standard spellings are normally dragonfly / firefly; preserve source forms pending review." },
+    { "source_form": "Insects heading", "issue": "Contains entries that are not scientifically insects; assess lesson vocabulary only, not taxonomy." }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "source_record_version": "g5-eng-past-source-v1",
+  "screenshot": "Screenshot 2026-10-20 at 11.53.00.png",
+  "theme_heading": "Theme 16: Our Past",
+  "status": "draft_review_gated",
+  "entries": [
+    {"order": 1, "english": "Timber carvings", "sinhala": "ලී කැටයම්", "confidence": "high", "meaning_review": "source_term_preserved"},
+    {"order": 2, "english": "Stone carvings", "sinhala": "ගල් කැටයම්", "confidence": "high", "meaning_review": "plural_preserved"},
+    {"order": 3, "english": "Palace", "sinhala": "මාලිගාව", "confidence": "high", "meaning_review": "generic_only"},
+    {"order": 4, "english": "Throne", "sinhala": "සිංහාසනය", "confidence": "high", "meaning_review": "generic_only"},
+    {"order": 5, "english": "Crown", "sinhala": "ඔටුන්න", "confidence": "high", "meaning_review": "schematic_only"}
+  ],
+  "approved_normalizations": [],
+  "review_issues": [
+    "Timber must not be silently replaced by Wood",
+    "Carving material must be distinguishable without colour alone",
+    "No named palace, throne, crown, ruler, dynasty, site, date, provenance, or authenticity claim",
+    "Code-built exhibits are schematic learning cues rather than historical replicas"
+  ]
+}

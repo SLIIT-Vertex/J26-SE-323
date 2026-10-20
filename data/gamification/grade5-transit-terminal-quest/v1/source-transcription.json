@@ -1,0 +1,28 @@
+{
+  "screenshot_identity": ["theme-9-transport-list"],
+  "transcription_status": "english_from_implementation_prompt",
+  "sinhala_status": "not_visible_in_supplied_prompt_pending_screenshot",
+  "review_state": "unresolved",
+  "theme_heading": "Theme 9: Transport",
+  "registered_title": "Transport",
+  "entries": [
+    {"english": "Lorry", "sinhala": null, "scored": false},
+    {"english": "Van", "sinhala": null, "scored": false},
+    {"english": "Train", "sinhala": null, "scored": true},
+    {"english": "Aeroplane", "sinhala": null, "scored": true},
+    {"english": "Helicopter", "sinhala": null, "scored": true},
+    {"english": "Ship", "sinhala": null, "scored": false},
+    {"english": "Boat", "sinhala": null, "scored": false},
+    {"english": "Bus", "sinhala": null, "scored": true},
+    {"english": "Car", "sinhala": null, "scored": true},
+    {"english": "Bicycle", "sinhala": null, "scored": true},
+    {"english": "Cart", "sinhala": null, "scored": false}
+  ],
+  "review_issues": [
+    "Lorry is retained; truck is not a substitute",
+    "Aeroplane is retained; airplane is not a substitute",
+    "Bicycle is retained; bike is not a substitute",
+    "Cart, Ship/Boat, and Lorry/Van stay unscored until a reviewed code silhouette distinguishes them at 320 CSS pixels",
+    "Sinhala counterparts stay null until the screenshot is transcribed"
+  ]
+}

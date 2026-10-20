@@ -1,8 +1,8 @@
 import type {
 	AdditionAdventureSupportManifest,
 	CapacityAdventureSupportManifest,
-	ClassroomActionSupportManifest,
 	ChildEpisodeResponse,
+	ClassroomActionSupportManifest,
 	DecimalAdventureSupportManifest,
 	DirectionAdventureSupportManifest,
 	DistanceAdventureSupportManifest,

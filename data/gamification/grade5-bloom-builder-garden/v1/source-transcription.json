@@ -1,0 +1,23 @@
+{
+  "screenshot_identity": ["theme-10-home-garden-flowers"],
+  "transcription_status": "draft_from_supplied_screenshot",
+  "review_state": "unresolved",
+  "theme_heading": {"english": "Theme 10: Home Garden", "sinhala": "ගෙවත්ත"},
+  "section": {"english": "Flowers", "sinhala": "මල්"},
+  "entries": [
+    {"english": "Marigold", "sinhala": "දාස්පෙතියා", "confidence": "medium_pending_sinhala_review"},
+    {"english": "Shoe flower", "sinhala": "සපත්තු මල", "confidence": "medium_pending_sinhala_review"},
+    {"english": "Rose", "sinhala": "රෝස", "confidence": "high"},
+    {"english": "Sunflower", "sinhala": "සූරියකාන්ත", "confidence": "high"},
+    {"english": "Jasmine", "sinhala": "පිච්ච", "confidence": "medium_pending_sinhala_review"}
+  ],
+  "approved_normalizations": [],
+  "uncertainty_notes": ["Sinhala transcription requires a second-reader check against the supplied screenshot."],
+  "review_issues": [
+    "Retain regional source form Shoe flower; do not silently replace it with hibiscus",
+    "Sunflower is one word and Shoe flower is two; this is not evidence for a compound-word outcome",
+    "Natural species and cultivar variation requires versioned reference renderers",
+    "Colour is never the only scored distinction",
+    "Home Garden does not establish tools, care, cultivation, or garden-layout outcomes"
+  ]
+}

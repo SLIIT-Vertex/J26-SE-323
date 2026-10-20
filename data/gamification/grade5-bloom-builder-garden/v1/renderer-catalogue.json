@@ -1,0 +1,13 @@
+{
+  "catalogue_version": "g5-eng-flower-renderers-v1",
+  "public_descriptor_type": "opaque_integer_variant",
+  "implementation": "deterministic_css",
+  "uses_colour_as_sole_cue": false,
+  "variants": [
+    {"variant": 0, "structural_cues": ["compact layered petals", "small centre"], "review": "open"},
+    {"variant": 1, "structural_cues": ["broad trumpet form", "prominent central column"], "review": "open"},
+    {"variant": 2, "structural_cues": ["layered spiral form", "overlapping petals"], "review": "open"},
+    {"variant": 3, "structural_cues": ["large patterned centre", "radiating petals"], "review": "open"},
+    {"variant": 4, "structural_cues": ["cluster of small star blooms", "multiple centres"], "review": "open"}
+  ]
+}

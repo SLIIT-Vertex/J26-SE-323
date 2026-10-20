@@ -1,0 +1,141 @@
+.wildlife-ranger .wildlife-board {
+	display: grid;
+	gap: 14px;
+}
+.wildlife-scene {
+	position: relative;
+	border-radius: 24px;
+	overflow: hidden;
+	min-height: 150px;
+	background: #dcfce7;
+}
+.body-map img {
+	object-fit: contain;
+	background: #e7f4da;
+}
+.body-marker {
+	position: absolute;
+	translate: -50% -50%;
+	min-width: 48px;
+	min-height: 48px;
+	border: 3px solid #fff;
+	border-radius: 999px;
+	background: #7252c7;
+	color: #fff;
+	box-shadow: 0 3px 10px #203d2860;
+	font: inherit;
+	font-weight: 900;
+}
+.body-marker span {
+	position: absolute;
+	left: 50%;
+	top: 42px;
+	translate: -50% 0;
+	white-space: nowrap;
+	border-radius: 10px;
+	background: #fff;
+	color: #203d28;
+	padding: 3px 7px;
+	font-size: 0.75rem;
+}
+.body-marker:disabled {
+	opacity: 0.78;
+}
+.wildlife-scene img {
+	display: block;
+	width: 100%;
+	max-height: 230px;
+	object-fit: cover;
+}
+.wildlife-word-rail {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	justify-content: center;
+}
+.wildlife-word-rail button,
+.wildlife-target {
+	min-height: 52px;
+	border: 2px solid #86b97b;
+	border-radius: 16px;
+	background: #fff;
+	color: #203d28;
+	font: inherit;
+	font-weight: 800;
+	padding: 10px 14px;
+}
+.wildlife-word-rail button.selected {
+	border-color: #7252c7;
+	background: #eee8ff;
+	transform: translateY(-2px);
+}
+.wildlife-word-rail button:disabled {
+	opacity: 0.48;
+}
+.wildlife-targets {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+}
+.wildlife-target {
+	display: grid;
+	place-items: center;
+	gap: 6px;
+	min-height: 100px;
+	border-style: dashed;
+}
+.animal-sprite {
+	display: block;
+	width: 72px;
+	height: 58px;
+	background-image: url("/curriculum/game/G5-AREA-ENG-04/animal-icon-sheet.png");
+	background-size: 400% 200%;
+	background-repeat: no-repeat;
+}
+.sprite-0 {
+	background-position: 0% 0%;
+}
+.sprite-1 {
+	background-position: 33.333% 0%;
+}
+.sprite-2 {
+	background-position: 66.666% 0%;
+}
+.sprite-3 {
+	background-position: 100% 0%;
+}
+.sprite-4 {
+	background-position: 0% 100%;
+}
+.sprite-5 {
+	background-position: 33.333% 100%;
+}
+.sprite-6 {
+	background-position: 66.666% 100%;
+}
+.sprite-7 {
+	background-position: 100% 100%;
+}
+.wildlife-target span {
+	font-size: 0.82rem;
+}
+.wildlife-target.heading {
+	min-height: 84px;
+	background: #fff7d6;
+}
+.wildlife-target.part {
+	min-height: 70px;
+	background: #e9f7ff;
+}
+.wildlife-support-preview {
+	display: grid;
+	gap: 8px;
+	padding: 16px;
+	border-radius: 18px;
+	background: #f1f8e9;
+}
+@media (min-width: 520px) {
+	.wildlife-targets {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}

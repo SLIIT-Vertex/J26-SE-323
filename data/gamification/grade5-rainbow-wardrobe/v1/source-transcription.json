@@ -1,0 +1,29 @@
+{
+  "screenshot_identity": ["theme-7-safety-and-protection-clothes"],
+  "transcription_status": "draft_from_implementation_prompt",
+  "review_state": "unresolved",
+  "theme_heading": "Theme 7: Safety & Protection",
+  "registered_title": "Safety & protection",
+  "section": "Clothes - ඇඳුම්",
+  "transcription_confidence": "high_for_english_and_sinhala_visible_text",
+  "entries": [
+    {"english": "Handkerchief", "sinhala": "ලේන්සුව", "confidence": "high"},
+    {"english": "Shoes", "sinhala": "සපත්තු", "confidence": "high"},
+    {"english": "Socks", "sinhala": "මේස්", "confidence": "high"},
+    {"english": "Frock", "sinhala": "ගවුම", "confidence": "high"},
+    {"english": "Shorts", "sinhala": "කොට කලිසම", "confidence": "high"},
+    {"english": "Shirt", "sinhala": "කමිසය", "confidence": "high"},
+    {"english": "Trousers", "sinhala": "දිග කලිසම", "confidence": "high"},
+    {"english": "Sarong", "sinhala": "සරම", "confidence": "high"},
+    {"english": "Saree", "sinhala": "සාරිය", "confidence": "high"},
+    {"english": "Blouse", "sinhala": "හැට්ටය", "confidence": "high"},
+    {"english": "Skirt", "sinhala": "සාය", "confidence": "high"}
+  ],
+  "approved_normalizations": [],
+  "review_issues": [
+    "Safety & Protection capitalization differs from the registered title",
+    "Handkerchief is preserved in transcription but excluded from scored visual content until its code-rendered glyph is approved",
+    "Plural printed forms remain plural and must not be silently normalized",
+    "Saree and sarong representations require Sri Lankan cultural review"
+  ]
+}

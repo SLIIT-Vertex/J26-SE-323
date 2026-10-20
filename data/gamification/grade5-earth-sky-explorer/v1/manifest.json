@@ -1,0 +1,9 @@
+{
+  "area_id": "G5-AREA-ENG-13",
+  "title": "Earth & Sky Explorer",
+  "package_version": "g5-eng-earth-sky-explorer-draft-v1",
+  "status": "draft_review_gated",
+  "skills": ["G5-ENG-EARTHSKY-BILINGUAL-01", "G5-ENG-EARTHSKY-VISUAL-02"],
+  "response_schemas": ["earth_sky_bilingual_links_v1", "earth_sky_scene_mapping_v1"],
+  "required_reviews": ["curriculum", "english", "sinhala", "scientific_renderer", "accessibility", "age_suitability", "cultural_context", "answer_leakage", "parallel_equivalence"]
+}

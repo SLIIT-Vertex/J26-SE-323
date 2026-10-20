@@ -1,0 +1,148 @@
+.info-station {
+	background: linear-gradient(#e9f6fa, #fff8e8);
+	color: #17364a;
+}
+.info-station .caq-header {
+	background: linear-gradient(135deg, #265d7b, #694f9b);
+}
+.is-console {
+	height: 135px;
+	display: grid;
+	place-items: center;
+	position: relative;
+	border: 2px solid #7fa8b9;
+	border-radius: 25px;
+	background: linear-gradient(#243b5c 55%, #d8e8ec 55%);
+	font-size: 2.6rem;
+	overflow: hidden;
+}
+.is-console i {
+	position: absolute;
+	top: 20px;
+	width: 7px;
+	height: 7px;
+	background: #7ef0b5;
+	border-radius: 50%;
+	box-shadow:
+		28px 0 #ffd369,
+		-28px 0 #7acfff;
+}
+.is-console b {
+	position: absolute;
+	bottom: 17px;
+	width: 70%;
+	height: 25px;
+	border: 4px solid #517687;
+	border-radius: 10px;
+	background: repeating-linear-gradient(90deg, #fff 0 20px, #d6e8ed 21px 23px);
+}
+.is-privacy {
+	font-size: 0.76rem;
+	text-align: center;
+	font-weight: 750;
+}
+.is-board {
+	display: grid;
+	gap: 13px;
+}
+.is-tray,
+.is-targets {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 9px;
+}
+.is-tray button,
+.is-targets button {
+	min-height: 54px;
+	border: 2px solid #8ab5c5;
+	border-radius: 15px;
+	background: #fff;
+	color: #17364a;
+	font-weight: 850;
+	padding: 9px;
+}
+.is-tray button[aria-pressed="true"] {
+	outline: 3px solid #ffcf66;
+}
+.is-targets button {
+	min-height: 112px;
+}
+.is-targets strong,
+.is-targets small {
+	display: block;
+	font-family: "Noto Sans Sinhala", "Iskoola Pota", system-ui, sans-serif;
+}
+.is-object {
+	display: block;
+	position: relative;
+	height: 78px;
+	border-radius: 11px;
+	background: #dbeaf0;
+	overflow: hidden;
+}
+.is-object i,
+.is-object b {
+	position: absolute;
+	display: block;
+}
+.is-object i:first-child {
+	left: 16%;
+	right: 16%;
+	top: 17%;
+	height: 52%;
+	border: 5px solid #465e6b;
+	background: #f4ead1;
+}
+.is-object i:nth-child(2) {
+	left: 25%;
+	right: 25%;
+	top: 28%;
+	height: 4px;
+	background: #718590;
+	box-shadow:
+		0 10px #718590,
+		0 20px #718590;
+}
+.is-object b {
+	bottom: 8px;
+	left: 12%;
+	right: 12%;
+	height: 7px;
+	background: #b04d50;
+}
+.is-object[data-v="1"] i:first-child {
+	left: 22%;
+	right: 22%;
+	top: 30%;
+	height: 34%;
+	border-radius: 50%;
+	background: #3e5968;
+	transform: rotate(-13deg);
+}
+.is-object[data-v="1"] i:nth-child(2) {
+	left: 15%;
+	right: 15%;
+	top: 18%;
+	height: 12px;
+	border: 5px solid #3e5968;
+	border-radius: 50%;
+	background: transparent;
+	box-shadow: none;
+}
+.is-object[data-v="1"] b {
+	height: 18px;
+	left: 25%;
+	right: 25%;
+	background: #6e8793;
+	border-radius: 8px;
+}
+@media (max-width: 340px) {
+	.is-targets {
+		grid-template-columns: 1fr;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.is-console i {
+		box-shadow: none;
+	}
+}

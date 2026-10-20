@@ -1,0 +1,229 @@
+.conversation-street {
+	--cs-ink: #173c47;
+	--cs-coral: #ff735d;
+	--cs-sky: #dff5ff;
+	background: linear-gradient(180deg, #fff8e9, #eaf8ff);
+	color: var(--cs-ink);
+	min-height: 100%;
+	overflow-x: hidden;
+}
+.conversation-street .caq-header {
+	background: linear-gradient(135deg, #163f52, #22677b);
+}
+.cs-street {
+	align-items: end;
+	background: linear-gradient(#bfeaff 65%, #95d98c 65%);
+	border: 3px solid #174758;
+	border-radius: 24px;
+	display: flex;
+	font-size: 3rem;
+	height: 150px;
+	justify-content: space-around;
+	overflow: hidden;
+	padding: 16px;
+}
+.cs-street b {
+	align-self: start;
+	background: #fff;
+	border: 3px solid var(--cs-ink);
+	border-radius: 22px 22px 22px 6px;
+	font-size: 2rem;
+	padding: 8px 14px;
+}
+.cs-privacy,
+.cs-fictional-label {
+	background: #fff7c9;
+	border: 2px solid #765b00;
+	border-radius: 16px;
+	font-size: 0.92rem;
+	line-height: 1.35;
+	padding: 12px;
+}
+.cs-fictional-label {
+	position: sticky;
+	top: 0;
+	z-index: 3;
+}
+.cs-venue {
+	display: grid;
+	gap: 12px;
+}
+.cs-speakers {
+	display: flex;
+	justify-content: space-between;
+}
+.cs-speakers span {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	font-size: 0.8rem;
+	font-weight: 800;
+	gap: 4px;
+}
+.cs-speakers i {
+	background: #ffd4a9;
+	border: 3px solid var(--cs-ink);
+	border-radius: 50% 50% 40% 40%;
+	display: block;
+	height: 45px;
+	position: relative;
+	width: 45px;
+}
+.cs-timeline,
+.cs-response-sheet,
+.cs-slots {
+	display: grid;
+	gap: 10px;
+}
+.cs-timeline button,
+.cs-response-sheet button,
+.cs-clear {
+	background: #fff;
+	border: 2px solid #3a7180;
+	border-radius: 16px;
+	color: var(--cs-ink);
+	min-height: 52px;
+	padding: 11px 13px;
+	text-align: left;
+}
+.cs-timeline button:nth-child(even) {
+	border-radius: 16px 16px 5px 16px;
+	margin-left: 24px;
+}
+.cs-timeline button:nth-child(odd) {
+	border-radius: 16px 16px 16px 5px;
+	margin-right: 24px;
+}
+.cs-timeline button.selected {
+	box-shadow: 0 0 0 4px #ffd35a;
+	transform: translateY(-1px);
+}
+.cs-timeline span,
+.cs-response-sheet small {
+	display: block;
+	font-size: 0.72rem;
+	font-weight: 800;
+	opacity: 0.72;
+}
+.cs-missing {
+	border: 2px dashed #3a7180;
+	border-radius: 16px;
+	font-weight: 800;
+	margin: 0;
+	min-height: 48px;
+	padding: 12px;
+	text-align: center;
+}
+.cs-response-sheet {
+	background: #e4f7ff;
+	border: 2px solid #7db8c8;
+	border-radius: 22px 22px 10px 10px;
+	padding: 12px;
+}
+.cs-response-sheet button:disabled {
+	opacity: 0.45;
+}
+.cs-ordered {
+	display: grid;
+	gap: 8px;
+	margin: 0;
+	padding-left: 28px;
+}
+.cs-ordered li {
+	background: #fff;
+	border: 2px solid #3a7180;
+	border-radius: 15px;
+	min-height: 48px;
+	padding: 10px;
+}
+.cs-profile {
+	background: #fff;
+	border: 3px solid var(--cs-ink);
+	border-radius: 20px;
+	box-shadow: 0 5px 0 #aed6df;
+	padding: 14px;
+}
+.cs-profile h2,
+.cs-profile p {
+	margin: 7px 0;
+}
+.cs-question-bubble {
+	background: #fff;
+	border: 3px solid var(--cs-ink);
+	border-radius: 18px 18px 18px 5px;
+	padding: 14px;
+}
+.cs-slots {
+	grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+}
+.cs-slots span {
+	align-items: center;
+	background: #fff;
+	border: 2px dashed #4a7681;
+	border-radius: 12px;
+	display: flex;
+	justify-content: center;
+	min-height: 48px;
+	padding: 7px;
+}
+.cs-clear {
+	background: #fff7df;
+	text-align: center;
+}
+.cs-code-scene {
+	align-items: center;
+	background: linear-gradient(#cceeff 60%, #bce3a7 60%);
+	border: 3px solid var(--cs-ink);
+	border-radius: 22px;
+	display: flex;
+	height: 150px;
+	justify-content: center;
+	overflow: hidden;
+	position: relative;
+}
+.cs-code-scene span {
+	font-size: 5rem;
+	z-index: 1;
+}
+.cs-code-scene i {
+	background: #fff4bc;
+	border-radius: 50%;
+	height: 58px;
+	position: absolute;
+	right: 14px;
+	top: 12px;
+	width: 58px;
+}
+.cs-speakers span:last-child i {
+	border-radius: 35% 50% 50% 40%;
+	box-shadow: inset 0 0 0 8px #bdebd7;
+}
+.cs-transcript,
+.cs-venue details {
+	background: #fff;
+	border: 2px solid #7da7b1;
+	border-radius: 14px;
+	padding: 10px;
+}
+.cs-transcript summary,
+.cs-venue summary {
+	cursor: pointer;
+	font-weight: 800;
+	min-height: 30px;
+}
+@media (min-width: 560px) {
+	.cs-response-sheet {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+	.cs-venue {
+		max-width: 620px;
+		margin-inline: auto;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.conversation-street * {
+		animation: none;
+		scroll-behavior: auto;
+		transition: none;
+	}
+}

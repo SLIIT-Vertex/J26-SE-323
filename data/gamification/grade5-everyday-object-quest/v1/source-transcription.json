@@ -1,0 +1,15 @@
+{
+  "area_id": "G5-AREA-ENG-05",
+  "theme_heading": "Theme 5: What we use",
+  "transcription_version": "g5-eng-object-source-transcription-v1",
+  "status": "draft_human_review_required",
+  "sections": {
+    "Objects in the classroom": ["Blackboard", "Table", "Chair", "Duster", "Desk", "Dustbin", "Ruler", "Vase", "Pencil", "Bottle", "Text Book", "Work Book", "Lunch box", "Register", "Record Book", "Hole Puncture", "Stapler Machine", "Pencil Sharpener"],
+    "Objects in the Home": ["Needle", "Thread", "Bed", "Comb", "Toothbrush", "Toothpaste", "Fork", "Knife", "Spoon", "Cup", "Saucer", "Plate", "Pan", "Mug", "Glass", "Broom"]
+  },
+  "review_issues": [
+    { "source_form": "Hole Puncture", "issue": "Likely intended to mean hole punch or hole puncher; excluded from scored content." },
+    { "source_form": "Text Book / Work Book", "issue": "Compound spacing requires English-language review." },
+    { "source_form": "Stapler Machine", "issue": "Common learner-facing form may be stapler; retain source pending review." }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "source_record_version": "g5-eng-classroom-language-source-v1",
+  "screenshots": [
+    {"identity": "Screenshot 2026-10-20 at 11.55.05.png", "order": 1},
+    {"identity": "Screenshot 2026-10-20 at 11.55.22.png", "order": 2}
+  ],
+  "main_heading": "Classroom Language",
+  "status": "draft_review_gated",
+  "groups": [
+    {"heading": "Greetings and Wishes", "entries": [
+      ["Good Morning", "සුබ උදෑසනක් වේවා"], ["Good Afternoon", "සුබ දහවලක් වේවා"], ["Good Evening", "සුබ සන්ධ්‍යාවක් වේවා"], ["Good Bye", "නික්මයාමේ දී සිදු කරන සුබ පැතීම"], ["Good Luck", "වාසනා වේවා"], ["All the Best", "සුබ පැතුම්"], ["Happy Birthday", "සුබ උපන් දිනයක් වේවා"], ["Happy New Year", "සුබ අලුත් අවුරුද්දක් වේවා"], ["Merry Christmas", "ප්‍රීතිමත් නත්තලක් වේවා"], ["Happy Christmas", "සුබ නත්තලක් වේවා"]
+    ]},
+    {"heading": "Simple Commands", "entries": [
+      ["Hands up", "අත් ඔසවන්න"], ["Hands down", "අත් පහළට දමන්න"], ["Run", "දුවන්න"], ["Jump", "උඩ පනින්න"], ["Start", "පටන්ගන්න"], ["Clap your hands", "අත්පුඩි ගසන්න"], ["Look at me", "මා දිහා බලන්න"], ["Form a Line", "පේළියක් හැදෙන්න"], ["Form a Circle", "රවුමක් හැදෙන්න"], ["Don't go out", "එළියට යන්න එපා"], ["Get ready", "සූදානම් වන්න"]
+    ]},
+    {"heading": "Request", "entries": [
+      ["May I come in?", "මම ඇතුළට එන්න ද?"], ["May I go out?", "මම එළියට යන්න ද?"], ["Silence Please", "කරුණාකරලා නිශ්ශබ්ද වන්න"], ["Listen to me please", "කරුණාකරලා මට සවන් දෙන්න"], ["Hurry up please", "කරුණාකරලා ඉක්මන් කරන්න"], ["Be quiet", "නිශ්ශබ්ද වන්න"], ["Be Careful", "ප්‍රවේශම් වන්න"]
+    ]},
+    {"heading": "Praising", "entries": [["Good", "හොඳයි"], ["Very good", "ඉතා හොඳයි"], ["That's right", "ඒක හරි"], ["Well done", "හොඳට කළා"], ["I like it", "මම එයට කැමතියි"]]},
+    {"heading": "Polite Forms", "entries": [["Thank You", "ස්තුතියි"], ["Please excuse me", "කරුණාකරලා, සමාවෙන්න"], ["I'm sorry", "මට සමාවෙන්න"]]},
+    {"heading": "Simple Question Forms", "entries": [["Who is shouting ?", "කෑ ගසන්නේ කවු ද?"], ["What's this?", "මේ මොකක් ද?"], ["What's that?", "අර මොකක් ද?"], ["What is it?", "එය කුමක් ද?"], ["Is it a ................. ?", "එය ................. ද?"], ["Is that a ................. ?", "අර ................. ද?"], ["Are you ready?", "ඔබ සූදානම් ද?"]]}
+  ],
+  "transcription_confidence": "high_with_review_flags",
+  "approved_normalizations": [],
+  "review_issues": ["Good Bye spelling", "source capitalization and punctuation", "space before question mark", "dotted blanks are placeholders", "mixed Request heading functions", "inclusive fictional Christmas contexts", "no physical Run or Jump instruction", "Look at me uses no camera or gaze tracking"]
+}
