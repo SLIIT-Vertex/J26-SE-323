@@ -1,0 +1,10 @@
+{
+  "authoring_basis": "provisional_development_assumption",
+  "development_only": true,
+  "files": {
+    "area_support_types.jsonl": "cd9fedf5d4304ca1327a0f254a0255ee5d8a3a79f9a27386777ecee0ef43a5d6"
+  },
+  "package_version": "grade5-area-support-catalog-v1",
+  "publication_status": "blocked",
+  "review_status": "unreviewed"
+}

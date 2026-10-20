@@ -1,6 +1,5 @@
 import type {
 	AnswerRequest,
-	ChildEpisodeResponse,
 	DraftMissionCatalog,
 	DraftMissionRecord,
 	OpenEpisodeRequest,
@@ -15,6 +14,7 @@ import {
 	parseDraftMissionCatalog,
 	parseDraftMissionRecord,
 	parseTelemetryAcknowledgement,
+	type ScoredEpisodeResponse,
 } from "./runtime";
 
 export type LearningFlowClient = ReturnType<typeof createLearningFlowClient>;
@@ -43,13 +43,74 @@ export function createLearningFlowClient({
 	learnerId: string;
 	request?: Requester;
 }) {
+	let activeLearnerId = learnerId;
 	const headers = (idempotencyKey: string) => ({
 		"Content-Type": "application/json",
 		"Idempotency-Key": idempotencyKey,
 		"X-Dev-Principal": "NOT_FOR_PRODUCTION",
 		"X-Dev-Role": "learner",
-		"X-Learner-Id": learnerId,
+		"X-Learner-Id": activeLearnerId,
 	});
+	const createDevelopmentLearner = async (): Promise<string> => {
+		const created = await request(`${baseUrl}/learners`, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ grade: 5, preferred_language: "si" }),
+		});
+		if (!created.ok) {
+			throw new LearningFlowApiError(
+				"DEVELOPMENT_LEARNER_BOOTSTRAP_FAILED",
+				created.status,
+			);
+		}
+		const profile = (await created.json()) as { id?: unknown };
+		if (typeof profile.id !== "string") {
+			throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+		}
+		return profile.id;
+	};
+	const resolveDevelopmentLearner = async (
+		atomicSkillId?: string,
+		excludedLearnerId?: string,
+	): Promise<string> => {
+		const listed = await request(`${baseUrl}/learners`);
+		if (listed.ok) {
+			const learners = (await listed.json()) as Array<{
+				id?: unknown;
+				grade?: unknown;
+				preferred_language?: unknown;
+			}>;
+			const compatibleLearners = Array.isArray(learners)
+				? learners.filter(
+						(row) =>
+							typeof row.id === "string" &&
+							row.id !== excludedLearnerId &&
+							row.grade === 5 &&
+							row.preferred_language === "si",
+					)
+				: [];
+			const preferredLearners = [
+				...compatibleLearners.filter((row) => row.id === activeLearnerId),
+				...compatibleLearners.filter((row) => row.id !== activeLearnerId),
+			];
+			for (const compatible of preferredLearners) {
+				if (typeof compatible.id !== "string") continue;
+				if (!atomicSkillId) return compatible.id;
+				const availability = await request(
+					`${baseUrl}/development/learning-flow/learners/${compatible.id}/skills/${encodeURIComponent(atomicSkillId)}/available`,
+				);
+				if (!availability.ok) continue;
+				const payload = (await availability.json()) as { available?: unknown };
+				if (payload.available === true) return compatible.id;
+			}
+		}
+		return createDevelopmentLearner();
+	};
+	const ensureDevelopmentLearner = async (
+		atomicSkillId?: string,
+	): Promise<void> => {
+		activeLearnerId = await resolveDevelopmentLearner(atomicSkillId);
+	};
 	const post = async <T>(
 		path: string,
 		key: string,
@@ -90,18 +151,46 @@ export function createLearningFlowClient({
 	};
 
 	return {
-		open: (
+		open: async (
 			body: OpenEpisodeRequest,
 			key: string,
-		): Promise<ChildEpisodeResponse> => post("/episodes", key, body),
+		): Promise<ScoredEpisodeResponse> => {
+			await ensureDevelopmentLearner(body.atomic_skill_id ?? undefined);
+			try {
+				return await post("/episodes", key, {
+					...body,
+					learner_id: activeLearnerId,
+				});
+			} catch (error) {
+				if (!(error instanceof LearningFlowApiError)) {
+					throw error;
+				}
+				if (error.code === "PROBE_ALREADY_RESERVED_OR_EXPOSED") {
+					activeLearnerId = await createDevelopmentLearner();
+				} else if (
+					["LEARNER_NOT_FOUND", "GRADE5_SINHALA_REQUIRED"].includes(error.code)
+				) {
+					activeLearnerId = await resolveDevelopmentLearner(
+						body.atomic_skill_id ?? undefined,
+						activeLearnerId,
+					);
+				} else {
+					throw error;
+				}
+				return post("/episodes", key, {
+					...body,
+					learner_id: activeLearnerId,
+				});
+			}
+		},
 		answerBefore: (episodeId: string, body: AnswerRequest, key: string) =>
-			post<ChildEpisodeResponse>(`/episodes/${episodeId}/before`, key, body),
+			post<ScoredEpisodeResponse>(`/episodes/${episodeId}/before`, key, body),
 		completeSupport: (
 			episodeId: string,
 			body: SupportCompleteRequest,
 			key: string,
 		) =>
-			post<ChildEpisodeResponse>(
+			post<ScoredEpisodeResponse>(
 				`/episodes/${episodeId}/support/complete`,
 				key,
 				body,
@@ -111,15 +200,15 @@ export function createLearningFlowClient({
 			body: WithdrawalAcknowledgementRequest,
 			key: string,
 		) =>
-			post<ChildEpisodeResponse>(
+			post<ScoredEpisodeResponse>(
 				`/episodes/${episodeId}/support/withdraw`,
 				key,
 				body,
 			),
 		presentAfter: (episodeId: string, key: string) =>
-			post<ChildEpisodeResponse>(`/episodes/${episodeId}/after/present`, key),
+			post<ScoredEpisodeResponse>(`/episodes/${episodeId}/after/present`, key),
 		answerAfter: (episodeId: string, body: AnswerRequest, key: string) =>
-			post<ChildEpisodeResponse>(`/episodes/${episodeId}/after`, key, body),
+			post<ScoredEpisodeResponse>(`/episodes/${episodeId}/after`, key, body),
 		telemetry: (
 			episodeId: string,
 			body: TelemetryBatch,
@@ -135,11 +224,9 @@ export type DraftMissionCatalogClient = ReturnType<
 
 export function createDraftMissionCatalogClient({
 	baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1",
-	allowDraft,
 	request = fetch,
 }: {
 	baseUrl?: string;
-	allowDraft: boolean;
 	request?: Requester;
 }) {
 	const headers = {
@@ -150,15 +237,12 @@ export function createDraftMissionCatalogClient({
 		path: string,
 		parse: (value: unknown) => T,
 	): Promise<T> => {
-		if (allowDraft !== true) {
-			throw new LearningFlowApiError("DRAFT_CATALOG_BLOCKED", 403);
-		}
 		let response: Response;
 		try {
-			response = await request(
-				`${baseUrl}/development/learning-flow${path}?allow_draft=true`,
-				{ method: "GET", headers },
-			);
+			response = await request(`${baseUrl}/learning-flow${path}`, {
+				method: "GET",
+				headers,
+			});
 		} catch {
 			throw new LearningFlowApiError("BACKEND_UNAVAILABLE", 0);
 		}

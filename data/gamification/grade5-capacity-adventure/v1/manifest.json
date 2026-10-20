@@ -1,0 +1,20 @@
+{
+  "area_id": "G5-AREA-MAT-11",
+  "package_version": "g5-mat-capacity-adventure-v1",
+  "medium": "si",
+  "grade": 5,
+  "development_only": true,
+  "review_status": "blocked_pending_human_review",
+  "source_curriculum_node_ids": ["G5-MAT-C13", "G5-MAT-C13-L01", "G5-MAT-C13-L02"],
+  "atomic_skill_ids": [
+    "G5-MAT-CAPACITY-READ-01",
+    "G5-MAT-CAPACITY-COMPOSE-01",
+    "G5-MAT-CAPACITY-CONVERT-01",
+    "G5-MAT-CAPACITY-ARITHMETIC-01",
+    "G5-MAT-CAPACITY-PROBLEM-01"
+  ],
+  "chapters": ["water_laboratory", "litre_machine", "water_delivery"],
+  "item_schema_version": "capacity-adventure-item-v1",
+  "support_schema_version": "capacity-adventure-support-v1",
+  "rights_note": "Generated decorative assets contain no textbook artwork or instructional answers. All measures and working are rendered in code."
+}

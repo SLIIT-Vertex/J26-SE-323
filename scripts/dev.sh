@@ -19,7 +19,10 @@ if ! curl -sf -o /dev/null "$api"; then
 		echo "backend/.venv is missing. Create it in backend/ before npm run dev." >&2
 		exit 1
 	fi
-	(cd "$root/backend" && "$python" -m uvicorn app.main:app --host 127.0.0.1 --port 8000) &
+	# Keep the API contract in sync with Vite during development. Without reload,
+	# frontend changes can hot-update while an older backend response shape remains
+	# in memory, making a valid Confirm response look like a service failure.
+	(cd "$root/backend" && "$python" -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000) &
 	backend_pid="$!"
 	for _ in $(seq 1 50); do
 		if curl -sf -o /dev/null "$api"; then

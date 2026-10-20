@@ -7,6 +7,9 @@ from fastapi import FastAPI, Request, Response
 from starlette.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.gamification.api.learning_flow_router import (
+    development_router as development_learning_flow_router,
+)
 from app.gamification.api.learning_flow_router import legacy_router as legacy_learning_flow_router
 from app.gamification.api.learning_flow_router import router as learning_flow_router
 from app.gamification.api.router import register_play_errors
@@ -131,5 +134,6 @@ app.include_router(submissions_router, prefix=settings.api_v1_prefix)
 app.include_router(report_router, prefix=settings.api_v1_prefix)
 app.include_router(gamification_router, prefix=settings.api_v1_prefix)
 app.include_router(learning_flow_router, prefix=settings.api_v1_prefix)
+app.include_router(development_learning_flow_router, prefix=settings.api_v1_prefix)
 app.include_router(legacy_learning_flow_router, prefix=settings.api_v1_prefix)
 register_play_errors(app)

@@ -41,7 +41,7 @@ export function createFractionBarGame(
     parent,
     width: 360,
     height: Math.max(180, manifest.options.length * 56 + 24),
-    backgroundColor: "#f3f7f1",
+    transparent: true,
     scene: [FractionBarScene],
     banner: false,
     audio: { noAudio: true },

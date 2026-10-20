@@ -200,6 +200,20 @@ class SqlAlchemyLearningFlowStore:
         }
         return {**safe, "manifest_sha256": digest(safe)}
 
+    def support_history(
+        self, *, learner_id: UUID, skill_id: str
+    ) -> tuple[dict[str, object], ...]:
+        rows = self.session.scalars(
+            select(LearningFlowEpisodeRunModel)
+            .where(
+                LearningFlowEpisodeRunModel.learner_id == learner_id,
+                LearningFlowEpisodeRunModel.skill_id == skill_id,
+                LearningFlowEpisodeRunModel.status == "completed",
+            )
+            .order_by(LearningFlowEpisodeRunModel.updated_at, LearningFlowEpisodeRunModel.episode_id)
+        ).all()
+        return tuple(dict(row.state_json) for row in rows)
+
     def _append_event(self, episode_id: UUID, event: object, now: datetime) -> None:
         if not isinstance(event, dict):
             raise LearningFlowPersistenceError("INVALID_EVENT")

@@ -1,0 +1,313 @@
+.fraction-adventure {
+	width: min(100%, 44rem);
+	margin: auto;
+	color: #352653;
+}
+.fraction-header,
+.fraction-play-shell,
+.fraction-game-card {
+	background: rgba(255, 253, 247, 0.96);
+	border-radius: 2rem;
+}
+.fraction-header {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem;
+	margin-bottom: 1rem;
+}
+.fraction-header h1 {
+	margin: 0;
+}
+.fraction-game-list {
+	display: grid;
+	gap: 1rem;
+}
+.fraction-game-card {
+	min-height: 11rem;
+	border: 4px solid #8bd8ca;
+	padding: 1rem;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	text-align: left;
+	color: inherit;
+}
+.fraction-game-card:nth-child(2) {
+	border-color: #ffca55;
+}
+.fraction-game-card:nth-child(3) {
+	border-color: #b89af4;
+}
+.fraction-game-card img {
+	width: 7rem;
+	height: 7rem;
+	object-fit: contain;
+}
+.fraction-game-card span {
+	display: grid;
+	gap: 0.5rem;
+}
+.fraction-game-card strong {
+	font-size: 1.35rem;
+}
+.fraction-game-card small {
+	font-weight: 800;
+	color: #6553a4;
+}
+.fraction-play-shell {
+	padding: clamp(0.75rem, 4vw, 1.5rem);
+	overflow: hidden;
+}
+.fraction-position {
+	text-align: center;
+	font-weight: 800;
+	color: #62539a;
+}
+.fraction-play-shell h2 {
+	font-size: clamp(1.2rem, 5vw, 1.6rem);
+}
+.fraction-primary {
+	min-height: 3.5rem;
+	width: 100%;
+	border: 0;
+	border-radius: 1.2rem;
+	background: #7057eb;
+	color: white;
+	font: inherit;
+	font-weight: 900;
+	margin-top: 1rem;
+	box-shadow: 0 0.4rem 0 #4834b8;
+}
+.fraction-primary:disabled {
+	opacity: 0.45;
+	box-shadow: none;
+}
+.stacked-fraction {
+	display: inline-grid;
+	justify-items: stretch;
+	min-width: 3rem;
+	text-align: center;
+	font-size: 1.4rem;
+}
+.stacked-fraction span {
+	height: 2px;
+	background: currentColor;
+}
+.fraction-construction {
+	display: grid;
+	justify-items: center;
+	gap: 1rem;
+	background: #fff9e9;
+	padding: 1rem;
+	border-radius: 1.5rem;
+}
+.fraction-shape {
+	width: min(100%, 20rem);
+	display: grid;
+	gap: 0.25rem;
+}
+.fraction-shape.rectangle,
+.fraction-shape.strip {
+	grid-template-columns: repeat(var(--parts, 2), 1fr);
+}
+.fraction-shape[data-parts="2"] {
+	--parts: 2;
+}
+.fraction-shape[data-parts="4"] {
+	--parts: 4;
+}
+.fraction-shape[data-parts="10"] {
+	--parts: 10;
+}
+.fraction-shape.circle {
+	width: min(18rem, 100%);
+	margin-inline: auto;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	align-content: center;
+	grid-template-columns: none;
+	border-radius: 50%;
+	padding: 1.25rem;
+	background: #f0e8ff;
+}
+.region {
+	min-width: 0;
+	min-height: 5rem;
+	border: 3px solid #694aa0;
+	background: white;
+}
+.strip .region {
+	min-height: 7rem;
+}
+.circle .region {
+	width: 4.5rem;
+	height: 4.5rem;
+	min-height: 4.5rem;
+	border-radius: 50%;
+}
+.region.shaded {
+	background: #ffc94e;
+	background-image: repeating-linear-gradient(
+		45deg,
+		transparent,
+		transparent 8px,
+		rgba(107, 65, 162, 0.22) 8px,
+		rgba(107, 65, 162, 0.22) 12px
+	);
+}
+.grouping-board {
+	display: grid;
+	gap: 1rem;
+}
+.object-tray {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	align-content: center;
+	gap: 0.25rem;
+	background: #fff3cd;
+	border-radius: 1rem;
+	padding: 0.5rem;
+}
+.apple-token {
+	width: 48px;
+	height: 48px;
+	border: 2px solid transparent;
+	background: none;
+	padding: 2px;
+	border-radius: 50%;
+}
+.apple-token img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+.sharing-groups {
+	display: grid;
+	gap: 0.5rem;
+}
+.groups-2 {
+	grid-template-columns: repeat(2, 1fr);
+}
+.groups-4 {
+	grid-template-columns: repeat(2, 1fr);
+}
+.sharing-bowl {
+	min-height: 7rem;
+	border: 3px solid #8066bd;
+	background: #fff;
+	border-radius: 1rem;
+	position: relative;
+	display: grid;
+	place-items: center;
+	align-content: center;
+	text-align: center;
+}
+.sharing-bowl.active {
+	outline: 4px solid #16ad98;
+}
+.sharing-bowl img {
+	width: 72%;
+	height: 5rem;
+	object-fit: contain;
+}
+.sharing-bowl strong {
+	display: block;
+}
+.quarter-table-wrap {
+	overflow: hidden;
+}
+.quarter-table-wrap table {
+	width: 100%;
+	border-collapse: collapse;
+	table-layout: fixed;
+	background: #fff9e9;
+}
+.quarter-table-wrap th,
+.quarter-table-wrap td {
+	border: 2px solid #6d4a91;
+	padding: 0.35rem;
+	text-align: center;
+}
+.quarter-table-wrap td:not(:first-child) {
+	display: grid;
+	justify-items: center;
+	gap: 0.25rem;
+}
+.quarter-table-wrap button,
+.numerator-stepper button {
+	width: 48px;
+	height: 48px;
+	border: 0;
+	border-radius: 50%;
+	background: #684ed4;
+	color: #fff;
+	font-size: 1.6rem;
+}
+.numerator-stepper {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+.fraction-support {
+	background: #e8fff7;
+	border: 3px dashed #17ae98;
+	border-radius: 1.5rem;
+	padding: 1rem;
+}
+.support-type {
+	display: inline-block;
+	background: #c9f8e9;
+	border-radius: 999px;
+	padding: 0.5rem 0.75rem;
+	font-weight: 900;
+}
+.fraction-support li {
+	padding: 0.5rem;
+}
+.fraction-support li.done {
+	background: #c9f8e9;
+}
+.fraction-feedback,
+.fraction-status {
+	text-align: center;
+	padding: 2rem;
+}
+.fraction-adventure button:focus-visible {
+	outline: 4px solid #f28c28;
+	outline-offset: 3px;
+}
+@media (max-width: 340px) {
+	.fraction-play-shell {
+		padding: 0.65rem;
+	}
+	.fraction-game-card {
+		min-height: 8rem;
+	}
+	.fraction-game-card img {
+		width: 5rem;
+		height: 5rem;
+	}
+	.object-tray {
+		gap: 0;
+	}
+	.apple-token {
+		width: 40px;
+		height: 48px;
+	}
+	.quarter-table-wrap th,
+	.quarter-table-wrap td {
+		padding: 0.15rem;
+		font-size: 0.8rem;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.fraction-adventure * {
+		animation: none;
+		scroll-behavior: auto;
+	}
+}

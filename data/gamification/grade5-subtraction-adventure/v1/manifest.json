@@ -1,0 +1,36 @@
+{
+  "area_id": "G5-AREA-MAT-04",
+  "experience_id": "subtraction_adventure",
+  "package_version": "g5-mat-subtraction-adventure-draft-v1",
+  "scoring_version": "g5-mat-subtraction-scoring-v1",
+  "equivalence_version": "g5-mat-subtraction-parallel-v1",
+  "grade": 5,
+  "medium": "si",
+  "universal_skill_id": "MAT-OPS",
+  "source_id": "SRC-G5-MAT-TG-01",
+  "source_parents": ["G5-MAT-C07-L01", "G5-MAT-C07-L01-O01", "G5-MAT-C07-L01-O02", "G5-MAT-C07-L01-O03"],
+  "direct_draft_skill_ids": ["G5-MAT-C07-L01-O01", "G5-MAT-C07-L01-O02"],
+  "provisional_atomic_skill_ids": [
+    "G5-MAT-SUB-NO-REGROUP-01",
+    "G5-MAT-SUB-EXPANDED-01",
+    "G5-MAT-SUB-DIFF-BETWEEN-01",
+    "G5-MAT-SUB-HOW-MANY-MORE-01"
+  ],
+  "two_regroup_evidence": "repository_draft_not_photographed_worked_example",
+  "misconception_catalogue_version": "g5-mat-subtraction-misconceptions-v1",
+  "scaffold_catalogue_version": "g5-mat-subtraction-scaffolds-v1",
+  "policy_version": "g5-mat-subtraction-raw-ig-shadow-v1",
+  "review_status": "draft_blocked",
+  "production_child_delivery": false,
+  "human_review_required": [
+    "curriculum",
+    "usage_rights",
+    "sinhala_language",
+    "educator_content",
+    "accessibility",
+    "answer_leakage",
+    "ethics_privacy",
+    "model_safety",
+    "release"
+  ]
+}

@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from app.gamification.api.learning_flow_router import router
+from app.gamification.api.learning_flow_router import development_router, router
 from fastapi import FastAPI
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -16,6 +16,7 @@ OUTPUT = ROOT / "docs" / "adaptive-gamified-learning" / "mobile-learning-contrac
 def build() -> dict[str, object]:
     app = FastAPI(title="MindBridge development contract", version="1.0.0")
     app.include_router(router, prefix="/api/v1")
+    app.include_router(development_router, prefix="/api/v1")
     schema = app.openapi()
     return {
         "contract_version": "mobile-learning-contracts-v1",

@@ -1,0 +1,326 @@
+.roman-adventure {
+	width: 100%;
+	max-width: 760px;
+	margin: 0 auto;
+	padding: clamp(10px, 4vw, 24px);
+	box-sizing: border-box;
+	color: #274b4c;
+	overflow-x: clip;
+}
+.roman-header {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-bottom: 16px;
+	padding: 1rem;
+	border-radius: 2rem;
+	background: rgba(255, 253, 247, 0.96);
+}
+.roman-header p,
+.roman-position {
+	margin: 0;
+	color: #6f7771;
+	font-weight: 800;
+}
+.roman-header h1 {
+	margin: 2px 0;
+	font-size: clamp(1.55rem, 8vw, 2.2rem);
+}
+.roman-game-list,
+.roman-play {
+	display: grid;
+	gap: 14px;
+}
+.roman-game-card {
+	width: 100%;
+	min-height: 112px;
+	border: 2px solid #d6b86c;
+	border-radius: 22px;
+	background: rgba(255, 255, 255, 0.95);
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 11px;
+	text-align: left;
+	box-shadow: 0 7px 0 #cfaf60;
+	color: inherit;
+}
+.roman-game-card img {
+	width: 88px;
+	height: 88px;
+	object-fit: contain;
+	flex: none;
+}
+.roman-game-card span {
+	display: grid;
+	gap: 7px;
+}
+.roman-game-card strong {
+	font-size: 1.08rem;
+	line-height: 1.4;
+}
+.roman-game-card small {
+	font-weight: 800;
+	color: #74664c;
+}
+.roman-play > h2,
+.roman-support > h2 {
+	margin: 0;
+	font-size: 1.16rem;
+	line-height: 1.5;
+}
+.roman-primary {
+	min-height: 52px;
+	border: 0;
+	border-radius: 16px;
+	background: #19776f;
+	color: #fff;
+	font: inherit;
+	font-weight: 900;
+	padding: 12px 18px;
+}
+.roman-primary:disabled {
+	opacity: 0.45;
+}
+.roman-adventure button:focus-visible,
+.roman-adventure fieldset:focus-within {
+	outline: 4px solid #bd6447;
+	outline-offset: 3px;
+}
+.roman-bridge {
+	min-width: 0;
+	min-height: 330px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: clamp(34px, 17vw, 130px);
+	padding: 82px clamp(22px, 10vw, 86px) 42px;
+}
+.roman-bridge section {
+	display: grid;
+	align-content: center;
+	gap: 8px;
+}
+.roman-bridge button,
+.symbol-bank button,
+.emoji-grid button {
+	min-width: 48px;
+	min-height: 48px;
+	border: 2px solid #377f7a;
+	border-radius: 13px;
+	background: #fff;
+	color: #2a4545;
+	font: inherit;
+	font-weight: 900;
+}
+.roman-bridge button {
+	display: grid;
+	place-items: center;
+}
+.roman-bridge small {
+	display: block;
+	font-size: 0.75rem;
+}
+.roman-bridge .selected {
+	background: #fff0a9;
+	border-color: #b65a3e;
+	box-shadow: inset 0 0 0 2px #b65a3e;
+}
+.roman-bridge button:disabled {
+	opacity: 0.48;
+}
+.emoji-workshop {
+	display: grid;
+	gap: 15px;
+}
+.count-display {
+	text-align: center;
+	margin: 0;
+	padding: 8px;
+	border-radius: 12px;
+	background: #fff1bb;
+	font-weight: 800;
+}
+.emoji-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(48px, 1fr));
+	gap: 9px;
+}
+.emoji-grid button {
+	font-size: 1.9rem;
+	padding: 4px;
+}
+.emoji-grid button.counted {
+	background: #d7f2e5;
+	border-color: #357c54;
+	box-shadow: inset 0 0 0 2px #357c54;
+}
+.symbol-builder {
+	min-width: 0;
+	border: 2px solid #d7bd79;
+	border-radius: 18px;
+	padding: 12px;
+	margin: 0;
+	background: rgba(255, 255, 255, 0.9);
+}
+.symbol-builder legend {
+	padding: 0 8px;
+	font-weight: 850;
+}
+.answer-rail {
+	min-height: 62px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	border: 2px dashed #99783e;
+	border-radius: 13px;
+	background: #fffdf5;
+	font-size: 2rem;
+	font-family: Georgia, serif;
+}
+.answer-rail span {
+	min-width: 32px;
+	text-align: center;
+}
+.symbol-bank {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(48px, 1fr));
+	gap: 9px;
+	margin-top: 10px;
+}
+.symbol-bank button {
+	font-size: 1.5rem;
+}
+.roman-calc {
+	min-height: 310px;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100% 100%;
+	padding: 84px clamp(30px, 11vw, 90px) 50px;
+	display: grid;
+	align-content: center;
+	gap: 14px;
+}
+.roman-expression {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 10px;
+	font:
+		900 clamp(1.55rem, 8vw, 2.3rem) Georgia,
+		serif;
+}
+.roman-support {
+	display: grid;
+	gap: 13px;
+	padding: 15px;
+	border: 2px solid #d6b86c;
+	border-radius: 20px;
+	background: #fffdf5;
+}
+.roman-support > p {
+	margin: 0;
+	font-weight: 900;
+	color: #a14f39;
+}
+.roman-cue {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+}
+.roman-cue strong {
+	min-height: 52px;
+	display: grid;
+	place-items: center;
+	border: 2px solid #3a827b;
+	border-radius: 13px;
+	background: #e1f4ed;
+}
+.roman-support ol {
+	margin: 0;
+	padding-left: 28px;
+	display: grid;
+	gap: 8px;
+}
+.roman-support li {
+	opacity: 0.55;
+}
+.roman-support li.done {
+	opacity: 1;
+	font-weight: 800;
+}
+.worked-roman,
+.worked-calc,
+.worked-emoji {
+	display: grid;
+	gap: 9px;
+	padding: 12px;
+	border-radius: 14px;
+	background: #fff0b2;
+}
+.worked-roman {
+	grid-template-columns: repeat(2, 1fr);
+}
+.worked-roman span,
+.worked-calc span,
+.worked-calc b {
+	min-height: 48px;
+	display: grid;
+	place-items: center;
+	border-radius: 10px;
+	background: #fff;
+	font-size: 1.25rem;
+}
+.worked-emoji > div {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 7px;
+	font-size: 1.7rem;
+}
+.worked-emoji span {
+	opacity: 0.3;
+}
+.worked-emoji span.shown {
+	opacity: 1;
+}
+.roman-feedback {
+	display: grid;
+	gap: 14px;
+	text-align: center;
+}
+.roman-feedback.result img {
+	width: min(90%, 450px);
+	margin: auto;
+}
+.roman-feedback.result h2 {
+	margin: 0;
+}
+@media (max-width: 360px) {
+	.roman-adventure {
+		padding: 8px;
+	}
+	.roman-game-card img {
+		width: 74px;
+		height: 74px;
+	}
+	.roman-bridge {
+		gap: 28px;
+		padding: 78px 20px 38px;
+	}
+	.roman-calc {
+		padding: 76px 24px 42px;
+	}
+	.emoji-grid {
+		grid-template-columns: repeat(3, minmax(48px, 1fr));
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.roman-adventure * {
+		scroll-behavior: auto;
+		animation: none;
+		transition: none;
+	}
+}

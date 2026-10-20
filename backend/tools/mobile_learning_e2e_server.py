@@ -7,6 +7,7 @@ from uuid import UUID
 import uvicorn
 from sqlalchemy.orm import Session
 
+from app.gamification.application.delivery import LIMITER
 from app.main import app
 from app.shared.database.base import Base
 from app.shared.database.session import engine
@@ -38,6 +39,7 @@ def seed() -> None:
 
 
 if __name__ == "__main__":
+    LIMITER.limit = int(os.environ.get("MOBILE_LEARNING_E2E_RATE_LIMIT", "60"))
     seed()
     uvicorn.run(
         app,

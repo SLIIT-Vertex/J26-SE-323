@@ -1,0 +1,44 @@
+{
+  "area_id": "G5-AREA-MAT-02",
+  "package_version": "g5-mat-addition-adventure-draft-v1",
+  "grade": 5,
+  "medium": "si",
+  "universal_skill_id": "MAT-OPS",
+  "source_id": "SRC-G5-MAT-TG-01",
+  "source_nodes": [
+    "G5-MAT-U103-A001",
+    "G5-MAT-U103-A002",
+    "G5-MAT-U103-A004",
+    "G5-MAT-C06-L01-O01",
+    "G5-MAT-C06-L01-O02",
+    "G5-MAT-C06-L01-O03",
+    "G5-MAT-U103-A006"
+  ],
+  "atomic_skill_ids": [
+    "G5-MAT-ADD-MENTAL-01",
+    "G5-MAT-C06-L01-O01",
+    "G5-MAT-C06-L01-O02",
+    "G5-MAT-C06-L01-O03",
+    "G5-MAT-ADD-RUNNING-TOTAL-01",
+    "G5-MAT-ADD-CONTEXT-01",
+    "G5-MAT-ADD-TABLE-TOTAL-01",
+    "G5-MAT-ADD-TABLE-DIFFERENCE-01",
+    "G5-MAT-ADD-TABLE-MAX-01"
+  ],
+  "misconception_catalogue_version": "g5-mat-addition-misconceptions-v1",
+  "scaffold_catalogue_version": "g5-mat-addition-scaffolds-v1",
+  "policy_version": "g5-mat-addition-raw-ig-shadow-v1",
+  "review_status": "draft_blocked",
+  "production_child_delivery": false,
+  "human_review_required": [
+    "curriculum",
+    "usage_rights",
+    "sinhala_language",
+    "educator_content",
+    "accessibility",
+    "answer_leakage",
+    "ethics_privacy",
+    "model_safety",
+    "release"
+  ]
+}
