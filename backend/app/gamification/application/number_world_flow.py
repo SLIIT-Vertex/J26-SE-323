@@ -109,6 +109,7 @@ _LEVEL_BANDS = {
     "medium": "medium",
     "medium_hard": "medium",
     "hard": "hard",
+    "easy_to_hard": "medium",  # items that run across the whole range: the middle band
 }
 
 # Environments the flow may run in. Only "pilot" can mark an answer as usable by a model, and only for
