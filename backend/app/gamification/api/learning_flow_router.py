@@ -66,7 +66,7 @@ class OpenEpisodeRequest(Boundary):
     grade: Literal[5]
     medium: Literal["si"]
     condition: Literal["baseline", "proposed"]
-    environment: Literal["development", "test"]
+    environment: Literal["development", "test", "pilot"]
     allow_draft: Literal[True]
     area_id: str | None = Field(default=None, max_length=32)
     atomic_skill_id: str | None = Field(default=None, max_length=64)

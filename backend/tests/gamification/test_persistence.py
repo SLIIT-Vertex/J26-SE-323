@@ -688,8 +688,8 @@ def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (gamification_head,) = script.get_revisions("gamification@head")
-    assert gamification_head.revision == "gam_20261020_01"
-    assert gamification_head.down_revision == "gam_20261017_07"
+    assert gamification_head.revision == "gam_20261021_01"
+    assert gamification_head.down_revision == "gam_20261020_01"
     assert gamification_head.revision in script.get_heads()
     for head in set(script.get_heads()) - {gamification_head.revision}:
         ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}

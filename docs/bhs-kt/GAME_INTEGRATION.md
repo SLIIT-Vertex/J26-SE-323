@@ -43,24 +43,66 @@ defaults ever differ. The learner must exist in the database: `python -m scripts
 creates it (once; running it again changes nothing). When there is a login, both should take the
 signed-in child's id instead.
 
-## What the game still has to do
+## Her skills are parts of our 30 (nothing of hers is changed)
 
-1. **Fix `universal_skill_id` in the durable flow.** `_publish_score` writes `"MAT-FRC"` on every
-   record. It should use the skill of the question that was played. Until then, every record for a
-   skill other than fractions is refused.
-2. **Decide when `model_ingestion_eligible` becomes `true`.** It is always `false` today, and the
-   flow only runs in `development` or `test`. Tell us who decides, and how it is switched on
-   (real children, parent consent, approval). Until it is, nothing real is read.
-3. **Send the real difficulty.** `difficulty` is a fixed `"easy"` today. Send `easy`, `medium` or
-   `hard`, converted from the question's own level.
-4. **Send `response_time_ms`.** The mobile app sends no response time, so it is always empty.
-5. **More questions, with variety.** The flow that writes the records has 3 questions in total (one
-   before help, one practice, one after help), all for one fractions skill, so every episode scores
-   the same two. It needs a bank of questions per skill and a way to pick different ones, for as many
-   of our 30 skills as possible. The questions are still `draft`.
-6. **Review the skill crosswalk.** All 548 rows are `draft`, none reviewed. It reaches 25 of our 30
-   skills; the five aptitude skills (APT-LOG, APT-REL, APT-SPA, APT-VIS, APT-WRD) have no game skill.
-   Confirm that is intended.
+The game keeps finer skills, for example `MAT-DIV` or the item skill `G5-MAT-DIV-WRITTEN-01`. They are
+parts of our 30 (`MAT-DIV` is a part of `MAT-OPS`), and she keeps all of them as they are.
+`shared/game_skill_map.json` says which of our skills each one belongs to:
+
+* `sub_skills`: her skill label -> ours (`MAT-DIV` -> `MAT-OPS`, `MAT-TIME` -> `MAT-TIM`, ...). A label that
+  is already one of our 30 passes through unchanged.
+* `item_skills`: her item skill id -> ours (126 items today, covering 11 of our skills; the English games all map to `LAN-BIL`).
+
+The file is **generated**, not typed: `python -m scripts.build_game_skill_map` reads her flows and her own
+`areas.json` (which names the parent skill of every area). The reader only reads the file and never
+imports the game. A test fails if the file is out of date, so when she adds a game or a skill, run the
+command once and commit the file. Her data is the only source; if `areas.json` names a different parent,
+the file follows it.
+
+The reader still checks every record: the skill on it, after translation, must agree with the one the map
+gives for its item skill. A skill in neither table is skipped, so a wrong or new label cannot slip in.
+
+## How a game answer is released to the model (done)
+
+The game's adventure flows now set `model_ingestion_eligible` with a rule, in
+`NumberWorldFlow._model_eligible` (`number_world_flow.py`):
+
+> an answer is released only when the episode ran in the **`pilot`** environment **and** the learner has a
+> **research consent** on record that is granted and not expired.
+
+* `development` and `test` answers are never released. They are read only with the trial switch below.
+* **Camera consent is not research consent.** They are different purposes in the consent store.
+* A pilot episode still needs the explicit `allow_draft` opt-in, because the questions are still drafts.
+  Any other environment (for example `production`) is still refused.
+* The database allows the `pilot` value through migration `gam_20261021_01`, and the stored API
+  description (`mobile-learning-contracts-v1.json`) lists it.
+* Record a consent once the guardian's written consent is held:
+  `python -m scripts.record_research_consent --learner-id <uuid>` (add `--withdraw` to stop it). A newer
+  decision replaces the older one; answers already read are not changed.
+
+Every adventure answer also carries a `difficulty` (easy, medium or hard), a `difficulty_source` and the
+mapping version `gamification-skill-level-v1`. The game's skills keep their own finer level; `evidence_difficulty`
+reads it as: easy -> easy, medium -> medium, hard -> hard, and the in-between or wide levels (`easy_medium`,
+`medium_hard`, `easy-to-hard`) -> medium. A skill with no level of its own gets `medium`, marked `default_unlabelled`, so
+the research can leave those answers out later. Today that is addition, subtraction, fractions, number
+world, number patterns and time.
+
+The whole chain is one test, `tests/knowledge_tracing/test_game_pilot_end_to_end.py`: the real division
+flow, the game's real outbox publisher, and our reader in its strict default mode, which saves the answers
+under `MAT-OPS` with their real times.
+
+## What is still open
+
+1. **Approved content.** The questions are still unreviewed drafts. The release rule above does not check
+   a review status; the team should decide who approves the items a pilot uses, and add that check if it
+   wants it enforced in code.
+2. **Levels for six games.** Give the skills of addition, subtraction, fractions, number world, number
+   patterns and time a `difficulty` of their own, so they stop falling back to `medium`.
+3. **The Sinhala language areas and one environment area have no parent skill** (26 of 57 areas are
+   `no_universal_parent` in `areas.json`), and the five aptitude skills (APT-LOG, APT-REL, APT-SPA,
+   APT-VIS, APT-WRD) have no game. Decide whether they get skills of ours or stay outside the model.
+4. **Optional, later:** the old durable fractions flow (`_publish_score`) and the fixture rounds still
+   write `model_ingestion_eligible: false`; they do not release answers.
 
 Not needed from the game: a `language` field (the learner's language is used) and any "published"
 marking of outbox rows (the reader does not need it).

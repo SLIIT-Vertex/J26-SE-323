@@ -25,7 +25,9 @@ from app.knowledge_tracing.application.attempts import AttemptService
 from app.knowledge_tracing.application.game_evidence import (
     CrosswalkUnavailable,
     GameEvidenceIngestor,
+    checked_skills,
     load_crosswalk,
+    load_game_skill_map,
 )
 from app.knowledge_tracing.domain.feature_spec import get_feature_spec
 from app.knowledge_tracing.infrastructure.db.attempt_repository import (
@@ -49,7 +51,8 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        crosswalk = load_crosswalk(args.crosswalk)
+        skill_map = load_game_skill_map()
+        crosswalk = checked_skills(load_crosswalk(args.crosswalk), skill_map)
     except CrosswalkUnavailable as error:
         print(f"nothing was read: {error}", file=sys.stderr)
         return 1
@@ -71,6 +74,7 @@ def main() -> int:
             spec,
             crosswalk,
             include_development=args.include_development,
+            sub_skills=skill_map.sub_skills,
         )
         report = ingestor.run(dry_run=args.dry_run)
 
