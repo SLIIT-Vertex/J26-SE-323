@@ -91,7 +91,7 @@ class LearnerStateAnswerGateway(Protocol):
         response_time_ms: int | None,
         supported: bool,
         hint_count: int,
-        visual: dict[str, float],
+        visual: dict[str, float] | None,
     ) -> str | None: ...
 
 

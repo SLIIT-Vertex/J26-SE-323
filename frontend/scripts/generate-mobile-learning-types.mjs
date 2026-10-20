@@ -24,6 +24,7 @@ const expectedPaths = [
 	"/api/v1/development/learning-flow/episodes/{episode_id}/telemetry",
 	"/api/v1/learning-flow/draft-missions",
 	"/api/v1/learning-flow/draft-missions/{area_id}",
+	"/api/v1/development/learning-flow/consents/learner-state-camera",
 ];
 
 if (
@@ -42,6 +43,8 @@ for (const schemaName of [
 	"PublicMathematicsOutcomeSlot",
 	"PublicSinhalaDraftItemSlot",
 	"PublicHeldOutcomeSlot",
+	"VisualFeatureWindow",
+	"CameraConsentResponse",
 ]) {
 	if (!contract.openapi?.components?.schemas?.[schemaName]) {
 		throw new Error(`Missing required schema: ${schemaName}`);
@@ -124,7 +127,10 @@ const output =
 	`  | { kind: "classroom_navigation"; command_id: string; origin_id: string; movement_path: Array<{ sequence: number; action: "move"; destination_id: string }>; final_location_id: string; interaction_trace: string[]; revisions: number; invalid_drops: number };\n` +
 	`export type ConstructedResponse = ConstructedResponsePayload & { presentation_id?: UUID; item_revision_id?: string; interaction_version?: "constructed-response-v1" };\n` +
 	`export interface OpenEpisodeRequest { learner_id: UUID; session_id: UUID; grade: 5; medium: "si"; condition: ExperimentCondition; environment: "development" | "test"; allow_draft: true; area_id?: string | null; atomic_skill_id?: string | null; }\n` +
-	`export interface AnswerRequest { option_id?: string | null; constructed_response?: ConstructedResponse | null; response_time_ms?: number | null; interaction_summary?: Record<string, unknown>; }\n` +
+	`export interface VisualFeatureWindow { mean_eye_openness: number; std_eye_openness: number; mean_gaze_ratio: number; std_gaze_ratio: number; mean_pitch: number; mean_yaw: number; mean_roll: number; mean_abs_pitch: number; mean_abs_yaw: number; mean_abs_roll: number; face_visibility_ratio: number; }\n` +
+	`export interface AnswerRequest { option_id?: string | null; constructed_response?: ConstructedResponse | null; response_time_ms?: number | null; interaction_summary?: Record<string, unknown>; visual?: VisualFeatureWindow | null; learner_state_session_id?: UUID | null; }\n` +
+	`export interface CameraConsentRequest { granted: boolean; }\n` +
+	`export interface CameraConsentResponse { granted: boolean; decided_at: string | null; }\n` +
 	`export interface SupportCompleteRequest { duration_ms: number; steps_viewed: number; manifest_revision_id: string; grouped_count?: number; group_sizes?: number[]; interaction_summary?: Record<string, string | number | boolean>; }\n` +
 	`export interface WithdrawalAcknowledgementRequest { request_id: UUID; support_revision_id: string; manifest_revision_id: string; all_support_removed: true; answer_revealing_state_cleared: true; input_handlers_cleared: true; }\n` +
 	`export interface TelemetryEvent { event_id: UUID; sequence: number; version: 1; client_occurred_at: string; payload: Record<string, string | number | boolean>; }\n` +

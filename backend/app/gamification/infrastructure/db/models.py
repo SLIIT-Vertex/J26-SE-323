@@ -1083,6 +1083,19 @@ class ConsentEligibilityReferenceModel(Base):
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class ConsentDecisionModel(Base):
+    """The current purpose-specific consent decision for a learner, for example camera use."""
+
+    __tablename__ = "consent_decisions"
+
+    learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"), primary_key=True)
+    purpose: Mapped[str] = mapped_column(String(64), primary_key=True)
+    granted: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    consent_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    decided_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class ExperimentAssignmentModel(Base):
     __tablename__ = "experiment_assignments"
     __table_args__ = (

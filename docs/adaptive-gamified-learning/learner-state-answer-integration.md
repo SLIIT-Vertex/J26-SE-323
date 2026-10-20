@@ -25,7 +25,7 @@ infrastructure boundary.
 
 ## 2. Optional visual snapshot
 
-The pilot answer request may include `visual_features`. It is an optional snapshot containing
+The pilot answer request may include `visual`. It is an optional snapshot containing
 exactly these 11 finite numeric values:
 
 ```text
@@ -70,7 +70,7 @@ The active recommendation mapping is:
 | --- | --- |
 | `request_tutor_support` | Mark immediate tutor support as requested |
 | `request_reengagement_support` | Mark immediate re-engagement support as requested |
-| `none`, `monitor`, `collect_more`, missing, or unknown | Do not trigger immediate support |
+| `none`, `monitor`, `collect_more_evidence`, missing, or unknown | Do not trigger immediate support |
 
 The two request types remain distinct in the recorded reason. The learner-facing UI still needs
 a dedicated re-engagement action before that distinction changes what the child sees.
@@ -126,26 +126,57 @@ returned values and freezes one snapshot for the answer request. The host does n
 second camera pipeline. Camera lifecycle, permission handling, and snapshot production belong
 to the shared visual-feature hook.
 
-No shared `useVisualFeatures()` implementation is currently available in this checkout, so the
-camera lifecycle has not been activated or end-to-end tested here. Answers continue without it.
+The shared hook is `useGameVisualFeatures({ enabled })` in
+`frontend/src/features/learner-state/game/`. `GameHost` is no longer mounted by the app; the
+learning-flow adventures use the hook as described in §6.
 
-## 6. Remaining composition work
+## 6. Learning-flow adventures (active path)
 
-The answer flow can consume an immediate learner-state recommendation, but the concrete
-`LearnerStateRecorder` adapter is not yet composed. Its behavior payload still needs agreed
-definitions for `overlap_time`, `first_action`, `position`, `original`, and `task_progress`, as
-well as a decision on whether verification hints may be exposed. Until those fields are
-defined, the game must not fabricate them.
+The Grade 5 adventures (`/development/learning-flow/episodes`) record learner-state evidence
+for every scored mathematics answer:
 
-Before production release:
+1. `NumberWorldFlow`, the base of every adventure flow, scores and commits the answer as before.
+2. Only after the commit, and never for a replayed idempotent request, it calls
+   `record_scored_answer()` (`application/learner_state_answers.py`) with the Universal Skill ID
+   of the area, the server correctness, `response_time_ms`, `supported = false` and
+   `hint_count = 0` (only unsupported answers are scored).
+3. Camera values are passed only with current `learner_state_camera` consent; the answer
+   behaviour is recorded either way, and fusion then gives the visual models zero weight.
+4. The gateway is learner-state's published `GameAnswerRecorder`
+   (`app.learner_state.application.answer_recording`), composed in
+   `infrastructure/gateways/learner_state_answers.py`. It records in its own database session.
+5. Any learner-state error is logged and ignored; the answer is never changed or rejected.
 
-- provide and test the shared visual-feature hook and consent-driven camera lifecycle;
-- define the missing behavior semantics and compose the recorder adapter;
-- replace the in-memory window allocator with durable allocation;
-- implement the learner-facing re-engagement action; and
-- confirm downstream ingestion policy for v2 evidence.
+The result does not change the adventure yet (silent mode for the pilot,
+`docs/learner-state/12_PILOT_STUDY_PLAN.md`). The English classroom quest does not record
+learner-state evidence, because the behaviour models were trained on mathematics answers.
 
-## 7. Contract and verification locations
+Request fields (both optional, both part of the idempotency fingerprint when sent):
+
+| Field | Meaning |
+| --- | --- |
+| `visual` | the 11 on-device camera numbers of the last 10 seconds; an invalid snapshot is dropped and the answer continues |
+| `learner_state_session_id` | one id per app session, so learner-state history spans the episodes played in one sitting (each episode has its own `session_id`); without it the episode's `session_id` is used |
+
+The window id is the scoring time in milliseconds, so it increases across episodes and does not
+need an allocator.
+
+Camera consent is stored in `consent_decisions` (migration `gam_20261020_01`) and read and
+written through `GET` / `PUT /development/learning-flow/consents/learner-state-camera`. In the
+app, a guardian switch under **Settings** (වැඩිහිටි සැකසුම්) sets it; the camera runs only while
+consent is given and a mathematics game screen is open. The development endpoint stands in for a
+guardian-authenticated decision, which production needs.
+
+## 7. Remaining work
+
+- Guardian authentication for the camera decision.
+- Agreement on the provisional behaviour values used by `GameAnswerRecorder`
+  (`original = 1`, `overlap_time = response_time_ms`) and a source for `task_progress`
+  (`docs/learner-state/11_GAME_INTEGRATION.md`).
+- A learner-facing re-engagement action before learner-state results change what the child sees.
+- Confirm downstream ingestion policy for v2 evidence.
+
+## 8. Contract and verification locations
 
 The generated request and response schemas are published in:
 

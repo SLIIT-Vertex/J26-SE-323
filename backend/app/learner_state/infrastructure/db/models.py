@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.shared.database.base import Base
@@ -26,7 +26,8 @@ class LearnerSkillStateModel(Base):
     learner_id: Mapped[UUID] = mapped_column(ForeignKey("learners.id"), primary_key=True)
     skill_id: Mapped[str] = mapped_column(String(16), primary_key=True)
     session_id: Mapped[str] = mapped_column(String(100))
-    window_id: Mapped[int] = mapped_column(Integer)
+    # 64-bit: in-process game callers use the scoring time in milliseconds as the window id.
+    window_id: Mapped[int] = mapped_column(BigInteger)
     observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     confusion_state: Mapped[str] = mapped_column(String(40))
     confusion_support_need: Mapped[str] = mapped_column(String(40))
