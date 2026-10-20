@@ -32,10 +32,17 @@ LEARNERS = {
 }
 
 
+def default_settings() -> Settings:
+    """Code defaults only; a developer's local backend/.env must not change these tests."""
+
+    return Settings(_env_file=None, database_url="sqlite://")  # type: ignore[call-arg]
+
+
 @pytest.fixture
 def synthetic_client() -> TestClient:
     previous = app.dependency_overrides.copy()
     app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None,
         database_url="sqlite://",
         tutor_api_mode="synthetic-demo",
         tutor_demo_access_key="test-demo-key",
@@ -119,6 +126,7 @@ def test_existing_routes_remain_registered(client: TestClient) -> None:
 
 
 def test_api_is_disabled_by_default_without_constructing_workflow(client: TestClient) -> None:
+    app.dependency_overrides[get_settings] = default_settings
     app.dependency_overrides[get_tutor_orchestrator_factory] = lambda: (
         lambda learner_id: pytest.fail("disabled API constructed the workflow")
     )
@@ -130,6 +138,7 @@ def test_api_is_disabled_by_default_without_constructing_workflow(client: TestCl
 
 
 def test_demo_session_api_is_disabled_by_default(client: TestClient) -> None:
+    app.dependency_overrides[get_settings] = default_settings
     response = client.post(DEMO_SESSIONS_PATH, json={"scenario_id": "L0"})
 
     assert response.status_code == 503
@@ -138,6 +147,7 @@ def test_demo_session_api_is_disabled_by_default(client: TestClient) -> None:
 
 def test_internal_shadow_mode_cannot_enable_an_http_execution_path(client: TestClient) -> None:
     app.dependency_overrides[get_settings] = lambda: Settings(
+        _env_file=None,
         database_url="sqlite://",
         tutor_api_mode="internal-shadow",
         tutor_demo_access_key="not-an-internal-authenticator",

@@ -31,7 +31,10 @@ NUMBERED_IMPLEMENTATION_TERM = re.compile(r"phase[\s_-]*\d+", re.IGNORECASE)
 def _excluded(path: Path) -> bool:
     if path == ALLOWED_RESEARCH or ALLOWED_RESEARCH in path.parents:
         return True
-    if any(part in SKIPPED_DIRECTORY_NAMES for part in path.relative_to(ROOT).parts):
+    if any(
+        part in SKIPPED_DIRECTORY_NAMES or part.startswith(".venv")  # e.g. .venv313 virtualenvs
+        for part in path.relative_to(ROOT).parts
+    ):
         return True
     return any(path == generated or generated in path.parents for generated in GENERATED_WEB_COPIES)
 

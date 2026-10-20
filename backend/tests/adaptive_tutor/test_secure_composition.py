@@ -47,6 +47,7 @@ def test_live_research_composition_denies_without_explicit_enablement() -> None:
     ):
         build_local_research_tutor_service(
             Settings(
+                _env_file=None,
                 database_url="sqlite://",
                 tutor_api_mode="research-local",
                 tutor_research_access_key="research-key",
@@ -58,6 +59,7 @@ def test_live_research_composition_denies_without_explicit_enablement() -> None:
 
 def test_live_research_composition_rejects_gemini_verifier_alias() -> None:
     settings = Settings(
+        _env_file=None,
         database_url="sqlite://",
         tutor_api_mode="research-local",
         tutor_research_composition_enabled=True,
@@ -88,10 +90,10 @@ def test_experimental_opt_in_is_explicit_and_does_not_weaken_verified_mode() -> 
         "tutor_llm_provider": "gemini",
     }
     with pytest.raises(ValueError, match="independent semantic verifier"):
-        validate_local_research_settings(Settings(**common))
+        validate_local_research_settings(Settings(_env_file=None, **common))
 
     policies = validate_local_research_settings(
-        Settings(**common, tutor_pp1_experimental_demo_enabled=True)
+        Settings(_env_file=None, **common, tutor_pp1_experimental_demo_enabled=True)
     )
     assert policies == frozenset({"controlled-v1"})
 
