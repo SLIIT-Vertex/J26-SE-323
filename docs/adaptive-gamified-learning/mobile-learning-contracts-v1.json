@@ -454,7 +454,8 @@
             "environment": {
               "enum": [
                 "development",
-                "test"
+                "test",
+                "pilot"
               ],
               "title": "Environment",
               "type": "string"

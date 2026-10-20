@@ -14,6 +14,7 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
+from app.gamification.application.consent_gate import research_consent_granted
 from app.gamification.application.learner_state_answers import record_scored_answer
 from app.gamification.application.ports import ConsentStore
 from app.gamification.application.session_play import LearnerStateAnswerGateway
@@ -68,6 +69,38 @@ _NUMBER_WORLD_SUPPORT_SEQUENCE = {
     "G5-MAT-NUM-LEADING-ZERO-01": _SUPPORT_ORDER,
     "G5-MAT-NUM-ORDER-01": _SUPPORT_ORDER,
 }
+
+
+# The knowledge-tracing component learns from each scored answer. It needs a difficulty (easy, medium or
+# hard); the game's own skills carry a finer level, so this says how the finer level is read.
+EVIDENCE_LEVEL_MAPPING_VERSION = "gamification-skill-level-v1"
+_LEVEL_BANDS = {
+    "easy": "easy",
+    "easy_medium": "medium",  # between two bands: the middle one, so neither extreme is over-stated
+    "medium": "medium",
+    "medium_hard": "medium",
+    "hard": "hard",
+}
+
+# Environments the flow may run in. Only "pilot" can mark an answer as usable by a model, and only for
+# a learner who has given research consent. Content is still draft, so every environment needs the
+# explicit allow_draft opt-in.
+OPEN_ENVIRONMENTS = frozenset({"development", "test", "pilot"})
+PILOT_ENVIRONMENT = "pilot"
+
+
+def evidence_difficulty(skill: object) -> tuple[str, str]:
+    """(band, source) for one scored answer: easy, medium or hard, and whether the skill declared it.
+
+    A skill with no level of its own gets the neutral band "medium", marked "default_unlabelled" so the
+    research can leave those answers out later.
+    """
+    level = getattr(skill, "difficulty", None)
+    if isinstance(level, str):
+        band = _LEVEL_BANDS.get(level.strip().lower().replace("-", "_"))
+        if band is not None:
+            return band, "declared"
+    return "medium", "default_unlabelled"
 
 
 class NumberWorldFlowError(ValueError):
@@ -315,7 +348,7 @@ class NumberWorldFlow:
         prior = self._receipt(idempotency_key, request)
         if prior is not None:
             return prior
-        if environment not in {"development", "test"} or not allow_draft:
+        if environment not in OPEN_ENVIRONMENTS or not allow_draft:
             raise NumberWorldFlowError("HUMAN_APPROVAL_REQUIRED")
         if atomic_skill_id not in self.skills:
             raise NumberWorldFlowError(self.missing_skill_error)
@@ -410,7 +443,7 @@ class NumberWorldFlow:
             )
             state["attempts"].append(score)  # type: ignore[union-attr]
             _event(state, "unsupported_before_scored", at, presentation_id=score["presentation_id"])
-            self._publish(state, score)
+            self._publish(state, score, at)
             scored.update(state=state, score=score, at=at)
             if score["correct"]:
                 state.update(
@@ -713,7 +746,7 @@ class NumberWorldFlow:
             )
             state["attempts"].append(score)  # type: ignore[union-attr]
             _event(state, "unsupported_after_scored", at, presentation_id=score["presentation_id"])
-            self._publish(state, score)
+            self._publish(state, score, at)
             scored.update(state=state, score=score, at=at)
             before = next(row for row in state["attempts"] if row["role"] == "unsupported_before")  # type: ignore[index]
             exclusions = []
@@ -928,7 +961,18 @@ class NumberWorldFlow:
             "scored_at": at.isoformat(),
         }
 
-    def _publish(self, state: dict[str, object], attempt: dict[str, object]) -> None:
+    def _model_eligible(self, state: dict[str, object], at: datetime) -> bool:
+        """True only in the pilot environment, for a learner whose research consent is on record.
+
+        Development and test answers, and answers of a learner with no (or withdrawn, or expired)
+        research consent, are never released to a model.
+        """
+        if state["environment"] != PILOT_ENVIRONMENT or self._camera_consent is None:
+            return False
+        return research_consent_granted(self._camera_consent, UUID(str(state["learner_id"])), at)
+
+    def _publish(self, state: dict[str, object], attempt: dict[str, object], at: datetime) -> None:
+        difficulty, difficulty_source = evidence_difficulty(self.skills.get(str(state["skill_id"])))
         presentation = next(
             row
             for row in state["presentations"]  # type: ignore[union-attr]
@@ -954,8 +998,11 @@ class NumberWorldFlow:
                 "response_time_ms": attempt["response_time_ms"],
                 "supported": False,
                 "hint_count": 0,
+                "difficulty": difficulty,
+                "difficulty_source": difficulty_source,
+                "difficulty_mapping_version": EVIDENCE_LEVEL_MAPPING_VERSION,
                 "environment": state["environment"],
-                "model_ingestion_eligible": False,
+                "model_ingestion_eligible": self._model_eligible(state, at),
                 "session_id": state["session_id"],
             }
         )

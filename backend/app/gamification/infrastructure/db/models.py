@@ -1118,7 +1118,7 @@ class LearningFlowEpisodeRunModel(Base):
     __table_args__ = (
         UniqueConstraint("session_id", name="uq_learning_flow_episode_runs_session"),
         CheckConstraint(
-            "environment IN ('development', 'test')", name="ck_learning_flow_runs_environment"
+            "environment IN ('development', 'test', 'pilot')", name="ck_learning_flow_runs_environment"
         ),
         CheckConstraint(
             "condition IN ('baseline', 'proposed')", name="ck_learning_flow_runs_condition"
