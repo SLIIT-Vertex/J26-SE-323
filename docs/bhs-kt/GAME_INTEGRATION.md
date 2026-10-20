@@ -62,28 +62,47 @@ the file follows it.
 The reader still checks every record: the skill on it, after translation, must agree with the one the map
 gives for its item skill. A skill in neither table is skipped, so a wrong or new label cannot slip in.
 
-## What the game still has to do
+## How a game answer is released to the model (done)
 
-Checked on 2026-10-20 by running the game's real division flow through its own publisher and then
-through our reader (17 playable areas publish through the same code).
+The game's adventure flows now set `model_ingestion_eligible` with a rule, in
+`NumberWorldFlow._model_eligible` (`number_world_flow.py`):
 
-1. **`model_ingestion_eligible` is still always `false`**, in every publisher, and
-   `playable_area_package.py` types it as `Literal[False]`. Tell us who decides, and how it is switched
-   on (real children, parent consent, approval). Until then nothing real is read.
-2. **`difficulty` is missing.** The adventure flows send no `difficulty` (it is `null`), so every record
-   is skipped as `unknown_difficulty`. Send `easy`, `medium` or `hard`, converted from the item's own
-   level (the older flow's `_difficulty_band` does this).
+> an answer is released only when the episode ran in the **`pilot`** environment **and** the learner has a
+> **research consent** on record that is granted and not expired.
+
+* `development` and `test` answers are never released. They are read only with the trial switch below.
+* **Camera consent is not research consent.** They are different purposes in the consent store.
+* A pilot episode still needs the explicit `allow_draft` opt-in, because the questions are still drafts.
+  Any other environment (for example `production`) is still refused.
+* The database allows the `pilot` value through migration `gam_20261021_01`, and the stored API
+  description (`mobile-learning-contracts-v1.json`) lists it.
+* Record a consent once the guardian's written consent is held:
+  `python -m scripts.record_research_consent --learner-id <uuid>` (add `--withdraw` to stop it). A newer
+  decision replaces the older one; answers already read are not changed.
+
+Every adventure answer also carries a `difficulty` (easy, medium or hard), a `difficulty_source` and the
+mapping version `gamification-skill-level-v1`. The game's skills keep their own finer level; `evidence_difficulty`
+reads it as: easy -> easy, medium -> medium, hard -> hard, and the two in-between levels (`easy_medium`,
+`medium_hard`) -> medium. A skill with no level of its own gets `medium`, marked `default_unlabelled`, so
+the research can leave those answers out later. Today that is addition, subtraction, fractions, number
+world, number patterns and time.
+
+The whole chain is one test, `tests/knowledge_tracing/test_game_pilot_end_to_end.py`: the real division
+flow, the game's real outbox publisher, and our reader in its strict default mode, which saves the answers
+under `MAT-OPS` with their real times.
+
+## What is still open
+
+1. **Approved content.** The questions are still unreviewed drafts. The release rule above does not check
+   a review status; the team should decide who approves the items a pilot uses, and add that check if it
+   wants it enforced in code.
+2. **Levels for six games.** Give the skills of addition, subtraction, fractions, number world, number
+   patterns and time a `difficulty` of their own, so they stop falling back to `medium`.
 3. **The Sinhala language areas and one environment area have no parent skill** (26 of 57 areas are
    `no_universal_parent` in `areas.json`), and the five aptitude skills (APT-LOG, APT-REL, APT-SPA,
    APT-VIS, APT-WRD) have no game. Decide whether they get skills of ours or stay outside the model.
-4. **Optional, later:** the old durable fractions flow (`_publish_score`) writes `MAT-FRC` on every
-   record; give it the area's skill. Not needed for the adventure flows.
-
-Done on her side: real `response_time_ms`, and 17 playable areas (16 mathematics, 1 English) with generated
-items instead of 3 questions for one skill.
-
-Result today: `python -m scripts.ingest_game_evidence` still skips every record, for items 1 and 2.
-With both set, her division answers are saved under `MAT-OPS` with their real times (tried on her real flow).
+4. **Optional, later:** the old durable fractions flow (`_publish_score`) and the fixture rounds still
+   write `model_ingestion_eligible: false`; they do not release answers.
 
 Not needed from the game: a `language` field (the learner's language is used) and any "published"
 marking of outbox rows (the reader does not need it).

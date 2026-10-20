@@ -105,6 +105,19 @@ def play_division(
     help_done = finish_help(flow, episode, supported)
     flow.withdraw_support(
         episode, request_id=uuid4(), **help_done, all_support_removed=True,
+    manifest = supported["support"]["game_manifest"]
+    flow.complete_support(
+        episode, duration_ms=1200, steps_viewed=3, manifest_revision_id=manifest["revision_id"],
+        grouped_count=0, group_sizes=(),
+        interaction_summary={
+            "completed": True, "renderer_id": manifest["renderer_id"],
+            "parallel_example_id": manifest["parallel_example_id"], "support_actions": 3,
+        },
+        idempotency_key=f"c-{uuid4()}",
+    )
+    flow.withdraw_support(
+        episode, request_id=uuid4(), support_revision_id=supported["support"]["revision_id"],
+        manifest_revision_id=manifest["revision_id"], all_support_removed=True,
         answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key=f"w-{uuid4()}",
     )
     flow.present_after(episode, idempotency_key=f"p-{uuid4()}")

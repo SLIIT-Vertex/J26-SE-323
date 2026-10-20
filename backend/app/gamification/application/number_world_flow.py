@@ -100,6 +100,38 @@ def evidence_difficulty(skill: object) -> tuple[str, str]:
     return "medium", "default_unlabelled"
 
 
+# The knowledge-tracing component learns from each scored answer. It needs a difficulty (easy, medium or
+# hard); the game's own skills carry a finer level, so this says how the finer level is read.
+EVIDENCE_LEVEL_MAPPING_VERSION = "gamification-skill-level-v1"
+_LEVEL_BANDS = {
+    "easy": "easy",
+    "easy_medium": "medium",  # between two bands: the middle one, so neither extreme is over-stated
+    "medium": "medium",
+    "medium_hard": "medium",
+    "hard": "hard",
+}
+
+# Environments the flow may run in. Only "pilot" can mark an answer as usable by a model, and only for
+# a learner who has given research consent. Content is still draft, so every environment needs the
+# explicit allow_draft opt-in.
+OPEN_ENVIRONMENTS = frozenset({"development", "test", "pilot"})
+PILOT_ENVIRONMENT = "pilot"
+
+
+def evidence_difficulty(skill: object) -> tuple[str, str]:
+    """(band, source) for one scored answer: easy, medium or hard, and whether the skill declared it.
+
+    A skill with no level of its own gets the neutral band "medium", marked "default_unlabelled" so the
+    research can leave those answers out later.
+    """
+    level = getattr(skill, "difficulty", None)
+    if isinstance(level, str):
+        band = _LEVEL_BANDS.get(level.strip().lower().replace("-", "_"))
+        if band is not None:
+            return band, "declared"
+    return "medium", "default_unlabelled"
+
+
 class NumberWorldFlowError(ValueError):
     def __init__(self, code: str, **context: object) -> None:
         super().__init__(code)
