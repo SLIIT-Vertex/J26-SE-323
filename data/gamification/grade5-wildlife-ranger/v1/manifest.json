@@ -1,0 +1,21 @@
+{
+  "area_id": "G5-AREA-ENG-04",
+  "title": "Animals around us",
+  "package_version": "g5-eng-wildlife-ranger-draft-v1",
+  "status": "draft_human_review_required",
+  "curriculum_medium": "si",
+  "target_language": "en",
+  "instruction_language": "si",
+  "atomic_skills": [
+    "G5-ENG-ANIMAL-VOCAB-01",
+    "G5-ENG-ANIMAL-GROUP-02",
+    "G5-ENG-ANIMAL-PARTS-03"
+  ],
+  "source_review_issues": [
+    "Shake likely requires correction to Snake",
+    "Rattle Snake, Humming bird, Dragon fly, and Fire fly require spelling review",
+    "The textbook Insects heading is not a scientific taxonomy claim",
+    "Animal-to-body-part mappings require visual and curriculum review"
+  ],
+  "production_release": false
+}
