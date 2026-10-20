@@ -2,49 +2,20 @@
 
 import { Capacitor } from "@capacitor/core";
 import {
+	type ComponentType,
+	type FunctionComponent,
+	lazy,
+	type LazyExoticComponent,
 	type ReactNode,
+	Suspense,
 	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
 } from "react";
-import { ClassroomActionQuest } from "../english-area-1/ClassroomActionQuest";
-import { SriLankaDiscovery } from "../english-area-2/SriLankaDiscovery";
-import { PlantExplorerQuest } from "../english-area-3/PlantExplorerQuest";
-import { WildlifeRangerQuest } from "../english-area-4/WildlifeRangerQuest";
-import { EverydayObjectQuest } from "../english-area-5/EverydayObjectQuest";
-import { IslandFoodFestival } from "../english-area-6/IslandFoodFestival";
-import { RainbowWardrobeQuest } from "../english-area-7/RainbowWardrobeQuest";
-import { WaterWorksAdventure } from "../english-area-8/WaterWorksAdventure";
-import { TransitTerminalQuest } from "../english-area-9/TransitTerminalQuest";
-import { BloomBuilderGarden } from "../english-area-10/BloomBuilderGarden";
-import { WorkplaceLinkCity } from "../english-area-11/WorkplaceLinkCity";
-import { FamilyWordConstellation } from "../english-area-12/FamilyWordConstellation";
-import { EarthSkyExplorer } from "../english-area-13/EarthSkyExplorer";
-import { SchoolHomeBlueprintQuest } from "../english-area-14/SchoolHomeBlueprintQuest";
-import { InformationStation } from "../english-area-15/InformationStation";
-import { HeritageMuseumQuest } from "../english-area-16/HeritageMuseumQuest";
-import { ClassroomLanguageLive } from "../english-area-17/ClassroomLanguageLive";
-import { ConversationStreet } from "../english-area-18/ConversationStreet";
 import { PapersApp } from "../papers/PapersApp";
 import { go, usePapersRoute } from "../papers/router";
-import { NumberWorldJourney } from "../skill-area-1/NumberWorldJourney";
-import { AdditionAdventureJourney } from "../skill-area-2/AdditionAdventureJourney";
-import { NumberPatternJourney } from "../skill-area-3/NumberPatternJourney";
-import { SubtractionAdventureJourney } from "../skill-area-4/SubtractionAdventureJourney";
-import { FractionAdventureJourney } from "../skill-area-5/FractionAdventureJourney";
-import { MultiplicationAdventureJourney } from "../skill-area-6/MultiplicationAdventureJourney";
-import { TimeAdventureJourney } from "../skill-area-7/TimeAdventureJourney";
-import { DivisionAdventureJourney } from "../skill-area-8/DivisionAdventureJourney";
-import { DistanceAdventureJourney } from "../skill-area-9/DistanceAdventureJourney";
-import { MoneyAdventureJourney } from "../skill-area-10/MoneyAdventureJourney";
-import { CapacityAdventureJourney } from "../skill-area-11/CapacityAdventureJourney";
-import { MassAdventureJourney } from "../skill-area-12/MassAdventureJourney";
-import { ShapeAdventureJourney } from "../skill-area-13/ShapeAdventureJourney";
-import { DirectionAdventureJourney } from "../skill-area-14/DirectionAdventureJourney";
-import { DecimalAdventureJourney } from "../skill-area-15/DecimalAdventureJourney";
-import { RomanAdventureJourney } from "../skill-area-16/RomanAdventureJourney";
 import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
 import {
 	createFixtureRoundClient,
@@ -76,6 +47,161 @@ import {
 	MemoryEncryptedStore,
 	WebCryptoLocalStore,
 } from "./offline/EncryptedEventQueue";
+
+type LazyNamedComponent<Module, Name extends keyof Module> =
+	Module[Name] extends ComponentType<infer Props>
+		? LazyExoticComponent<ComponentType<Props>>
+		: never;
+
+function lazyNamed<Module, Name extends keyof Module>(
+	loader: () => Promise<Module>,
+	exportName: Name,
+): LazyNamedComponent<Module, Name> {
+	// React.lazy's public constraint uses `any`; the conditional return type above
+	// restores the exact props inferred from the selected named export.
+	// biome-ignore lint/suspicious/noExplicitAny: required by React.lazy's ComponentType constraint
+	return lazy<FunctionComponent<any>>(async () => ({
+		// biome-ignore lint/suspicious/noExplicitAny: narrowed by LazyNamedComponent at the boundary
+		default: (await loader())[exportName] as FunctionComponent<any>,
+	})) as unknown as LazyNamedComponent<Module, Name>;
+}
+
+const NumberWorldJourney = lazyNamed(
+	() => import("../skill-area-1/NumberWorldJourney"),
+	"NumberWorldJourney",
+);
+const AdditionAdventureJourney = lazyNamed(
+	() => import("../skill-area-2/AdditionAdventureJourney"),
+	"AdditionAdventureJourney",
+);
+const NumberPatternJourney = lazyNamed(
+	() => import("../skill-area-3/NumberPatternJourney"),
+	"NumberPatternJourney",
+);
+const SubtractionAdventureJourney = lazyNamed(
+	() => import("../skill-area-4/SubtractionAdventureJourney"),
+	"SubtractionAdventureJourney",
+);
+const FractionAdventureJourney = lazyNamed(
+	() => import("../skill-area-5/FractionAdventureJourney"),
+	"FractionAdventureJourney",
+);
+const MultiplicationAdventureJourney = lazyNamed(
+	() => import("../skill-area-6/MultiplicationAdventureJourney"),
+	"MultiplicationAdventureJourney",
+);
+const TimeAdventureJourney = lazyNamed(
+	() => import("../skill-area-7/TimeAdventureJourney"),
+	"TimeAdventureJourney",
+);
+const DivisionAdventureJourney = lazyNamed(
+	() => import("../skill-area-8/DivisionAdventureJourney"),
+	"DivisionAdventureJourney",
+);
+const DistanceAdventureJourney = lazyNamed(
+	() => import("../skill-area-9/DistanceAdventureJourney"),
+	"DistanceAdventureJourney",
+);
+const MoneyAdventureJourney = lazyNamed(
+	() => import("../skill-area-10/MoneyAdventureJourney"),
+	"MoneyAdventureJourney",
+);
+const CapacityAdventureJourney = lazyNamed(
+	() => import("../skill-area-11/CapacityAdventureJourney"),
+	"CapacityAdventureJourney",
+);
+const MassAdventureJourney = lazyNamed(
+	() => import("../skill-area-12/MassAdventureJourney"),
+	"MassAdventureJourney",
+);
+const ShapeAdventureJourney = lazyNamed(
+	() => import("../skill-area-13/ShapeAdventureJourney"),
+	"ShapeAdventureJourney",
+);
+const DirectionAdventureJourney = lazyNamed(
+	() => import("../skill-area-14/DirectionAdventureJourney"),
+	"DirectionAdventureJourney",
+);
+const DecimalAdventureJourney = lazyNamed(
+	() => import("../skill-area-15/DecimalAdventureJourney"),
+	"DecimalAdventureJourney",
+);
+const RomanAdventureJourney = lazyNamed(
+	() => import("../skill-area-16/RomanAdventureJourney"),
+	"RomanAdventureJourney",
+);
+const ClassroomActionQuest = lazyNamed(
+	() => import("../english-area-1/ClassroomActionQuest"),
+	"ClassroomActionQuest",
+);
+const SriLankaDiscovery = lazyNamed(
+	() => import("../english-area-2/SriLankaDiscovery"),
+	"SriLankaDiscovery",
+);
+const PlantExplorerQuest = lazyNamed(
+	() => import("../english-area-3/PlantExplorerQuest"),
+	"PlantExplorerQuest",
+);
+const WildlifeRangerQuest = lazyNamed(
+	() => import("../english-area-4/WildlifeRangerQuest"),
+	"WildlifeRangerQuest",
+);
+const EverydayObjectQuest = lazyNamed(
+	() => import("../english-area-5/EverydayObjectQuest"),
+	"EverydayObjectQuest",
+);
+const IslandFoodFestival = lazyNamed(
+	() => import("../english-area-6/IslandFoodFestival"),
+	"IslandFoodFestival",
+);
+const RainbowWardrobeQuest = lazyNamed(
+	() => import("../english-area-7/RainbowWardrobeQuest"),
+	"RainbowWardrobeQuest",
+);
+const WaterWorksAdventure = lazyNamed(
+	() => import("../english-area-8/WaterWorksAdventure"),
+	"WaterWorksAdventure",
+);
+const TransitTerminalQuest = lazyNamed(
+	() => import("../english-area-9/TransitTerminalQuest"),
+	"TransitTerminalQuest",
+);
+const BloomBuilderGarden = lazyNamed(
+	() => import("../english-area-10/BloomBuilderGarden"),
+	"BloomBuilderGarden",
+);
+const WorkplaceLinkCity = lazyNamed(
+	() => import("../english-area-11/WorkplaceLinkCity"),
+	"WorkplaceLinkCity",
+);
+const FamilyWordConstellation = lazyNamed(
+	() => import("../english-area-12/FamilyWordConstellation"),
+	"FamilyWordConstellation",
+);
+const EarthSkyExplorer = lazyNamed(
+	() => import("../english-area-13/EarthSkyExplorer"),
+	"EarthSkyExplorer",
+);
+const SchoolHomeBlueprintQuest = lazyNamed(
+	() => import("../english-area-14/SchoolHomeBlueprintQuest"),
+	"SchoolHomeBlueprintQuest",
+);
+const InformationStation = lazyNamed(
+	() => import("../english-area-15/InformationStation"),
+	"InformationStation",
+);
+const HeritageMuseumQuest = lazyNamed(
+	() => import("../english-area-16/HeritageMuseumQuest"),
+	"HeritageMuseumQuest",
+);
+const ClassroomLanguageLive = lazyNamed(
+	() => import("../english-area-17/ClassroomLanguageLive"),
+	"ClassroomLanguageLive",
+);
+const ConversationStreet = lazyNamed(
+	() => import("../english-area-18/ConversationStreet"),
+	"ConversationStreet",
+);
 
 type Screen =
 	| "splash"
@@ -191,16 +317,16 @@ type SyncState = "synced" | "pending" | "offline" | "conflict";
 
 export interface MobileLearningService
 	extends Pick<
-		LearningFlowClient,
-		| "open"
-		| "answerBefore"
-		| "completeSupport"
-		| "withdrawSupport"
-		| "presentAfter"
-		| "answerAfter"
-		| "telemetry"
-	>,
-	Partial<Pick<LearningFlowClient, "cameraConsent" | "setCameraConsent">> {}
+			LearningFlowClient,
+			| "open"
+			| "answerBefore"
+			| "completeSupport"
+			| "withdrawSupport"
+			| "presentAfter"
+			| "answerAfter"
+			| "telemetry"
+		>,
+		Partial<Pick<LearningFlowClient, "cameraConsent" | "setCameraConsent">> {}
 
 const DEV_LEARNER = "00000000-0000-4000-8000-000000000721";
 const FIXTURE_LOOPS: Partial<Record<string, DraftTemplateId>> = {
@@ -381,9 +507,7 @@ export function MobileLearningApp({
 		[learnerId, service],
 	);
 	useEffect(() => {
-		api
-			.cameraConsent?.()
-			.then(setCameraConsent, () => setCameraConsent(false));
+		api.cameraConsent?.().then(setCameraConsent, () => setCameraConsent(false));
 	}, [api]);
 	const changeCameraConsent = useCallback(
 		(granted: boolean) => {
@@ -997,565 +1121,567 @@ export function MobileLearningApp({
 			data-screen={screen}
 			data-game={GAME_SCREENS.has(screen) ? "true" : undefined}
 		>
-			{screen === "splash" && (
-				<Splash
-					onContinue={() =>
-						setScreen(
-							enableOnboarding
-								? "onboarding"
-								: papersRoute
-									? "practice"
-									: "home",
-						)
-					}
-				/>
-			)}
-			{screen === "onboarding" && (
-				<Onboarding onContinue={() => setScreen("language")} />
-			)}
-			{screen === "language" && (
-				<LanguageSetup onContinue={() => setScreen("profile-setup")} />
-			)}
-			{screen === "profile-setup" && (
-				<ProfileSetup
-					name={learnerName}
-					onNameChange={setLearnerName}
-					onContinue={() => setScreen(papersRoute ? "practice" : "home")}
-				/>
-			)}
-			{screen === "home" && (
-				<PlannedPage title="මුල් පිටුව">
-					{/* The bottom navigation has no account tab, so the guardian reaches settings,
-					    including the learner-state camera decision, from here. */}
-					<button
-						className="secondary-action"
-						onClick={() => setScreen("settings")}
-					>
-						<AppIcon name="settings" size={19} /> වැඩිහිටි සැකසුම්
-					</button>
-				</PlannedPage>
-			)}
-			{screen === "learn" && (
-				<GamesHome
-					onPlay={() => setScreen("mission")}
-					missions={draftMissions}
-					catalogStatus={draftCatalogStatus}
-					onChoose={chooseMission}
-					openSubject={openSubject}
-					onOpenSubject={setOpenSubject}
-				/>
-			)}
-			{screen === "practice" && (
-				<div className="papers-tab">
-					<PapersApp embedded route={papersRoute ?? { name: "papers" }} />
-				</div>
-			)}
-			{screen === "mindy" && <PlannedPage title="Mindy" />}
-			{screen === "rewards" && <RewardsHub />}
-			{screen === "account" && (
-				<Account
-					name={learnerName}
-					onSettings={() => setScreen("settings")}
-					onOnboarding={() => setScreen("onboarding")}
-				/>
-			)}
-			{screen === "mission" && (
-				<Mission
-					onContinue={() => setScreen("overview")}
-					onBack={() => setScreen("learn")}
-				/>
-			)}
-			{screen === "overview" && (
-				<Overview
-					busy={busy}
-					onStart={begin}
-					onBack={() => setScreen("learn")}
-				/>
-			)}
-			{screen === "baseline" && manifest && (
-				<ChoiceActivity
-					title="ඔබම උත්සාහ කරන්න"
-					manifest={manifest}
-					selected={selected}
-					busy={busy}
-					onSelect={setSelected}
-					onSubmit={submitBefore}
-				/>
-			)}
-			{screen === "difficulty" && (
-				<Transition
-					title="වෙනත් ක්‍රමයකින් උත්සාහ කරමු"
-					body="අපි කුඩා ක්‍රීඩාවකින් සමාන කාණ්ඩ දෙකක් සාදමු."
-					onContinue={() => setScreen("support")}
-				/>
-			)}
-			{screen === "support" && support && (
-				<SupportPractice
-					support={support}
-					done={Boolean(completionProof)}
-					withdrawing={withdrawing}
-					withdrawalRequest={withdrawalRequest}
-					busy={busy}
-					reducedMotion={reducedMotion}
-					onEvent={onGameEvent}
-					onFinish={finishSupport}
-				/>
-			)}
-			{screen === "withdrawal" && (
-				<Transition
-					title="දැන් අලුත් එකක් ඔබම උත්සාහ කරන්න"
-					body="උදව් අවසන්. අලුත් ප්‍රශ්නයේදී ඔබට ඉඟි නොපෙන්වයි."
-					onContinue={presentAfter}
-					busy={busy}
-				/>
-			)}
-			{screen === "after" && manifest && (
-				<ChoiceActivity
-					title="අලුත් එක ඔබම උත්සාහ කරන්න"
-					manifest={manifest}
-					selected={selected}
-					busy={busy}
-					onSelect={setSelected}
-					onSubmit={submitAfter}
-				/>
-			)}
-			{screen === "result" && (
-				<Result
-					hasReward={Boolean(episode?.reward?.points)}
-					onContinue={() => setScreen("reward")}
-				/>
-			)}
-			{screen === "reward" && (
-				<Reward
-					points={episode?.reward?.points ?? 0}
-					onContinue={() => setScreen("summary")}
-				/>
-			)}
-			{screen === "summary" && (
-				<Summary
-					supported={Boolean(support || completionProof)}
-					onProgress={() => setScreen("progress")}
-					onHome={() => setScreen("home")}
-				/>
-			)}
-			{screen === "progress" && <PlannedPage title="ප්‍රගතිය" />}
-			{screen === "settings" && (
-				<Settings
-					syncState={syncState}
-					onSync={sync}
-					reducedMotion={reducedMotion}
-					setReducedMotion={setReducedMotion}
-					cameraConsent={cameraConsent}
-					onCameraConsent={changeCameraConsent}
-					onBack={() => setScreen("home")}
-				/>
-			)}
-			{screen === "failure" && (
-				<Failure code={failure} onSafePractice={() => setScreen("home")} />
-			)}
-			{serverScores.length > 0 &&
-				[
-					"difficulty",
-					"support",
-					"withdrawal",
-					"after",
-					"result",
-					"reward",
-					"summary",
-				].includes(screen) && (
-					<ul aria-label="සේවාදායක ලකුණු">
-						{serverScores.map((score) => (
-							<li
-								key={score.measurement_role}
-								data-server-score={score.earned_score}
-								data-maximum-score={score.maximum_score}
-								data-scoring-version={score.scoring_version}
-								data-server-authoritative="true"
-								data-measurement-role={score.measurement_role}
-							>
-								සේවාදායක ලකුණු {score.earned_score}/{score.maximum_score}
-							</li>
-						))}
-					</ul>
+			<Suspense fallback={<p role="status">ක්‍රීඩාව පූරණය වෙමින්…</p>}>
+				{screen === "splash" && (
+					<Splash
+						onContinue={() =>
+							setScreen(
+								enableOnboarding
+									? "onboarding"
+									: papersRoute
+										? "practice"
+										: "home",
+							)
+						}
+					/>
 				)}
-			{screen === "fixture-round" && fixtureMission && (
-				<FixtureRoundPlayer
-					mission={fixtureMission}
-					sessionId={sessionId.current}
-					rounds={rounds}
-					busy={busy}
-					onBusy={setBusy}
-					onFailure={safeFailure}
-					onBack={() => setScreen("learn")}
-				/>
-			)}
-			{screen === "number-world" && (
-				<NumberWorldJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onFailure={safeFailure}
-					onBack={() => setScreen("learn")}
-				/>
-			)}
-			{screen === "addition-adventure" && (
-				<AdditionAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onFailure={safeFailure}
-					onBack={() => setScreen("learn")}
-				/>
-			)}
-			{screen === "number-pattern-adventure" && (
-				<NumberPatternJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "subtraction-adventure" && (
-				<SubtractionAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "fraction-adventure" && (
-				<FractionAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "multiplication-adventure" && (
-				<MultiplicationAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "time-adventure" && (
-				<TimeAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "division-adventure" && (
-				<DivisionAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "distance-adventure" && (
-				<DistanceAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "money-adventure" && (
-				<MoneyAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "capacity-adventure" && (
-				<CapacityAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "mass-adventure" && (
-				<MassAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "shape-adventure" && (
-				<ShapeAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "direction-adventure" && (
-				<DirectionAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "decimal-adventure" && (
-				<DecimalAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "roman-adventure" && (
-				<RomanAdventureJourney
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "classroom-action-quest" && (
-				<ClassroomActionQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "sri-lanka-discovery" && (
-				<SriLankaDiscovery
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "plant-explorer" && (
-				<PlantExplorerQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "wildlife-ranger" && (
-				<WildlifeRangerQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "everyday-object-quest" && (
-				<EverydayObjectQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "island-food-festival" && (
-				<IslandFoodFestival
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "rainbow-wardrobe-quest" && (
-				<RainbowWardrobeQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "water-works-adventure" && (
-				<WaterWorksAdventure
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "transit-terminal-quest" && (
-				<TransitTerminalQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "bloom-builder-garden" && (
-				<BloomBuilderGarden
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "workplace-link-city" && (
-				<WorkplaceLinkCity
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "family-word-constellation" && (
-				<FamilyWordConstellation
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "earth-sky-explorer" && (
-				<EarthSkyExplorer
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "blueprint-quest" && (
-				<SchoolHomeBlueprintQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "information-station" && (
-				<InformationStation
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "heritage-museum" && (
-				<HeritageMuseumQuest
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "classroom-language-live" && (
-				<ClassroomLanguageLive
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "conversation-street" && (
-				<ConversationStreet
-					api={api}
-					learnerId={learnerId}
-					condition={engineeringCondition}
-					reducedMotion={reducedMotion}
-					onBack={() => setScreen("learn")}
-					onFailure={safeFailure}
-				/>
-			)}
-			{screen === "draft-player" && sharedDraftMission && (
-				<DraftTemplatePlayer
-					mission={sharedDraftMission}
-					busy={busy}
-					submitted={draftAnswerSent}
-					onSubmit={submitDraftAnswer}
-					onBack={() => setScreen("learn")}
-				/>
-			)}
-			{["home", "learn", "mission", "practice", "mindy", "progress"].includes(
-				screen,
-			) && (
-				<BottomNavigation
-					active={screen === "mission" ? "learn" : screen}
-					onNavigate={(destination) => {
-						if (destination === "practice") {
-							go({ name: "papers" });
-							setScreen("practice");
-							return;
-						}
-						if (papersRoute) {
-							window.location.hash = "#/";
-						}
-						setScreen(destination);
-					}}
-				/>
-			)}
+				{screen === "onboarding" && (
+					<Onboarding onContinue={() => setScreen("language")} />
+				)}
+				{screen === "language" && (
+					<LanguageSetup onContinue={() => setScreen("profile-setup")} />
+				)}
+				{screen === "profile-setup" && (
+					<ProfileSetup
+						name={learnerName}
+						onNameChange={setLearnerName}
+						onContinue={() => setScreen(papersRoute ? "practice" : "home")}
+					/>
+				)}
+				{screen === "home" && (
+					<PlannedPage title="මුල් පිටුව">
+						{/* The bottom navigation has no account tab, so the guardian reaches settings,
+						    including the learner-state camera decision, from here. */}
+						<button
+							className="secondary-action"
+							onClick={() => setScreen("settings")}
+						>
+							<AppIcon name="settings" size={19} /> වැඩිහිටි සැකසුම්
+						</button>
+					</PlannedPage>
+				)}
+				{screen === "learn" && (
+					<GamesHome
+						onPlay={() => setScreen("mission")}
+						missions={draftMissions}
+						catalogStatus={draftCatalogStatus}
+						onChoose={chooseMission}
+						openSubject={openSubject}
+						onOpenSubject={setOpenSubject}
+					/>
+				)}
+				{screen === "practice" && (
+					<div className="papers-tab">
+						<PapersApp embedded route={papersRoute ?? { name: "papers" }} />
+					</div>
+				)}
+				{screen === "mindy" && <PlannedPage title="Mindy" />}
+				{screen === "rewards" && <RewardsHub />}
+				{screen === "account" && (
+					<Account
+						name={learnerName}
+						onSettings={() => setScreen("settings")}
+						onOnboarding={() => setScreen("onboarding")}
+					/>
+				)}
+				{screen === "mission" && (
+					<Mission
+						onContinue={() => setScreen("overview")}
+						onBack={() => setScreen("learn")}
+					/>
+				)}
+				{screen === "overview" && (
+					<Overview
+						busy={busy}
+						onStart={begin}
+						onBack={() => setScreen("learn")}
+					/>
+				)}
+				{screen === "baseline" && manifest && (
+					<ChoiceActivity
+						title="ඔබම උත්සාහ කරන්න"
+						manifest={manifest}
+						selected={selected}
+						busy={busy}
+						onSelect={setSelected}
+						onSubmit={submitBefore}
+					/>
+				)}
+				{screen === "difficulty" && (
+					<Transition
+						title="වෙනත් ක්‍රමයකින් උත්සාහ කරමු"
+						body="අපි කුඩා ක්‍රීඩාවකින් සමාන කාණ්ඩ දෙකක් සාදමු."
+						onContinue={() => setScreen("support")}
+					/>
+				)}
+				{screen === "support" && support && (
+					<SupportPractice
+						support={support}
+						done={Boolean(completionProof)}
+						withdrawing={withdrawing}
+						withdrawalRequest={withdrawalRequest}
+						busy={busy}
+						reducedMotion={reducedMotion}
+						onEvent={onGameEvent}
+						onFinish={finishSupport}
+					/>
+				)}
+				{screen === "withdrawal" && (
+					<Transition
+						title="දැන් අලුත් එකක් ඔබම උත්සාහ කරන්න"
+						body="උදව් අවසන්. අලුත් ප්‍රශ්නයේදී ඔබට ඉඟි නොපෙන්වයි."
+						onContinue={presentAfter}
+						busy={busy}
+					/>
+				)}
+				{screen === "after" && manifest && (
+					<ChoiceActivity
+						title="අලුත් එක ඔබම උත්සාහ කරන්න"
+						manifest={manifest}
+						selected={selected}
+						busy={busy}
+						onSelect={setSelected}
+						onSubmit={submitAfter}
+					/>
+				)}
+				{screen === "result" && (
+					<Result
+						hasReward={Boolean(episode?.reward?.points)}
+						onContinue={() => setScreen("reward")}
+					/>
+				)}
+				{screen === "reward" && (
+					<Reward
+						points={episode?.reward?.points ?? 0}
+						onContinue={() => setScreen("summary")}
+					/>
+				)}
+				{screen === "summary" && (
+					<Summary
+						supported={Boolean(support || completionProof)}
+						onProgress={() => setScreen("progress")}
+						onHome={() => setScreen("home")}
+					/>
+				)}
+				{screen === "progress" && <PlannedPage title="ප්‍රගතිය" />}
+				{screen === "settings" && (
+					<Settings
+						syncState={syncState}
+						onSync={sync}
+						reducedMotion={reducedMotion}
+						setReducedMotion={setReducedMotion}
+						cameraConsent={cameraConsent}
+						onCameraConsent={changeCameraConsent}
+						onBack={() => setScreen("home")}
+					/>
+				)}
+				{screen === "failure" && (
+					<Failure code={failure} onSafePractice={() => setScreen("home")} />
+				)}
+				{serverScores.length > 0 &&
+					[
+						"difficulty",
+						"support",
+						"withdrawal",
+						"after",
+						"result",
+						"reward",
+						"summary",
+					].includes(screen) && (
+						<ul aria-label="සේවාදායක ලකුණු">
+							{serverScores.map((score) => (
+								<li
+									key={score.measurement_role}
+									data-server-score={score.earned_score}
+									data-maximum-score={score.maximum_score}
+									data-scoring-version={score.scoring_version}
+									data-server-authoritative="true"
+									data-measurement-role={score.measurement_role}
+								>
+									සේවාදායක ලකුණු {score.earned_score}/{score.maximum_score}
+								</li>
+							))}
+						</ul>
+					)}
+				{screen === "fixture-round" && fixtureMission && (
+					<FixtureRoundPlayer
+						mission={fixtureMission}
+						sessionId={sessionId.current}
+						rounds={rounds}
+						busy={busy}
+						onBusy={setBusy}
+						onFailure={safeFailure}
+						onBack={() => setScreen("learn")}
+					/>
+				)}
+				{screen === "number-world" && (
+					<NumberWorldJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onFailure={safeFailure}
+						onBack={() => setScreen("learn")}
+					/>
+				)}
+				{screen === "addition-adventure" && (
+					<AdditionAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onFailure={safeFailure}
+						onBack={() => setScreen("learn")}
+					/>
+				)}
+				{screen === "number-pattern-adventure" && (
+					<NumberPatternJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "subtraction-adventure" && (
+					<SubtractionAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "fraction-adventure" && (
+					<FractionAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "multiplication-adventure" && (
+					<MultiplicationAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "time-adventure" && (
+					<TimeAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "division-adventure" && (
+					<DivisionAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "distance-adventure" && (
+					<DistanceAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "money-adventure" && (
+					<MoneyAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "capacity-adventure" && (
+					<CapacityAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "mass-adventure" && (
+					<MassAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "shape-adventure" && (
+					<ShapeAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "direction-adventure" && (
+					<DirectionAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "decimal-adventure" && (
+					<DecimalAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "roman-adventure" && (
+					<RomanAdventureJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "classroom-action-quest" && (
+					<ClassroomActionQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "sri-lanka-discovery" && (
+					<SriLankaDiscovery
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "plant-explorer" && (
+					<PlantExplorerQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "wildlife-ranger" && (
+					<WildlifeRangerQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "everyday-object-quest" && (
+					<EverydayObjectQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "island-food-festival" && (
+					<IslandFoodFestival
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "rainbow-wardrobe-quest" && (
+					<RainbowWardrobeQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "water-works-adventure" && (
+					<WaterWorksAdventure
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "transit-terminal-quest" && (
+					<TransitTerminalQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "bloom-builder-garden" && (
+					<BloomBuilderGarden
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "workplace-link-city" && (
+					<WorkplaceLinkCity
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "family-word-constellation" && (
+					<FamilyWordConstellation
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "earth-sky-explorer" && (
+					<EarthSkyExplorer
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "blueprint-quest" && (
+					<SchoolHomeBlueprintQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "information-station" && (
+					<InformationStation
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "heritage-museum" && (
+					<HeritageMuseumQuest
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "classroom-language-live" && (
+					<ClassroomLanguageLive
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "conversation-street" && (
+					<ConversationStreet
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "draft-player" && sharedDraftMission && (
+					<DraftTemplatePlayer
+						mission={sharedDraftMission}
+						busy={busy}
+						submitted={draftAnswerSent}
+						onSubmit={submitDraftAnswer}
+						onBack={() => setScreen("learn")}
+					/>
+				)}
+				{["home", "learn", "mission", "practice", "mindy", "progress"].includes(
+					screen,
+				) && (
+					<BottomNavigation
+						active={screen === "mission" ? "learn" : screen}
+						onNavigate={(destination) => {
+							if (destination === "practice") {
+								go({ name: "papers" });
+								setScreen("practice");
+								return;
+							}
+							if (papersRoute) {
+								window.location.hash = "#/";
+							}
+							setScreen(destination);
+						}}
+					/>
+				)}
+			</Suspense>
 		</main>
 	);
 }
@@ -2299,9 +2425,8 @@ function Settings({
 				ඉගෙනීමට උදව් වීමට කැමරාව භාවිත කරන්න
 			</label>
 			<p className="camera-consent-note">
-				කැමරා රූප මෙම උපාංගයෙන් පිටතට නොයයි, ගබඩා කරන්නේද නැත. ඉගෙනුම්
-				ක්‍රීඩා අතරතුර ඇස් සහ හිසෙහි පිහිටීම පිළිබඳ අංක කිහිපයක් පමණක් භාවිත
-				වේ. ඕනෑම වේලාවක මෙය අක්‍රිය කළ හැක.
+				කැමරා රූප මෙම උපාංගයෙන් පිටතට නොයයි, ගබඩා කරන්නේද නැත. ඉගෙනුම් ක්‍රීඩා අතරතුර ඇස් සහ
+				හිසෙහි පිහිටීම පිළිබඳ අංක කිහිපයක් පමණක් භාවිත වේ. ඕනෑම වේලාවක මෙය අක්‍රිය කළ හැක.
 			</p>
 			<p role="status">
 				සමමුහුර්ත තත්ත්වය: <strong>{labels[syncState]}</strong>

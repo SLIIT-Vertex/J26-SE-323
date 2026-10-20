@@ -101,6 +101,19 @@ async function click(container: HTMLElement, label: string) {
 	});
 }
 
+async function waitForSelector(container: HTMLElement, selector: string) {
+	for (let attempt = 0; attempt < 20; attempt += 1) {
+		if (container.querySelector(selector)) return;
+		await act(async () => {
+			await new Promise((resolve) => setTimeout(resolve, 5));
+		});
+	}
+	expect(
+		container.querySelector(selector),
+		`selector ${selector}`,
+	).not.toBeNull();
+}
+
 describe("baseline mobile flow", () => {
 	it("shows the app without a feature flag", async () => {
 		const container = document.createElement("div");
@@ -379,6 +392,7 @@ describe("baseline mobile flow", () => {
 
 		await click(container, "ගණිතය");
 		await click(container, "සංඛ්‍යා");
+		await waitForSelector(container, "[data-number-world-step]");
 		expect(
 			container
 				.querySelector("[data-number-world-step]")
@@ -402,6 +416,7 @@ describe("baseline mobile flow", () => {
 
 		await click(container, "ආපසු");
 		await click(container, "භාග");
+		await waitForSelector(container, ".fraction-game-card");
 		expect(container.textContent).toContain("සමාන බෙදීමේ මැදිරිය");
 		expect(container.textContent).toContain("කාල පලතුරු වත්ත");
 		expect(container.textContent).toContain("දහයෙන් මෝසෙයික්");
@@ -584,6 +599,7 @@ describe("baseline mobile flow", () => {
 			}
 			await click(container, areaName);
 			if (areaId === "G5-AREA-MAT-01") {
+				await waitForSelector(container, "[data-number-world-step]");
 				expect(
 					container.querySelector("[data-number-world-step]"),
 				).not.toBeNull();
@@ -592,6 +608,7 @@ describe("baseline mobile flow", () => {
 				continue;
 			}
 			if (areaId === "G5-AREA-MAT-03") {
+				await waitForSelector(container, "[data-pattern-step]");
 				expect(container.querySelector("[data-pattern-step]")).not.toBeNull();
 				expect(container.textContent).toContain("සංඛ්‍යා පියවර මාවත");
 				expect(container.textContent).toContain("අභියෝග 2ක්");
@@ -599,6 +616,7 @@ describe("baseline mobile flow", () => {
 				continue;
 			}
 			if (areaId === "G5-AREA-MAT-07") {
+				await waitForSelector(container, ".time-game-list");
 				expect(container.querySelector(".time-game-list")).not.toBeNull();
 				expect(container.textContent).toContain("කාල මෙවලම්");
 				expect(container.textContent).toContain("අභියෝග 2ක් · පහසු");
