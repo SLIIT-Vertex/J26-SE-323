@@ -32,7 +32,25 @@ type AdaptiveManifest = Extract<
 			| "shape-adventure-support-v1"
 			| "direction-adventure-support-v1"
 			| "decimal-adventure-support-v1"
-			| "roman-adventure-support-v1";
+			| "roman-adventure-support-v1"
+			| "classroom-action-support-v1"
+			| "sri-lanka-discovery-support-v1"
+			| "plant-explorer-support-v1"
+			| "wildlife-ranger-support-v1"
+			| "everyday-object-quest-support-v1"
+			| "island-food-festival-support-v1"
+			| "water-works-adventure-support-v1"
+			| "transit-terminal-quest-support-v1"
+			| "rainbow-wardrobe-support-v1"
+			| "bloom-builder-garden-support-v1"
+			| "workplace-link-city-support-v1"
+			| "family-word-constellation-support-v1"
+			| "earth-sky-explorer-support-v1"
+			| "blueprint-quest-support-v1"
+			| "information-station-support-v1"
+			| "heritage-museum-support-v1"
+			| "classroom-language-live-support-v1"
+			| "conversation-street-support-v1";
 	}
 >;
 

@@ -23,13 +23,19 @@ def _flow():
     Base.metadata.create_all(engine)
     session = Session(engine)
     now = datetime.now(UTC)
-    session.add(LearnerModel(id=LEARNER, grade=5, preferred_language="si", created_at=now, updated_at=now))
+    session.add(
+        LearnerModel(id=LEARNER, grade=5, preferred_language="si", created_at=now, updated_at=now)
+    )
     session.commit()
     publisher = RecordingEvidencePublisher()
-    return session, publisher, LearningFlowOrchestrator(
-        SqlAlchemyLearningFlowStore(session),
-        probe_gateway=LocalProbeGateway(),
-        evidence_publisher=publisher,
+    return (
+        session,
+        publisher,
+        LearningFlowOrchestrator(
+            SqlAlchemyLearningFlowStore(session),
+            probe_gateway=LocalProbeGateway(),
+            evidence_publisher=publisher,
+        ),
     )
 
 
@@ -64,9 +70,14 @@ def test_full_support_withdrawal_and_independent_measurement(condition: str) -> 
     state = flow.reconstruct(episode)["state"]
     before = next(row for row in state["presentations"] if row["role"] == "unsupported_before")
     wrong = correct_response(before["game_data"])
-    wrong["semantic_action_id"] = "sit_down" if wrong["semantic_action_id"] != "sit_down" else "bend"
+    wrong["semantic_action_id"] = (
+        "sit_down" if wrong["semantic_action_id"] != "sit_down" else "bend"
+    )
     wrong["final_body_state"] = {
-        "posture": "upright", "arm_position": "down", "orientation": "front", "seat_state": "seated"
+        "posture": "upright",
+        "arm_position": "down",
+        "orientation": "front",
+        "seat_state": "seated",
     }
     wrong.update(
         presentation_id=before["presentation_id"],
@@ -74,15 +85,23 @@ def test_full_support_withdrawal_and_independent_measurement(condition: str) -> 
         interaction_version="constructed-response-v1",
     )
     supported = flow.submit_before(
-        episode, option_id=None, constructed_response=wrong, response_time_ms=500,
-        interaction_summary=_summary(), idempotency_key=f"wrong-eng-{condition}"
+        episode,
+        option_id=None,
+        constructed_response=wrong,
+        response_time_ms=500,
+        interaction_summary=_summary(),
+        idempotency_key=f"wrong-eng-{condition}",
     )
     support = supported["support"]
     manifest = support["game_manifest"]
     assert manifest["worked_example"]["correct_response"]
     flow.complete_support(
-        episode, duration_ms=700, steps_viewed=manifest["required_actions"],
-        manifest_revision_id=manifest["revision_id"], grouped_count=0, group_sizes=(),
+        episode,
+        duration_ms=700,
+        steps_viewed=manifest["required_actions"],
+        manifest_revision_id=manifest["revision_id"],
+        grouped_count=0,
+        group_sizes=(),
         interaction_summary={
             "completed": True,
             "renderer_id": manifest["renderer_id"],
@@ -92,9 +111,13 @@ def test_full_support_withdrawal_and_independent_measurement(condition: str) -> 
         idempotency_key=f"complete-eng-{condition}",
     )
     flow.withdraw_support(
-        episode, request_id=uuid4(), support_revision_id=support["revision_id"],
-        manifest_revision_id=manifest["revision_id"], all_support_removed=True,
-        answer_revealing_state_cleared=True, input_handlers_cleared=True,
+        episode,
+        request_id=uuid4(),
+        support_revision_id=support["revision_id"],
+        manifest_revision_id=manifest["revision_id"],
+        all_support_removed=True,
+        answer_revealing_state_cleared=True,
+        input_handlers_cleared=True,
         idempotency_key=f"withdraw-eng-{condition}",
     )
     after = flow.present_after(episode, idempotency_key=f"after-eng-{condition}")
@@ -107,8 +130,11 @@ def test_full_support_withdrawal_and_independent_measurement(condition: str) -> 
         interaction_version="constructed-response-v1",
     )
     result = flow.submit_after(
-        episode, option_id=None, constructed_response=response, response_time_ms=500,
-        idempotency_key=f"answer-eng-{condition}"
+        episode,
+        option_id=None,
+        constructed_response=response,
+        response_time_ms=500,
+        idempotency_key=f"answer-eng-{condition}",
     )
     assert result["status"] == "completed"
     assert result["server_score"]["correct"] is True
@@ -124,11 +150,19 @@ def test_full_support_withdrawal_and_independent_measurement(condition: str) -> 
 def test_public_manifest_hides_target_and_translation() -> None:
     session, _, flow = _flow()
     opened = flow.open_episode(
-        learner_id=LEARNER, session_id=uuid4(), grade=5, medium="si", condition="baseline",
-        environment="test", allow_draft=True, area_id="G5-AREA-ENG-01",
-        atomic_skill_id="G5-ENG-BEH-DESTINATION-01", idempotency_key="open-eng-public",
+        learner_id=LEARNER,
+        session_id=uuid4(),
+        grade=5,
+        medium="si",
+        condition="baseline",
+        environment="test",
+        allow_draft=True,
+        area_id="G5-AREA-ENG-01",
+        atomic_skill_id="G5-ENG-BEH-DESTINATION-01",
+        idempotency_key="open-eng-public",
     )
     game = opened["manifest"]["game"]
+    assert "command_id" not in game
     assert "target_location_id" not in game
     assert "translation_si" not in game
     session.close()

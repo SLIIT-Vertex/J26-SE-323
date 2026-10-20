@@ -13,29 +13,46 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from app.gamification.application.adaptive_game_flow import AdaptiveGameFlow
 from app.gamification.application.addition_adventure_flow import AdditionAdventureFlow
+from app.gamification.application.bloom_builder_garden_flow import BloomBuilderGardenFlow
+from app.gamification.application.blueprint_quest_flow import BlueprintQuestFlow
 from app.gamification.application.capacity_adventure_flow import CapacityAdventureFlow
 from app.gamification.application.classroom_action_quest_flow import ClassroomActionQuestFlow
+from app.gamification.application.classroom_language_live_flow import ClassroomLanguageLiveFlow
+from app.gamification.application.conversation_street_flow import ConversationStreetFlow
 from app.gamification.application.decimal_adventure_flow import DecimalAdventureFlow
 from app.gamification.application.direction_adventure_flow import DirectionAdventureFlow
 from app.gamification.application.distance_adventure_flow import DistanceAdventureFlow
 from app.gamification.application.division_adventure_flow import DivisionAdventureFlow
+from app.gamification.application.earth_sky_explorer_flow import EarthSkyExplorerFlow
+from app.gamification.application.everyday_object_quest_flow import EverydayObjectQuestFlow
+from app.gamification.application.family_word_constellation_flow import FamilyWordConstellationFlow
 from app.gamification.application.fraction_adventure_flow import FractionAdventureFlow
+from app.gamification.application.heritage_museum_quest_flow import HeritageMuseumQuestFlow
+from app.gamification.application.information_station_flow import InformationStationFlow
+from app.gamification.application.island_food_festival_flow import IslandFoodFestivalFlow
 from app.gamification.application.mass_adventure_flow import MassAdventureFlow
 from app.gamification.application.money_adventure_flow import MoneyAdventureFlow
 from app.gamification.application.multiplication_adventure_flow import MultiplicationAdventureFlow
 from app.gamification.application.number_patterns_flow import NumberPatternsFlow
 from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.plant_explorer_flow import PlantExplorerFlow
 from app.gamification.application.ports import ConsentStore
+from app.gamification.application.rainbow_wardrobe_quest_flow import RainbowWardrobeQuestFlow
 from app.gamification.application.roman_adventure_flow import RomanAdventureFlow
 from app.gamification.application.session_play import LearnerStateAnswerGateway
 from app.gamification.application.shape_adventure_flow import ShapeAdventureFlow
+from app.gamification.application.sri_lanka_discovery_flow import SriLankaDiscoveryFlow
 from app.gamification.application.subtraction_adventure_flow import SubtractionAdventureFlow
 from app.gamification.application.time_adventure_flow import TimeAdventureFlow
+from app.gamification.application.transit_terminal_quest_flow import TransitTerminalQuestFlow
+from app.gamification.application.water_works_adventure_flow import WaterWorksAdventureFlow
+from app.gamification.application.wildlife_ranger_flow import WildlifeRangerFlow
+from app.gamification.application.workplace_link_city_flow import WorkplaceLinkCityFlow
 from app.gamification.content.curriculum_registry import (
     ItemRevision,
     PublicCurriculumPackage,
@@ -69,6 +86,7 @@ from app.gamification.modeling.misconception_inference.inference import (
     development_curriculum_candidate,
 )
 from app.gamification.modeling.support_selection.selection import (
+    BeliefSnapshotContract,
     ContextualScaffoldPolicy,
     DifficultyEvidence,
     EligibilityInput,
@@ -106,6 +124,29 @@ def request_digest(value: object) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
+def _state_int(value: object, field: str) -> int:
+    if type(value) is not int:
+        raise LearningFlowOrchestrationError("MALFORMED_PERSISTED_STATE", field=field)
+    return value
+
+
+def _state_mapping_rows(value: object, field: str) -> list[dict[str, object]]:
+    if not isinstance(value, list):
+        raise LearningFlowOrchestrationError("MALFORMED_PERSISTED_STATE", field=field)
+    rows: list[dict[str, object]] = []
+    for row in value:
+        if not isinstance(row, Mapping) or not all(isinstance(key, str) for key in row):
+            raise LearningFlowOrchestrationError("MALFORMED_PERSISTED_STATE", field=field)
+        rows.append({str(key): item for key, item in row.items()})
+    return rows
+
+
+def _state_strings(value: object, field: str) -> tuple[str, ...]:
+    if not isinstance(value, (list, tuple)) or not all(isinstance(item, str) for item in value):
+        raise LearningFlowOrchestrationError("MALFORMED_PERSISTED_STATE", field=field)
+    return tuple(value)
+
+
 class LearningFlowOrchestrationError(ValueError):
     def __init__(self, code: str, **context: object) -> None:
         super().__init__(code)
@@ -117,7 +158,7 @@ class LearningFlowPersistenceError(ValueError):
     pass
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(slots=True)
 class StoredLearningFlowRun:
     episode_id: UUID
     revision: int
@@ -226,7 +267,7 @@ class LearningFlowOrchestrator:
         self._probe = probe_gateway
         self._publisher = evidence_publisher
         self._now = now or (lambda: datetime.now(UTC))
-        flow_types: tuple[type[NumberWorldFlow], ...] = (
+        flow_types: tuple[type[AdaptiveGameFlow], ...] = (
             NumberWorldFlow,
             AdditionAdventureFlow,
             NumberPatternsFlow,
@@ -244,6 +285,23 @@ class LearningFlowOrchestrator:
             DecimalAdventureFlow,
             RomanAdventureFlow,
             ClassroomActionQuestFlow,
+            SriLankaDiscoveryFlow,
+            PlantExplorerFlow,
+            WildlifeRangerFlow,
+            EverydayObjectQuestFlow,
+            RainbowWardrobeQuestFlow,
+            IslandFoodFestivalFlow,
+            WaterWorksAdventureFlow,
+            TransitTerminalQuestFlow,
+            BloomBuilderGardenFlow,
+            WorkplaceLinkCityFlow,
+            FamilyWordConstellationFlow,
+            EarthSkyExplorerFlow,
+            BlueprintQuestFlow,
+            InformationStationFlow,
+            HeritageMuseumQuestFlow,
+            ClassroomLanguageLiveFlow,
+            ConversationStreetFlow,
         )
         flows: tuple[AdaptiveGameFlow, ...] = tuple(
             flow_type(
@@ -628,7 +686,7 @@ class LearningFlowOrchestrator:
         def transition(
             state: dict[str, object], _package: PublicCurriculumPackage, at: datetime
         ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
-            expected = int(state["next_client_sequence"])
+            expected = _state_int(state["next_client_sequence"], "next_client_sequence")
             existing = {str(row["event_id"]): row for row in state["telemetry"]}  # type: ignore[index]
             if first_sequence > expected:
                 raise LearningFlowOrchestrationError(
@@ -643,7 +701,7 @@ class LearningFlowOrchestrator:
                         raise LearningFlowOrchestrationError("DUPLICATE_EVENT_CONFLICT")
                     duplicates += 1
                     continue
-                if int(event["sequence"]) < expected:
+                if _state_int(event["sequence"], "event.sequence") < expected:
                     raise LearningFlowOrchestrationError(
                         "LATE_EVENT_CONFLICT", expected_sequence=expected
                     )
@@ -658,7 +716,7 @@ class LearningFlowOrchestrator:
                 None,
                 {"batch_id": str(batch_id), "accepted": accepted, "duplicates": duplicates},
             )
-            response = {
+            response: dict[str, object] = {
                 "accepted": accepted,
                 "duplicates": duplicates,
                 "next_sequence": expected,
@@ -700,7 +758,10 @@ class LearningFlowOrchestrator:
         ) -> tuple[dict[str, object], dict[str, object], str, tuple[str, ...]]:
             state["status"] = "invalidated"
             state["validity"] = "invalid"
-            state["exclusion_reasons"] = sorted({*state.get("exclusion_reasons", []), reason})
+            exclusion_reasons = _state_strings(
+                state.get("exclusion_reasons", []), "exclusion_reasons"
+            )
+            state["exclusion_reasons"] = sorted({*exclusion_reasons, reason})
             state["policy_update_status"] = "not_authorized_invalid"
             _append_event(state, "episode_invalidated", at, None, {"reason": reason})
             return state, self._summary(state), "episode_invalidated", (reason,)
@@ -723,7 +784,9 @@ class LearningFlowOrchestrator:
         before = _item(package, "unsupported_before")
         scored = self._score(state, before, option_id, AssistanceState.NONE, response_time_ms, at)
         state["attempts"].append(scored)  # type: ignore[union-attr]
-        _append_event(state, "unsupported_before_scored", at, UUID(scored["presentation_id"]))
+        _append_event(
+            state, "unsupported_before_scored", at, UUID(str(scored["presentation_id"]))
+        )
         self._publish_score(state, scored)
         if Decimal(str(scored["earned_score"])) == Decimal(str(scored["maximum_score"])):
             state["status"] = "completed"
@@ -748,8 +811,8 @@ class LearningFlowOrchestrator:
             observed_at=at,
             measurement_role=MeasurementRole.UNSUPPORTED_BEFORE,
             assistance_state=AssistanceState.NONE,
-            earned_score=float(scored["earned_score"]),
-            maximum_score=float(scored["maximum_score"]),
+            earned_score=float(str(scored["earned_score"])),
+            maximum_score=float(str(scored["maximum_score"])),
             selected_response=option_id,
             distractor_misconception_code=mapping,
             structured_error_code=mapping,
@@ -844,7 +907,7 @@ class LearningFlowOrchestrator:
                 contributing_event_ids=(evidence_id,),
                 observed_at=at,
             ),
-            belief=belief,
+            belief=cast(BeliefSnapshotContract, belief),
             prior_outcomes=(),
             recent_support_count=0,
             support_dependency_rate=None,
@@ -1075,7 +1138,9 @@ class LearningFlowOrchestrator:
         after = _item(package, "unsupported_after")
         scored = self._score(state, after, option_id, AssistanceState.NONE, response_time_ms, at)
         state["attempts"].append(scored)  # type: ignore[union-attr]
-        _append_event(state, "unsupported_after_scored", at, UUID(scored["presentation_id"]))
+        _append_event(
+            state, "unsupported_after_scored", at, UUID(str(scored["presentation_id"]))
+        )
         self._publish_score(state, scored)
         measurement = self._measurement(state, package, at)
         state["raw_independence_gain"] = (
@@ -1325,12 +1390,14 @@ class LearningFlowOrchestrator:
         try:
             row = self._store.get(episode_id, for_update=True)
             state = dict(row.state)
-            state["presentations"] = [dict(value) for value in state["presentations"]]
-            state["attempts"] = [dict(value) for value in state["attempts"]]
-            state["events"] = [dict(value) for value in state["events"]]
-            state["telemetry"] = [dict(value) for value in state["telemetry"]]
+            state["presentations"] = _state_mapping_rows(
+                state["presentations"], "presentations"
+            )
+            state["attempts"] = _state_mapping_rows(state["attempts"], "attempts")
+            state["events"] = _state_mapping_rows(state["events"], "events")
+            state["telemetry"] = _state_mapping_rows(state["telemetry"], "telemetry")
             old_event_count = len(state["events"])
-            expected_revision = int(state["revision"])
+            expected_revision = _state_int(state["revision"], "revision")
             package = load_curriculum_public_package(allow_draft=True)
             state, response, audit_type, audit_reasons = transition(state, package, at)
             state["revision"] = expected_revision + 1

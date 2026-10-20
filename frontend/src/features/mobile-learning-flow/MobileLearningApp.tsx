@@ -9,6 +9,24 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { ClassroomActionQuest } from "../english-area-1/ClassroomActionQuest";
+import { SriLankaDiscovery } from "../english-area-2/SriLankaDiscovery";
+import { PlantExplorerQuest } from "../english-area-3/PlantExplorerQuest";
+import { WildlifeRangerQuest } from "../english-area-4/WildlifeRangerQuest";
+import { EverydayObjectQuest } from "../english-area-5/EverydayObjectQuest";
+import { IslandFoodFestival } from "../english-area-6/IslandFoodFestival";
+import { RainbowWardrobeQuest } from "../english-area-7/RainbowWardrobeQuest";
+import { WaterWorksAdventure } from "../english-area-8/WaterWorksAdventure";
+import { TransitTerminalQuest } from "../english-area-9/TransitTerminalQuest";
+import { BloomBuilderGarden } from "../english-area-10/BloomBuilderGarden";
+import { WorkplaceLinkCity } from "../english-area-11/WorkplaceLinkCity";
+import { FamilyWordConstellation } from "../english-area-12/FamilyWordConstellation";
+import { EarthSkyExplorer } from "../english-area-13/EarthSkyExplorer";
+import { SchoolHomeBlueprintQuest } from "../english-area-14/SchoolHomeBlueprintQuest";
+import { InformationStation } from "../english-area-15/InformationStation";
+import { HeritageMuseumQuest } from "../english-area-16/HeritageMuseumQuest";
+import { ClassroomLanguageLive } from "../english-area-17/ClassroomLanguageLive";
+import { ConversationStreet } from "../english-area-18/ConversationStreet";
 import { PapersApp } from "../papers/PapersApp";
 import { go, usePapersRoute } from "../papers/router";
 import { NumberWorldJourney } from "../skill-area-1/NumberWorldJourney";
@@ -27,7 +45,6 @@ import { ShapeAdventureJourney } from "../skill-area-13/ShapeAdventureJourney";
 import { DirectionAdventureJourney } from "../skill-area-14/DirectionAdventureJourney";
 import { DecimalAdventureJourney } from "../skill-area-15/DecimalAdventureJourney";
 import { RomanAdventureJourney } from "../skill-area-16/RomanAdventureJourney";
-import { ClassroomActionQuest } from "../english-area-1/ClassroomActionQuest";
 import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
 import {
 	createFixtureRoundClient,
@@ -102,7 +119,24 @@ type Screen =
 	| "direction-adventure"
 	| "decimal-adventure"
 	| "roman-adventure"
-	| "classroom-action-quest";
+	| "classroom-action-quest"
+	| "sri-lanka-discovery"
+	| "plant-explorer"
+	| "wildlife-ranger"
+	| "everyday-object-quest"
+	| "island-food-festival"
+	| "rainbow-wardrobe-quest"
+	| "water-works-adventure"
+	| "transit-terminal-quest"
+	| "bloom-builder-garden"
+	| "workplace-link-city"
+	| "family-word-constellation"
+	| "earth-sky-explorer"
+	| "blueprint-quest"
+	| "information-station"
+	| "heritage-museum"
+	| "classroom-language-live"
+	| "conversation-street";
 
 const GAME_SCREENS = new Set<Screen>([
 	"mission",
@@ -134,6 +168,23 @@ const GAME_SCREENS = new Set<Screen>([
 	"decimal-adventure",
 	"roman-adventure",
 	"classroom-action-quest",
+	"sri-lanka-discovery",
+	"plant-explorer",
+	"wildlife-ranger",
+	"everyday-object-quest",
+	"island-food-festival",
+	"rainbow-wardrobe-quest",
+	"water-works-adventure",
+	"transit-terminal-quest",
+	"bloom-builder-garden",
+	"workplace-link-city",
+	"family-word-constellation",
+	"earth-sky-explorer",
+	"blueprint-quest",
+	"information-station",
+	"heritage-museum",
+	"classroom-language-live",
+	"conversation-street",
 ]);
 
 type SyncState = "synced" | "pending" | "offline" | "conflict";
@@ -460,6 +511,96 @@ export function MobileLearningApp({
 		setDraftAnswerSent(false);
 		setServerScores([]);
 		const mission = draftMissions.find((item) => item.area_id === areaId);
+		if (areaId === "G5-AREA-ENG-01") {
+			setSelectedAreaId(areaId);
+			setScreen("classroom-action-quest");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-02") {
+			setSelectedAreaId(areaId);
+			setScreen("sri-lanka-discovery");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-03") {
+			setSelectedAreaId(areaId);
+			setScreen("plant-explorer");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-04") {
+			setSelectedAreaId(areaId);
+			setScreen("wildlife-ranger");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-05") {
+			setSelectedAreaId(areaId);
+			setScreen("everyday-object-quest");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-06") {
+			setSelectedAreaId(areaId);
+			setScreen("island-food-festival");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-07") {
+			setSelectedAreaId(areaId);
+			setScreen("rainbow-wardrobe-quest");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-08") {
+			setSelectedAreaId(areaId);
+			setScreen("water-works-adventure");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-09") {
+			setSelectedAreaId(areaId);
+			setScreen("transit-terminal-quest");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-10") {
+			setSelectedAreaId(areaId);
+			setScreen("bloom-builder-garden");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-11") {
+			setSelectedAreaId(areaId);
+			setScreen("workplace-link-city");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-12") {
+			setSelectedAreaId(areaId);
+			setScreen("family-word-constellation");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-13") {
+			setSelectedAreaId(areaId);
+			setScreen("earth-sky-explorer");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-14") {
+			setSelectedAreaId(areaId);
+			setScreen("blueprint-quest");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-15") {
+			setSelectedAreaId(areaId);
+			setScreen("information-station");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-16") {
+			setSelectedAreaId(areaId);
+			setScreen("heritage-museum");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-17") {
+			setSelectedAreaId(areaId);
+			setScreen("classroom-language-live");
+			return;
+		}
+		if (areaId === "G5-AREA-ENG-18") {
+			setSelectedAreaId(areaId);
+			setScreen("conversation-street");
+			return;
+		}
 		if (!mission) return;
 		setSelectedAreaId(areaId);
 		if (areaId === "G5-AREA-MAT-01") {
@@ -524,10 +665,6 @@ export function MobileLearningApp({
 		}
 		if (areaId === "G5-AREA-MAT-16") {
 			setScreen("roman-adventure");
-			return;
-		}
-		if (areaId === "G5-AREA-ENG-01") {
-			setScreen("classroom-action-quest");
 			return;
 		}
 		setScreen(isFixtureLoop(mission) ? "fixture-round" : "draft-player");
@@ -1214,6 +1351,176 @@ export function MobileLearningApp({
 			)}
 			{screen === "classroom-action-quest" && (
 				<ClassroomActionQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "sri-lanka-discovery" && (
+				<SriLankaDiscovery
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "plant-explorer" && (
+				<PlantExplorerQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "wildlife-ranger" && (
+				<WildlifeRangerQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "everyday-object-quest" && (
+				<EverydayObjectQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "island-food-festival" && (
+				<IslandFoodFestival
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "rainbow-wardrobe-quest" && (
+				<RainbowWardrobeQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "water-works-adventure" && (
+				<WaterWorksAdventure
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "transit-terminal-quest" && (
+				<TransitTerminalQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "bloom-builder-garden" && (
+				<BloomBuilderGarden
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "workplace-link-city" && (
+				<WorkplaceLinkCity
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "family-word-constellation" && (
+				<FamilyWordConstellation
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "earth-sky-explorer" && (
+				<EarthSkyExplorer
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "blueprint-quest" && (
+				<SchoolHomeBlueprintQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "information-station" && (
+				<InformationStation
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "heritage-museum" && (
+				<HeritageMuseumQuest
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "classroom-language-live" && (
+				<ClassroomLanguageLive
+					api={api}
+					learnerId={learnerId}
+					condition={engineeringCondition}
+					reducedMotion={reducedMotion}
+					onBack={() => setScreen("learn")}
+					onFailure={safeFailure}
+				/>
+			)}
+			{screen === "conversation-street" && (
+				<ConversationStreet
 					api={api}
 					learnerId={learnerId}
 					condition={engineeringCondition}

@@ -18,8 +18,8 @@ import type {
 import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
-	bodyStateResponse,
 	type BodyActionId,
+	bodyStateResponse,
 	navigationResponse,
 } from "./classroomActionLogic";
 import {
@@ -410,7 +410,7 @@ function ActionMirror({
 		setTrace(nextTrace);
 		onResponse(
 			bodyStateResponse(
-				String(game.command_id),
+				String(game.command_token),
 				action,
 				nextTrace,
 				Math.max(0, nextTrace.length - 1),
@@ -464,7 +464,7 @@ function ClassroomDash({
 		setRevisions(nextRevisions);
 		onResponse(
 			navigationResponse(
-				String(game.command_id),
+				String(game.command_token),
 				String(game.origin_id),
 				destination,
 				nextTrace,
