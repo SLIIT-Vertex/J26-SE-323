@@ -185,6 +185,18 @@ class SemanticVerificationResult(BaseModel):
     factual_support: VerificationCheckOutcome
     language_appropriateness: VerificationCheckOutcome
     age_appropriateness: VerificationCheckOutcome
+    reason_codes: tuple[NonBlankText, ...] = Field(default=(), max_length=20)
+    evidence_references: tuple[NonBlankText, ...] = Field(default=(), max_length=20)
+    verifier_model: NonBlankText | None = None
+    verifier_version: NonBlankText | None = None
+
+    @model_validator(mode="after")
+    def validate_metadata(self) -> Self:
+        if len(self.reason_codes) != len(set(self.reason_codes)):
+            raise ValueError("semantic reason codes must be unique")
+        if len(self.evidence_references) != len(set(self.evidence_references)):
+            raise ValueError("semantic evidence references must be unique")
+        return self
 
 
 class SemanticVerifier(Protocol):
@@ -223,6 +235,10 @@ class VerificationResult(BaseModel):
     sufficient_evidence_for_pass: bool
     evidence_provenance: tuple[EvidenceProvenance, ...] = ()
     semantic_verifier_name: NonBlankText | None = None
+    semantic_reason_codes: tuple[NonBlankText, ...] = ()
+    semantic_evidence_references: tuple[NonBlankText, ...] = ()
+    semantic_verifier_model: NonBlankText | None = None
+    semantic_verifier_version: NonBlankText | None = None
 
     @model_validator(mode="after")
     def validate_decision(self) -> Self:
@@ -258,11 +274,13 @@ def verify_response(
         _check_curriculum_evidence(request),
         _check_curriculum_citations(request),
     ]
-    checks.extend(_semantic_checks(request, semantic_verifier))
+    semantic_checks, semantic_result = _semantic_checks(request, semantic_verifier)
+    checks.extend(semantic_checks)
     return _build_result(
         checks,
         request.curriculum_evidence,
         semantic_verifier.name if semantic_verifier is not None else None,
+        semantic_result,
     )
 
 
@@ -614,7 +632,7 @@ _SEMANTIC_DIMENSIONS = (
 def _semantic_checks(
     request: VerificationRequest,
     verifier: SemanticVerifier | None,
-) -> list[VerificationCheckResult]:
+) -> tuple[list[VerificationCheckResult], SemanticVerificationResult | None]:
     required = {
         "assistance_level_compliance": True,
         "answer_leakage": request.assistance_level is not AssistanceLevel.FULL_EXPLANATION,
@@ -625,23 +643,32 @@ def _semantic_checks(
         "age_appropriateness": True,
     }
     if verifier is None:
-        return [
-            _missing_semantic_check(check, required[field], label)
-            for check, field, label in _SEMANTIC_DIMENSIONS
-        ]
+        return (
+            [
+                _missing_semantic_check(check, required[field], label)
+                for check, field, label in _SEMANTIC_DIMENSIONS
+            ],
+            None,
+        )
 
     try:
         result = verifier.verify(request)
     except (SemanticVerifierError, TimeoutError):
-        return [
-            _unavailable_semantic_check(check, required[field], label)
-            for check, field, label in _SEMANTIC_DIMENSIONS
-        ]
+        return (
+            [
+                _unavailable_semantic_check(check, required[field], label)
+                for check, field, label in _SEMANTIC_DIMENSIONS
+            ],
+            None,
+        )
     if not isinstance(result, SemanticVerificationResult):
-        return [
-            _unavailable_semantic_check(check, required[field], label)
-            for check, field, label in _SEMANTIC_DIMENSIONS
-        ]
+        return (
+            [
+                _unavailable_semantic_check(check, required[field], label)
+                for check, field, label in _SEMANTIC_DIMENSIONS
+            ],
+            None,
+        )
 
     checks: list[VerificationCheckResult] = []
     for check_name, field, label in _SEMANTIC_DIMENSIONS:
@@ -649,7 +676,7 @@ def _semantic_checks(
         if judgment is VerificationCheckOutcome.NOT_APPLICABLE and required[field]:
             judgment = VerificationCheckOutcome.INDETERMINATE
         checks.append(_semantic_check(check_name, judgment, label))
-    return checks
+    return checks, result
 
 
 def _missing_semantic_check(
@@ -699,6 +726,7 @@ def _build_result(
     checks: list[VerificationCheckResult],
     evidence: tuple[RetrievedCurriculumPassage, ...],
     semantic_verifier_name: str | None,
+    semantic_result: SemanticVerificationResult | None = None,
 ) -> VerificationResult:
     if any(check.outcome is VerificationCheckOutcome.FAIL for check in checks):
         outcome = VerificationOutcome.FAIL
@@ -724,6 +752,12 @@ def _build_result(
         sufficient_evidence_for_pass=outcome is VerificationOutcome.PASS,
         evidence_provenance=provenance,
         semantic_verifier_name=semantic_verifier_name,
+        semantic_reason_codes=semantic_result.reason_codes if semantic_result else (),
+        semantic_evidence_references=(
+            semantic_result.evidence_references if semantic_result else ()
+        ),
+        semantic_verifier_model=semantic_result.verifier_model if semantic_result else None,
+        semantic_verifier_version=semantic_result.verifier_version if semantic_result else None,
     )
 
 

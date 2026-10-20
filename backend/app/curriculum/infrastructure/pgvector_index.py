@@ -12,6 +12,7 @@ from app.curriculum.application.retrieval import (
     CurriculumReviewStatus,
     CurriculumSourceRecord,
     IngestionStatus,
+    MetadataStatus,
     UsageRightsStatus,
 )
 from app.curriculum.infrastructure.models import (
@@ -148,11 +149,16 @@ class CurriculumVectorIndex:
 
     def has_approved_source(self, request: CurriculumRetrievalRequest) -> bool:
         statement = select(CurriculumSourceModel.source_id).where(
-            CurriculumSourceModel.review_status != CurriculumReviewStatus.REJECTED.value,
-            CurriculumSourceModel.usage_rights_status != UsageRightsStatus.RESTRICTED.value,
-            CurriculumSourceModel.ingestion_status != IngestionStatus.FAILED.value,
-            (CurriculumSourceModel.grade.is_(None))
-            | (CurriculumSourceModel.grade == request.grade),
+            CurriculumSourceModel.metadata_status == MetadataStatus.VERIFIED.value,
+            CurriculumSourceModel.ingestion_status == IngestionStatus.INGESTED.value,
+            CurriculumSourceModel.review_status == CurriculumReviewStatus.APPROVED.value,
+            CurriculumSourceModel.usage_rights_status == UsageRightsStatus.PERMITTED.value,
+            CurriculumSourceModel.publisher_authority.is_not(None),
+            CurriculumSourceModel.source_location.is_not(None),
+            CurriculumSourceModel.source_version.is_not(None),
+            CurriculumSourceModel.grade == request.grade,
+            CurriculumSourceModel.subject.is_not(None),
+            CurriculumSourceModel.language.is_not(None),
         )
         if request.subject is not None:
             statement = statement.where(CurriculumSourceModel.subject == request.subject)
@@ -168,11 +174,21 @@ class CurriculumVectorIndex:
                 CurriculumSourceModel.source_id == CurriculumChunkModel.source_id,
             )
             .where(
-                CurriculumSourceModel.review_status != CurriculumReviewStatus.REJECTED.value,
-                CurriculumSourceModel.usage_rights_status != UsageRightsStatus.RESTRICTED.value,
-                CurriculumSourceModel.ingestion_status != IngestionStatus.FAILED.value,
-                CurriculumChunkModel.review_status != CurriculumReviewStatus.REJECTED.value,
+                CurriculumSourceModel.metadata_status == MetadataStatus.VERIFIED.value,
+                CurriculumSourceModel.ingestion_status == IngestionStatus.INGESTED.value,
+                CurriculumSourceModel.review_status == CurriculumReviewStatus.APPROVED.value,
+                CurriculumSourceModel.usage_rights_status == UsageRightsStatus.PERMITTED.value,
+                CurriculumSourceModel.publisher_authority.is_not(None),
+                CurriculumSourceModel.source_location.is_not(None),
+                CurriculumSourceModel.source_version.is_not(None),
+                CurriculumChunkModel.review_status == CurriculumReviewStatus.APPROVED.value,
                 CurriculumChunkModel.grade == request.grade,
+                CurriculumSourceModel.grade == CurriculumChunkModel.grade,
+                CurriculumSourceModel.subject == CurriculumChunkModel.subject,
+                CurriculumSourceModel.language == CurriculumChunkModel.language,
+                CurriculumSourceModel.source_version == CurriculumChunkModel.source_version,
+                (CurriculumChunkModel.page_number.is_not(None))
+                | (CurriculumChunkModel.section_locator.is_not(None)),
             )
         )
         if request.subject is not None:

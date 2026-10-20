@@ -3,16 +3,22 @@ import importlib.util
 import json
 import socket
 from pathlib import Path
+from uuid import UUID
 
 import pytest
 import sqlalchemy
 from pydantic import ValidationError
 
+from app.adaptive_tutor.application import ContextEvidenceOrigin, TutoringContext
+from app.adaptive_tutor.application.controller import ScaffoldingController
 from app.adaptive_tutor.domain import AssistanceLevel
 from app.adaptive_tutor.evaluation import (
     EvaluationManifest,
+    IntegratedEvaluationPartition,
+    IntegratedEvaluationRecord,
     binary_violation_metrics,
     evaluate_reference_policy,
+    integrated_evaluation_metrics,
     ordinal_assistance_metrics,
     render_evaluation_summary,
 )
@@ -230,3 +236,134 @@ def test_evaluation_uses_no_network_or_database(
     )
 
     assert report["controller_reference_policy"]["agreement"]["value"] == 1.0
+
+
+def test_integrated_offline_metrics_cover_required_software_behaviors() -> None:
+    controller = ScaffoldingController()
+    base = {
+        "learner_id": UUID("00000000-0000-4000-8000-000000000061"),
+        "skill_id": "MAT-FRC",
+        "mastery": 0.6,
+        "support_need": 0.4,
+    }
+    ready_cases = (
+        ("pre-interaction", {"attempt_count": 0, "is_correct": None, "error_severity": None}),
+        (
+            "first-attempt",
+            {"attempt_count": 1, "is_correct": False, "error_severity": 0.45},
+        ),
+        (
+            "repeated-escalation",
+            {
+                "attempt_count": 3,
+                "is_correct": False,
+                "error_severity": 0.7,
+                "previous_assistance_level": "L1",
+                "previous_hint_effective": False,
+            },
+        ),
+        (
+            "fading",
+            {
+                "attempt_count": 2,
+                "is_correct": False,
+                "error_severity": 0.3,
+                "previous_assistance_level": "L3",
+                "previous_hint_effective": True,
+            },
+        ),
+        (
+            "correct-attempt",
+            {"attempt_count": 1, "is_correct": True, "error_severity": 0.0},
+        ),
+    )
+    expected_levels = {
+        "pre-interaction": AssistanceLevel.INDEPENDENT_RETRY,
+        "first-attempt": AssistanceLevel.METACOGNITIVE_PROMPT,
+        "repeated-escalation": AssistanceLevel.CONCEPTUAL_HINT,
+        "fading": AssistanceLevel.CONCEPTUAL_HINT,
+        "correct-attempt": AssistanceLevel.INDEPENDENT_RETRY,
+    }
+    records: list[IntegratedEvaluationRecord] = []
+    for scenario_id, context_data in ready_cases:
+        context = TutoringContext.model_validate({**base, **context_data})
+        first = controller.decide(context)
+        assert controller.decide(context) == first
+        behavior_tags = {
+            "pre-interaction": ("pre_interaction",),
+            "first-attempt": ("first_attempt", "incorrect_attempt"),
+            "repeated-escalation": (
+                "repeated_attempts",
+                "escalation",
+                "incorrect_attempt",
+            ),
+            "fading": ("fading", "repeated_attempts", "incorrect_attempt"),
+            "correct-attempt": ("correct_attempt",),
+        }[scenario_id]
+        records.append(
+            IntegratedEvaluationRecord(
+                scenario_id=scenario_id,
+                partition=IntegratedEvaluationPartition.SYNTHETIC_INTEGRATION,
+                coverage_tags=(
+                    *behavior_tags,
+                    "controller_determinism",
+                ),
+                expected_ready=True,
+                observed_ready=True,
+                expected_assistance_level=expected_levels[scenario_id],
+                observed_assistance_level=first.assistance_level,
+                provenance=ContextEvidenceOrigin.MIXED,
+                expected_evidence_items=5,
+                available_evidence_items=5,
+            )
+        )
+
+    blocked_cases = (
+        "missing_evidence",
+        "uncertain_evidence",
+        "stale_evidence",
+        "unapproved_severity",
+        "session_isolation",
+        "kt_cold_start",
+        "learner_state_unavailable",
+        "tutor_history_not_delivered",
+        "skill_mapper_abstention",
+    )
+    records.extend(
+        IntegratedEvaluationRecord(
+            scenario_id=case,
+            partition=IntegratedEvaluationPartition.REAL_INFRASTRUCTURE,
+            coverage_tags=(case, "fail_closed"),
+            expected_ready=False,
+            observed_ready=False,
+            should_fail_closed=True,
+            observed_fail_closed=True,
+            expected_evidence_items=5,
+            available_evidence_items=4,
+        )
+        for case in blocked_cases
+    )
+
+    metrics = integrated_evaluation_metrics(records)
+
+    assert metrics["scenario_pass_rate"] == {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0,
+    }
+    assert metrics["context_readiness_rate"]["numerator"] == 5
+    assert metrics["controller_policy_agreement"]["agreement"]["value"] == 1.0
+    assert metrics["fail_closed_rate"]["value"] == 1.0
+    assert metrics["provenance_distribution"] == {
+        "REAL": 0,
+        "SYNTHETIC": 0,
+        "MIXED": 5,
+        "NONE": 9,
+    }
+    assert metrics["evidence_coverage"] == {
+        "numerator": 61,
+        "denominator": 70,
+        "value": 61 / 70,
+    }
+    assert metrics["baseline_and_ablation"]["evaluation_status"] == "NOT_EVALUATED"
+    assert metrics["human_inter_rater_agreement"]["evaluation_status"] == "NOT_EVALUATED"

@@ -44,6 +44,7 @@ def _source() -> CurriculumSourceRecord:
         subject="Mathematics",
         language="si",
         source_type="textbook",
+        source_location="repository://synthetic/retrieval-evaluation.pdf",
         source_version="fixture-v1",
         metadata_status=MetadataStatus.VERIFIED,
         ingestion_status=IngestionStatus.INGESTED,
@@ -63,10 +64,11 @@ def _passage(chunk_id: str, *, grade: int = 5) -> RetrievedCurriculumPassage:
             subject="Mathematics",
             language="si",
             skill_ids=("MAT-FRC",),
+            page_number=1,
             unit_id="G5-MAT-C03",
             review_status=CurriculumReviewStatus.APPROVED,
         ),
-        source=_source(),
+        source=_source().model_copy(update={"grade": grade}),
         score=1.0,
     )
 

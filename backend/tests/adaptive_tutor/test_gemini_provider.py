@@ -1,3 +1,4 @@
+import builtins
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +9,8 @@ from app.adaptive_tutor.application import (
     GenerationRequest,
     GenerationStatus,
     LlmProviderError,
+    LlmProviderUnavailableError,
+    ProviderFailureReason,
     generate_tutor_draft,
 )
 from app.adaptive_tutor.domain import AssistanceLevel
@@ -294,3 +297,96 @@ def test_lazy_client_factory_receives_configured_timeout() -> None:
     assert provider.generate(prompt_for()) == "Synthetic response"
     assert created_with == [config]
     assert created_with[0].timeout_seconds == 7.5
+
+
+class DetailedSdkError(SdkError):
+    """Mirrors google.genai.errors.APIError, which exposes the parsed error body as details."""
+
+    def __init__(self, code: int, reason: str) -> None:
+        super().__init__(code)
+        self.details = {"error": {"code": code, "details": [{"reason": reason}]}}
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (TimeoutError(), ProviderFailureReason.NETWORK_OR_TIMEOUT),
+        (ConnectionError(), ProviderFailureReason.NETWORK_OR_TIMEOUT),
+        (SdkError(504), ProviderFailureReason.NETWORK_OR_TIMEOUT),
+        (SdkError(401), ProviderFailureReason.AUTHENTICATION_FAILED),
+        (SdkError(403), ProviderFailureReason.AUTHENTICATION_FAILED),
+        (DetailedSdkError(400, "API_KEY_INVALID"), ProviderFailureReason.AUTHENTICATION_FAILED),
+        (SdkError(404), ProviderFailureReason.MODEL_NOT_FOUND),
+        (SdkError(429), ProviderFailureReason.RATE_LIMITED),
+        (SdkError(503), ProviderFailureReason.PROVIDER_TEMPORARILY_UNAVAILABLE),
+        (SdkError(400), ProviderFailureReason.INVALID_REQUEST),
+        (SdkError(500), ProviderFailureReason.UNEXPECTED_PROVIDER_FAILURE),
+        (RuntimeError("unknown"), ProviderFailureReason.UNEXPECTED_PROVIDER_FAILURE),
+    ],
+)
+def test_provider_failures_carry_sanitized_reason(
+    error: Exception, reason: ProviderFailureReason
+) -> None:
+    provider = GeminiLlmProvider(gemini_config(), client=RecordingClient(error))
+
+    with pytest.raises(LlmProviderError) as caught:
+        provider.generate(prompt_for())
+
+    assert caught.value.reason is reason
+
+
+def test_blocked_response_reason_is_distinct() -> None:
+    response = SimpleNamespace(
+        text=None, prompt_feedback=SimpleNamespace(block_reason="SAFETY"), candidates=[]
+    )
+    provider = GeminiLlmProvider(gemini_config(), client=RecordingClient(response))
+
+    with pytest.raises(LlmProviderError) as caught:
+        provider.generate(prompt_for())
+
+    assert caught.value.reason is ProviderFailureReason.RESPONSE_BLOCKED
+
+
+def test_missing_sdk_under_existing_google_namespace_is_reported_as_not_installed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression: protobuf-style `google` namespace without genai raises a plain ImportError."""
+
+    real_import = builtins.__import__
+
+    def import_without_genai(name: str, *args: object, **kwargs: object) -> object:
+        fromlist = args[2] if len(args) > 2 else kwargs.get("fromlist")
+        if name == "google" and fromlist and "genai" in fromlist:  # type: ignore[operator]
+            raise ImportError("cannot import name 'genai' from 'google' (unknown location)")
+        return real_import(name, *args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(builtins, "__import__", import_without_genai)
+    provider = GeminiLlmProvider(gemini_config())
+
+    with pytest.raises(LlmProviderUnavailableError) as caught:
+        provider.generate(prompt_for())
+
+    assert caught.value.reason is ProviderFailureReason.PROVIDER_SDK_NOT_INSTALLED
+    assert generate_tutor_draft(request_for(), provider).status is (
+        GenerationStatus.PROVIDER_UNAVAILABLE
+    )
+
+
+def test_configured_thinking_level_is_forwarded_and_blank_sends_none() -> None:
+    blank = RecordingClient(SimpleNamespace(text="Synthetic response"))
+    low = RecordingClient(SimpleNamespace(text="Synthetic response"))
+
+    GeminiLlmProvider(gemini_config(), client=blank).generate(prompt_for())
+    select_tutor_llm_provider(
+        settings_for(tutor_gemini_thinking_level=" low "), gemini_client=low
+    ).generate(prompt_for())
+
+    assert "thinking_config" not in blank.models.calls[0]["config"]  # type: ignore[operator]
+    assert low.models.calls[0]["config"]["thinking_config"] == {  # type: ignore[index]
+        "thinking_level": "LOW"
+    }
+
+
+def test_unknown_thinking_level_fails_explicitly() -> None:
+    with pytest.raises(GeminiConfigurationError, match="thinking level"):
+        GeminiLlmProvider(gemini_config(thinking_level="EXTREME"))

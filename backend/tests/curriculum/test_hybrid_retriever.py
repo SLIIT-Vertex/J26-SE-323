@@ -94,6 +94,7 @@ def _source(**overrides: object) -> CurriculumSourceRecord:
         "subject": "Mathematics",
         "language": "si",
         "source_type": "textbook",
+        "source_location": "repository://synthetic/curriculum-fixture.pdf",
         "source_version": "fixture-v1",
         "metadata_status": MetadataStatus.VERIFIED,
         "ingestion_status": IngestionStatus.INGESTED,
@@ -168,7 +169,7 @@ def indexed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     get_settings.cache_clear()
 
 
-def test_pending_chunk_is_returned_with_the_approved_chunks(indexed) -> None:
+def test_pending_chunk_is_excluded_from_approved_chunks(indexed) -> None:
     _session, _index, retriever = indexed
     result = retriever.retrieve(_request())
 
@@ -176,7 +177,6 @@ def test_pending_chunk_is_returned_with_the_approved_chunks(indexed) -> None:
     assert [passage.chunk.chunk_id for passage in result.passages] == [
         "chunk-a",
         "chunk-b",
-        "chunk-pending",
     ]
     assert CHUNKING_VERSION in result.retriever_version
     assert E5_MODEL_REVISION in result.retriever_version
@@ -228,11 +228,10 @@ def test_requested_language_is_a_preference_not_a_hard_filter(indexed) -> None:
     assert [passage.chunk.chunk_id for passage in result.passages] == [
         "chunk-a",
         "chunk-b",
-        "chunk-pending",
     ]
 
 
-def test_unknown_usage_rights_still_return_the_chunks(indexed) -> None:
+def test_unknown_usage_rights_return_no_approved_source(indexed) -> None:
     session, _index, retriever = indexed
     source = session.get(CurriculumSourceModel, "SRC-FIXTURE")
     assert source is not None
@@ -241,11 +240,8 @@ def test_unknown_usage_rights_still_return_the_chunks(indexed) -> None:
 
     result = retriever.retrieve(_request())
 
-    assert [passage.chunk.chunk_id for passage in result.passages] == [
-        "chunk-a",
-        "chunk-b",
-        "chunk-pending",
-    ]
+    assert result.passages == ()
+    assert result.status is CurriculumRetrievalStatus.NO_APPROVED_SOURCE
 
 
 @pytest.mark.parametrize("rights", [UsageRightsStatus.RESTRICTED])

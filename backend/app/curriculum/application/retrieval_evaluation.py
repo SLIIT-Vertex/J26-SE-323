@@ -20,12 +20,10 @@ from app.curriculum.application.retrieval import (
     CurriculumRetrievalResult,
     CurriculumRetrievalStatus,
     CurriculumRetriever,
-    CurriculumReviewStatus,
-    IngestionStatus,
     NonBlankText,
     RetrievalPurpose,
     RetrievedCurriculumPassage,
-    UsageRightsStatus,
+    validate_passage_eligibility,
     validate_retrieval_result_for_request,
 )
 
@@ -144,19 +142,8 @@ def passage_is_filter_violation(
 ) -> bool:
     """A passage violates the check when trust fails or it misses the request filters."""
 
-    source = passage.source
-    chunk = passage.chunk
-    trusted = (
-        source.review_status is not CurriculumReviewStatus.REJECTED
-        and chunk.review_status is not CurriculumReviewStatus.REJECTED
-        and source.usage_rights_status is not UsageRightsStatus.RESTRICTED
-        and source.ingestion_status is not IngestionStatus.FAILED
-        and chunk.source_id == source.source_id
-        and source.source_version == chunk.source_version
-    )
-    if not trusted:
-        return True
     try:
+        validate_passage_eligibility(passage)
         validate_retrieval_result_for_request(
             request,
             CurriculumRetrievalResult(

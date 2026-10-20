@@ -6,6 +6,9 @@ import { MobileLearningApp } from "./features/mobile-learning-flow/MobileLearnin
 const LearnerStateDevPage = import.meta.env.DEV
   ? lazy(() => import("./features/learner-state/dev/LearnerStateDevPage"))
   : null;
+const TutorDemoPage = lazy(() =>
+  import("./features/adaptiveTutor/TutorDemo").then(({ TutorDemo }) => ({ default: TutorDemo })),
+);
 
 /** One MindBridge app: mobile learning shell hosts Papers as its practice tab. */
 export default function App() {
@@ -13,6 +16,14 @@ export default function App() {
     return (
       <Suspense fallback={<p>Loading…</p>}>
         <LearnerStateDevPage />
+      </Suspense>
+    );
+  }
+
+  if (window.location.hash.startsWith("#/tutor")) {
+    return (
+      <Suspense fallback={<p>Loading…</p>}>
+        <TutorDemoPage />
       </Suspense>
     );
   }

@@ -353,6 +353,28 @@ def test_missing_or_invalid_completed_attempt_evidence_is_not_ready(
     assert ContextReadinessReason.ASSESSMENT_INVALID in reasons(result)
 
 
+@pytest.mark.parametrize(
+    ("status", "reason"),
+    [
+        (EvidenceStatus.UNCERTAIN, ContextReadinessReason.ASSESSMENT_UNCERTAIN),
+        (EvidenceStatus.STALE, ContextReadinessReason.ASSESSMENT_STALE),
+        (
+            EvidenceStatus.SESSION_MISMATCH,
+            ContextReadinessReason.ASSESSMENT_SESSION_MISMATCH,
+        ),
+    ],
+)
+def test_assessment_fail_closed_statuses_have_explicit_readiness_reasons(
+    status: EvidenceStatus,
+    reason: ContextReadinessReason,
+) -> None:
+    result = assembler(
+        FakeProviders(assessment_result=AssessmentEvidenceResult(status=status))
+    ).assemble(assembly_request())
+
+    assert reasons(result) == {reason}
+
+
 def test_hint_effectiveness_without_previous_assistance_is_invalid() -> None:
     history = AssistanceHistoryResult.model_construct(
         status=EvidenceStatus.AVAILABLE,

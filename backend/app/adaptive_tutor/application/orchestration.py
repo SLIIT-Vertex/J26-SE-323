@@ -4,6 +4,7 @@ from typing import Annotated, Protocol, Self
 from uuid import UUID
 
 from pydantic import (
+    AwareDatetime,
     BaseModel,
     ConfigDict,
     Field,
@@ -48,6 +49,7 @@ from app.adaptive_tutor.application.verification import (
     EvidenceProvenance,
     SemanticVerifier,
     TrustedAnswerReference,
+    VerificationCheckName,
     VerificationOutcome,
     VerificationReasonCode,
     VerificationResult,
@@ -103,6 +105,12 @@ class TutorWorkflowRequest(BaseModel):
     response_language: NonBlankText
     conversation_context: tuple[ConversationTurn, ...] = Field(default=(), max_length=8)
     active_skill_id: NonBlankText | None = None
+    session_id: UUID | None = None
+    interaction_id: NonBlankText | None = None
+    interaction_sequence: int | None = Field(default=None, strict=True, ge=1)
+    as_of: AwareDatetime | None = None
+    max_age_ms: int | None = Field(default=None, strict=True, ge=0)
+    trusted_skill_mapping: SkillMappingResult | None = Field(default=None, exclude=True)
 
     @model_validator(mode="after")
     def validate_context_size(self) -> Self:
@@ -143,6 +151,8 @@ class TutorWorkflowResult(BaseModel):
     curriculum_status: CurriculumRetrievalStatus | None = None
     generation_status: GenerationStatus | None = None
     generation_provider_name: NonBlankText | None = None
+    draft_attempt_count: int = Field(default=0, strict=True, ge=0, le=3)
+    regeneration_reason_codes: tuple[VerificationReasonCode, ...] = ()
     verification_outcome: VerificationOutcome | None = None
     verification_reason_codes: tuple[VerificationReasonCode, ...] = ()
     verification_evidence_provenance: tuple[EvidenceProvenance, ...] = ()
@@ -199,6 +209,9 @@ class TutorOrchestrator:
         semantic_verifier: SemanticVerifier | None = None,
         trusted_answer_provider: TrustedAnswerProvider | None = None,
         semantic_verifier_is_simulated: bool = False,
+        authorized_generation_providers: Collection[str] = (),
+        max_regeneration_attempts: int = 2,
+        decision_only: bool = False,
     ) -> None:
         self._skill_mapper = skill_mapper
         self._skill_mapper_source = skill_mapper_source
@@ -212,6 +225,11 @@ class TutorOrchestrator:
         self._semantic_verifier_is_simulated = semantic_verifier_is_simulated or isinstance(
             semantic_verifier, DeterministicFakeSemanticVerifier
         )
+        self._authorized_generation_providers = frozenset(authorized_generation_providers)
+        self._decision_only = decision_only
+        if isinstance(max_regeneration_attempts, bool) or not 0 <= max_regeneration_attempts <= 2:
+            raise ValueError("max_regeneration_attempts must be between zero and two")
+        self._max_regeneration_attempts = max_regeneration_attempts
         if not self._valid_skill_ids:
             raise ValueError("valid_skill_ids must not be empty")
 
@@ -251,11 +269,14 @@ class TutorOrchestrator:
                 "The active skill reference is not in the authoritative taxonomy.",
             )
         try:
-            raw_mapping = self._skill_mapper.map(mapping_request)
+            raw_mapping = workflow_request.trusted_skill_mapping
+            if raw_mapping is None:
+                raw_mapping = self._skill_mapper.map(mapping_request)
             mapping = SkillMappingResult.model_validate(
                 raw_mapping.model_dump() if isinstance(raw_mapping, BaseModel) else raw_mapping,
                 from_attributes=True,
             )
+            validate_skill_ids_against_taxonomy(mapping, self._valid_skill_ids)
         except Exception:  # noqa: BLE001 - dependency boundary fails closed
             return self._result(
                 TutorWorkflowStatus.DEPENDENCY_FAILURE,
@@ -290,6 +311,15 @@ class TutorOrchestrator:
                     learner_id=workflow_request.learner_id,
                     skill_mapping=mapping,
                     skill_mapping_source=self._skill_mapper_source,
+                    session_id=(
+                        str(workflow_request.session_id)
+                        if workflow_request.session_id is not None
+                        else None
+                    ),
+                    interaction_id=workflow_request.interaction_id,
+                    interaction_sequence=workflow_request.interaction_sequence,
+                    as_of=workflow_request.as_of,
+                    max_age_ms=workflow_request.max_age_ms,
                 )
             )
         except Exception:  # noqa: BLE001 - dependency boundary fails closed
@@ -319,6 +349,15 @@ class TutorOrchestrator:
                 context_result=context_result,
             )
 
+        if self._decision_only:
+            return self._result(
+                TutorWorkflowStatus.DELIVERY_NOT_AUTHORIZED,
+                "The Controller decision is available for local experimental generation only.",
+                mapping=mapping,
+                context_result=context_result,
+                decision=decision,
+            )
+
         curriculum_status, evidence = self._retrieve_curriculum(
             workflow_request,
             mapping,
@@ -344,7 +383,6 @@ class TutorOrchestrator:
                 curriculum_evidence=evidence,
                 conversation_context=workflow_request.conversation_context,
             )
-            generation = generate_tutor_draft(generation_request, self._llm_provider)
         except Exception:  # noqa: BLE001 - generation boundary fails closed
             return self._result(
                 TutorWorkflowStatus.GENERATION_FAILED,
@@ -355,33 +393,11 @@ class TutorOrchestrator:
                 curriculum_status=curriculum_status,
             )
 
-        if generation.status is not GenerationStatus.DRAFT_GENERATED:
-            status = (
-                TutorWorkflowStatus.CURRICULUM_UNAVAILABLE
-                if generation.status is GenerationStatus.INSUFFICIENT_CURRICULUM_EVIDENCE
-                else TutorWorkflowStatus.GENERATION_FAILED
-            )
-            return self._result(
-                status,
-                "No generated response is eligible for delivery.",
-                mapping=mapping,
-                context_result=context_result,
-                decision=decision,
-                curriculum_status=curriculum_status,
-                generation=generation,
-            )
-
         try:
             trusted_answer = self._trusted_answer(
                 workflow_request,
                 mapping.skill_id,
                 context_result.learner_grade,
-            )
-            verification = verify_generation_result(
-                generation_request,
-                generation,
-                trusted_answer=trusted_answer,
-                semantic_verifier=self._semantic_verifier,
             )
         except Exception:  # noqa: BLE001 - verification boundary fails closed
             return self._result(
@@ -391,31 +407,108 @@ class TutorOrchestrator:
                 context_result=context_result,
                 decision=decision,
                 curriculum_status=curriculum_status,
-                generation=generation,
             )
 
-        if verification.outcome is VerificationOutcome.FAIL:
+        regeneration_codes: list[VerificationReasonCode] = []
+        generation: GenerationResult | None = None
+        verification: VerificationResult | None = None
+        draft_attempt_count = 0
+        for attempt in range(1, self._max_regeneration_attempts + 2):
+            if attempt > 1:
+                generation_request = GenerationRequest(
+                    student_question=generation_request.student_question,
+                    skill_id=generation_request.skill_id,
+                    assistance_level=generation_request.assistance_level,
+                    response_language=generation_request.response_language,
+                    grade=generation_request.grade,
+                    curriculum_evidence=generation_request.curriculum_evidence,
+                    conversation_context=generation_request.conversation_context,
+                    draft_attempt=attempt,
+                    revision_reason_codes=tuple(
+                        code.value for code in dict.fromkeys(regeneration_codes)
+                    ),
+                )
+            try:
+                generation = generate_tutor_draft(generation_request, self._llm_provider)
+            except Exception:  # noqa: BLE001 - generation boundary fails closed
+                return self._result(
+                    TutorWorkflowStatus.GENERATION_FAILED,
+                    "Response generation failed safely.",
+                    mapping=mapping,
+                    context_result=context_result,
+                    decision=decision,
+                    curriculum_status=curriculum_status,
+                    draft_attempt_count=attempt,
+                    regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
+                )
+            draft_attempt_count = attempt
+            if generation.status is not GenerationStatus.DRAFT_GENERATED:
+                status = (
+                    TutorWorkflowStatus.CURRICULUM_UNAVAILABLE
+                    if generation.status is GenerationStatus.INSUFFICIENT_CURRICULUM_EVIDENCE
+                    else TutorWorkflowStatus.GENERATION_FAILED
+                )
+                return self._result(
+                    status,
+                    "No generated response is eligible for delivery.",
+                    mapping=mapping,
+                    context_result=context_result,
+                    decision=decision,
+                    curriculum_status=curriculum_status,
+                    generation=generation,
+                    draft_attempt_count=draft_attempt_count,
+                    regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
+                )
+            try:
+                verification = verify_generation_result(
+                    generation_request,
+                    generation,
+                    trusted_answer=trusted_answer,
+                    semantic_verifier=self._semantic_verifier,
+                )
+            except Exception:  # noqa: BLE001 - verification boundary fails closed
+                return self._result(
+                    TutorWorkflowStatus.DEPENDENCY_FAILURE,
+                    "Response verification is currently unavailable.",
+                    mapping=mapping,
+                    context_result=context_result,
+                    decision=decision,
+                    curriculum_status=curriculum_status,
+                    generation=generation,
+                    draft_attempt_count=draft_attempt_count,
+                    regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
+                )
+            if verification.outcome is VerificationOutcome.PASS:
+                break
+            if attempt <= self._max_regeneration_attempts and _is_retryable_verification_failure(
+                verification
+            ):
+                regeneration_codes.extend(_retry_reason_codes(verification))
+                continue
+            status = (
+                TutorWorkflowStatus.VERIFICATION_FAILED
+                if verification.outcome is VerificationOutcome.FAIL
+                else TutorWorkflowStatus.VERIFICATION_INDETERMINATE
+            )
             return self._result(
-                TutorWorkflowStatus.VERIFICATION_FAILED,
-                "The generated response did not pass verification.",
+                status,
+                (
+                    "The generated response did not pass verification."
+                    if status is TutorWorkflowStatus.VERIFICATION_FAILED
+                    else "The generated response could not be verified with sufficient evidence."
+                ),
                 mapping=mapping,
                 context_result=context_result,
                 decision=decision,
                 curriculum_status=curriculum_status,
                 generation=generation,
                 verification=verification,
+                draft_attempt_count=draft_attempt_count,
+                regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
             )
-        if verification.outcome is VerificationOutcome.INDETERMINATE:
-            return self._result(
-                TutorWorkflowStatus.VERIFICATION_INDETERMINATE,
-                "The generated response could not be verified with sufficient evidence.",
-                mapping=mapping,
-                context_result=context_result,
-                decision=decision,
-                curriculum_status=curriculum_status,
-                generation=generation,
-                verification=verification,
-            )
+
+        assert generation is not None
+        assert verification is not None
 
         execution_origin = self._execution_origin(
             context_result,
@@ -435,18 +528,25 @@ class TutorOrchestrator:
                 curriculum_status=curriculum_status,
                 generation=generation,
                 verification=verification,
+                draft_attempt_count=draft_attempt_count,
+                regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
             )
 
-        if generation.provider_name == "google-gemini":
+        if (
+            generation.provider_name == "google-gemini"
+            and generation.provider_name not in self._authorized_generation_providers
+        ):
             return self._result(
                 TutorWorkflowStatus.DELIVERY_NOT_AUTHORIZED,
-                "The configured generation provider is not authorized for learner delivery.",
+                "The configured generation provider is not authorized for this delivery path.",
                 mapping=mapping,
                 context_result=context_result,
                 decision=decision,
                 curriculum_status=curriculum_status,
                 generation=generation,
                 verification=verification,
+                draft_attempt_count=draft_attempt_count,
+                regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
             )
 
         assert generation.draft_text is not None
@@ -460,6 +560,8 @@ class TutorOrchestrator:
             curriculum_status=curriculum_status,
             generation=generation,
             verification=verification,
+            draft_attempt_count=draft_attempt_count,
+            regeneration_reason_codes=tuple(dict.fromkeys(regeneration_codes)),
         )
 
     def _retrieve_curriculum(
@@ -546,6 +648,8 @@ class TutorOrchestrator:
         curriculum_status: CurriculumRetrievalStatus | None = None,
         generation: GenerationResult | None = None,
         verification: VerificationResult | None = None,
+        draft_attempt_count: int = 0,
+        regeneration_reason_codes: tuple[VerificationReasonCode, ...] = (),
     ) -> TutorWorkflowResult:
         execution_origin = self._execution_origin(
             context_result,
@@ -567,6 +671,8 @@ class TutorOrchestrator:
             curriculum_status=curriculum_status,
             generation_status=generation.status if generation else None,
             generation_provider_name=generation.provider_name if generation else None,
+            draft_attempt_count=draft_attempt_count,
+            regeneration_reason_codes=regeneration_reason_codes,
             verification_outcome=verification.outcome if verification else None,
             verification_reason_codes=verification.reason_codes if verification else (),
             verification_evidence_provenance=(
@@ -581,3 +687,43 @@ class TutorOrchestrator:
                 else None
             ),
         )
+
+
+_RETRYABLE_VERIFICATION_CHECKS = frozenset(
+    {
+        VerificationCheckName.RESPONSE_STRUCTURE,
+        VerificationCheckName.LEVEL_STRUCTURE,
+        VerificationCheckName.ANSWER_LEAKAGE,
+        VerificationCheckName.LANGUAGE_SCRIPT,
+        VerificationCheckName.CURRICULUM_CITATIONS,
+        VerificationCheckName.SEMANTIC_LEVEL_COMPLIANCE,
+        VerificationCheckName.SEMANTIC_ANSWER_LEAKAGE,
+        VerificationCheckName.SEMANTIC_FACTUAL_SUPPORT,
+        VerificationCheckName.SEMANTIC_LANGUAGE,
+        VerificationCheckName.SEMANTIC_AGE_APPROPRIATENESS,
+    }
+)
+
+
+def _is_retryable_verification_failure(result: VerificationResult) -> bool:
+    failed_checks = {
+        check.check
+        for check in result.checks
+        if check.outcome.value == VerificationOutcome.FAIL.value
+    }
+    return (
+        result.outcome is VerificationOutcome.FAIL
+        and bool(failed_checks)
+        and failed_checks <= _RETRYABLE_VERIFICATION_CHECKS
+    )
+
+
+def _retry_reason_codes(result: VerificationResult) -> tuple[VerificationReasonCode, ...]:
+    return tuple(
+        dict.fromkeys(
+            code
+            for check in result.checks
+            if check.outcome.value == VerificationOutcome.FAIL.value
+            for code in check.reason_codes
+        )
+    )

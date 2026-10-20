@@ -1,4 +1,4 @@
-"""The gamification adapter can read the fractions pilot from the shared index."""
+"""The shared index stores the fractions pilot but cannot approve it for use."""
 
 from pathlib import Path
 
@@ -13,7 +13,7 @@ FINE = "G5-MAT-C03-L01-O01"
 PARENT = "MAT-FRC"
 
 
-def test_adapter_returns_the_four_fraction_passages(tmp_path: Path) -> None:
+def test_adapter_blocks_the_unapproved_fraction_passages(tmp_path: Path) -> None:
     database = f"sqlite:///{tmp_path / 'fractions.sqlite'}"
     engine, session, retriever, loaded = open_skill_retriever(database, CHUNKS, REGISTRY, PARENT)
     try:
@@ -31,6 +31,5 @@ def test_adapter_returns_the_four_fraction_passages(tmp_path: Path) -> None:
 
     assert loaded == 4
     assert adapter.requested_skill_ids == [PARENT]
-    assert result.status is CurriculumRetrievalStatus.FOUND
-    assert len(result.passages) == 4
-    assert all(PARENT in passage.chunk.skill_ids for passage in result.passages)
+    assert result.status is CurriculumRetrievalStatus.NO_APPROVED_SOURCE
+    assert result.passages == ()

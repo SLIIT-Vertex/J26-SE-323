@@ -40,4 +40,5 @@ def test_only_the_intentional_module_heads_exist() -> None:
         "curr_20261015_01",
         "gam_20261021_01",
         "20261020_02",  # knowledge tracing, grading, and learner state
+        "tutor_20261018_02",
     }

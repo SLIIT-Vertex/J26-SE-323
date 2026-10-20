@@ -240,7 +240,7 @@ def test_help_on_screen_counts_as_at_least_one_hint(overrides: dict[str, object]
 
 
 def test_a_time_from_a_naive_database_value_is_read_as_utc() -> None:
-    naive = datetime(2026, 10, 1, 9, 0)
+    naive = datetime(2026, 10, 1, 9, 0)  # noqa: DTZ001 - validates UTC normalization
     assert command_for(ready(created=naive)).answered_at == naive.replace(tzinfo=UTC)
 
 

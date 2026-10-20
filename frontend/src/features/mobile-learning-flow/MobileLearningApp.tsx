@@ -202,6 +202,10 @@ const ConversationStreet = lazyNamed(
 	() => import("../english-area-18/ConversationStreet"),
 	"ConversationStreet",
 );
+const TutorDemo = lazyNamed(
+	() => import("../adaptiveTutor/TutorDemo"),
+	"TutorDemo",
+);
 
 type Screen =
 	| "splash"
@@ -1175,7 +1179,7 @@ export function MobileLearningApp({
 						<PapersApp embedded route={papersRoute ?? { name: "papers" }} />
 					</div>
 				)}
-				{screen === "mindy" && <PlannedPage title="Mindy" />}
+				{screen === "mindy" && <TutorDemo embedded />}
 				{screen === "rewards" && <RewardsHub />}
 				{screen === "account" && (
 					<Account

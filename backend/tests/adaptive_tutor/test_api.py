@@ -24,6 +24,7 @@ from app.main import app
 from app.shared.database.session import get_db
 
 PATH = "/api/v1/adaptive-tutor/responses"
+DEMO_SESSIONS_PATH = "/api/v1/adaptive-tutor/demo/sessions"
 LEARNERS = {
     "L0": "00000000-0000-4000-8000-000000000001",
     "L3": "00000000-0000-4000-8000-000000000006",
@@ -37,8 +38,13 @@ def synthetic_client() -> TestClient:
     app.dependency_overrides[get_settings] = lambda: Settings(
         database_url="sqlite://",
         tutor_api_mode="synthetic-demo",
+        tutor_demo_access_key="test-demo-key",
     )
-    with TestClient(app, raise_server_exceptions=False) as client:
+    with TestClient(
+        app,
+        raise_server_exceptions=False,
+        headers={"X-Tutor-Demo-Key": "test-demo-key"},
+    ) as client:
         yield client
     app.dependency_overrides.clear()
     app.dependency_overrides.update(previous)
@@ -121,6 +127,30 @@ def test_api_is_disabled_by_default_without_constructing_workflow(client: TestCl
 
     assert response.status_code == 503
     assert response.json() == {"detail": "Adaptive Tutor API is disabled."}
+
+
+def test_demo_session_api_is_disabled_by_default(client: TestClient) -> None:
+    response = client.post(DEMO_SESSIONS_PATH, json={"scenario_id": "L0"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Adaptive Tutor API is disabled."}
+
+
+def test_internal_shadow_mode_cannot_enable_an_http_execution_path(client: TestClient) -> None:
+    app.dependency_overrides[get_settings] = lambda: Settings(
+        database_url="sqlite://",
+        tutor_api_mode="internal-shadow",
+        tutor_demo_access_key="not-an-internal-authenticator",
+    )
+
+    response = client.post(
+        DEMO_SESSIONS_PATH,
+        json={"scenario_id": "L0"},
+        headers={"X-Tutor-Demo-Key": "not-an-internal-authenticator"},
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Adaptive Tutor synthetic demo is disabled."}
 
 
 @pytest.mark.parametrize(

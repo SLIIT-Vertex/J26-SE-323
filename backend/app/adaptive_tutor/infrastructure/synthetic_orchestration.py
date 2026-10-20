@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.adaptive_tutor.application.context_assembly import TutorContextAssembler
 from app.adaptive_tutor.application.controller import ScaffoldingController
-from app.adaptive_tutor.application.generation import DeterministicFakeLlmProvider
+from app.adaptive_tutor.application.generation import DeterministicFakeLlmProvider, LlmProvider
 from app.adaptive_tutor.application.orchestration import TutorOrchestrator
 from app.adaptive_tutor.application.skill_mapper_contracts import (
     SkillMappingRequest,
@@ -15,6 +15,7 @@ from app.adaptive_tutor.application.skill_mapper_contracts import (
 from app.adaptive_tutor.application.verification import (
     DeterministicFakeSemanticVerifier,
     SemanticVerificationResult,
+    SemanticVerifier,
     TrustedAnswerReference,
     VerificationCheckOutcome,
 )
@@ -27,6 +28,7 @@ from app.adaptive_tutor.domain import (
 from app.adaptive_tutor.infrastructure.skill_taxonomy import XlsxSkillTaxonomyCatalog
 from app.adaptive_tutor.infrastructure.synthetic_context import (
     REFERENCE_SCENARIOS,
+    SyntheticFixtureMode,
     SyntheticTutorContextFixture,
 )
 from app.curriculum.application import (
@@ -148,8 +150,36 @@ class SyntheticTrustedAnswerProvider:
         )
 
 
-def build_synthetic_tutor_orchestrator(learner_id: UUID) -> TutorOrchestrator:
-    fixture = _fixture_for_learner(learner_id)
+def build_synthetic_tutor_orchestrator(
+    learner_id: UUID,
+    *,
+    fixture_mode: SyntheticFixtureMode = SyntheticFixtureMode.COMPLETE,
+    llm_provider: LlmProvider | None = None,
+    semantic_verifier: SemanticVerifier | None = None,
+    use_default_semantic_verifier: bool = True,
+    include_curriculum: bool = True,
+    max_regeneration_attempts: int = 2,
+) -> TutorOrchestrator:
+    fixture = _fixture_for_learner(learner_id, fixture_mode)
+    return build_controlled_tutor_orchestrator(
+        fixture,
+        llm_provider=llm_provider,
+        semantic_verifier=semantic_verifier,
+        use_default_semantic_verifier=use_default_semantic_verifier,
+        include_curriculum=include_curriculum,
+        max_regeneration_attempts=max_regeneration_attempts,
+    )
+
+
+def build_controlled_tutor_orchestrator(
+    fixture: SyntheticTutorContextFixture,
+    *,
+    llm_provider: LlmProvider | None = None,
+    semantic_verifier: SemanticVerifier | None = None,
+    use_default_semantic_verifier: bool = True,
+    include_curriculum: bool = True,
+    max_regeneration_attempts: int = 2,
+) -> TutorOrchestrator:
     valid_skill_ids = _valid_skill_ids()
     context_assembler = TutorContextAssembler(
         learner_provider=fixture,
@@ -159,23 +189,29 @@ def build_synthetic_tutor_orchestrator(learner_id: UUID) -> TutorOrchestrator:
         history_provider=fixture,
         valid_skill_ids=valid_skill_ids,
     )
+    selected_semantic_verifier = semantic_verifier
+    if selected_semantic_verifier is None and use_default_semantic_verifier:
+        selected_semantic_verifier = DeterministicFakeSemanticVerifier(_passing_semantic_result())
     return TutorOrchestrator(
         skill_mapper=SyntheticDemoSkillMapper(fixture.assembly_request().skill_mapping),
         skill_mapper_source=fixture.source,
         context_assembler=context_assembler,
         controller=ScaffoldingController(),
-        llm_provider=DeterministicFakeLlmProvider(
-            response=_RESPONSES[fixture.expected_assistance_level]
-        ),
+        llm_provider=llm_provider
+        or DeterministicFakeLlmProvider(response=_RESPONSES[fixture.expected_assistance_level]),
         valid_skill_ids=valid_skill_ids,
-        curriculum_retriever=SyntheticCurriculumRetriever(),
-        semantic_verifier=DeterministicFakeSemanticVerifier(_passing_semantic_result()),
+        curriculum_retriever=SyntheticCurriculumRetriever() if include_curriculum else None,
+        semantic_verifier=selected_semantic_verifier,
         trusted_answer_provider=SyntheticTrustedAnswerProvider(),
-        semantic_verifier_is_simulated=True,
+        semantic_verifier_is_simulated=selected_semantic_verifier is not None,
+        max_regeneration_attempts=max_regeneration_attempts,
     )
 
 
-def _fixture_for_learner(learner_id: UUID) -> SyntheticTutorContextFixture:
+def _fixture_for_learner(
+    learner_id: UUID,
+    mode: SyntheticFixtureMode = SyntheticFixtureMode.COMPLETE,
+) -> SyntheticTutorContextFixture:
     document = json.loads(REFERENCE_SCENARIOS.read_text(encoding="utf-8"))
     scenario_id = next(
         (
@@ -187,7 +223,11 @@ def _fixture_for_learner(learner_id: UUID) -> SyntheticTutorContextFixture:
     )
     if scenario_id is None:
         raise UnknownSyntheticLearnerError
-    return SyntheticTutorContextFixture.select(scenario_id, allow_synthetic=True)
+    return SyntheticTutorContextFixture.select(
+        scenario_id,
+        allow_synthetic=True,
+        mode=mode,
+    )
 
 
 @lru_cache

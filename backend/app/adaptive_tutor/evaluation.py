@@ -3,8 +3,9 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StringConstraints, model_validator
 
+from app.adaptive_tutor.application.context_assembly import ContextEvidenceOrigin
 from app.adaptive_tutor.application.contracts import TutoringContext
 from app.adaptive_tutor.application.controller import ScaffoldingController
 from app.adaptive_tutor.domain import AssistanceLevel, DecisionReasonCode
@@ -36,6 +37,13 @@ class TransitionKind(StrEnum):
     ESCALATION = "ESCALATION"
     MAINTAINED = "MAINTAINED"
     FADING = "FADING"
+
+
+class IntegratedEvaluationPartition(StrEnum):
+    DESIGN_AUTHORED = "DESIGN_AUTHORED"
+    SYNTHETIC_INTEGRATION = "SYNTHETIC_INTEGRATION"
+    REAL_INFRASTRUCTURE = "REAL_INFRASTRUCTURE"
+    INDEPENDENT_VALIDATION = "INDEPENDENT_VALIDATION"
 
 
 class DatasetProvenance(BaseModel):
@@ -93,6 +101,103 @@ class ControllerEvaluationRecord(BaseModel):
     observed_transition: TransitionKind | None = None
     observed_reason_codes: tuple[DecisionReasonCode, ...]
     applicable_research_questions: tuple[NonBlankText, ...]
+
+
+class IntegratedEvaluationRecord(BaseModel):
+    """One offline software-behavior observation, never a learner-outcome claim."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenario_id: NonBlankText
+    partition: IntegratedEvaluationPartition
+    coverage_tags: tuple[NonBlankText, ...]
+    expected_ready: StrictBool
+    observed_ready: StrictBool
+    expected_assistance_level: AssistanceLevel | None = None
+    observed_assistance_level: AssistanceLevel | None = None
+    should_fail_closed: StrictBool = False
+    observed_fail_closed: StrictBool = False
+    provenance: ContextEvidenceOrigin | None = None
+    expected_evidence_items: Annotated[int, Field(strict=True, ge=0)] = 0
+    available_evidence_items: Annotated[int, Field(strict=True, ge=0)] = 0
+
+    @model_validator(mode="after")
+    def validate_observation(self) -> Self:
+        if not self.coverage_tags:
+            raise ValueError("integrated evaluation record requires coverage tags")
+        if self.expected_ready != (self.expected_assistance_level is not None):
+            raise ValueError("expected readiness and assistance level must agree")
+        if self.observed_ready != (self.observed_assistance_level is not None):
+            raise ValueError("observed readiness and assistance level must agree")
+        if self.available_evidence_items > self.expected_evidence_items:
+            raise ValueError("available evidence cannot exceed expected evidence")
+        if self.observed_ready and self.provenance is None:
+            raise ValueError("ready observation requires provenance")
+        return self
+
+
+def integrated_evaluation_metrics(
+    records: Sequence[IntegratedEvaluationRecord | Mapping[str, Any]],
+) -> dict[str, Any]:
+    """Aggregate offline integration behavior while preserving evidence partitions."""
+
+    parsed = tuple(
+        record
+        if isinstance(record, IntegratedEvaluationRecord)
+        else IntegratedEvaluationRecord.model_validate(record)
+        for record in records
+    )
+    scenario_passes = sum(_integrated_scenario_passed(record) for record in parsed)
+    expected_fail_closed = tuple(record for record in parsed if record.should_fail_closed)
+    provenance = {origin.value: 0 for origin in ContextEvidenceOrigin}
+    provenance["NONE"] = 0
+    partitions = {
+        partition.value: {"scenario_count": 0, "passed": 0}
+        for partition in IntegratedEvaluationPartition
+    }
+    for record in parsed:
+        provenance[record.provenance.value if record.provenance is not None else "NONE"] += 1
+        partition = partitions[record.partition.value]
+        partition["scenario_count"] += 1
+        partition["passed"] += _integrated_scenario_passed(record)
+
+    policy_records = tuple(
+        record for record in parsed if record.expected_assistance_level is not None
+    )
+    policy_metrics = ordinal_assistance_metrics(
+        [record.expected_assistance_level for record in policy_records],
+        [record.observed_assistance_level for record in policy_records],
+    )
+    return {
+        "evaluation_status": "EVALUATED",
+        "scenario_count": len(parsed),
+        "scenario_pass_rate": _rate(scenario_passes, len(parsed)),
+        "context_readiness_rate": _rate(
+            sum(record.observed_ready for record in parsed), len(parsed)
+        ),
+        "controller_policy_agreement": policy_metrics,
+        "fail_closed_rate": _rate(
+            sum(record.observed_fail_closed for record in expected_fail_closed),
+            len(expected_fail_closed),
+        ),
+        "provenance_distribution": provenance,
+        "evidence_coverage": _rate(
+            sum(record.available_evidence_items for record in parsed),
+            sum(record.expected_evidence_items for record in parsed),
+        ),
+        "partition_results": partitions,
+        "coverage_tags": sorted({tag for record in parsed for tag in record.coverage_tags}),
+        "baseline_and_ablation": _not_evaluated(
+            "No preregistered baseline or ablation dataset is available."
+        ),
+        "human_inter_rater_agreement": _not_evaluated(
+            "No approved independent ordinal severity annotations are available."
+        ),
+        "interpretation": (
+            "Offline software-behavior conformance only; no real learner validation or "
+            "educational-effect claim."
+        ),
+    }
 
 
 def ordinal_assistance_metrics(
@@ -368,6 +473,17 @@ def _transition_metrics(records: Sequence[ControllerEvaluationRecord]) -> dict[s
             "assistance level."
         ),
     }
+
+
+def _integrated_scenario_passed(record: IntegratedEvaluationRecord) -> bool:
+    if record.expected_ready != record.observed_ready:
+        return False
+    if (
+        record.expected_assistance_level is not None
+        and record.expected_assistance_level is not record.observed_assistance_level
+    ):
+        return False
+    return not record.should_fail_closed or record.observed_fail_closed
 
 
 def _quadratic_weighted_kappa(

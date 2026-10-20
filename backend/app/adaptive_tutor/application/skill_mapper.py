@@ -52,6 +52,7 @@ class SkillMappingPolicy:
     candidate_threshold: float = 0.70
     minimum_margin: float = 0.03
     active_skill_bonus: float = 0.02
+    explicit_fraction_notation_bonus: float = 0.03
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -59,6 +60,7 @@ class SkillMappingPolicy:
             "candidate_threshold",
             "minimum_margin",
             "active_skill_bonus",
+            "explicit_fraction_notation_bonus",
         ):
             value = getattr(self, field_name)
             if not 0.0 <= value <= 1.0:
@@ -316,14 +318,16 @@ class ConversationalSkillMapper:
         validate_skill_ids_against_taxonomy(request, self._nodes_by_id.keys())
         resolved_intent = intent or classify_intent(request)
         uses_context = _uses_conversation_context(request, resolved_intent)
-        adjustments = (
-            {request.active_skill_id: self._policy.active_skill_bonus}
-            if uses_context and request.active_skill_id
-            else None
-        )
+        adjustments: dict[str, float] = {}
+        if uses_context and request.active_skill_id:
+            adjustments[request.active_skill_id] = self._policy.active_skill_bonus
+        if has_explicit_fraction_notation(request.learner_message):
+            adjustments["MAT-FRC"] = (
+                adjustments.get("MAT-FRC", 0.0) + self._policy.explicit_fraction_notation_bonus
+            )
         return self._retriever.rank(
             prepare_mapping_query(request, resolved_intent),
-            adjustments,
+            adjustments or None,
         )
 
 
@@ -331,6 +335,53 @@ def prepare_text(text: str) -> str:
     """Normalize Unicode and whitespace without discarding symbols, fractions, or numbers."""
 
     return " ".join(unicodedata.normalize("NFC", text).split())
+
+
+# Deterministic notation evidence for MAT-FRC. A slash alone is not treated as a fraction:
+# "3/4" can be a date, so any clock, date or calendar cue disables the signal entirely.
+_SIMPLE_FRACTION = re.compile(r"(?<![\d/])\d+\s*/\s*[1-9]\d*(?![\d/])")
+_TIME_OR_DATE_CUE = re.compile(
+    r"\d\s*:\s*\d{2}"
+    r"|\d+\s*/\s*\d+\s*/\s*\d+"
+    r"|\d\s*(?:a\.?m|p\.?m)\b"
+    r"|\b(?:time|clock|o'?clock|hours?|hrs?|minutes?|mins?|seconds?|noon|midnight"
+    r"|date|dates|today|tomorrow|yesterday|days?|weeks?|months?|years?|calendar|birthday|leap"
+    r"|monday|tuesday|wednesday|thursday|friday|saturday|sunday"
+    r"|january|february|march|april|june|july|august|september|october|november|december"
+    r"|welawa|paya|minithu\w*|dinaya|dawasa|sathiya|masaya|awurudda|oralosu\w*)\b"
+    r"|වේලාව|වෙලාව|ඔරලෝසු|පැය|මිනිත්තු|තත්පර|දිනය|දවස|සතිය|මාස|අවුරුදු|දිනදර්ශන"
+    r"|நேரம்|மணி|நிமிட|நாள்|தேதி|வாரம்|மாத"
+)
+_FRACTION_RELATION = re.compile(
+    r"[+\-−*×÷=<>]"
+    r"|\b(?:equal|equals|equivalent|same|compare|comparing|bigger|biggest|larger|largest"
+    r"|smaller|smallest|greater|greatest|less|more|add|adding|plus|sum|total|minus"
+    r"|subtract|take away|difference|multiply|times|divide|divided)\b"
+    r"|\b(?:samana|ekathu|adu|loku|podi|wishala|kuda|guna|beda)\w*"
+    r"|සමාන|එකතු|අඩු|ලොකු|විශාල|කුඩා|පොඩි|සසඳ|සංසන්දන|ගුණ|බෙද"
+    r"|சமம|கூட்ட|கழி|பெரிய|சிறிய|ஒப்பிட"
+)
+_FRACTION_VOCABULARY = re.compile(
+    r"\b(?:fractions?|numerator|denominator|bhaga\w*|haraya|lawaya)\b|භාග|හරය|ලවය|பின்ன"
+)
+_FRACTION_OF_QUANTITY = re.compile(
+    r"(?<![\d/])\d+\s*/\s*[1-9]\d*\s+of\s+(?:an?\s+|the\s+)?\d"
+    r"|\d+\s*න්\s*\d+\s*/\s*[1-9]"
+)
+
+
+def has_explicit_fraction_notation(text: str) -> bool:
+    """True only for unambiguous written fractions; time and date wording always vetoes."""
+
+    normalized = prepare_text(text).casefold()
+    if _TIME_OR_DATE_CUE.search(normalized):
+        return False
+    fractions = _SIMPLE_FRACTION.findall(normalized)
+    if not fractions:
+        return False
+    if len(fractions) >= 2 and _FRACTION_RELATION.search(normalized):
+        return True
+    return bool(_FRACTION_VOCABULARY.search(normalized) or _FRACTION_OF_QUANTITY.search(normalized))
 
 
 def prepare_mapping_query(request: SkillMappingRequest, intent: LearningIntent) -> str:

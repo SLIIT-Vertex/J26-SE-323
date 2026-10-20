@@ -56,6 +56,7 @@ def curriculum_request_for_mapping(
         skill_id=mapping.skill_id,
         grade=grade,
         requested_language=requested_language,
+        required_language=requested_language,
         limit=limit,
     )
     validate_curriculum_skill_ids(request, valid_skill_ids)

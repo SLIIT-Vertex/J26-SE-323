@@ -3,6 +3,10 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from app.adaptive_tutor.infrastructure import (
+    tutor_assessment as tutor_assessment_models,  # noqa: F401
+)
+from app.adaptive_tutor.infrastructure import tutor_history as tutor_history_models  # noqa: F401
 from app.config import get_settings
 from app.curriculum.infrastructure import models as curriculum_models  # noqa: F401
 from app.gamification.infrastructure.db import models as gamification_models  # noqa: F401
