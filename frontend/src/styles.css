@@ -1685,9 +1685,6 @@ p {
 	background: none;
 	font-weight: 800;
 }
-[data-progress-mode="stars"] {
-	display: none;
-}
 .adventure-skills > button {
 	min-height: 88px;
 	font-weight: 850;
@@ -1712,6 +1709,37 @@ p {
 	max-height: 300px;
 	margin: 0.25rem auto 0.5rem;
 	object-fit: contain;
+}
+.game-success-screen {
+	display: grid;
+	justify-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	gap: 0;
+	margin-top: 1rem;
+	padding: 1rem;
+	border-radius: 24px;
+	background: rgba(255, 255, 255, 0.97);
+	box-shadow: 0 12px 28px rgba(72, 42, 116, 0.14);
+	text-align: center;
+}
+.game-success-screen.game-success-screen .success-celebration-image {
+	display: block;
+	width: min(210px, 66vw);
+	height: auto;
+	max-width: 210px;
+	max-height: 300px;
+	margin: 0.25rem auto 0.5rem;
+	object-fit: contain;
+}
+.game-success-screen h2 {
+	margin: 0.35rem 0;
+}
+.game-success-screen p {
+	margin: 0.35rem 0 0.75rem;
+}
+.game-success-screen .primary-action {
+	width: 100%;
 }
 .adventure-progress {
 	display: flex;
@@ -1742,11 +1770,39 @@ p {
 	border-color: #57558f;
 	background: #eeeafe;
 }
-.adventure-progress--stars span {
-	color: #fff;
-	border-color: #e9a915;
-	background: linear-gradient(180deg, #ffd95a, #ffad1f);
-	box-shadow: 0 3px 0 #d98712;
+.adventure-notice {
+	position: fixed;
+	right: 0.75rem;
+	bottom: max(1rem, env(safe-area-inset-bottom));
+	left: 0.75rem;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.65rem;
+	width: min(25rem, calc(100% - 1.5rem));
+	margin-inline: auto;
+	padding: 0.7rem 0.8rem;
+	border: 2px solid #efb72f;
+	border-radius: 14px;
+	color: #35264f;
+	background: #fff7d6;
+	box-shadow: 0 8px 24px rgb(53 38 79 / 20%);
+	font-size: 0.78rem;
+	font-weight: 850;
+}
+.adventure-notice button {
+	display: grid;
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
+	min-height: 32px;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgb(53 38 79 / 9%);
+	font-size: 1.25rem;
 }
 .game-round-label {
 	margin: 0 0 0.6rem;
@@ -1897,7 +1953,7 @@ p {
 	position: relative;
 	z-index: 1;
 	width: 100%;
-	min-width: 312px;
+	min-width: 0;
 	border: 2px solid #6d4b8f;
 	border-collapse: collapse;
 	border-radius: 12px;
@@ -1942,7 +1998,7 @@ p {
 	display: grid;
 	width: 100%;
 	height: 100%;
-	min-width: 48px;
+	min-width: 0;
 	min-height: 56px;
 	place-items: center;
 	padding: 0;
@@ -2194,8 +2250,10 @@ p {
 	font-size: 1.2rem;
 }
 .expanded-step-button {
-	width: 48px;
-	height: 48px;
+	width: min(40px, 90%);
+	height: 40px;
+	min-width: 0;
+	min-height: 40px;
 	border: 2px solid #0c8f86;
 	border-radius: 12px;
 	background: #fff;
@@ -2280,14 +2338,14 @@ p {
 }
 .abacus-grid {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.55rem;
 }
 .abacus-rod-control {
 	display: grid;
 	gap: 0.32rem;
 	min-width: 0;
-	padding: 0.55rem;
+	padding: 0.45rem 0.3rem;
 	border: 2px solid #ddd3f4;
 	border-radius: 16px;
 	background: #f9f7ff;
@@ -2299,7 +2357,7 @@ p {
 }
 .abacus-stepper {
 	display: grid;
-	grid-template-columns: 48px minmax(2rem, 1fr) 48px;
+	grid-template-columns: 40px minmax(1.5rem, 1fr) 40px;
 	align-items: center;
 	justify-items: center;
 	gap: 0.35rem;
@@ -2310,10 +2368,10 @@ p {
 }
 .abacus-step-button {
 	display: grid;
-	width: 48px;
-	height: 48px;
-	min-width: 48px;
-	min-height: 48px;
+	width: 40px;
+	height: 40px;
+	min-width: 40px;
+	min-height: 40px;
 	place-items: center;
 	padding: 0;
 	border: 3px solid #57558f;
@@ -3329,6 +3387,26 @@ p {
 	background: #1eb69f;
 	color: #fff;
 }
+.number-world-support-replica {
+	display: grid;
+	gap: 0.75rem;
+}
+.support-question-replica {
+	min-width: 0;
+}
+.support-question-replica .manipulation-board {
+	margin: 0;
+}
+.support-correct-answer,
+.support-practice-note {
+	margin: 0;
+	padding: 0.7rem;
+	border: 2px solid #1eb69f;
+	border-radius: 12px;
+	background: #e2fff8;
+	font-weight: 900;
+	text-align: center;
+}
 @keyframes worked-pop {
 	from {
 		opacity: 0;
@@ -3693,10 +3771,9 @@ p {
 @media (max-width: 360px) {
 	.harbour-board {
 		box-sizing: border-box;
-		width: calc(100vw - 2px);
-		margin-right: calc((100% - (100vw - 2px)) / 2);
-		margin-left: calc((100% - (100vw - 2px)) / 2);
-		padding: 0;
+		width: 100%;
+		margin-inline: 0;
+		padding: 0.35rem;
 	}
 	.place-value-table-frame {
 		padding: 0;
@@ -3706,9 +3783,6 @@ p {
 	}
 }
 @media (min-width: 480px) {
-	.abacus-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
 	.river-bank,
 	.river-route {
 		grid-template-columns: repeat(4, minmax(0, 1fr));

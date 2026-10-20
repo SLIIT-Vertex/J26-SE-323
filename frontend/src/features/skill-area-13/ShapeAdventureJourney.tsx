@@ -15,7 +15,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	netMatchResponse,
@@ -256,9 +256,12 @@ export function ShapeAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 2) void openSkill(SHAPE_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 3 ? "result" : "chapters");
+		setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -339,33 +342,22 @@ export function ShapeAdventureJourney({
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="shape-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackLabel(feedback)} නැවත බලමු.`}
+								{`${feedbackLabel(feedback)} නැවත බලමු.`}
 							</h2>
 							<button className="shape-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="shape-feedback">
-							<SuccessCelebration />
-							<h2>හැඩතල ක්‍රියාකාරකම් 3ම සම්පූර්ණයි!</h2>
-							<button
-								className="shape-primary"
-								onClick={() => setStep("chapters")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={index + 1}
+							gameCount={SHAPE_GAMES.length}
+							onContinue={() => index < SHAPE_SKILLS.length - 1 ? void openSkill(SHAPE_SKILLS[index + 1].id) : setStep("chapters")}
+						/>
 					)}
 				</section>
 			)}

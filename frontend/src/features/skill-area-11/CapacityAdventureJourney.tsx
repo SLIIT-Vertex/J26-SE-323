@@ -4,7 +4,7 @@ import type { CapacityAdventureWorkedExample, ConstructedResponse, ExperimentCon
 import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import { adaptiveGameProgressStage, AdventureProgress } from "../mobile-learning-flow/AdventureProgress";
-import { AdventureBackButton, SuccessCelebration } from "../mobile-learning-flow/AdventureShared";
+import { AdventureBackButton, GameSuccessScreen } from "../mobile-learning-flow/AdventureShared";
 import { canonicalCapacityArithmetic, formatCapacity, portionCounts, splitCapacity, type CapacityArithmeticResponse } from "./capacityLogic";
 import { CAPACITY_GAMES, CAPACITY_SKILLS } from "./manifest";
 import "./capacity-adventure.css";
@@ -20,7 +20,7 @@ export function CapacityAdventureJourney({ api, learnerId, condition, reducedMot
 	const [correct, setCorrect] = useState(false), [feedbackColumn, setFeedbackColumn] = useState<string | null>(null), [busy, setBusy] = useState(false), [supportStage, setSupportStage] = useState(0);
 	const [completed, setCompleted] = useState<string[]>([]), [startedAt, setStartedAt] = useState(Date.now()), [moves, setMoves] = useState(0), [corrections, setCorrections] = useState(0), [exchanges, setExchanges] = useState(0), [overflows, setOverflows] = useState(0);
 	const [pending, setPending] = useState<{ episode: string; support: string; manifest: string } | null>(null); const lock = useRef(false);
-	const index = Math.max(0, CAPACITY_SKILLS.findIndex((skill) => skill.id === skillId)); const active = CAPACITY_SKILLS[index];
+	const index = Math.max(0, CAPACITY_SKILLS.findIndex((skill) => skill.id === skillId)); const active = CAPACITY_SKILLS[index]; const activeGameIndex = CAPACITY_GAMES.findIndex((game) => game.id === active?.chapter);
 	const run = useCallback(async <T,>(job: () => Promise<T>) => { setBusy(true); try { return await job(); } catch (error) { onFailure(error); return undefined; } finally { setBusy(false); } }, [onFailure]);
 	const reset = useCallback(() => { setResponse(null); setStartedAt(Date.now()); setMoves(0); setCorrections(0); setExchanges(0); setOverflows(0); }, []);
 
@@ -61,8 +61,10 @@ export function CapacityAdventureJourney({ api, learnerId, condition, reducedMot
 	const advance = () => {
 		if (!skillId) return; if (!correct) { void openSkill(skillId); return; }
 		const nextDone = completed.includes(skillId) ? completed : [...completed, skillId]; setCompleted(nextDone);
-		if (index < 4) void openSkill(CAPACITY_SKILLS[index + 1].id); else setStep(nextDone.length === 5 ? "result" : "chapters");
+		const nextSkill = CAPACITY_SKILLS[index + 1]; if (nextSkill?.chapter === active?.chapter) void openSkill(nextSkill.id); else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => { if (step === "feedback" && correct) advance(); }, [step, correct]);
 
 	return <main className="capacity-adventure" data-reduced-motion={reducedMotion || undefined}>
 		<header className="capacity-header"><AdventureBackButton onClick={step === "chapters" ? onBack : () => setStep("chapters")} /><h1>පරිමාව හා ධාරිතාව</h1></header>
@@ -72,8 +74,8 @@ export function CapacityAdventureJourney({ api, learnerId, condition, reducedMot
 			{step === "question" && manifest?.game && <><h2>{manifest.prompt_si}</h2><CapacityActivity key={manifest.revision_id} game={manifest.game as Record<string, unknown>} onResponse={record} /><button className="capacity-primary" disabled={busy || !response} onClick={confirm}>තහවුරු කරන්න</button></>}
 			{step === "support" && support && <CapacitySupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />}
 			{step === "withdrawing" && <p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
-			{step === "feedback" && <section className="capacity-feedback"><h2>{correct ? "ක්‍රියාකාරකම සම්පූර්ණයි!" : `${feedbackName(feedbackColumn)} නැවත බලමු.`}</h2><button className="capacity-primary" onClick={advance}>{correct ? index === 4 ? "අවසන් කරන්න" : "ඊළඟ ක්‍රියාකාරකම" : "නැවත උත්සාහ කරන්න"}</button></section>}
-			{step === "result" && <section className="capacity-feedback"><SuccessCelebration /><h2>ධාරිතා ක්‍රියාකාරකම් 5ම සම්පූර්ණයි!</h2><button className="capacity-primary" onClick={() => setStep("chapters")}>ක්‍රීඩා බලන්න</button></section>}
+			{step === "feedback" && !correct && <section className="capacity-feedback"><h2>{feedbackName(feedbackColumn)} නැවත බලමු.</h2><button className="capacity-primary" onClick={advance}>නැවත උත්සාහ කරන්න</button></section>}
+			{step === "result" && <GameSuccessScreen gameNumber={activeGameIndex + 1} gameCount={CAPACITY_GAMES.length} onContinue={() => { const nextGame = CAPACITY_GAMES[activeGameIndex + 1]; const nextSkill = nextGame && CAPACITY_SKILLS.find((skill) => skill.chapter === nextGame.id); if (nextSkill) void openSkill(nextSkill.id); else setStep("chapters"); }} />}
 		</section>}
 	</main>;
 }

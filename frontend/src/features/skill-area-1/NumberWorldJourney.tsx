@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
 	ConstructedResponse,
 	ExperimentCondition,
+	NumberWorldWorkedExample,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
@@ -16,8 +17,9 @@ import {
 	type AdventureProgressStage,
 } from "../mobile-learning-flow/AdventureProgress";
 import {
+	AdventureNotice,
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	NUMBER_WORLD_ASSET_ROOT,
@@ -394,7 +396,6 @@ export function NumberWorldJourney({
 							? 0
 							: NUMBER_WORLD_GAMES[activeGameIndex].skillIds.length}
 					</p>
-					<p className="independent-badge">තනිවම අතින් ගොඩනඟන්න</p>
 					<h2>{manifest.prompt_si}</h2>
 					<div
 						aria-disabled={step === "feedback"}
@@ -442,6 +443,12 @@ export function NumberWorldJourney({
 							"classroom-action-support-v1" && (
 							<AdaptiveSupportActivity
 								manifest={support.game_manifest}
+								renderNumberWorldExample={(example, actions) => (
+									<NumberWorldSupportReplica
+										example={example}
+										actions={actions}
+									/>
+								)}
 								onProgress={(actions, complete) => {
 									setSupportActions(actions);
 									setSupportComplete(complete);
@@ -466,32 +473,22 @@ export function NumberWorldJourney({
 				</div>
 			)}
 			{step === "result" && (
-				<div
-					className={`adventure-result${answeredCorrectly ? " is-success" : ""}`}
-					data-answer-result={answeredCorrectly ? "correct" : "incorrect"}
-				>
-					<AdventureProgress stage={progressStage} />
-					{answeredCorrectly && <SuccessCelebration />}
-					<h2>{message}</h2>
-					<p>
-						{answeredCorrectly
-							? activeGameIndex === NUMBER_WORLD_GAMES.length - 1
-								? "සියලු අභියෝග අවසන්. තරුව ඔබටයි!"
-								: "මෙම ක්‍රීඩාවේ අභියෝග අවසන්. ඊළඟ ක්‍රීඩාවට යමු."
-							: "තවම නිවැරදි නැහැ. වෙනස් උදව්වක් සමඟ නැවත උත්සාහ කරමු."}
-					</p>
-					<button
-						type="button"
-						className="primary-action"
-						onClick={answeredCorrectly ? openNextGame : retryCurrentGame}
-					>
-						{answeredCorrectly
-							? activeGameIndex === NUMBER_WORLD_GAMES.length - 1
-								? "ක්‍රීඩා තේරීමට"
-								: "ඊළඟ ක්‍රීඩාව"
-							: "නැවත උත්සාහ කරන්න"}
-					</button>
-				</div>
+				answeredCorrectly && activeGameIndex !== null ? (
+					<GameSuccessScreen
+						gameNumber={activeGameIndex + 1}
+						gameCount={NUMBER_WORLD_GAMES.length}
+						onContinue={openNextGame}
+					/>
+				) : (
+					<div className="adventure-result" data-answer-result="incorrect">
+						<AdventureProgress stage={progressStage} />
+						<h2>{message}</h2>
+						<p>තවම නිවැරදි නැහැ. වෙනස් උදව්වක් සමඟ නැවත උත්සාහ කරමු.</p>
+						<button type="button" className="primary-action" onClick={retryCurrentGame}>
+							නැවත උත්සාහ කරන්න
+						</button>
+					</div>
+				)
 			)}
 		</section>
 	);
@@ -519,6 +516,81 @@ function NumberManipulation({
 	if (chapter === "kite_workshop")
 		return <Kite game={game} onChange={onChange} />;
 	return <River game={game} onChange={onChange} />;
+}
+
+function correctNumberWorldAnswer(response: ConstructedResponse): string {
+	switch (response.kind) {
+		case "drag_to_slot":
+			return response.represented_value !== undefined
+				? formatPlaceValue(response.represented_value)
+				: placeLabels[5 - (response.selected_place ?? 0)];
+		case "constructed_number":
+			return formatPlaceValue(response.constructed_number);
+		case "bead_placement":
+			return formatPlaceValue(Number(response.rods.join("")));
+		case "expanded_form":
+			return response.terms.map(formatPlaceValue).join(" + ");
+		case "digit_order":
+			return response.digits.join("");
+		case "number_order":
+			return response.order.map(formatPlaceValue).join(" → ");
+		default:
+			return "නිවැරදි පිළිතුර පෙන්වා ඇත.";
+	}
+}
+
+function NumberWorldSupportReplica({
+	example,
+	actions,
+}: {
+	example: NumberWorldWorkedExample;
+	actions: number;
+}) {
+	const [practiceResponse, setPracticeResponse] =
+		useState<ConstructedResponse | null>(null);
+	return (
+		<div
+			className="exact-worked-example number-world-support-replica"
+			data-worked-example-mode={example.mode}
+		>
+			<p className="worked-same-question">ඔබට වැරදුණු එම ප්‍රශ්නය</p>
+			<h4>{example.prompt_si}</h4>
+			<div className="support-question-replica">
+				<NumberManipulation
+					chapter={example.game.chapter}
+					game={example.game}
+					onChange={setPracticeResponse}
+				/>
+			</div>
+			<ol className="worked-steps" aria-live="polite">
+				{example.steps_si.map((step, index) => (
+					<li
+						className={
+							actions > index
+								? "is-done"
+								: actions === index
+									? "is-current"
+									: ""
+						}
+						key={step}
+					>
+						<span>{index + 1}</span>
+						{step}
+					</li>
+				))}
+			</ol>
+			{actions >= 3 && (
+				<p className="worked-answer support-correct-answer" role="status">
+					නිවැරදි පිළිතුර: {correctNumberWorldAnswer(example.correct_response)}
+				</p>
+			)}
+			{practiceResponse && actions < 3 && (
+				<p className="support-practice-note" aria-live="polite">
+					හොඳයි—දැන් පහත මඟ පෙන්වීමෙන් ඊළඟ පියවර බලන්න.
+				</p>
+			)}
+		</div>
+	);
 }
 
 const placeLabels = ["ලක්ෂ", "දස දහස්", "දහස්", "සිය", "දහය", "එක"];
@@ -1025,7 +1097,7 @@ export function Kite({
 					</table>
 				</div>
 			</div>
-			<p role="status">{note}</p>
+			<AdventureNotice message={note} onDismiss={() => setNote("")} />
 		</div>
 	);
 }

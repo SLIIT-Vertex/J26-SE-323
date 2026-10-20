@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import type { ConstructedResponse, ExperimentCondition, PresentationManifest, SupportView } from "../mobile-learning-flow/api/generated";
 import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import { AdventureBackButton, SuccessCelebration } from "../mobile-learning-flow/AdventureShared";
+import { AdventureBackButton, GameSuccessScreen } from "../mobile-learning-flow/AdventureShared";
 import { AdventureProgress, adaptiveGameProgressStage } from "../mobile-learning-flow/AdventureProgress";
 import { TIME_GAMES, TIME_SKILLS, type TimeChapter } from "./manifest";
 import { analogClockResponse, arithmeticResponse, conversionResponse, elapsedResponse, unitMatchResponse } from "./timeLogic";
@@ -96,6 +96,8 @@ export function TimeAdventureJourney({ api, learnerId, condition, reducedMotion,
 		if (!correct || !chapter) { reset(); setStep("question"); return; }
 		if (challengeIndex + 1 < skills.length) void openSkill(skills[challengeIndex + 1].id, chapter); else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => { if (step === "feedback" && correct) continueAfterFeedback(); }, [step, correct]);
 
 	return <main className="time-adventure" data-reduced-motion={reducedMotion || undefined}>
 		<header className="time-header"><AdventureBackButton onClick={step === "chapters" ? onBack : () => setStep("chapters")} /><h1>කාලය</h1></header>
@@ -105,8 +107,8 @@ export function TimeAdventureJourney({ api, learnerId, condition, reducedMotion,
 			{step === "question" && manifest?.game && <><h2>{manifest.prompt_si}</h2><TimeActivity key={manifest.revision_id} game={manifest.game as Record<string, unknown>} onResponse={record} /><button className="time-primary" disabled={busy || !response} onClick={confirm}>තහවුරු කරන්න</button></>}
 			{step === "support" && support && <TimeSupport support={support} actions={actions} onAction={() => setActions((value) => value + 1)} onComplete={finishSupport} />}
 			{step === "withdrawing" && <p className="time-status" role="status">සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
-			{step === "feedback" && <div className="time-feedback"><h2>{correct ? "නිවැරදියි!" : "නැවත බලමු."}</h2><button className="time-primary" onClick={continueAfterFeedback}>{correct ? "ඊළඟ අභියෝගය" : "නැවත උත්සාහ කරන්න"}</button></div>}
-			{step === "result" && chapter && <div className="time-feedback"><SuccessCelebration /><h2>ක්‍රීඩාව සම්පූර්ණයි!</h2><button className="time-primary" onClick={() => { const next = TIME_GAMES[chapterIndex + 1]; if (!next) { setStep("chapters"); return; } const first = TIME_SKILLS.find((item) => item.chapter === next.id); if (first) void openSkill(first.id, next.id); }}>ඊළඟ ක්‍රීඩාව</button></div>}
+			{step === "feedback" && !correct && <div className="time-feedback"><h2>නැවත බලමු.</h2><button className="time-primary" onClick={continueAfterFeedback}>නැවත උත්සාහ කරන්න</button></div>}
+			{step === "result" && chapter && <GameSuccessScreen gameNumber={chapterIndex + 1} gameCount={TIME_GAMES.length} onContinue={() => { const next = TIME_GAMES[chapterIndex + 1]; if (!next) { setStep("chapters"); return; } const first = TIME_SKILLS.find((item) => item.chapter === next.id); if (first) void openSkill(first.id, next.id); }} />}
 		</section>}
 	</main>;
 }

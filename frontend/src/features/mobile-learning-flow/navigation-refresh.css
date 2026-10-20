@@ -123,12 +123,6 @@
 @media (hover:hover) {
   .subject-card:hover { transform: translateY(-3px); }
 }
-.current-game-card { display: grid; grid-template-columns: 62px 1fr; gap: .8rem; margin-top: 1rem; padding: 1rem; border-radius: 23px; background: #fff; box-shadow: var(--shadow); }
-.current-game-icon { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 18px; color: var(--purple); background: var(--purple-soft); font-family: Georgia,serif; font-size: 1.8rem; font-weight: 900; }
-.current-game-card h2 { margin: .1rem 0; font-size: 1rem; }
-.current-game-card p:not(.eyebrow) { color: var(--muted); font-size: .7rem; line-height: 1.45; }
-.current-game-card .primary-action { grid-column: 1 / 3; }
-
 .progress-screen { padding-top: .6rem; }
 .progress-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .progress-header h1 { margin: 0; font-size: 1.65rem; }

@@ -127,6 +127,21 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
+	it("does not show the removed current-game promotion", async () => {
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		await act(async () =>
+			root.render(<MobileLearningApp service={fakeService()} />),
+		);
+		await click(container, "මගේ පැතිකඩට");
+		await click(container, "ක්‍රීඩා");
+		expect(container.querySelector(".current-game-card")).toBeNull();
+		expect(container.textContent).not.toContain("දැනට ඇති ක්‍රීඩාව");
+		expect(container.textContent).not.toContain("සමාන කාණ්ඩ දෙකක්");
+		await act(async () => root.unmount());
+	});
+
 	it("does not report a lost connection in settings when no game is open", async () => {
 		const container = document.createElement("div");
 		document.body.append(container);
@@ -263,10 +278,7 @@ describe("baseline mobile flow", () => {
 		const container = document.createElement("div");
 		document.body.append(container);
 		const root = createRoot(container);
-		await act(async () => root.render(<MobileLearningApp service={service} />));
-		await click(container, "මගේ පැතිකඩට");
-		await click(container, "ක්‍රීඩා");
-		await click(container, "ක්‍රීඩා කරන්න");
+		await act(async () => root.render(<MobileLearningApp service={service} initialScreen="mission" />));
 		await click(container, "මෙහෙයුම බලන්න");
 		await click(container, "ආරම්භ කරන්න");
 		expect(container.textContent).toContain("ඔබම උත්සාහ කරන්න");
@@ -332,12 +344,9 @@ describe("baseline mobile flow", () => {
 		const root = createRoot(container);
 		await act(async () =>
 			root.render(
-				<MobileLearningApp service={service} engineeringCondition="proposed" />,
+				<MobileLearningApp service={service} engineeringCondition="proposed" initialScreen="mission" />,
 			),
 		);
-		await click(container, "මගේ පැතිකඩට");
-		await click(container, "ක්‍රීඩා");
-		await click(container, "ක්‍රීඩා කරන්න");
 		await click(container, "මෙහෙයුම බලන්න");
 		await click(container, "ආරම්භ කරන්න");
 		expect(service.open).toHaveBeenCalledWith(
@@ -900,10 +909,7 @@ describe("baseline mobile flow", () => {
 		const container = document.createElement("div");
 		document.body.append(container);
 		const root = createRoot(container);
-		await act(async () => root.render(<MobileLearningApp service={service} />));
-		await click(container, "මගේ පැතිකඩට");
-		await click(container, "ක්‍රීඩා");
-		await click(container, "ක්‍රීඩා කරන්න");
+		await act(async () => root.render(<MobileLearningApp service={service} initialScreen="mission" />));
 		await click(container, "මෙහෙයුම බලන්න");
 		await click(container, "ආරම්භ කරන්න");
 		await click(container, "14");

@@ -14,7 +14,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	contextualRemainderInterpretation,
@@ -311,13 +311,14 @@ export function DivisionAdventureJourney({
 			: [...completedSkills, skillId];
 		setCompletedSkills(nextCompleted);
 		const nextIndex = activeIndex + 1;
-		if (nextIndex < DIVISION_SKILLS.length)
+		if (DIVISION_SKILLS[nextIndex]?.chapter === activeSkill?.chapter)
 			void openSkill(DIVISION_SKILLS[nextIndex].id);
-		else
-			setStep(
-				nextCompleted.length === DIVISION_SKILLS.length ? "result" : "chapters",
-			);
+		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) continueAfterFeedback();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -400,12 +401,10 @@ export function DivisionAdventureJourney({
 							පිළිතුරු සහිත සහාය ඉවත් කර අලුත් ප්‍රශ්නය සූදානම් කරමින්…
 						</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="division-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: feedbackStep === null
+								{feedbackStep === null
 										? "පළමු වැරදි පියවර නැවත බලමු."
 										: `පියවර ${feedbackStep + 1} නැවත බලමු.`}
 							</h2>
@@ -413,25 +412,21 @@ export function DivisionAdventureJourney({
 								className="division-primary"
 								onClick={continueAfterFeedback}
 							>
-								{correct
-									? activeIndex === 4
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "සහාය සමඟ නැවත උත්සාහ කරන්න"}
+								සහාය සමඟ නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="division-feedback division-result">
-							<SuccessCelebration />
-							<h2>බෙදීමේ අභියෝග 5ම සම්පූර්ණයි!</h2>
-							<button
-								className="division-primary"
-								onClick={() => setStep("chapters")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={activeGameIndex + 1}
+							gameCount={DIVISION_GAMES.length}
+							onContinue={() => {
+								const nextGame = DIVISION_GAMES[activeGameIndex + 1];
+								const nextSkill = nextGame && DIVISION_SKILLS.find((item) => item.chapter === nextGame.id);
+								if (nextSkill) void openSkill(nextSkill.id);
+								else setStep("chapters");
+							}}
+						/>
 					)}
 				</section>
 			)}

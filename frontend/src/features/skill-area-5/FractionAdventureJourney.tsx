@@ -10,7 +10,7 @@ import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlo
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	AdventureProgress,
@@ -292,6 +292,10 @@ export function FractionAdventureJourney({
 			void openSkill(skills[challengeIndex + 1].id, chapter);
 		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) continueAfterFeedback();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -370,26 +374,23 @@ export function FractionAdventureJourney({
 							සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…
 						</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<div className="fraction-feedback">
-							<h2>{correct ? "නිවැරදියි!" : "නැවත බලමු."}</h2>
+							<h2>නැවත බලමු.</h2>
 							<button
 								type="button"
 								className="fraction-primary"
 								onClick={continueAfterFeedback}
 							>
-								{correct ? "ඊළඟ අභියෝගය" : "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</div>
 					)}
 					{step === "result" && chapter && (
-						<div className="fraction-feedback">
-							<SuccessCelebration />
-							<h2>ක්‍රීඩාව සම්පූර්ණයි!</h2>
-							<button
-								type="button"
-								className="fraction-primary"
-								onClick={() => {
+						<GameSuccessScreen
+							gameNumber={chapterIndex + 1}
+							gameCount={FRACTION_GAMES.length}
+							onContinue={() => {
 									const next = FRACTION_GAMES[chapterIndex + 1];
 									if (next) {
 										const first = FRACTION_SKILLS.find(
@@ -398,10 +399,7 @@ export function FractionAdventureJourney({
 										if (first) void openSkill(first.id, next.id);
 									} else setStep("chapters");
 								}}
-							>
-								ඊළඟ ක්‍රීඩාව
-							</button>
-						</div>
+						/>
 					)}
 				</section>
 			)}

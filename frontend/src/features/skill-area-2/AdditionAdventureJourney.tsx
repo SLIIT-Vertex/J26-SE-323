@@ -24,7 +24,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import { expandedTerms } from "./additionLogic";
 import {
@@ -119,7 +119,6 @@ export function AdditionAdventureJourney({
 		(item) => item.id === chapter,
 	);
 	const isLastChallenge = activeChallengeIndex === skills.length - 1;
-	const isLastChapter = activeChapterIndex === ADDITION_CHAPTERS.length - 1;
 	const resetWork = useCallback(() => {
 		setResponse(null);
 		setEvidence({ moves: 0, corrections: 0, carries: 0, firstActionMs: null });
@@ -255,7 +254,7 @@ export function AdditionAdventureJourney({
 		}
 		const correct = next.server_score.correct === true;
 		setAnsweredCorrectly(correct);
-		setMessage(correct ? "ක්‍රියාව සම්පූර්ණයි!" : "නැවත බලමු.");
+		setMessage(correct ? "" : "නැවත බලමු.");
 		if (activeSkillId) {
 			setFailedAttempts((current) => {
 				const updated = { ...current };
@@ -268,6 +267,13 @@ export function AdditionAdventureJourney({
 		}
 		if (next.status === "support_active" && next.support) {
 			setSupport(next.support);
+		}
+		if (correct && !isLastChallenge) {
+			const nextChallenge = skills[activeChallengeIndex + 1];
+			if (nextChallenge) {
+				await openSkill(nextChallenge.id);
+				return;
+			}
 		}
 		setStep(correct ? "result" : "feedback");
 	};
@@ -401,7 +407,6 @@ export function AdditionAdventureJourney({
 						ක්‍රීඩාව {activeChapterIndex + 1} · අභියෝගය {activeChallengeIndex + 1}/
 						{skills.length}
 					</p>
-					<p className="independent-badge">තනිවම අතින් ගොඩනඟන්න</p>
 					<h2>{manifest.prompt_si}</h2>
 					<div
 						aria-disabled={step === "feedback"}
@@ -477,45 +482,16 @@ export function AdditionAdventureJourney({
 				</div>
 			)}
 			{step === "result" && (
-				<div
-					className={`adventure-result${answeredCorrectly ? " is-success" : ""}`}
-					data-answer-result={answeredCorrectly ? "correct" : "incorrect"}
-				>
-					<AdventureProgress
-						stage={progressStage}
-						activityCount={skills.length}
-					/>
-					{answeredCorrectly && <SuccessCelebration />}
-					<h2>
-						{answeredCorrectly
-							? isLastChallenge
-								? `${ADDITION_CHAPTERS[activeChapterIndex]?.title ?? "ක්‍රීඩාව"} සම්පූර්ණයි!`
-								: `අභියෝගය ${activeChallengeIndex + 1} සම්පූර්ණයි!`
-							: message}
-					</h2>
-					<p>
-						{answeredCorrectly
-							? isLastChallenge
-								? isLastChapter
-									? "සියලු එකතු කිරීමේ අභියෝග අවසන්. තරු ඔබටයි!"
-									: "මෙම ක්‍රීඩාවේ අභියෝග අවසන්. ඊළඟ ක්‍රීඩාවට යමු."
-								: "නියමයි! දැන් ඊළඟ අභියෝගයට යමු."
-							: "තවම නිවැරදි නැහැ. වෙනස් උදව්වක් සමඟ නැවත උත්සාහ කරමු."}
-					</p>
-					<button
-						type="button"
-						className="primary-action"
-						onClick={answeredCorrectly ? openNextGame : retryCurrentGame}
-					>
-						{answeredCorrectly
-							? !isLastChallenge
-								? "ඊළඟ අභියෝගය"
-								: isLastChapter
-									? "ක්‍රීඩා තේරීමට"
-									: "ඊළඟ ක්‍රීඩාව"
-							: "නැවත උත්සාහ කරන්න"}
-					</button>
-				</div>
+				answeredCorrectly ? (
+					<GameSuccessScreen gameNumber={activeChapterIndex + 1} gameCount={ADDITION_CHAPTERS.length} onContinue={openNextGame} />
+				) : (
+					<div className="adventure-result" data-answer-result="incorrect">
+						<AdventureProgress stage={progressStage} activityCount={skills.length} />
+						<h2>{message}</h2>
+						<p>තවම නිවැරදි නැහැ. වෙනස් උදව්වක් සමඟ නැවත උත්සාහ කරමු.</p>
+						<button type="button" className="primary-action" onClick={retryCurrentGame}>නැවත උත්සාහ කරන්න</button>
+					</div>
+				)
 			)}
 		</section>
 	);

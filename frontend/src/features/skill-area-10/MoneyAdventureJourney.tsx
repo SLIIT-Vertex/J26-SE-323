@@ -15,7 +15,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	canonicalMoneyArithmetic,
@@ -67,6 +67,7 @@ export function MoneyAdventureJourney({
 	const lock = useRef(false);
 	const index = Math.max(0, MONEY_SKILLS.findIndex((skill) => skill.id === skillId));
 	const active = MONEY_SKILLS[index];
+	const activeGameIndex = MONEY_GAMES.findIndex((game) => game.id === active?.chapter);
 
 	const run = useCallback(async <T,>(job: () => Promise<T>) => {
 		setBusy(true);
@@ -159,9 +160,12 @@ export function MoneyAdventureJourney({
 		if (!correct) { void openSkill(skillId); return; }
 		const nextDone = completed.includes(skillId) ? completed : [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 4) void openSkill(MONEY_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 5 ? "result" : "chapters");
+		const nextSkill = MONEY_SKILLS[index + 1];
+		if (nextSkill?.chapter === active?.chapter) void openSkill(nextSkill.id);
+		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => { if (step === "feedback" && correct) advance(); }, [step, correct]);
 
 	return <main className="money-adventure" data-reduced-motion={reducedMotion || undefined}>
 		<header className="money-header">
@@ -182,8 +186,8 @@ export function MoneyAdventureJourney({
 			</>}
 			{step === "support" && support && <MoneySupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />}
 			{step === "withdrawing" && <p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
-			{step === "feedback" && <section className="money-feedback"><h2>{correct ? "ක්‍රියාකාරකම සම්පූර්ණයි!" : `${feedbackName(feedbackColumn)} නැවත බලමු.`}</h2><button className="money-primary" onClick={advance}>{correct ? index === 4 ? "අවසන් කරන්න" : "ඊළඟ ක්‍රියාකාරකම" : "නැවත උත්සාහ කරන්න"}</button></section>}
-			{step === "result" && <section className="money-feedback"><SuccessCelebration /><h2>මුදල් ක්‍රියාකාරකම් 5ම සම්පූර්ණයි!</h2><button className="money-primary" onClick={() => setStep("chapters")}>ක්‍රීඩා බලන්න</button></section>}
+			{step === "feedback" && !correct && <section className="money-feedback"><h2>{feedbackName(feedbackColumn)} නැවත බලමු.</h2><button className="money-primary" onClick={advance}>නැවත උත්සාහ කරන්න</button></section>}
+			{step === "result" && <GameSuccessScreen gameNumber={activeGameIndex + 1} gameCount={MONEY_GAMES.length} onContinue={() => { const nextGame = MONEY_GAMES[activeGameIndex + 1]; const nextSkill = nextGame && MONEY_SKILLS.find((skill) => skill.chapter === nextGame.id); if (nextSkill) void openSkill(nextSkill.id); else setStep("chapters"); }} />}
 		</section>}
 	</main>;
 }

@@ -25,7 +25,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	SUBTRACTION_CHAPTERS,
@@ -136,7 +136,6 @@ export function SubtractionAdventureJourney({
 		(item) => item.id === chapter,
 	);
 	const isLastChallenge = activeChallengeIndex === skills.length - 1;
-	const isLastChapter = activeChapterIndex === SUBTRACTION_CHAPTERS.length - 1;
 	const progressStage = adaptiveGameProgressStage(
 		step,
 		manifest?.measurement_role,
@@ -300,7 +299,7 @@ export function SubtractionAdventureJourney({
 		}
 		const correct = next.server_score.correct === true;
 		setAnsweredCorrectly(correct);
-		setMessage(correct ? "ක්‍රියාව සම්පූර්ණයි!" : "නැවත බලමු.");
+		setMessage(correct ? "" : "නැවත බලමු.");
 		if (
 			activeSkillId &&
 			!correct &&
@@ -314,6 +313,13 @@ export function SubtractionAdventureJourney({
 		if (next.status === "support_active" && next.support)
 			setSupport(next.support);
 		else setSupport(null);
+		if (correct && !isLastChallenge) {
+			const nextChallenge = skills[activeChallengeIndex + 1];
+			if (nextChallenge) {
+				await openSkill(nextChallenge.id);
+				return;
+			}
+		}
 		setStep(next.status === "support_active" ? "feedback" : "result");
 	};
 	const advanceFeedback = () => {
@@ -434,7 +440,6 @@ export function SubtractionAdventureJourney({
 						ක්‍රීඩාව {activeChapterIndex + 1} · අභියෝගය {activeChallengeIndex + 1}/
 						{skills.length}
 					</p>
-					<p className="independent-badge">තනිවම අඩු කිරීම ගොඩනඟන්න</p>
 					<h2>{manifest.prompt_si}</h2>
 					<div
 						aria-disabled={step === "feedback"}
@@ -509,40 +514,15 @@ export function SubtractionAdventureJourney({
 				</div>
 			)}
 			{step === "result" && (
-				<div
-					className={`adventure-result${answeredCorrectly ? " is-success" : ""}`}
-					data-answer-result={answeredCorrectly ? "correct" : "incorrect"}
-				>
-					<AdventureProgress
-						stage={progressStage}
-						activityCount={skills.length}
-					/>
-					{answeredCorrectly && isLastChallenge && <SuccessCelebration />}
-					<h2>
-						{answeredCorrectly
-							? isLastChallenge
-								? `${SUBTRACTION_CHAPTERS[activeChapterIndex]?.title} සම්පූර්ණයි!`
-								: `අභියෝගය ${activeChallengeIndex + 1} සම්පූර්ණයි!`
-							: message}
-					</h2>
-					<button
-						type="button"
-						className="primary-action"
-						onClick={
-							answeredCorrectly
-								? advance
-								: () => activeSkillId && void openSkill(activeSkillId)
-						}
-					>
-						{answeredCorrectly
-							? !isLastChallenge
-								? "ඊළඟ අභියෝගය"
-								: isLastChapter
-									? "ක්‍රීඩා තේරීමට"
-									: "ඊළඟ ක්‍රීඩාව"
-							: "නැවත උත්සාහ කරන්න"}
-					</button>
-				</div>
+				answeredCorrectly ? (
+					<GameSuccessScreen gameNumber={activeChapterIndex + 1} gameCount={SUBTRACTION_CHAPTERS.length} onContinue={advance} />
+				) : (
+					<div className="adventure-result" data-answer-result="incorrect">
+						<AdventureProgress stage={progressStage} activityCount={skills.length} />
+						<h2>{message}</h2>
+						<button type="button" className="primary-action" onClick={() => activeSkillId && void openSkill(activeSkillId)}>නැවත උත්සාහ කරන්න</button>
+					</div>
+				)
 			)}
 		</section>
 	);

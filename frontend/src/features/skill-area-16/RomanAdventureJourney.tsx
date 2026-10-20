@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -253,9 +253,12 @@ export function RomanAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(done);
-		if (index < 2) void openSkill(ROMAN_SKILLS[index + 1].id);
-		else setStep(done.length === 3 ? "result" : "games");
+		setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 	return (
 		<main
 			className="roman-adventure"
@@ -324,31 +327,22 @@ export function RomanAdventureJourney({
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="roman-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackLabel(feedback)} නැවත බලමු.`}
+								{`${feedbackLabel(feedback)} නැවත බලමු.`}
 							</h2>
 							<button className="roman-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="roman-feedback result">
-							<img
-								src={`${ROMAN_ASSET_ROOT}/roman-laurel-decoration.png`}
-								alt=""
-							/>
-							<SuccessCelebration />
-							<h2>රෝම සංඛ්‍යාංක ක්‍රීඩා 3ම සම්පූර්ණයි!</h2>
-						</section>
+						<GameSuccessScreen
+							gameNumber={index + 1}
+							gameCount={ROMAN_GAMES.length}
+							onContinue={() => index < ROMAN_SKILLS.length - 1 ? void openSkill(ROMAN_SKILLS[index + 1].id) : setStep("games")}
+						/>
 					)}
 				</section>
 			)}

@@ -14,7 +14,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	decimalReadingResponse,
@@ -274,9 +274,12 @@ export function DecimalAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 3) void openSkill(DECIMAL_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 4 ? "result" : "games");
+		setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -348,33 +351,22 @@ export function DecimalAdventureJourney({
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් දශම ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="decimal-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackLabel(feedback)} නැවත බලමු.`}
+								{`${feedbackLabel(feedback)} නැවත බලමු.`}
 							</h2>
 							<button className="decimal-primary" onClick={advance}>
-								{correct
-									? index === 3
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="decimal-feedback">
-							<SuccessCelebration />
-							<h2>දශම ක්‍රියාකාරකම් 4ම සම්පූර්ණයි!</h2>
-							<button
-								className="decimal-primary"
-								onClick={() => setStep("games")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={index + 1}
+							gameCount={DECIMAL_GAMES.length}
+							onContinue={() => index < DECIMAL_SKILLS.length - 1 ? void openSkill(DECIMAL_SKILLS[index + 1].id) : setStep("games")}
+						/>
 					)}
 				</section>
 			)}

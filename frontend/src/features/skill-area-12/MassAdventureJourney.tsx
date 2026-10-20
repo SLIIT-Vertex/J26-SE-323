@@ -4,7 +4,7 @@ import type { ConstructedResponse, ExperimentCondition, MassAdventureWorkedExamp
 import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import { adaptiveGameProgressStage, AdventureProgress } from "../mobile-learning-flow/AdventureProgress";
-import { AdventureBackButton, SuccessCelebration } from "../mobile-learning-flow/AdventureShared";
+import { AdventureBackButton, GameSuccessScreen } from "../mobile-learning-flow/AdventureShared";
 import { balanceDifference, balanceDirection, canonicalMassArithmetic, denominationCounts, formatMass, splitMass, type MassArithmeticResponse } from "./massLogic";
 import { MASS_GAMES, MASS_SKILLS } from "./manifest";
 import "./mass-adventure.css";
@@ -21,7 +21,7 @@ export function MassAdventureJourney({ api, learnerId, condition, reducedMotion,
 	const [correct, setCorrect] = useState(false), [feedbackColumn, setFeedbackColumn] = useState<string | null>(null), [busy, setBusy] = useState(false), [supportStage, setSupportStage] = useState(0);
 	const [completed, setCompleted] = useState<string[]>([]), [startedAt, setStartedAt] = useState(Date.now()), [moves, setMoves] = useState(0), [corrections, setCorrections] = useState(0), [exchanges, setExchanges] = useState(0), [overshoots, setOvershoots] = useState(0);
 	const [pending, setPending] = useState<{ episode: string; support: string; manifest: string } | null>(null); const lock = useRef(false);
-	const index = Math.max(0, MASS_SKILLS.findIndex((skill) => skill.id === skillId)); const active = MASS_SKILLS[index];
+	const index = Math.max(0, MASS_SKILLS.findIndex((skill) => skill.id === skillId)); const active = MASS_SKILLS[index]; const activeGameIndex = MASS_GAMES.findIndex((game) => game.id === active?.chapter);
 	const run = useCallback(async <T,>(job: () => Promise<T>) => { setBusy(true); try { return await job(); } catch (error) { onFailure(error); return undefined; } finally { setBusy(false); } }, [onFailure]);
 	const reset = useCallback(() => { setResponse(null); setStartedAt(Date.now()); setMoves(0); setCorrections(0); setExchanges(0); setOvershoots(0); }, []);
 
@@ -62,8 +62,10 @@ export function MassAdventureJourney({ api, learnerId, condition, reducedMotion,
 	const advance = () => {
 		if (!skillId) return; if (!correct) { void openSkill(skillId); return; }
 		const nextDone = completed.includes(skillId) ? completed : [...completed, skillId]; setCompleted(nextDone);
-		if (index < 4) void openSkill(MASS_SKILLS[index + 1].id); else setStep(nextDone.length === 5 ? "result" : "chapters");
+		const nextSkill = MASS_SKILLS[index + 1]; if (nextSkill?.chapter === active?.chapter) void openSkill(nextSkill.id); else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => { if (step === "feedback" && correct) advance(); }, [step, correct]);
 
 	return <main className="mass-adventure" data-reduced-motion={reducedMotion || undefined}>
 		<header className="mass-header"><AdventureBackButton onClick={step === "chapters" ? onBack : () => setStep("chapters")} /><h1>බර මැනීම</h1></header>
@@ -73,8 +75,8 @@ export function MassAdventureJourney({ api, learnerId, condition, reducedMotion,
 			{step === "question" && manifest?.game && <><h2>{manifest.prompt_si}</h2><MassActivity key={manifest.revision_id} game={manifest.game as Record<string, unknown>} onResponse={record} /><button className="mass-primary" disabled={busy || !response} onClick={confirm}>තහවුරු කරන්න</button></>}
 			{step === "support" && support && <MassSupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />}
 			{step === "withdrawing" && <p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
-			{step === "feedback" && <section className="mass-feedback"><h2>{correct ? "ක්‍රියාකාරකම සම්පූර්ණයි!" : `${feedbackName(feedbackColumn)} නැවත බලමු.`}</h2><button className="mass-primary" onClick={advance}>{correct ? index === 4 ? "අවසන් කරන්න" : "ඊළඟ ක්‍රියාකාරකම" : "නැවත උත්සාහ කරන්න"}</button></section>}
-			{step === "result" && <section className="mass-feedback"><SuccessCelebration /><h2>බර මැනීමේ ක්‍රියාකාරකම් 5ම සම්පූර්ණයි!</h2><button className="mass-primary" onClick={() => setStep("chapters")}>ක්‍රීඩා බලන්න</button></section>}
+			{step === "feedback" && !correct && <section className="mass-feedback"><h2>{feedbackName(feedbackColumn)} නැවත බලමු.</h2><button className="mass-primary" onClick={advance}>නැවත උත්සාහ කරන්න</button></section>}
+			{step === "result" && <GameSuccessScreen gameNumber={activeGameIndex + 1} gameCount={MASS_GAMES.length} onContinue={() => { const nextGame = MASS_GAMES[activeGameIndex + 1]; const nextSkill = nextGame && MASS_SKILLS.find((skill) => skill.chapter === nextGame.id); if (nextSkill) void openSkill(nextSkill.id); else setStep("chapters"); }} />}
 		</section>}
 	</main>;
 }

@@ -14,7 +14,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	compassResponse,
@@ -88,6 +88,13 @@ export function DirectionAdventureJourney({
 		DIRECTION_SKILLS.findIndex((skill) => skill.id === skillId),
 	);
 	const active = DIRECTION_SKILLS[index];
+	const activeGameIndex = Math.max(
+		0,
+		DIRECTION_GAMES.findIndex((game, gameIndex) => {
+			const next = DIRECTION_GAMES[gameIndex + 1];
+			return index >= game.firstSkillIndex && (!next || index < next.firstSkillIndex);
+		}),
+	);
 	const run = useCallback(
 		async <T,>(job: () => Promise<T>) => {
 			setBusy(true);
@@ -262,9 +269,14 @@ export function DirectionAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 2) void openSkill(DIRECTION_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 3 ? "result" : "games");
+		const nextSkill = DIRECTION_SKILLS[index + 1];
+		if (nextSkill && nextSkill.chapter === active?.chapter) void openSkill(nextSkill.id);
+		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -340,33 +352,26 @@ export function DirectionAdventureJourney({
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් මාලිමාව සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="direction-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackLabel(feedback)} නැවත බලමු.`}
+								{`${feedbackLabel(feedback)} නැවත බලමු.`}
 							</h2>
 							<button className="direction-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="direction-feedback">
-							<SuccessCelebration />
-							<h2>දිශා ක්‍රියාකාරකම් 3ම සම්පූර්ණයි!</h2>
-							<button
-								className="direction-primary"
-								onClick={() => setStep("games")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={activeGameIndex + 1}
+							gameCount={DIRECTION_GAMES.length}
+							onContinue={() => {
+								const nextGame = DIRECTION_GAMES[activeGameIndex + 1];
+								if (!nextGame) setStep("games");
+								else void openSkill(DIRECTION_SKILLS[nextGame.firstSkillIndex].id);
+							}}
+						/>
 					)}
 				</section>
 			)}

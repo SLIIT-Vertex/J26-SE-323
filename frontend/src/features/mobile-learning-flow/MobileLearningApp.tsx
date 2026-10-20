@@ -438,6 +438,7 @@ const labels: Record<SyncState, string> = {
 
 export function MobileLearningApp({
 	service,
+	initialScreen = "splash",
 	enableOnboarding = false,
 	learnerId = import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEV_LEARNER,
 	engineeringCondition = import.meta.env.VITE_MOBILE_LEARNING_CONDITION ===
@@ -448,13 +449,14 @@ export function MobileLearningApp({
 	fixtureRounds,
 }: {
 	service?: MobileLearningService;
+	initialScreen?: Screen;
 	enableOnboarding?: boolean;
 	learnerId?: string;
 	engineeringCondition?: ExperimentCondition;
 	catalog?: Pick<DraftMissionCatalogClient, "listDraftMissions">;
 	fixtureRounds?: Pick<FixtureRoundClient, "open" | "answer" | "continue">;
 }) {
-	const [screen, setScreen] = useState<Screen>("splash");
+	const [screen, setScreen] = useState<Screen>(initialScreen);
 	const papersRoute = usePapersRoute();
 	const [learnerName, setLearnerName] = useState("කවිඳු");
 	const [avatarTone, setAvatarTone] = useState<AvatarTone>("violet");
@@ -1238,7 +1240,6 @@ export function MobileLearningApp({
 				)}
 				{screen === "learn" && (
 					<GamesHome
-						onPlay={() => setScreen("mission")}
 						missions={draftMissions}
 						catalogStatus={draftCatalogStatus}
 						onChoose={chooseMission}
@@ -2432,7 +2433,6 @@ function missionsForSubject(
 }
 
 function GamesHome({
-	onPlay,
 	missions = [],
 	catalogStatus = "idle",
 	onChoose,
@@ -2440,7 +2440,6 @@ function GamesHome({
 	onOpenSubject,
 	avatarTone = "violet",
 }: {
-	onPlay(): void;
 	missions?: DraftMissionRecord[];
 	catalogStatus?: "idle" | "loading" | "ready" | "error";
 	onChoose?(areaId: string): void;
@@ -2552,16 +2551,6 @@ function GamesHome({
 							සිංහල සහ පරිසර අධ්‍යයන මෙහෙයුම් ලබා ගත නොහැක. API සේවාව ක්‍රියාත්මක නොවේ.
 						</p>
 					)}
-					<article className="current-game-card">
-						<span className="current-game-icon">½</span>
-						<div>
-							<p className="eyebrow">දැනට ඇති ක්‍රීඩාව</p>
-							<h2>සමාන කාණ්ඩ දෙකක්</h2>
-						</div>
-						<button className="primary-action" onClick={onPlay}>
-							ක්‍රීඩා කරන්න <AppIcon name="play" size={17} />
-						</button>
-					</article>
 				</>
 			)}
 		</section>

@@ -14,7 +14,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	canonicalDistanceArithmetic,
@@ -78,6 +78,7 @@ export function DistanceAdventureJourney({
 		DISTANCE_SKILLS.findIndex((s) => s.id === skillId),
 	);
 	const active = DISTANCE_SKILLS[index];
+	const activeGameIndex = DISTANCE_GAMES.findIndex((game) => game.id === active?.chapter);
 	const run = useCallback(
 		async <T,>(job: () => Promise<T>) => {
 			setBusy(true);
@@ -257,9 +258,14 @@ export function DistanceAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 4) void openSkill(DISTANCE_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 5 ? "result" : "chapters");
+		const nextSkill = DISTANCE_SKILLS[index + 1];
+		if (nextSkill?.chapter === active?.chapter) void openSkill(nextSkill.id);
+		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 	return (
 		<main
 			className="distance-adventure"
@@ -333,33 +339,27 @@ export function DistanceAdventureJourney({
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="distance-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackColumn === "kilometres" ? "km" : feedbackColumn === "conversion" ? "ඒකක මාරුව" : "m තීරුව"} නැවත බලමු.`}
+								{`${feedbackColumn === "kilometres" ? "km" : feedbackColumn === "conversion" ? "ඒකක මාරුව" : "m තීරුව"} නැවත බලමු.`}
 							</h2>
 							<button className="distance-primary" onClick={advance}>
-								{correct
-									? index === 4
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "සහාය සමඟ නැවත උත්සාහ කරන්න"}
+								සහාය සමඟ නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="distance-feedback">
-							<SuccessCelebration />
-							<h2>දුර අභියෝග 5ම සම්පූර්ණයි!</h2>
-							<button
-								className="distance-primary"
-								onClick={() => setStep("chapters")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={activeGameIndex + 1}
+							gameCount={DISTANCE_GAMES.length}
+							onContinue={() => {
+								const nextGame = DISTANCE_GAMES[activeGameIndex + 1];
+								const nextSkill = nextGame && DISTANCE_SKILLS.find((item) => item.chapter === nextGame.id);
+								if (nextSkill) void openSkill(nextSkill.id);
+								else setStep("chapters");
+							}}
+						/>
 					)}
 				</section>
 			)}
