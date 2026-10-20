@@ -1,0 +1,22 @@
+{
+  "area_id": "G5-AREA-ENG-08",
+  "registered_title": "Water",
+  "theme_heading": "Theme 8: Water",
+  "package_version": "g5-eng-water-works-draft-v1",
+  "status": "draft_human_review_required",
+  "atomic_skills": ["G5-ENG-WATER-ACTION-01"],
+  "visual_system": "emoji_css_code_only",
+  "raster_assets_allowed": false,
+  "production_release": false,
+  "review_gates_open": [
+    "curriculum_fidelity",
+    "english",
+    "sinhala",
+    "scene_clarity",
+    "accessibility",
+    "age_suitability",
+    "culture_context",
+    "answer_leakage",
+    "parallel_equivalence"
+  ]
+}

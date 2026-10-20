@@ -1,0 +1,23 @@
+{
+  "screenshot_identity": ["theme-8-water-actions"],
+  "transcription_status": "english_from_implementation_prompt",
+  "sinhala_status": "not_visible_in_supplied_prompt_pending_screenshot",
+  "review_state": "unresolved",
+  "theme_heading": "Theme 8: Water",
+  "registered_title": "Water",
+  "entries": [
+    {"english": "Bathe", "sinhala": null},
+    {"english": "Cook", "sinhala": null},
+    {"english": "Wash", "sinhala": null},
+    {"english": "Drink", "sinhala": null},
+    {"english": "Water (the plants)", "sinhala": null}
+  ],
+  "review_issues": [
+    "Bathe: intransitive versus transitive use is unresolved; no sentence pattern is scored",
+    "Wash: no object complement is scored",
+    "Cook: scene shows a pot and steam, not a recipe",
+    "Drink: plain drinking-water glass only",
+    "Water (the plants): source parentheses retained; Water the plants is not an approved normalization",
+    "Sinhala counterparts are not in the implementation prompt and stay null until the screenshot is transcribed"
+  ]
+}
