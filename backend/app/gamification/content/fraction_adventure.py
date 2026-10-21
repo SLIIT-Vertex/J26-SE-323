@@ -30,6 +30,7 @@ class AtomicSkill:
     skill_id: str
     chapter: Chapter
     name_si: str
+    difficulty: str
     source_node_id: str
     source_page: int
     source_status: str
@@ -41,6 +42,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-FRC-HALF-WHOLE-01",
         "equal_share_studio",
         "සම්පූර්ණයක බාගය",
+        "easy",
         "G5-MAT-C03-L01",
         69,
         "provisional_unreviewed",
@@ -50,6 +52,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C03-L01-O01",
         "equal_share_studio",
         "සමූහයක බාගය",
+        "easy",
         "G5-MAT-C03-L01-O01",
         69,
         "existing_pilot_identity",
@@ -59,6 +62,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-FRC-QUARTER-WHOLE-01",
         "quarter_orchard",
         "සම්පූර්ණයක කාල",
+        "easy",
         "G5-MAT-C03-L01",
         69,
         "provisional_unreviewed",
@@ -68,6 +72,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C03-L01-O02",
         "quarter_orchard",
         "සමූහයක කාල",
+        "medium",
         "G5-MAT-C03-L01-O02",
         70,
         "development_only_unreviewed",
@@ -77,6 +82,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-FRC-QUARTER-TABLE-01",
         "quarter_orchard",
         "කාල සම්බන්ධතා වගුව",
+        "medium",
         "G5-MAT-C03-L01-O02",
         70,
         "provisional_unreviewed",
@@ -86,6 +92,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-FRC-TENTHS-BUILD-01",
         "tenths_mosaic",
         "දහයෙන් කොටස් සෑදීම",
+        "medium",
         "G5-MAT-C03-L01-O03",
         70,
         "provisional_unreviewed",
@@ -95,6 +102,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-FRC-TENTHS-READ-01",
         "tenths_mosaic",
         "දහයෙන් කොටස් කියවීම",
+        "medium",
         "G5-MAT-C03-L01-O03",
         70,
         "provisional_unreviewed",
@@ -159,7 +167,25 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> FractionItem:
+# Shading one half or one quarter of a whole is already the smallest form of those skills.
+_NO_SIMPLER_FORM = frozenset({"G5-MAT-FRC-HALF-WHOLE-01", "G5-MAT-FRC-QUARTER-WHOLE-01"})
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> FractionItem | None:
+    """The same fraction skill with fewer objects to share or fewer tenths to shade."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    if skill_id in _NO_SIMPLER_FORM:
+        return None
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> FractionItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("FRACTION_ITEM_REQUEST_INVALID")
     skill = SKILLS[skill_id]
@@ -178,7 +204,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> FractionItem:
         )
         prompt = "සමාන කොටස් දෙකෙන් එක කොටසක් පාට කරන්න."
     elif skill_id == "G5-MAT-C03-L01-O01":
-        total = rng.choice(tuple(range(6, 41, 2)))
+        total = rng.choice((4, 6) if simpler else tuple(range(6, 41, 2)))
         game.update(denominator=2, total=total, object_kind="apple")
         prompt = f"ඇපල් {total} සමාන කණ්ඩායම් දෙකකට බෙදන්න."
     elif skill_id == "G5-MAT-FRC-QUARTER-WHOLE-01":
@@ -187,11 +213,11 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> FractionItem:
         )
         prompt = "සමාන කොටස් හතරෙන් එක කොටසක් පාට කරන්න."
     elif skill_id == "G5-MAT-C03-L01-O02":
-        total = rng.choice(tuple(range(8, 41, 4)))
+        total = rng.choice((4, 8) if simpler else tuple(range(8, 41, 4)))
         game.update(denominator=4, total=total, object_kind="apple")
         prompt = f"ඇපල් {total} සමාන කණ්ඩායම් හතරකට බෙදන්න."
     elif skill_id == "G5-MAT-FRC-QUARTER-TABLE-01":
-        total = rng.choice((8, 12, 16, 20, 24))
+        total = rng.choice((4, 8) if simpler else (8, 12, 16, 20, 24))
         game.update(
             denominator=4,
             total=total,
@@ -199,7 +225,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> FractionItem:
         )
         prompt = f"{total} සඳහා කාල සම්බන්ධතා වගුව සම්පූර්ණ කරන්න."
     elif skill_id == "G5-MAT-FRC-TENTHS-BUILD-01":
-        numerator = rng.randint(1, 9)
+        numerator = rng.randint(1, 2) if simpler else rng.randint(1, 9)
         game.update(
             representation=rng.choice(("strip", "circle")),
             denominator=10,
@@ -209,8 +235,9 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> FractionItem:
         )
         prompt = f"දහයෙන් {numerator} කොටස් පාට කරන්න."
     else:
-        numerator = rng.randint(1, 9)
-        indices = sorted(rng.sample(range(10), numerator))
+        numerator = rng.randint(1, 3) if simpler else rng.randint(1, 9)
+        # The simpler version shades the first parts in a row, which are easier to count.
+        indices = list(range(numerator)) if simpler else sorted(rng.sample(range(10), numerator))
         game.update(
             representation=rng.choice(("strip", "circle")),
             denominator=10,
@@ -218,7 +245,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> FractionItem:
             stimulus_shaded_indices=indices,
         )
         prompt = "පාට කළ දහයෙන් කොටස් ගණන භාගයක් ලෙස සකසන්න."
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return FractionItem(
         item_id=f"{skill_id}:{role}",
         revision_id=revision,
@@ -384,7 +411,7 @@ def package_hash() -> str:
         "skills": [
             skill.__dict__
             if hasattr(skill, "__dict__")
-            else [skill.skill_id, skill.source_node_id, skill.source_page]
+            else [skill.skill_id, skill.source_node_id, skill.source_page, skill.difficulty]
             for skill in ATOMIC_SKILLS
         ],
         "misconceptions": MISCONCEPTIONS,

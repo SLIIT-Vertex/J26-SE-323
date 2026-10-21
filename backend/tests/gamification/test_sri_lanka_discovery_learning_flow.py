@@ -14,6 +14,7 @@ from app.gamification.content.sri_lanka_discovery import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000802")
 
@@ -87,34 +88,16 @@ def test_full_support_withdrawal_and_independent_measurement(condition: str) -> 
         interaction_summary=_summary(),
         idempotency_key=f"wrong-sri-lanka-{condition}",
     )
-    support = supported["support"]
-    manifest = support["game_manifest"]
-    assert manifest["worked_example"]["correct_response"]
-    flow.complete_support(
-        episode,
-        duration_ms=700,
-        steps_viewed=manifest["required_actions"],
-        manifest_revision_id=manifest["revision_id"],
-        grouped_count=0,
-        group_sizes=(),
-        interaction_summary={
-            "completed": True,
-            "renderer_id": manifest["renderer_id"],
-            "parallel_example_id": manifest["parallel_example_id"],
-            "support_actions": manifest["required_actions"],
-        },
-        idempotency_key=f"complete-sri-lanka-{condition}",
-    )
+    assert flow._adaptive_flow(episode).support_solution(before)["correct_response"]
+    help_done = finish_help(flow, episode, supported)
     flow.withdraw_support(
         episode,
+        **help_done,
         request_id=uuid4(),
-        support_revision_id=support["revision_id"],
-        manifest_revision_id=manifest["revision_id"],
         all_support_removed=True,
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
-        idempotency_key=f"withdraw-sri-lanka-{condition}",
-    )
+        idempotency_key=f"withdraw-sri-lanka-{condition}",)
     after = flow.present_after(episode, idempotency_key=f"after-sri-lanka-{condition}")
     state = flow.reconstruct(episode)["state"]
     after_item = next(row for row in state["presentations"] if row["role"] == "unsupported_after")

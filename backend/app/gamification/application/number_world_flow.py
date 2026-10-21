@@ -16,8 +16,18 @@ from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from app.gamification.application.consent_gate import research_consent_granted
 from app.gamification.application.learner_state_answers import record_scored_answer
+from app.gamification.application.learning_state_input import (
+    LearningStateReader,
+    read_learning_state,
+)
 from app.gamification.application.ports import ConsentStore
 from app.gamification.application.session_play import LearnerStateAnswerGateway
+from app.gamification.application.support_builders import SupportBuildContext
+from app.gamification.application.support_rounds import (
+    SupportRoundError,
+    SupportRoundService,
+)
+from app.gamification.content.area_support_catalog import assignment
 from app.gamification.content.number_world import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -29,46 +39,32 @@ from app.gamification.content.number_world import (
     POLICY_VERSION,
     SCORING_VERSION,
     SKILLS,
+    UNIVERSAL_SKILL_ID,
     NumberWorldItem,
     construct_extreme,
     expanded_form,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     order_numbers,
     package_hash,
     scaffold_decision,
     validate_constructed_response,
 )
+from app.gamification.modeling.independence_gain.episode_measurement import (
+    measure_withdrawn_episode,
+)
+from app.gamification.modeling.misconception_inference.learner_prior import (
+    apply_learner_prior,
+    prior_errors,
+)
+from app.gamification.modeling.support_selection.support_order import (
+    choose_support_order,
+    subject_of,
+)
 
 CONTRACT_VERSION = "number-world-learning-flow-v1"
 PROTOCOL_VERSION = "adaptive-episode-v1"
-_SUPPORT_ORDER = (
-    "visual_guidance",
-    "worked_parallel_example",
-    "step_by_step_guidance",
-)
-_NUMBER_WORLD_SUPPORT_SEQUENCE = {
-    "G5-MAT-NUM-POSITION-01": _SUPPORT_ORDER,
-    "G5-MAT-NUM-REPRESENTED-01": (
-        "worked_parallel_example",
-        "visual_guidance",
-        "step_by_step_guidance",
-    ),
-    "G5-MAT-NUM-100000-01": _SUPPORT_ORDER,
-    "G5-MAT-NUM-ABACUS-01": (
-        "worked_parallel_example",
-        "visual_guidance",
-        "step_by_step_guidance",
-    ),
-    "G5-MAT-NUM-EXPAND-01": (
-        "worked_parallel_example",
-        "visual_guidance",
-        "step_by_step_guidance",
-    ),
-    "G5-MAT-NUM-EXTREME-01": _SUPPORT_ORDER,
-    "G5-MAT-NUM-LEADING-ZERO-01": _SUPPORT_ORDER,
-    "G5-MAT-NUM-ORDER-01": _SUPPORT_ORDER,
-}
 
 
 # The knowledge-tracing component learns from each scored answer. It needs a difficulty (easy, medium or
@@ -166,113 +162,15 @@ def _event(state: dict[str, object], event_type: str, at: datetime, **details: o
     )
 
 
-def _escalate_scaffold(
-    selected: str,
-    *,
-    condition: str,
-    attempt_count: int,
-    skill_id: str | None = None,
-    preferred_support: str | None = None,
-    support_sequences: Mapping[str, tuple[str, ...]] | None = None,
-) -> tuple[str, str]:
-    """Keep baseline fixed; use a remembered, deterministic activity sequence."""
-    if condition != "proposed":
-        return selected, "baseline_fixed"
-    sequence = (support_sequences or _NUMBER_WORLD_SUPPORT_SEQUENCE).get(skill_id or "")
-    if sequence:
-        if preferred_support in sequence:
-            preferred_index = sequence.index(preferred_support)
-            sequence = sequence[preferred_index:] + sequence[:preferred_index]
-        support_index = min(max(1, attempt_count) - 1, len(sequence) - 1)
-        if support_index == 0:
-            mode = "learned_activity_preference" if preferred_support else "activity_default"
-        else:
-            mode = "activity_support_escalation"
-        return sequence[support_index], mode
-    minimum_index = 0 if attempt_count <= 1 else (1 if attempt_count == 2 else 2)
-    selected_index = _SUPPORT_ORDER.index(selected)
-    escalated = _SUPPORT_ORDER[max(selected_index, minimum_index)]
-    return escalated, "model_with_attempt_escalation"
+def _model1_label(belief: Mapping[str, object]) -> str | None:
+    label = belief.get("top_hypothesis") or belief.get("predicted_label")
+    return None if label is None else str(label)
 
 
-def _preferred_support_from_history(
-    history: tuple[Mapping[str, object], ...],
-) -> tuple[str | None, dict[str, object]]:
-    """Rank support only by valid post-withdrawal independent outcomes."""
-    stats: dict[str, dict[str, Decimal | int]] = {}
-    for state in history:
-        if state.get("condition") != "proposed" or state.get("validity") != "valid":
-            continue
-        model2 = state.get("model2")
-        measurement = state.get("measurement")
-        if not isinstance(model2, Mapping) or not isinstance(measurement, Mapping):
-            continue
-        support = str(model2.get("selected_action", ""))
-        if support not in _SUPPORT_ORDER:
-            continue
-        after_earned = Decimal(str(measurement.get("after_earned", 0)))
-        after_maximum = Decimal(str(measurement.get("after_maximum", 0)))
-        raw_ig = measurement.get("raw_independence_gain")
-        if after_maximum <= 0 or raw_ig is None:
-            continue
-        row = stats.setdefault(
-            support,
-            {"episodes": 0, "independent_successes": 0, "total_ig": Decimal(0)},
-        )
-        row["episodes"] = int(row["episodes"]) + 1
-        if after_earned == after_maximum:
-            row["independent_successes"] = int(row["independent_successes"]) + 1
-        row["total_ig"] = Decimal(str(row["total_ig"])) + Decimal(str(raw_ig))
-
-    successful = {
-        support: row for support, row in stats.items() if int(row["independent_successes"]) > 0
-    }
-    preferred = None
-    if successful:
-        preferred = max(
-            successful,
-            key=lambda support: (
-                int(successful[support]["independent_successes"])
-                / int(successful[support]["episodes"]),
-                Decimal(str(successful[support]["total_ig"]))
-                / int(successful[support]["episodes"]),
-                int(successful[support]["episodes"]),
-                -_SUPPORT_ORDER.index(support),
-            ),
-        )
-    serializable = {
-        support: {
-            "episodes": int(row["episodes"]),
-            "independent_successes": int(row["independent_successes"]),
-            "mean_independence_gain": str(
-                Decimal(str(row["total_ig"])) / int(row["episodes"])
-            ),
-        }
-        for support, row in stats.items()
-    }
-    return preferred, {
-        "basis": "valid_unsupported_after_outcomes",
-        "supported_correctness_used": False,
-        "preferred_support": preferred,
-        "by_support": serializable,
-    }
-
-
-def _next_support_attempt_from_history(history: tuple[Mapping[str, object], ...]) -> int:
-    """Resume after consecutive valid independent failures; success resets the retry cursor."""
-    consecutive_failures = 0
-    for state in reversed(history):
-        if state.get("condition") != "proposed" or state.get("validity") != "valid":
-            continue
-        measurement = state.get("measurement")
-        if not isinstance(measurement, Mapping):
-            continue
-        earned = Decimal(str(measurement.get("after_earned", 0)))
-        maximum = Decimal(str(measurement.get("after_maximum", 0)))
-        if maximum > 0 and earned == maximum:
-            break
-        consecutive_failures += 1
-    return consecutive_failures + 1
+def _model1_uncertain(belief: Mapping[str, object]) -> bool:
+    return any(
+        belief.get(flag) is True for flag in ("abstained", "low_confidence", "fallback_used")
+    )
 
 
 class NumberWorldFlow:
@@ -280,7 +178,7 @@ class NumberWorldFlow:
 
     area_id = AREA_ID
     experience_id = "number_world"
-    universal_skill_id = "MAT-NUM"
+    universal_skill_id = UNIVERSAL_SKILL_ID
     contract_version = CONTRACT_VERSION
     context_version = "g5-mat-number-world-context-v1"
     measurement_version = "number-world-independence-measurement-v1"
@@ -296,6 +194,8 @@ class NumberWorldFlow:
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    # The content module's easier item of the same skill, for the simpler-version help.
+    generate_simpler_item: Callable[..., object | None] | None = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -303,9 +203,8 @@ class NumberWorldFlow:
     missing_skill_error = "NUMBER_WORLD_SKILL_NOT_FOUND"
     episode_type_error = "NUMBER_WORLD_EPISODE_REQUIRED"
     operation_prefix = "number_world"
-    support_sequences: Mapping[str, tuple[str, ...]] = _NUMBER_WORLD_SUPPORT_SEQUENCE
-    activity_support_memory = True
-    answer_revealing_support = True
+    # Every game on this flow runs the multi-help loop after a detected difficulty.
+    runs_support_loop = True
     # The learner-state behaviour models were trained on mathematics answers (ASSISTments).
     records_learner_state = True
 
@@ -318,6 +217,7 @@ class NumberWorldFlow:
         now: Callable[[], datetime] | None = None,
         learner_state: LearnerStateAnswerGateway | None = None,
         camera_consent: ConsentStore | None = None,
+        support_need_provider: LearningStateReader | None = None,
     ) -> None:
         self._store = store
         self._probe = probe
@@ -325,6 +225,8 @@ class NumberWorldFlow:
         self._now = now or (lambda: datetime.now(UTC))
         self._learner_state = learner_state
         self._camera_consent = camera_consent
+        self._support_need_provider = support_need_provider
+        self._support_rounds = SupportRoundService()
 
     def open(
         self,
@@ -336,6 +238,7 @@ class NumberWorldFlow:
         allow_draft: bool,
         atomic_skill_id: str,
         idempotency_key: str,
+        seed_source: str | None = None,
     ) -> dict[str, object]:
         request = {
             "op": f"{self.operation_prefix}_open",
@@ -346,6 +249,9 @@ class NumberWorldFlow:
             "allow_draft": allow_draft,
             "atomic_skill_id": atomic_skill_id,
         }
+        # Only when sent, so ordinary opens keep their earlier fingerprint.
+        if seed_source is not None:
+            request["seed_source"] = seed_source
         prior = self._receipt(idempotency_key, request)
         if prior is not None:
             return prior
@@ -409,6 +315,9 @@ class NumberWorldFlow:
             "next_client_sequence": 1,
             "events": [],
         }
+        if seed_source is not None:
+            # Scripted demo history, played through the real models. Never read by a model.
+            state["seed_source"] = seed_source
         _event(state, "unsupported_before_presented", at, presentation_id=str(presentation_id))
         response = self._response(state, before)
         self._atomic(
@@ -439,9 +348,7 @@ class NumberWorldFlow:
 
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             item = self._stored_item(state, "unsupported_before")
-            score = self._score(
-                state, item, option_id, constructed_response, response_time_ms, at
-            )
+            score = self._score(state, item, option_id, constructed_response, response_time_ms, at)
             state["attempts"].append(score)  # type: ignore[union-attr]
             _event(state, "unsupported_before_scored", at, presentation_id=score["presentation_id"])
             self._publish(state, score, at)
@@ -461,6 +368,10 @@ class NumberWorldFlow:
                 response_time_ms=response_time_ms,
                 interaction_summary=interaction_summary,
             )
+            belief = apply_learner_prior(belief, prior_errors(self._store.support_history(
+                learner_id=UUID(str(state["learner_id"])), skill_id=str(state["skill_id"]),
+            )))
+            state["learning_state_session_id"] = str(learner_state_session_id or state["session_id"])
             evidence_id = uuid4()
             state["model1"] = {
                 "belief_snapshot_id": str(uuid4()),
@@ -497,79 +408,15 @@ class NumberWorldFlow:
             decision = self.scaffold_decision(
                 str(state["skill_id"]), str(state["condition"]), belief, seed=int(state["seed"])
             )
-            client_attempt_count = max(1, int(interaction_summary.get("attempt_count", 1)))
-            attempt_count = client_attempt_count
-            model_selected = str(decision["selected_action"])
-            preferred_support = None
-            preference_analysis: dict[str, object] = {
-                "basis": "not_applicable",
-                "supported_correctness_used": False,
-                "preferred_support": None,
-                "by_support": {},
-            }
-            if self.activity_support_memory and state.get("condition") == "proposed":
-                history = self._store.support_history(
-                    learner_id=UUID(str(state["learner_id"])),
-                    skill_id=str(state["skill_id"]),
-                )
-                preferred_support, preference_analysis = _preferred_support_from_history(history)
-                attempt_count = max(
-                    client_attempt_count,
-                    _next_support_attempt_from_history(history),
-                )
-            selected, selection_mode = _escalate_scaffold(
-                model_selected,
-                condition=str(state["condition"]),
-                attempt_count=attempt_count,
-                skill_id=(
-                    str(state["skill_id"])
-                    if self.activity_support_memory
-                    else None
-                ),
-                preferred_support=preferred_support,
-                support_sequences=self.support_sequences,
+            return self._start_support_loop(
+                state,
+                belief,
+                decision,
+                at,
+                evidence_id=evidence_id,
+                response_time_ms=response_time_ms,
+                interaction_summary=interaction_summary,
             )
-            decision.update(
-                model_selected_action=model_selected,
-                selected_action=selected,
-                attempt_count=attempt_count,
-                client_attempt_count=client_attempt_count,
-                support_selection_mode=selection_mode,
-                learner_activity_support_preference=preference_analysis,
-            )
-            state["model2"] = {
-                "decision_id": str(uuid4()),
-                "context_snapshot_id": str(uuid4()),
-                "context_version": self.context_version,
-                "artifact_sha256": self.package_hash(),
-                "created_at": at.isoformat(),
-                "complete_model1_probabilities": belief["probabilities"],
-                "missingness": self._missingness(response_time_ms, interaction_summary),
-                **decision,
-            }
-            scaffold_type = selected
-            state["scaffold_exposure"] = {
-                "exposure_id": str(uuid4()),
-                "revision_id": f"{state['skill_id']}:{scaffold_type}@v1",
-                "scaffold_type": scaffold_type,
-                "presented_at": at.isoformat(),
-                "completed_at": None,
-                "displayed": True,
-                "fully_withdrawn": False,
-                # Number World support deliberately demonstrates the solution to the
-                # exact failed presentation. The answer-bearing UI must be removed
-                # before the fresh unsupported-after probe is presented.
-                "answer_revealing": self.answer_revealing_support,
-                "manifest_revision_id": f"{state['skill_id']}:{state['chapter']}:support@v1",
-            }
-            state["status"] = "support_active"
-            _event(state, "difficulty_detected", at, evidence_id=str(evidence_id))
-            _event(state, "misconception_distribution_created", at)
-            _event(state, "scaffold_decision_created", at)
-            _event(state, "support_exposed", at)
-            response = self._summary(state)
-            response["support"] = self._support(state)
-            return response
 
         response = self._mutate(
             episode_id,
@@ -600,45 +447,13 @@ class NumberWorldFlow:
         interaction_summary: Mapping[str, object],
         idempotency_key: str,
     ) -> dict[str, object]:
-        def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
-            exposure = state["scaffold_exposure"]
-            assert isinstance(exposure, dict)
-            expected_renderer = f"{state['chapter']}:{exposure['scaffold_type']}"
-            expected_example = f"{state['skill_id']}:parallel-support-v1"
-            required_actions = self._required_support_actions(str(exposure["scaffold_type"]))
-            if (
-                manifest_revision_id != exposure["manifest_revision_id"]
-                or interaction_summary.get("completed") is not True
-                or interaction_summary.get("renderer_id") != expected_renderer
-                or interaction_summary.get("parallel_example_id") != expected_example
-                or type(interaction_summary.get("support_actions")) is not int
-                or int(interaction_summary["support_actions"]) < required_actions
-            ):
-                raise NumberWorldFlowError("INVALID_SUPPORT_COMPLETION")
-            exposure.update(
-                completed_at=at.isoformat(),
-                duration_ms=duration_ms,
-                steps_viewed=steps_viewed,
-                interaction_summary=dict(interaction_summary),
-            )
-            # Supported-practice completion is process evidence, never a client score.
-            state["supported_correctness"] = None
-            state["status"] = "support_complete"
-            _event(state, "supported_practice_complete", at)
-            return self._summary(state)
-
-        return self._mutate(
+        return self._support_progress(
             episode_id,
-            idempotency_key,
-            {
-                "op": f"{self.operation_prefix}_support",
-                "duration_ms": duration_ms,
-                "steps_viewed": steps_viewed,
-                "manifest_revision_id": manifest_revision_id,
-                "interaction_summary": dict(interaction_summary),
-            },
-            "support_active",
-            transition,
+            duration_ms=duration_ms,
+            steps_viewed=steps_viewed,
+            manifest_revision_id=manifest_revision_id,
+            interaction_summary=interaction_summary,
+            idempotency_key=idempotency_key,
         )
 
     def withdraw(
@@ -741,82 +556,31 @@ class NumberWorldFlow:
 
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             item = self._stored_item(state, "unsupported_after")
-            score = self._score(
-                state, item, option_id, constructed_response, response_time_ms, at
-            )
+            score = self._score(state, item, option_id, constructed_response, response_time_ms, at)
             state["attempts"].append(score)  # type: ignore[union-attr]
             _event(state, "unsupported_after_scored", at, presentation_id=score["presentation_id"])
             self._publish(state, score, at)
             scored.update(state=state, score=score, at=at)
-            before = next(row for row in state["attempts"] if row["role"] == "unsupported_before")  # type: ignore[index]
-            exclusions = []
-            exposure = state.get("scaffold_exposure")
-            if not isinstance(exposure, dict) or not exposure.get("fully_withdrawn"):
-                exclusions.append("SUPPORT_NOT_WITHDRAWN")
-            withdrawal = state.get("withdrawal")
-            if not isinstance(withdrawal, dict) or not all(
-                withdrawal.get(field) is True
-                for field in (
-                    "all_support_removed",
-                    "answer_revealing_state_cleared",
-                    "input_handlers_cleared",
-                )
-            ):
-                exclusions.append("WITHDRAWAL_NOT_VERIFIED")
-            elif (
-                exposure.get("answer_revealing") is True
-                and withdrawal.get("answer_revealing_state_cleared") is not True
-            ):
-                exclusions.append("ANSWER_REVEALING_STATE_NOT_CLEARED")
-            if before.get("scoring_version") != self.scoring_version or score.get(
-                "scoring_version"
-            ) != self.scoring_version:
-                exclusions.append("SCORING_VERSION_MISMATCH")
-            if before.get("assistance_state") != "none" or score.get(
-                "assistance_state"
-            ) != "none":
-                exclusions.append("ASSISTANCE_CONTAMINATION")
-            if item.get("skill_id") != state.get("skill_id"):
-                exclusions.append("SKILL_MISMATCH")
-            if (
-                item["parallel_family_id"]
-                != next(
-                    row for row in state["presentations"] if row["role"] == "unsupported_before"
-                )["parallel_family_id"]
-            ):  # type: ignore[index]
-                exclusions.append("INCOMPATIBLE_PARALLEL_FAMILY")
-            if (
-                item["revision_id"]
-                == next(
-                    row for row in state["presentations"] if row["role"] == "unsupported_before"
-                )["revision_id"]
-            ):  # type: ignore[index]
-                exclusions.append("AFTER_ITEM_NOT_FRESH")
-            exclusions.extend(self._additional_exclusions(state, item))
-            valid = not exclusions
-            baseline = Decimal(str(before["earned_score"])) / Decimal(str(before["maximum_score"]))
-            after = Decimal(str(score["earned_score"])) / Decimal(str(score["maximum_score"]))
-            raw_ig = after - baseline if valid else None
+            measurement = measure_withdrawn_episode(
+                state,
+                after_item=item,
+                after_score=score,
+                scoring_version=self.scoring_version,
+                measurement_version=self.measurement_version,
+                equivalence_version=self.equivalence_version,
+                additional_exclusions=self._additional_exclusions(state, item),
+            )
+            valid = bool(measurement["valid"])
+            exclusions = list(measurement["exclusion_reasons"])  # type: ignore[call-overload]
+            raw_ig = (
+                None
+                if measurement["raw_independence_gain"] is None
+                else Decimal(str(measurement["raw_independence_gain"]))
+            )
             decision = state["model2"]
             assert isinstance(decision, dict)
             update_authorized = valid and state["condition"] == "proposed"
-            state["measurement"] = {
-                "measurement_id": str(uuid4()),
-                "formula_version": "raw-independence-gain-v1",
-                "measurement_version": self.measurement_version,
-                "equivalence_version": self.equivalence_version,
-                "scoring_version": self.scoring_version,
-                "before_earned": before["earned_score"],
-                "before_maximum": before["maximum_score"],
-                "after_earned": score["earned_score"],
-                "after_maximum": score["maximum_score"],
-                "baseline": str(baseline),
-                "after": str(after),
-                "raw_independence_gain": None if raw_ig is None else str(raw_ig),
-                "valid": valid,
-                "exclusion_reasons": exclusions,
-                "supported_correctness_used_as_reward": False,
-            }
+            state["measurement"] = measurement
             state["raw_independence_gain"] = None if raw_ig is None else str(raw_ig)
             state["validity"] = "valid" if valid else "invalid"
             state["exclusion_reasons"] = exclusions
@@ -832,6 +596,8 @@ class NumberWorldFlow:
                         "decision_id": decision["decision_id"],
                         "reward": str(raw_ig),
                         "reward_source": "valid_raw_independence_gain",
+                        "support_order": decision.get("support_order"),
+                        "support_types_used": self._support_types_used(state),
                         "policy_version": self.policy_version,
                         "applied_once": True,
                         "created_at": at.isoformat(),
@@ -865,6 +631,239 @@ class NumberWorldFlow:
             transition,
         )
         return self._with_learner_state(response, scored, visual, learner_state_session_id)
+
+    def submit_supported(
+        self,
+        episode_id: UUID,
+        *,
+        constructed_response: Mapping[str, object],
+        response_time_ms: int | None,
+        interaction_summary: Mapping[str, object] | None = None,
+        idempotency_key: str,
+    ) -> dict[str, object]:
+        """Score one attempt made inside the current help round and advance the loop."""
+
+        summary = self._validate_interaction_summary(interaction_summary)
+
+        def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
+            item = self._support_rounds.current_item(state)
+            score = self._score(state, item, None, constructed_response, response_time_ms, at)
+            # Supported evidence: never published to the knowledge model, never a reward.
+            score.update(role="supported_practice", assistance_state="active")
+            status = self._support_rounds.record_attempt(
+                state, score, lambda: self._support_context(state, at), at
+            )
+            response = self._summary(state)
+            response.update(
+                server_score={
+                    "earned_score": score["earned_score"],
+                    "maximum_score": score["maximum_score"],
+                    "scoring_version": score["scoring_version"],
+                    "server_authoritative": True,
+                    "measurement_role": "supported_practice",
+                    "correct": score["correct"],
+                    "attempt_id": score["attempt_id"],
+                    "presentation_id": score["presentation_id"],
+                    "item_revision_id": score["revision_id"],
+                },
+                support=self._support_rounds.public_view(state, activity=self.support_activity),
+                support_round=status,
+            )
+            return response
+
+        return self._mutate(
+            episode_id,
+            idempotency_key,
+            {
+                "op": f"{self.operation_prefix}_supported_answer",
+                "constructed_response": dict(constructed_response),
+                "response_time_ms": response_time_ms,
+                "interaction_summary": dict(summary),
+            },
+            "support_active",
+            transition,
+        )
+
+    def _start_support_loop(
+        self,
+        state: dict[str, object],
+        belief: Mapping[str, object],
+        content_decision: Mapping[str, object],
+        at: datetime,
+        *,
+        evidence_id: UUID,
+        response_time_ms: int | None,
+        interaction_summary: Mapping[str, object],
+    ) -> dict[str, object]:
+        """Model 2 fixes this episode's help order; the first round opens at once."""
+
+        context = self._support_context(state, at)
+        eligible = assignment(self.area_id).eligible_support_types
+        plans = self._support_rounds.renderable_plans(context, eligible)
+        history: tuple[Mapping[str, object], ...] = ()
+        if state["condition"] == "proposed":
+            history = self._store.support_history(
+                learner_id=UUID(str(state["learner_id"])), skill_id=str(state["skill_id"])
+            )
+        try:
+            order = choose_support_order(
+                subject=subject_of(self.area_id),
+                condition=str(state["condition"]),
+                model1_label=_model1_label(belief),
+                model1_uncertain=_model1_uncertain(belief),
+                eligible=eligible,
+                renderable=tuple(plans),
+                history=history,
+                learning_state_input=read_learning_state(
+                    self._support_need_provider, learner_id=UUID(str(state["learner_id"])),
+                    skill_id=self.universal_skill_id,
+                    session_id=str(state.get("learning_state_session_id", state["session_id"])), at=at,
+                ),
+            )
+        except ValueError as error:
+            raise NumberWorldFlowError(str(error)) from error
+        state["model2"] = {
+            "decision_id": str(uuid4()),
+            "context_snapshot_id": str(uuid4()),
+            "context_version": self.context_version,
+            "artifact_sha256": self.package_hash(),
+            "created_at": at.isoformat(),
+            "complete_model1_probabilities": belief["probabilities"],
+            "missingness": self._missingness(response_time_ms, interaction_summary),
+            "condition": state["condition"],
+            "policy_version": self.policy_version,
+            "model_selected_action": content_decision.get("selected_action"),
+            # The game's own single-help decision, kept for audit; the order below is what runs.
+            "reference_decision": dict(content_decision),
+            "eligible_actions": list(eligible),
+            "renderable_actions": list(plans),
+            **order.as_record(),
+        }
+        state["supported_correctness"] = None
+        _event(state, "difficulty_detected", at, evidence_id=str(evidence_id))
+        _event(state, "misconception_distribution_created", at)
+        _event(state, "scaffold_decision_created", at)
+        # Rebuilt now that Model 1's reason is on record, so its cues answer that reason.
+        first_plan = self._support_rounds.renderable_plans(
+            self._support_context(state, at), (order.first,)
+        ).get(order.first, plans[order.first])
+        self._support_rounds.start(state, order, first_plan, at)
+        _event(state, "support_exposed", at)
+        response = self._summary(state)
+        response["support"] = self._support_rounds.public_view(
+            state, activity=self.support_activity
+        )
+        response["support_round"] = self._support_rounds.status(
+            state, previous_attempt_correct=None
+        )
+        return response
+
+    def _support_progress(
+        self,
+        episode_id: UUID,
+        *,
+        duration_ms: int,
+        steps_viewed: int,
+        manifest_revision_id: str,
+        interaction_summary: Mapping[str, object],
+        idempotency_key: str,
+    ) -> dict[str, object]:
+        """The child finished viewing a demonstration stage of the current help round."""
+
+        def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
+            if interaction_summary.get("completed") is not True:
+                raise NumberWorldFlowError("INVALID_SUPPORT_COMPLETION")
+            status = self._support_rounds.record_view_complete(state, manifest_revision_id, at)
+            response = self._summary(state)
+            response.update(
+                support=self._support_rounds.public_view(state, activity=self.support_activity),
+                support_round=status,
+            )
+            return response
+
+        return self._mutate(
+            episode_id,
+            idempotency_key,
+            {
+                "op": f"{self.operation_prefix}_support_progress",
+                "duration_ms": duration_ms,
+                "steps_viewed": steps_viewed,
+                "manifest_revision_id": manifest_revision_id,
+                "interaction_summary": dict(interaction_summary),
+            },
+            "support_active",
+            transition,
+        )
+
+    def _support_context(self, state: Mapping[str, object], at: datetime) -> SupportBuildContext:
+        skill_id = str(state["skill_id"])
+        seed = int(state["seed"])
+        failed_item = self.generate_item(skill_id, role="unsupported_before", seed=seed)
+        failed_record = dict(self._stored_item(dict(state), "unsupported_before"))
+        failed_record["public_activity"] = self._public_item(
+            failed_item, str(failed_record["presentation_id"])
+        )
+        after = self.generate_item(skill_id, role="unsupported_after", seed=seed)
+        reserved = {str(failed_record["revision_id"]), after.revision_id}
+        loop = state.get("support_loop")
+        if isinstance(loop, Mapping):
+            for round_record in loop["rounds"]:  # type: ignore[union-attr]
+                for stage in round_record["stages"]:
+                    if isinstance(stage.get("item"), Mapping):
+                        reserved.add(str(stage["item"]["revision_id"]))
+        model2 = state.get("model2")
+        return SupportBuildContext(
+            source=self,
+            skill_id=skill_id,
+            failed_item=failed_item,
+            failed_record=failed_record,
+            reserved_revisions=frozenset(reserved),
+            seed=seed,
+            reason_family=model2.get("reason_family") if isinstance(model2, Mapping) else None,
+            subject=subject_of(self.area_id),
+            at=at,
+        )
+
+    # The flow as a source of items for its own help builders.
+    def support_item(self, skill_id: str, seed: int) -> object:
+        return self.generate_item(skill_id, role="unsupported_before", seed=seed)
+
+    def simpler_support_item(
+        self, skill_id: str, seed: int, failed_record: Mapping[str, object]
+    ) -> object | None:
+        if self.generate_simpler_item is None:
+            return None
+        return self.generate_simpler_item(skill_id, seed=seed, than=failed_record["game_data"])
+
+    def support_record(self, item: object, at: datetime) -> dict[str, object]:
+        presentation_id = uuid4()
+        record = self._item_record(item, presentation_id, 0, at)  # type: ignore[arg-type]
+        record["public_activity"] = self._public_item(item, str(presentation_id))  # type: ignore[arg-type]
+        return record
+
+    def support_activity(self, record: Mapping[str, object]) -> dict[str, object]:
+        public = record["public_activity"]
+        assert isinstance(public, Mapping)
+        return {
+            "presentation_id": record["presentation_id"],
+            "revision_id": record["revision_id"],
+            "skill_id": record["skill_id"],
+            "prompt_si": public["prompt_si"],
+            "game": public["game"],
+        }
+
+    def support_solution(
+        self, record: Mapping[str, object], *, scaffold_type: str = "worked_parallel_example"
+    ) -> dict[str, object]:
+        return self._worked_example(dict(record), scaffold_type=scaffold_type)
+
+    @staticmethod
+    def _support_types_used(state: Mapping[str, object]) -> list[str]:
+        loop = state.get("support_loop")
+        if isinstance(loop, Mapping):
+            return list(loop["types_used"])  # type: ignore[call-overload]
+        model2 = state.get("model2")
+        return [str(model2["selected_action"])] if isinstance(model2, Mapping) else []
 
     @staticmethod
     def _with_learner_state_request(
@@ -1045,8 +1044,12 @@ class NumberWorldFlow:
             if state["status"] != expected:
                 raise NumberWorldFlowError("EPISODE_STATE_CONFLICT")
             old_count = len(state["events"])
-            response = transition(state, at)
+            try:
+                response = transition(state, at)
+            except SupportRoundError as error:
+                raise NumberWorldFlowError(error.code) from error
             state["revision"] = int(row.revision) + 1
+            rounds = SupportRoundService.round_rows(state)
             self._store.replace(
                 episode_id=episode_id,
                 expected_revision=row.revision,
@@ -1058,6 +1061,7 @@ class NumberWorldFlow:
                 request_sha256=_digest(request),
                 response=response,
                 now=at,
+                **({"support_rounds": rounds} if rounds else {}),
             )
             self._store.commit()
             return response
@@ -1114,7 +1118,13 @@ class NumberWorldFlow:
         if item.skill_id.endswith(("POSITION-01", "REPRESENTED-01")):
             public.update(number=game["number"], digit=game["digit"])
         elif item.skill_id.endswith("100000-01"):
-            public["milestone"] = True
+            # The givens of the milestone ladder: the number one below the milestone and the
+            # choices. Both are already in the prompt and the options.
+            public.update(
+                milestone=True,
+                milestone_base=int(game["number"]) - 1,
+                milestone_choices=list(game["milestone_choices"]),
+            )
         elif item.skill_id.endswith(("ABACUS-01", "EXPAND-01")):
             public["number"] = game["number"]
         elif item.skill_id.endswith(("EXTREME-01", "LEADING-ZERO-01")):
@@ -1156,11 +1166,6 @@ class NumberWorldFlow:
         return self.infer_belief(error_code, sparse=response_time_ms is None)
 
     @staticmethod
-    def _required_support_actions(scaffold_type: str) -> int:
-        del scaffold_type
-        return 3
-
-    @staticmethod
     def _validate_interaction_summary(
         interaction_summary: Mapping[str, object] | None,
     ) -> Mapping[str, object]:
@@ -1176,9 +1181,7 @@ class NumberWorldFlow:
         if not set(summary).issubset(allowed):
             raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
         if any(
-            not isinstance(value, int)
-            or isinstance(value, bool)
-            or not 0 <= value <= 86_400_000
+            not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 86_400_000
             for value in summary.values()
         ):
             raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
@@ -1197,52 +1200,6 @@ class NumberWorldFlow:
     ) -> list[str]:
         del state, after_item
         return []
-
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        assert isinstance(exposure, dict)
-        kind = str(exposure["scaffold_type"])
-        copy = {
-            "visual_guidance": ("වර්ණ සහ ඉස්මතු කිරීම් සමඟ මේ ප්‍රශ්නය බලමු.",),
-            "worked_parallel_example": ("පද්ධතිය මේ ප්‍රශ්නය විසඳන ආකාරය බලමු.",),
-            "step_by_step_guidance": ("එක් එක් පියවර පැහැදිලිව පරීක්ෂා කරමු.",),
-        }[kind]
-        renderer_id = f"{state['chapter']}:{kind}"
-        failed_item = self._stored_item(state, "unsupported_before")
-        worked_example = self._worked_example(failed_item, scaffold_type=kind)
-        parallel_values = {
-            "place_value_harbour": [5, 2, 0, 1, 4],
-            "firefly_abacus": [5, 2, 0, 1, 4],
-            "kite_workshop": [0, 3, 6, 8],
-            "river_route_rally": [12_305, 12_350, 13_205],
-        }[str(state["chapter"])]
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": {
-                "visual_guidance": "දෘශ්‍ය මඟ පෙන්වීමෙන් බලමු",
-                "worked_parallel_example": "විසඳන ආකාරය බලමු",
-                "step_by_step_guidance": "පියවරෙන් පියවර බලමු",
-            }[kind],
-            "body_si": list(copy),
-            "visual_alt_text_si": "ස්ථානීය අගය සොයා බැලීමට සහාය වන අන්තර්ක්‍රියාකාරී මඟ පෙන්වීම",
-            "maximum_steps": 4,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": renderer_id,
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": parallel_values,
-                "required_actions": 3,
-                "worked_example": worked_example,
-            },
-        }
 
     @staticmethod
     def _worked_example(

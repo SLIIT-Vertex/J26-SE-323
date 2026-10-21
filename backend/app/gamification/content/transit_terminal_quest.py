@@ -13,7 +13,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-09"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-transit-terminal-draft-v1"
 CATALOGUE_VERSION = "g5-eng-transport-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-transport-features-v1"
@@ -119,6 +122,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> TransitTerminalItem
     revision = f"{skill_id}:{role}:{seed % 100000}@v1"
     prompt = "ඉංග්‍රීසි වචනය ගැළපෙන වාහනයට සම්බන්ධ කරන්න."
     return TransitTerminalItem(f"{skill_id}:{role}", revision, f"{skill_id}:{chapter}:parallel-v1", skill_id, chapter, role, prompt, (), "constructed-response", {}, game)  # type: ignore[arg-type]
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> TransitTerminalItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
 
 
 def public_game_data(item: TransitTerminalItem) -> dict[str, object]:

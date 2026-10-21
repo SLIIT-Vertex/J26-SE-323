@@ -21,6 +21,7 @@ class AdaptiveGameFlow(Protocol):
         allow_draft: bool,
         atomic_skill_id: str,
         idempotency_key: str,
+        seed_source: str | None = None,
     ) -> dict[str, object]: ...
 
     def submit_before(
@@ -34,6 +35,16 @@ class AdaptiveGameFlow(Protocol):
         idempotency_key: str,
         visual: Mapping[str, float] | None = None,
         learner_state_session_id: UUID | None = None,
+    ) -> dict[str, object]: ...
+
+    def submit_supported(
+        self,
+        episode_id: UUID,
+        *,
+        constructed_response: Mapping[str, object],
+        response_time_ms: int | None,
+        interaction_summary: Mapping[str, object] | None = None,
+        idempotency_key: str,
     ) -> dict[str, object]: ...
 
     def complete_support(

@@ -35,6 +35,7 @@ from app.gamification.application.fraction_adventure_flow import FractionAdventu
 from app.gamification.application.heritage_museum_quest_flow import HeritageMuseumQuestFlow
 from app.gamification.application.information_station_flow import InformationStationFlow
 from app.gamification.application.island_food_festival_flow import IslandFoodFestivalFlow
+from app.gamification.application.learning_state_input import LearningStateReader
 from app.gamification.application.mass_adventure_flow import MassAdventureFlow
 from app.gamification.application.money_adventure_flow import MoneyAdventureFlow
 from app.gamification.application.multiplication_adventure_flow import MultiplicationAdventureFlow
@@ -262,6 +263,7 @@ class LearningFlowOrchestrator:
         now: Callable[[], datetime] | None = None,
         learner_state: LearnerStateAnswerGateway | None = None,
         camera_consent: ConsentStore | None = None,
+        support_need_provider: LearningStateReader | None = None,
     ) -> None:
         self._store = store
         self._probe = probe_gateway
@@ -311,6 +313,7 @@ class LearningFlowOrchestrator:
                 now=self._now,
                 learner_state=learner_state,
                 camera_consent=camera_consent,
+                support_need_provider=support_need_provider,
             )
             for flow_type in flow_types
         )
@@ -330,6 +333,7 @@ class LearningFlowOrchestrator:
         idempotency_key: str,
         area_id: str | None = None,
         atomic_skill_id: str | None = None,
+        seed_source: str | None = None,
     ) -> dict[str, object]:
         adaptive_flow = self._area_flows.get(area_id or "")
         if adaptive_flow is not None:
@@ -346,6 +350,7 @@ class LearningFlowOrchestrator:
                     allow_draft=allow_draft,
                     atomic_skill_id=atomic_skill_id,
                     idempotency_key=idempotency_key,
+                    seed_source=seed_source,
                 )
             except NumberWorldFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
@@ -550,6 +555,30 @@ class LearningFlowOrchestrator:
                 at,
             ),
         )
+
+    def submit_supported(
+        self,
+        episode_id: UUID,
+        *,
+        constructed_response: Mapping[str, object],
+        response_time_ms: int | None = None,
+        interaction_summary: Mapping[str, object] | None = None,
+        idempotency_key: str,
+    ) -> dict[str, object]:
+        """Score an attempt inside the current help round of a multi-help episode."""
+        adaptive_flow = self._adaptive_flow(episode_id)
+        if adaptive_flow is None or not getattr(adaptive_flow, "runs_support_loop", False):
+            raise LearningFlowOrchestrationError("SUPPORT_LOOP_NOT_AVAILABLE")
+        try:
+            return adaptive_flow.submit_supported(
+                episode_id,
+                constructed_response=constructed_response,
+                response_time_ms=response_time_ms,
+                interaction_summary=interaction_summary,
+                idempotency_key=idempotency_key,
+            )
+        except NumberWorldFlowError as error:
+            raise LearningFlowOrchestrationError(error.code, **error.context) from error
 
     def withdraw_support(
         self,
@@ -784,9 +813,7 @@ class LearningFlowOrchestrator:
         before = _item(package, "unsupported_before")
         scored = self._score(state, before, option_id, AssistanceState.NONE, response_time_ms, at)
         state["attempts"].append(scored)  # type: ignore[union-attr]
-        _append_event(
-            state, "unsupported_before_scored", at, UUID(str(scored["presentation_id"]))
-        )
+        _append_event(state, "unsupported_before_scored", at, UUID(str(scored["presentation_id"])))
         self._publish_score(state, scored)
         if Decimal(str(scored["earned_score"])) == Decimal(str(scored["maximum_score"])):
             state["status"] = "completed"
@@ -1138,9 +1165,7 @@ class LearningFlowOrchestrator:
         after = _item(package, "unsupported_after")
         scored = self._score(state, after, option_id, AssistanceState.NONE, response_time_ms, at)
         state["attempts"].append(scored)  # type: ignore[union-attr]
-        _append_event(
-            state, "unsupported_after_scored", at, UUID(str(scored["presentation_id"]))
-        )
+        _append_event(state, "unsupported_after_scored", at, UUID(str(scored["presentation_id"])))
         self._publish_score(state, scored)
         measurement = self._measurement(state, package, at)
         state["raw_independence_gain"] = (
@@ -1390,9 +1415,7 @@ class LearningFlowOrchestrator:
         try:
             row = self._store.get(episode_id, for_update=True)
             state = dict(row.state)
-            state["presentations"] = _state_mapping_rows(
-                state["presentations"], "presentations"
-            )
+            state["presentations"] = _state_mapping_rows(state["presentations"], "presentations")
             state["attempts"] = _state_mapping_rows(state["attempts"], "attempts")
             state["events"] = _state_mapping_rows(state["events"], "events")
             state["telemetry"] = _state_mapping_rows(state["telemetry"], "telemetry")

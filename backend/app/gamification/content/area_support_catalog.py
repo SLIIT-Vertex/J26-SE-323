@@ -15,17 +15,22 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.gamification.content.draft_mission_catalog import assigned_template, mapped_area_ids
+from app.gamification.content.support_types import (
+    ORIGINAL_GAME_SUPPORT_TYPES,
+    SUPPORT_TYPES,
+    SupportType,
+)
 from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 
 AREA_SUPPORT_CATALOG_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "grade5-area-support-catalog" / "v1"
 PACKAGE_VERSION = "grade5-area-support-catalog-v1"
 AUTHORING_BASIS = "provisional_development_assumption"
 REVIEW_STATUS = "unreviewed"
-GAME_SUPPORT_TYPES = (
-    "visual_guidance",
-    "worked_parallel_example",
-    "step_by_step_guidance",
-)
+# The three game types Sinhala and Environmental Studies areas keep until their own pass.
+GAME_SUPPORT_TYPES = ORIGINAL_GAME_SUPPORT_TYPES
+# Mathematics and English areas run the multi-help loop over every type in the shared contract.
+MATHEMATICS_SUPPORT_TYPES = SUPPORT_TYPES
+ENGLISH_SUPPORT_TYPES = SUPPORT_TYPES
 VERBAL_RELATION_AREAS = frozenset(
     {
         "G5-AREA-SIN-03",
@@ -39,21 +44,19 @@ VERBAL_RELATION_AREAS = frozenset(
     }
 )
 INVITATION_AREA = "G5-AREA-SIN-13"
-GameSupportType = Literal[
-    "visual_guidance",
-    "worked_parallel_example",
-    "step_by_step_guidance",
-]
+GameSupportType = SupportType
 SupportRule = Literal[
     "visible_structure_and_procedure",
     "highlightable_form",
     "verbal_relation",
     "text_structure",
     "observable_situation",
+    "word_meaning_link",
 ]
 _STRUCTURE_CONSTRAINT = (
     "Show the quantity, measure, or arrangement. The worked example uses different "
-    "quantities. Each step pauses before the result."
+    "quantities. Each step pauses before the result. The simpler version keeps the same "
+    "game with easier quantities; prerequisite repair uses an earlier skill of the same area."
 )
 _FORM_CONSTRAINT = (
     "Highlight the letter, sign, or slot already in the prompt. The worked example uses "
@@ -70,6 +73,11 @@ _TEXT_CONSTRAINT = (
 _SITUATION_CONSTRAINT = (
     "Show the object or situation without marking the scored choice. The worked example "
     "uses a different object of the same kind. Each step pauses before the scored choice."
+)
+_ENGLISH_CONSTRAINT = (
+    "Point at the picture, word, heading or turn without linking it. The worked example uses a "
+    "different set of words. The simpler version keeps the same game with fewer pairs or "
+    "choices; prerequisite repair uses the area's earlier word skill."
 )
 _VERBAL_TYPES = ("worked_parallel_example", "step_by_step_guidance")
 
@@ -89,12 +97,20 @@ def assignment(area_id: str) -> SupportAssignment:
     """Return the provisional candidate set for one mapped area.
 
     A blocked or unknown area raises ``ValueError`` through the template assignment.
+    English areas have their own games and no draft mission template.
     """
+    if area_id.startswith("G5-AREA-ENG-"):
+        return SupportAssignment(
+            template_id=f"english-game:{area_id}",
+            eligible_support_types=ENGLISH_SUPPORT_TYPES,
+            rule="word_meaning_link",
+            rendering_constraint=_ENGLISH_CONSTRAINT,
+        )
     template_id = assigned_template(area_id)
     if area_id.startswith("G5-AREA-MAT-"):
         return SupportAssignment(
             template_id=template_id,
-            eligible_support_types=GAME_SUPPORT_TYPES,
+            eligible_support_types=MATHEMATICS_SUPPORT_TYPES,
             rule="visible_structure_and_procedure",
             rendering_constraint=_STRUCTURE_CONSTRAINT,
         )
@@ -132,7 +148,9 @@ class AreaSupportRow(FrozenModel):
     name_en: str
     subject: Literal["MAT", "SIN", "ENV"]
     template_id: str
-    eligible_support_types: tuple[GameSupportType, ...] = Field(min_length=2, max_length=3)
+    eligible_support_types: tuple[GameSupportType, ...] = Field(
+        min_length=2, max_length=len(SUPPORT_TYPES)
+    )
     rule: SupportRule
     rendering_constraint: str
     authoring_basis: Literal["provisional_development_assumption"]
@@ -152,7 +170,7 @@ class AreaSupportRow(FrozenModel):
             raise ValueError(f"{self.area_id} support types do not match the area rule")
         if self.rule != expected.rule or self.rendering_constraint != expected.rendering_constraint:
             raise ValueError(f"{self.area_id} rule does not match the area rule")
-        if tuple(sorted(set(self.eligible_support_types), key=GAME_SUPPORT_TYPES.index)) != (
+        if tuple(sorted(set(self.eligible_support_types), key=SUPPORT_TYPES.index)) != (
             self.eligible_support_types
         ):
             raise ValueError(f"{self.area_id} support types must stay in canonical order")

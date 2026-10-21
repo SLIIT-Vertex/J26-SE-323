@@ -20,6 +20,7 @@ from app.gamification.content.subtraction_adventure import (
     analyze_subtraction,
     apply_interaction_evidence,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     scaffold_decision,
@@ -29,14 +30,6 @@ from app.gamification.content.subtraction_adventure import (
 
 _VISUAL_FIRST = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 _WORKED_FIRST = ("worked_parallel_example", "visual_guidance", "step_by_step_guidance")
-SUBTRACTION_SUPPORT_SEQUENCE = {
-    "G5-MAT-SUB-NO-REGROUP-01": _VISUAL_FIRST,
-    "G5-MAT-SUB-EXPANDED-01": _VISUAL_FIRST,
-    "G5-MAT-C07-L01-O01": _WORKED_FIRST,
-    "G5-MAT-C07-L01-O02": _WORKED_FIRST,
-    "G5-MAT-SUB-DIFF-BETWEEN-01": _VISUAL_FIRST,
-    "G5-MAT-SUB-HOW-MANY-MORE-01": _VISUAL_FIRST,
-}
 
 
 class SubtractionAdventureFlow(NumberWorldFlow):
@@ -58,6 +51,7 @@ class SubtractionAdventureFlow(NumberWorldFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -65,13 +59,6 @@ class SubtractionAdventureFlow(NumberWorldFlow):
     missing_skill_error = "SUBTRACTION_SKILL_NOT_FOUND"
     episode_type_error = "SUBTRACTION_EPISODE_REQUIRED"
     operation_prefix = "subtraction_adventure"
-    support_sequences = SUBTRACTION_SUPPORT_SEQUENCE
-    activity_support_memory = True
-    answer_revealing_support = True
-
-    @staticmethod
-    def _required_support_actions(scaffold_type: str) -> int:
-        return 3 if scaffold_type == "visual_guidance" else 6
 
     @staticmethod
     def _public_game_data(item: SubtractionItem) -> dict[str, object]:
@@ -137,9 +124,17 @@ class SubtractionAdventureFlow(NumberWorldFlow):
                 if not isinstance(value, bool):
                     raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key == "evidence_quality":
-                if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= float(value) <= 1:
+                if (
+                    isinstance(value, bool)
+                    or not isinstance(value, (int, float))
+                    or not 0 <= float(value) <= 1
+                ):
                     raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
-            elif not isinstance(value, int) or isinstance(value, bool) or not 0 <= value <= 86_400_000:
+            elif (
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or not 0 <= value <= 86_400_000
+            ):
                 raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return summary
 
@@ -202,62 +197,15 @@ class SubtractionAdventureFlow(NumberWorldFlow):
                 field in before_game or field in after_game
             ):
                 exclusions.append(code)
-        if before_game.get("context_id") and before_game.get("context_id") == after_game.get("context_id"):
-            exclusions.append("STORY_CONTEXT_REEXPOSED")
-        if (
-            before_game.get("minuend") == after_game.get("minuend")
-            and before_game.get("subtrahend") == after_game.get("subtrahend")
+        if before_game.get("context_id") and before_game.get("context_id") == after_game.get(
+            "context_id"
         ):
+            exclusions.append("STORY_CONTEXT_REEXPOSED")
+        if before_game.get("minuend") == after_game.get("minuend") and before_game.get(
+            "subtrahend"
+        ) == after_game.get("subtrahend"):
             exclusions.append("AFTER_OPERANDS_REEXPOSED")
         return exclusions
-
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        assert isinstance(exposure, dict)
-        kind = str(exposure["scaffold_type"])
-        copy = {
-            "visual_guidance": (
-                "එක තැන ඉස්මතු කර බලන්න.",
-                "අඩු කිරීම එක තැනේ සිට වමට යයි.",
-            ),
-            "worked_parallel_example": (
-                "ඔබට ලැබුණු අඩු කිරීම පියවරෙන් බලමු.",
-                "හුවමාරුවක් ඇත්නම් එය එක පියවරකින් පෙන්වමු.",
-            ),
-            "step_by_step_guidance": (
-                "දැන් වැඩ කරන තැන තෝරන්න.",
-                "හුවමාරුව අවශ්‍යද යන්න තීරණය කරන්න.",
-                "පිළිතුරු ඉලක්කම ලියා ඊළඟ තැනට යන්න.",
-            ),
-        }[kind]
-        failed_item = self._stored_item(state, "unsupported_before")
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": {
-                "visual_guidance": "දෘශ්‍ය මඟ පෙන්වීම",
-                "worked_parallel_example": "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
-                "step_by_step_guidance": "පියවරෙන් පියවර මඟ පෙන්වීම",
-            }[kind],
-            "body_si": list(copy),
-            "visual_alt_text_si": "ස්ථාන අගය තීරු සහ ගෙන ඒමේ හුවමාරුව පෙන්වන අන්තර්ක්‍රියාකාරී සහාය",
-            "maximum_steps": 6,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": f"{state['chapter']}:{kind}",
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": [],
-                "required_actions": self._required_support_actions(kind),
-                "worked_example": self._worked_example(failed_item, scaffold_type=kind),
-            },
-        }
 
     @staticmethod
     def _worked_example(
@@ -281,8 +229,16 @@ class SubtractionAdventureFlow(NumberWorldFlow):
             public_game.update(
                 relationship=game["relationship"],
                 quantities=[
-                    {"source": "first", "label_si": game["first_label_si"], "value": game["first_value"]},
-                    {"source": "second", "label_si": game["second_label_si"], "value": game["second_value"]},
+                    {
+                        "source": "first",
+                        "label_si": game["first_label_si"],
+                        "value": game["first_value"],
+                    },
+                    {
+                        "source": "second",
+                        "label_si": game["second_label_si"],
+                        "value": game["second_value"],
+                    },
                 ],
             )
         response: dict[str, object] | None

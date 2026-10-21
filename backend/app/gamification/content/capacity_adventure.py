@@ -152,36 +152,51 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> CapacityItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> CapacityItem:
+    """The same capacity skill with whole or half litres, fewer portions, or no regrouping."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> CapacityItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("CAPACITY_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill.response_kind == "vessel_reading":
-        target = rng.choice((300, 600, 800, 900))
+        target = rng.choice((200, 500) if simpler else (300, 600, 800, 900))
         start = rng.choice(tuple(value for value in range(100, 1001, 100) if value != target))
         game: dict[str, object] = {"capacity_ml": target, "start_level_ml": start, "tick_interval_ml": 100}
         prompt = f"දියර මට්ටම {target} ml සලකුණට සකස් කර අගය තහවුරු කරන්න."
     elif skill.response_kind == "capacity_composition":
         game = {"target_ml": 1000, "available_portions_ml": list(PORTIONS)}
         prompt = "විවිධ කොටස් භාවිතයෙන් ලීටර් එකක් සාදන්න."
+        if simpler:
+            # Half a litre from three portion sizes.
+            game = {"target_ml": 500, "available_portions_ml": [100, 250, 500]}
+            prompt = "විවිධ කොටස් භාවිතයෙන් 500 ml සාදන්න."
     elif skill.response_kind == "capacity_conversion":
-        source = rng.choice((2350, 2750, 4300, 5600))
-        source_l, source_ml = (0, source) if rng.choice((True, False)) else split_capacity(source)
+        source = rng.choice((1000, 2000, 3000) if simpler else (2350, 2750, 4300, 5600))
+        source_l, source_ml = (0, source) if rng.choice((True, False)) or simpler else split_capacity(source)
         game = {"source_litres": source_l, "source_millilitres": source_ml, "source_total_ml": source}
         prompt = f"{source_l} l {source_ml} ml ලීටර් සහ ඉතිරි මිලිලීටර් ලෙස මාරු කරන්න."
     elif skill.response_kind == "capacity_arithmetic":
         operation = rng.choice(("add", "subtract"))
         if operation == "add": pairs = ((8, 250, 4, 750), (3, 650, 2, 700))
         else: pairs = ((14, 600, 5, 750), (9, 200, 3, 650))
+        if simpler: pairs = ((2, 200, 1, 300),) if operation == "add" else ((5, 500, 2, 200),)
         left_l, left_ml, right_l, right_ml = rng.choice(pairs)
         game = {"operation": operation, "left_litres": left_l, "left_millilitres": left_ml, "right_litres": right_l, "right_millilitres": right_ml}
         prompt = f"{left_l} l {left_ml:03d} ml {('සහ' if operation == 'add' else 'න්')} {right_l} l {right_ml:03d} ml {('එකතු කරන්න.' if operation == 'add' else 'අඩු කරන්න.')}"
     else:
-        request = rng.choice((2250, 2750, 3500))
+        request = rng.choice((1000, 1500) if simpler else (2250, 2750, 3500))
         game = {"mission_id": f"delivery-{request}", "requested_total_ml": request, "available_containers_ml": [100, 250, 500, 1000], "source_total_ml": 5000}
         prompt = f"ගමනාන්තයට {format_capacity(request)} නිවැරදිව බෙදාහරින්න."
     game["response_kind"] = skill.response_kind
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return CapacityItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 

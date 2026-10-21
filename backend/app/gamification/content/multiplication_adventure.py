@@ -96,12 +96,14 @@ def places_for(width: int) -> list[str]:
     return list(PLACES[-width:])
 
 
-def _fact(rng: random.Random) -> tuple[int, int]:
-    return rng.randint(1, 12), rng.randint(1, 12)
+def _fact(rng: random.Random, *, simpler: bool = False) -> tuple[int, int]:
+    high = 5 if simpler else 12
+    return rng.randint(2 if simpler else 1, high), rng.randint(2 if simpler else 1, high)
 
 
-def _written(rng: random.Random, skill_id: str) -> tuple[int, int]:
-    multiplicand = rng.randint(100, 999)
+def _written(rng: random.Random, skill_id: str, *, simpler: bool = False) -> tuple[int, int]:
+    # The simpler version keeps the skill's multipliers with a two-digit multiplicand.
+    multiplicand = rng.randint(11, 49) if simpler else rng.randint(100, 999)
     if skill_id == "G5-MAT-MUL-BY-2-3-01":
         multiplier = rng.choice((2, 3))
     elif skill_id == "G5-MAT-MUL-BY-4-6-01":
@@ -111,16 +113,32 @@ def _written(rng: random.Random, skill_id: str) -> tuple[int, int]:
     return multiplicand, multiplier
 
 
-def _story(rng: random.Random) -> tuple[int, int, dict[str, str]]:
+def _story(rng: random.Random, *, simpler: bool = False) -> tuple[int, int, dict[str, str]]:
     context = dict(STORY_CONTEXTS[rng.randrange(len(STORY_CONTEXTS))])
+    if simpler:
+        return rng.randint(2, 5), rng.randint(2, 4), context
     return rng.randint(2, 12), rng.randint(2, 9), context
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> MultiplicationItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> MultiplicationItem:
+    """The same multiplication skill with smaller factors or fewer equal groups."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> MultiplicationItem:
     skill = SKILLS[skill_id]
-    rng = random.Random(f"{PACKAGE_VERSION}:{skill_id}:{role}:{seed}")
+    rng = random.Random(
+        f"{PACKAGE_VERSION}:{skill_id}:{role}:{seed}" + (":simpler" if simpler else "")
+    )
     if skill.response_kind == "multiplication_fact":
-        multiplicand, multiplier = _fact(rng)
+        multiplicand, multiplier = _fact(rng, simpler=simpler)
         product = multiplicand * multiplier
         game: dict[str, object] = {
             "response_kind": "multiplication_fact",
@@ -131,7 +149,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> MultiplicationItem:
         }
         prompt = "වගුවේ හමුවන කොටුවේ ගුණිතය ලියන්න."
     elif skill.response_kind == "written_multiplication":
-        multiplicand, multiplier = _written(rng, skill_id)
+        multiplicand, multiplier = _written(rng, skill_id, simpler=simpler)
         product = multiplicand * multiplier
         width = len(str(product))
         places = places_for(width)
@@ -148,7 +166,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> MultiplicationItem:
         }
         prompt = "තීරු ගැලපී ගුණ කර පිළිතුර ගොඩනඟන්න."
     else:
-        group_size, group_count, context = _story(rng)
+        group_size, group_count, context = _story(rng, simpler=simpler)
         product = group_size * group_count
         game = {
             "response_kind": "multiplication_story",
@@ -159,7 +177,11 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> MultiplicationItem:
         }
         prompt = f"{context['label_si']} සමාන කණ්ඩායම් ලෙස ගුණ කරන්න."
     revision = hashlib.sha256(
-        json.dumps({"skill": skill_id, "role": role, "seed": seed, "game": game}, sort_keys=True).encode()
+        json.dumps(
+            {"skill": skill_id, "role": role, "seed": seed, "game": game}
+            | ({"simpler": True} if simpler else {}),
+            sort_keys=True,
+        ).encode()
     ).hexdigest()[:16]
     return MultiplicationItem(
         item_id=f"{skill_id}:{role}:{revision}",

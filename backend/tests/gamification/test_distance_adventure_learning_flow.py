@@ -13,6 +13,7 @@ from app.gamification.content.distance_adventure import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000759")
 def test_distance_episode_is_reused_and_support_is_withdrawn_before_fresh_probe():
@@ -26,10 +27,9 @@ def test_distance_episode_is_reused_and_support_is_withdrawn_before_fresh_probe(
     supported = flow.submit_before(episode, option_id=None, constructed_response=response, response_time_ms=600, interaction_summary=summary, idempotency_key="wrong-distance")
     assert supported["episode_id"] == opened["episode_id"]
     assert supported["server_score"]["feedback_column"] in {"metres", "kilometres"}
-    assert supported["support"]["game_manifest"]["worked_example"]["correct_response"]["working_steps"]
-    support = supported["support"]; manifest = support["game_manifest"]
-    flow.complete_support(episode, duration_ms=900, steps_viewed=3, manifest_revision_id=manifest["revision_id"], grouped_count=0, group_sizes=(), interaction_summary={"completed": True, "renderer_id": manifest["renderer_id"], "parallel_example_id": manifest["parallel_example_id"], "support_actions": 3}, idempotency_key="complete-distance")
-    flow.withdraw_support(episode, request_id=uuid4(), support_revision_id=support["revision_id"], manifest_revision_id=manifest["revision_id"], all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key="withdraw-distance")
+    assert flow._adaptive_flow(episode).support_solution(before)["correct_response"]["working_steps"]
+    help_done = finish_help(flow, episode, supported)
+    flow.withdraw_support(episode, **help_done, request_id=uuid4(), all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key="withdraw-distance")
     after = flow.present_after(episode, idempotency_key="present-distance")
     assert after["manifest"]["measurement_role"] == "unsupported_after"
     assert after["manifest"]["revision_id"] != before["revision_id"]

@@ -14,6 +14,7 @@ from app.gamification.content.plant_explorer import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000803")
 
@@ -84,33 +85,15 @@ def test_plant_flow_support_withdrawal_and_independent_gain(condition: str) -> N
         interaction_summary=summary,
         idempotency_key=f"wrong-plant-{condition}",
     )
-    support = supported["support"]
-    manifest = support["game_manifest"]
-    flow.complete_support(
-        episode,
-        duration_ms=500,
-        steps_viewed=manifest["required_actions"],
-        manifest_revision_id=manifest["revision_id"],
-        grouped_count=0,
-        group_sizes=(),
-        interaction_summary={
-            "completed": True,
-            "renderer_id": manifest["renderer_id"],
-            "parallel_example_id": manifest["parallel_example_id"],
-            "support_actions": manifest["required_actions"],
-        },
-        idempotency_key=f"support-plant-{condition}",
-    )
+    help_done = finish_help(flow, episode, supported)
     flow.withdraw_support(
         episode,
+        **help_done,
         request_id=uuid4(),
-        support_revision_id=support["revision_id"],
-        manifest_revision_id=manifest["revision_id"],
         all_support_removed=True,
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
-        idempotency_key=f"withdraw-plant-{condition}",
-    )
+        idempotency_key=f"withdraw-plant-{condition}",)
     after = flow.present_after(episode, idempotency_key=f"after-plant-{condition}")
     state = flow.reconstruct(episode)["state"]
     item = next(row for row in state["presentations"] if row["role"] == "unsupported_after")

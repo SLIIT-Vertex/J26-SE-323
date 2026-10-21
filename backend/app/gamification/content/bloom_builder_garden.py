@@ -9,7 +9,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import shown_tokens, simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-10"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-bloom-builder-draft-v1"
 CATALOGUE_VERSION = "g5-eng-flower-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-flower-features-v1"
@@ -132,6 +135,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> BloomBuilderItem:
         game,
     )
 
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> BloomBuilderItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
+
 
 def public_game_data(item: BloomBuilderItem) -> dict[str, object]:
     return {"chapter": item.chapter, **{key: value for key, value in item.game_data.items() if key != "target_mapping"}}
@@ -175,7 +185,7 @@ def validate_constructed_response(
     assert isinstance(answer, Mapping)
     if not isinstance(rows, list) or response["unplaced_word_tokens"] != [] or len(rows) != len(answer):
         raise ValueError("INCOMPLETE_FLOWER_MAPPING")
-    allowed_targets = set(answer.values())
+    allowed_targets = set(answer.values()) | shown_tokens(game, "flower_token")
     for index, row in enumerate(rows, start=1):
         if (
             not isinstance(row, Mapping)

@@ -10,12 +10,11 @@ from app.gamification.application.learning_flow_orchestration import (
     LocalProbeGateway,
     RecordingEvidencePublisher,
 )
-from app.gamification.application.number_patterns_flow import NUMBER_PATTERN_SUPPORT_SEQUENCE
-from app.gamification.application.number_world_flow import _escalate_scaffold
 from app.gamification.content.number_patterns import ATOMIC_SKILLS
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000733")
 
@@ -93,34 +92,16 @@ def test_each_pattern_skill_runs_the_three_model_flow(service, skill) -> None:
         },
         idempotency_key=f"before:{skill}",
     )
-    assert support["support"]["game_manifest"]["worked_example"]["mode"] == "exact_failed_activity"
-    state = flow.reconstruct(episode)["state"]
-    exposure = state["scaffold_exposure"]
-    flow.complete_support(
-        episode,
-        duration_ms=1000,
-        steps_viewed=3,
-        manifest_revision_id=exposure["manifest_revision_id"],
-        grouped_count=0,
-        group_sizes=(),
-        interaction_summary={
-            "completed": True,
-            "renderer_id": f"{state['chapter']}:{exposure['scaffold_type']}",
-            "parallel_example_id": f"{skill}:parallel-support-v1",
-            "support_actions": 3,
-        },
-        idempotency_key=f"support:{skill}",
-    )
+    assert flow._adaptive_flow(episode).support_solution(before)["mode"] == "exact_failed_activity"
+    help_done = finish_help(flow, episode, support)
     flow.withdraw_support(
         episode,
+        **help_done,
         request_id=uuid4(),
-        support_revision_id=exposure["revision_id"],
-        manifest_revision_id=exposure["manifest_revision_id"],
         all_support_removed=True,
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
-        idempotency_key=f"withdraw:{skill}",
-    )
+        idempotency_key=f"withdraw:{skill}",)
     shown = flow.present_after(episode, idempotency_key=f"present:{skill}")
     after = flow.reconstruct(episode)["state"]["presentations"][-1]
     correct = _response(after, correct=True)
@@ -143,27 +124,3 @@ def test_each_pattern_skill_runs_the_three_model_flow(service, skill) -> None:
     assert final["measurement"]["supported_correctness_used_as_reward"] is False
     assert len(final["policy_updates"]) == 1
     assert {record["universal_skill_id"] for record in publisher.records} == {"APT-PAT"}
-
-
-def test_authored_support_sequences_are_deterministic() -> None:
-    assert _escalate_scaffold(
-        "step_by_step_guidance",
-        condition="proposed",
-        attempt_count=1,
-        skill_id="G5-MAT-PAT-DIFF-ASC-01",
-        support_sequences=NUMBER_PATTERN_SUPPORT_SEQUENCE,
-    ) == ("visual_guidance", "activity_default")
-    assert _escalate_scaffold(
-        "visual_guidance",
-        condition="proposed",
-        attempt_count=2,
-        skill_id="G5-MAT-PAT-DIFF-ASC-01",
-        support_sequences=NUMBER_PATTERN_SUPPORT_SEQUENCE,
-    ) == ("worked_parallel_example", "activity_support_escalation")
-    assert _escalate_scaffold(
-        "visual_guidance",
-        condition="proposed",
-        attempt_count=1,
-        skill_id="G5-MAT-PAT-RATIO-5-01",
-        support_sequences=NUMBER_PATTERN_SUPPORT_SEQUENCE,
-    ) == ("worked_parallel_example", "activity_default")

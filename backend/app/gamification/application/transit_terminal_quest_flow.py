@@ -17,6 +17,7 @@ from app.gamification.content.transit_terminal_quest import (
     TransitTerminalItem,
     correct_response,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     public_game_data,
@@ -24,8 +25,6 @@ from app.gamification.content.transit_terminal_quest import (
     validate_constructed_response,
     worked_steps,
 )
-
-SUPPORT_SEQUENCE = {skill_id: ("visual_guidance", "worked_parallel_example", "step_by_step_guidance") for skill_id in SKILLS}
 
 
 class TransitTerminalQuestFlow(SriLankaDiscoveryFlow):
@@ -46,6 +45,7 @@ class TransitTerminalQuestFlow(SriLankaDiscoveryFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -53,20 +53,37 @@ class TransitTerminalQuestFlow(SriLankaDiscoveryFlow):
     missing_skill_error = "TRANSIT_TERMINAL_SKILL_NOT_FOUND"
     episode_type_error = "TRANSIT_TERMINAL_EPISODE_REQUIRED"
     operation_prefix = "transit_terminal_quest"
-    support_sequences = SUPPORT_SEQUENCE
 
     @staticmethod
     def _public_game_data(item: TransitTerminalItem) -> dict[str, object]:
         return public_game_data(item)
 
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        support = super()._support(state)
-        support["title_si"] = {"visual_guidance": "වාහන විස්තර මඟ පෙන්වීම", "worked_parallel_example": "නව වාහනයක උදාහරණයක්", "step_by_step_guidance": "පියවරෙන් පියවර වචන සොයමු"}[str(support["scaffold_type"])]
-        support["visual_alt_text_si"] = "ඉංග්‍රීසි වචනය සහ වාහනය අතර සම්බන්ධය පෙන්වයි"
-        return support
-
     @staticmethod
-    def _worked_example(item: dict[str, object], *, scaffold_type: str = "worked_parallel_example") -> dict[str, object]:
+    def _worked_example(
+        item: dict[str, object], *, scaffold_type: str = "worked_parallel_example"
+    ) -> dict[str, object]:
         game = dict(item["game_data"])  # type: ignore[arg-type]
-        public = TransitTerminalItem(str(item["item_id"]), str(item["revision_id"]), str(item["parallel_family_id"]), str(item["skill_id"]), item["chapter"], item["role"], str(item["prompt_si"]), (), "constructed-response", {}, game)  # type: ignore[arg-type]
-        return {"mode": "exact_failed_activity", "prompt_si": item["prompt_si"], "game": {"schema_version": "transit-terminal-quest-item-v1", "skill_id": item["skill_id"], **public_game_data(public)}, "correct_response": correct_response(game), "steps_si": worked_steps(game, scaffold_type)}
+        public = TransitTerminalItem(
+            str(item["item_id"]),
+            str(item["revision_id"]),
+            str(item["parallel_family_id"]),
+            str(item["skill_id"]),
+            item["chapter"],
+            item["role"],
+            str(item["prompt_si"]),
+            (),
+            "constructed-response",
+            {},
+            game,
+        )  # type: ignore[arg-type]
+        return {
+            "mode": "exact_failed_activity",
+            "prompt_si": item["prompt_si"],
+            "game": {
+                "schema_version": "transit-terminal-quest-item-v1",
+                "skill_id": item["skill_id"],
+                **public_game_data(public),
+            },
+            "correct_response": correct_response(game),
+            "steps_si": worked_steps(game, scaffold_type),
+        }

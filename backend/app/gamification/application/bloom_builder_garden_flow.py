@@ -20,6 +20,7 @@ from app.gamification.content.bloom_builder_garden import (
     BloomBuilderItem,
     correct_response,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     public_game_data,
@@ -27,8 +28,6 @@ from app.gamification.content.bloom_builder_garden import (
     validate_constructed_response,
     worked_steps,
 )
-
-SUPPORT_SEQUENCE = {skill_id: ("visual_guidance", "worked_parallel_example", "step_by_step_guidance") for skill_id in SKILLS}
 
 
 class BloomBuilderGardenFlow(SriLankaDiscoveryFlow):
@@ -49,6 +48,7 @@ class BloomBuilderGardenFlow(SriLankaDiscoveryFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -56,14 +56,19 @@ class BloomBuilderGardenFlow(SriLankaDiscoveryFlow):
     missing_skill_error = "BLOOM_BUILDER_SKILL_NOT_FOUND"
     episode_type_error = "BLOOM_BUILDER_EPISODE_REQUIRED"
     operation_prefix = "bloom_builder_garden"
-    support_sequences = SUPPORT_SEQUENCE
 
     @staticmethod
     def _validate_interaction_summary(summary: Mapping[str, object] | None) -> Mapping[str, object]:
         result = dict(summary or {})
         allowed = {
-            "move_count", "correction_count", "first_action_ms", "active_time_ms",
-            "attempt_count", "invalid_drop_count", "tap_alternative_used", "detail_sheet_open_count",
+            "move_count",
+            "correction_count",
+            "first_action_ms",
+            "active_time_ms",
+            "attempt_count",
+            "invalid_drop_count",
+            "tap_alternative_used",
+            "detail_sheet_open_count",
         }
         if not set(result).issubset(allowed):
             raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
@@ -79,28 +84,32 @@ class BloomBuilderGardenFlow(SriLankaDiscoveryFlow):
     def _public_game_data(item: BloomBuilderItem) -> dict[str, object]:
         return public_game_data(item)
 
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        support = super()._support(state)
-        support["title_si"] = {
-            "visual_guidance": "මලේ ව්‍යුහය බලන මඟ පෙන්වීම",
-            "worked_parallel_example": "නව මලක උදාහරණයක්",
-            "step_by_step_guidance": "පියවරෙන් පියවර මල සොයමු",
-        }[str(support["scaffold_type"])]
-        support["visual_alt_text_si"] = "පාට පමණක් නොව මලේ පෙති, මැද කොටස සහ පොකුරු හැඩය සසඳන ආකාරය"
-        return support
-
     @staticmethod
-    def _worked_example(item: dict[str, object], *, scaffold_type: str = "worked_parallel_example") -> dict[str, object]:
+    def _worked_example(
+        item: dict[str, object], *, scaffold_type: str = "worked_parallel_example"
+    ) -> dict[str, object]:
         game = dict(item["game_data"])  # type: ignore[arg-type]
         public = BloomBuilderItem(
-            str(item["item_id"]), str(item["revision_id"]), str(item["parallel_family_id"]),
-            str(item["skill_id"]), item["chapter"], item["role"], str(item["prompt_si"]),
-            (), "constructed-response", {}, game,  # type: ignore[arg-type]
+            str(item["item_id"]),
+            str(item["revision_id"]),
+            str(item["parallel_family_id"]),
+            str(item["skill_id"]),
+            item["chapter"],
+            item["role"],
+            str(item["prompt_si"]),
+            (),
+            "constructed-response",
+            {},
+            game,  # type: ignore[arg-type]
         )
         return {
             "mode": "exact_failed_activity",
             "prompt_si": item["prompt_si"],
-            "game": {"schema_version": "bloom-builder-garden-item-v1", "skill_id": item["skill_id"], **public_game_data(public)},
+            "game": {
+                "schema_version": "bloom-builder-garden-item-v1",
+                "skill_id": item["skill_id"],
+                **public_game_data(public),
+            },
             "correct_response": correct_response(game),
             "steps_si": worked_steps(game, scaffold_type),
         }

@@ -17,6 +17,7 @@ from app.gamification.content.conversation_street import (
     ConversationStreetItem,
     correct_response,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     public_game_data,
@@ -24,11 +25,6 @@ from app.gamification.content.conversation_street import (
     validate_constructed_response,
     worked_steps,
 )
-
-SUPPORT_SEQUENCE = {
-    skill_id: ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
-    for skill_id in SKILLS
-}
 
 
 class ConversationStreetFlow(SriLankaDiscoveryFlow):
@@ -49,6 +45,7 @@ class ConversationStreetFlow(SriLankaDiscoveryFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -56,21 +53,10 @@ class ConversationStreetFlow(SriLankaDiscoveryFlow):
     missing_skill_error = "CONVERSATION_STREET_SKILL_NOT_FOUND"
     episode_type_error = "CONVERSATION_STREET_EPISODE_REQUIRED"
     operation_prefix = "conversation_street"
-    support_sequences = SUPPORT_SEQUENCE
 
     @staticmethod
     def _public_game_data(item: ConversationStreetItem) -> dict[str, object]:
         return public_game_data(item)
-
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        support = super()._support(state)
-        support["title_si"] = {
-            "visual_guidance": "සංවාද ඉඟි සසඳමු",
-            "worked_parallel_example": "වෙනත් කල්පිත සංවාදයක්",
-            "step_by_step_guidance": "පියවරෙන් පියවර සංවාදය",
-        }[str(support["scaffold_type"])]
-        support["visual_alt_text_si"] = "පිළිතුර නොහෙළි කර කල්පිත සංවාද වාර සසඳන සහාය"
-        return support
 
     @staticmethod
     def _worked_example(

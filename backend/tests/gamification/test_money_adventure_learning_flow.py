@@ -14,6 +14,7 @@ from app.gamification.content.money_adventure import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000760")
 
@@ -45,15 +46,14 @@ def test_money_episode_reuses_id_and_withdraws_exact_answers_before_probe():
     summary = {"move_count": 4, "correction_count": 0, "first_action_ms": 50, "active_time_ms": 500, "attempt_count": 1, "working_cell_count": 4, "exchange_count": 1, "overshoot_count": 0}
     supported = flow.submit_before(episode, option_id=None, constructed_response=response, response_time_ms=600, interaction_summary=summary, idempotency_key="wrong-money")
     assert supported["episode_id"] == opened["episode_id"]
-    worked = supported["support"]["game_manifest"]["worked_example"]
+    worked = flow._adaptive_flow(episode).support_solution(before)
     assert worked["prompt_si"] == before["prompt_si"]
-    assert supported["support"]["scaffold_type"] == "visual_guidance"
-    assert worked["correct_response"] is None
+    assert supported["support"]["scaffold_type"] == flow.reconstruct(episode)["state"]["model2"]["support_order"][0]
+    assert "correct_response" not in str(supported["support"])
     exact_worked = MoneyAdventureFlow._worked_example(before, scaffold_type="worked_parallel_example")
     assert exact_worked["correct_response"]["working_steps"]
-    support = supported["support"]; manifest = support["game_manifest"]
-    flow.complete_support(episode, duration_ms=900, steps_viewed=manifest["required_actions"], manifest_revision_id=manifest["revision_id"], grouped_count=0, group_sizes=(), interaction_summary={"completed": True, "renderer_id": manifest["renderer_id"], "parallel_example_id": manifest["parallel_example_id"], "support_actions": manifest["required_actions"]}, idempotency_key="complete-money")
-    flow.withdraw_support(episode, request_id=uuid4(), support_revision_id=support["revision_id"], manifest_revision_id=manifest["revision_id"], all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key="withdraw-money")
+    help_done = finish_help(flow, episode, supported)
+    flow.withdraw_support(episode, **help_done, request_id=uuid4(), all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key="withdraw-money")
     after = flow.present_after(episode, idempotency_key="present-money")
     assert after["manifest"]["measurement_role"] == "unsupported_after"
     assert after["manifest"]["revision_id"] != before["revision_id"]

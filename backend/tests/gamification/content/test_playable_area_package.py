@@ -557,7 +557,12 @@ def test_inventory_loads_every_playable_area() -> None:
         else:
             assert mission is not None
             assert mission.template_id == template_id
-            assert row.eligible_support_types == assignment(area_id).eligible_support_types
+            # One fixed scaffold per area: the original game types the area allows.
+            assert row.eligible_support_types == tuple(
+                support
+                for support in assignment(area_id).eligible_support_types
+                if support in GAME_SUPPORT_TYPES
+            )
         assert row.scaffold.support_type in row.eligible_support_types
         for item in row.items:
             assert item.prompt_si not in curriculum_text

@@ -9,6 +9,7 @@ import pytest
 
 from app.gamification.content.area_support_catalog import (
     GAME_SUPPORT_TYPES,
+    MATHEMATICS_SUPPORT_TYPES,
     VERBAL_RELATION_AREAS,
     assignment,
     load_area_support_catalog,
@@ -61,7 +62,10 @@ def test_every_mapped_area_has_a_provisional_candidate_set() -> None:
         assert row.name_en == names[row.area_id]
         assert row.template_id == expected.template_id
         assert row.eligible_support_types == expected.eligible_support_types
-        assert set(row.eligible_support_types) <= set(GAME_SUPPORT_TYPES)
+        allowed = (
+            MATHEMATICS_SUPPORT_TYPES if row.subject == "MAT" else GAME_SUPPORT_TYPES
+        )
+        assert set(row.eligible_support_types) <= set(allowed)
         assert len(row.eligible_support_types) >= 2
         assert row.authoring_basis == "provisional_development_assumption"
         assert row.review_status == "unreviewed"
@@ -77,7 +81,11 @@ def test_verbal_relation_areas_leave_out_a_depicting_visual() -> None:
         choices = catalog.choices(area_id)
         assert choices == ("worked_parallel_example", "step_by_step_guidance")
         assert catalog.row(area_id).rule == "verbal_relation"
-    others = [row for row in catalog.rows if row.area_id not in VERBAL_RELATION_AREAS]
+    others = [
+        row
+        for row in catalog.rows
+        if row.area_id not in VERBAL_RELATION_AREAS and row.subject != "MAT"
+    ]
     assert all(row.eligible_support_types == GAME_SUPPORT_TYPES for row in others)
 
 
@@ -85,12 +93,12 @@ def test_fractions_area_matches_the_game_model_actions() -> None:
     catalog = _development_catalog()
 
     assert GAME_SUPPORT_TYPES == ACTION_TYPES
-    assert catalog.choices("G5-AREA-MAT-05") == ACTION_TYPES
+    assert catalog.choices("G5-AREA-MAT-05") == MATHEMATICS_SUPPORT_TYPES
     assert catalog.row("G5-AREA-MAT-05").template_id == "half_set"
 
 
 def test_blocked_and_unknown_areas_have_no_assignment() -> None:
-    for area_id in (*BLOCKED_AREA_IDS, "G5-AREA-ENG-01", "G5-AREA-MAT-17"):
+    for area_id in (*BLOCKED_AREA_IDS, "G5-AREA-MAT-17"):
         with pytest.raises(ValueError):
             assignment(area_id)
     catalog = _development_catalog()

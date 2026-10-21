@@ -14,6 +14,7 @@ from app.gamification.content.roman_adventure import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000766")
 
@@ -88,36 +89,19 @@ def test_episode_reuse_exact_support_withdrawal_and_independent_success(conditio
         interaction_summary=summary,
         idempotency_key=f"wrong-roman-{condition}",
     )
-    support, manifest = supported["support"], supported["support"]["game_manifest"]
     assert (
-        manifest["worked_example"]["game"]["arabic_values"] == before["game_data"]["arabic_values"]
+        flow._adaptive_flow(episode).support_solution(before)["game"]["arabic_values"] == before["game_data"]["arabic_values"]
     )
-    assert manifest["worked_example"]["correct_response"]["matches"]
-    flow.complete_support(
-        episode,
-        duration_ms=700,
-        steps_viewed=manifest["required_actions"],
-        manifest_revision_id=manifest["revision_id"],
-        grouped_count=0,
-        group_sizes=(),
-        interaction_summary={
-            "completed": True,
-            "renderer_id": manifest["renderer_id"],
-            "parallel_example_id": manifest["parallel_example_id"],
-            "support_actions": manifest["required_actions"],
-        },
-        idempotency_key=f"complete-roman-{condition}",
-    )
+    assert flow._adaptive_flow(episode).support_solution(before)["correct_response"]["matches"]
+    help_done = finish_help(flow, episode, supported)
     flow.withdraw_support(
         episode,
+        **help_done,
         request_id=uuid4(),
-        support_revision_id=support["revision_id"],
-        manifest_revision_id=manifest["revision_id"],
         all_support_removed=True,
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
-        idempotency_key=f"withdraw-roman-{condition}",
-    )
+        idempotency_key=f"withdraw-roman-{condition}",)
     after = flow.present_after(episode, idempotency_key=f"after-roman-{condition}")
     assert after["manifest"]["measurement_role"] == "unsupported_after"
     after_item = next(

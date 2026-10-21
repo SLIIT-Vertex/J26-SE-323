@@ -183,22 +183,41 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> MoneyItem:
+SIMPLER_DENOMINATION_COUNT = 4
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> MoneyItem:
+    """The same money skill with fewer coins and notes, smaller amounts, or no carrying."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> MoneyItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("MONEY_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill.response_kind == "currency_recognition":
-        tokens = [{"denomination_id": row[0], "currency_type": row[1], "value_in_cents": row[2]} for row in DENOMINATIONS]
+        rows = DENOMINATIONS
+        if simpler:
+            rows = tuple(sorted(rng.sample(DENOMINATIONS, SIMPLER_DENOMINATION_COUNT), key=lambda row: row[2]))
+        tokens = [{"denomination_id": row[0], "currency_type": row[1], "value_in_cents": row[2]} for row in rows]
         rng.shuffle(tokens)
         prompt = "කාසි සහ නෝට්ටු නිවැරදි තැන්වල තබා කුඩා අගයෙන් විශාල අගයට පෙළගස්වන්න."
         game: dict[str, object] = {"tokens": tokens}
     elif skill.response_kind == "amount_construction":
-        target = rng.choice((7600, 8700, 12500, 18500))
+        target = rng.choice((1500, 2500, 3000) if simpler else (7600, 8700, 12500, 18500))
         prompt = f"රුපියල් {format_money(target)} මුදල පසුම්බියට සාදන්න."
         game = {"target_in_cents": target, "denominations": [row[0] for row in DENOMINATIONS[:7]]}
     elif skill.response_kind == "money_arithmetic":
         operation = "add" if skill_id.endswith("ADD-01") else "subtract"
         pairs = ((16575, 24250), (32860, 17655)) if operation == "add" else ((50000, 16575), (73025, 24860))
+        if simpler:
+            # Whole rupees with no carrying or exchanging between places.
+            pairs = ((12000, 24000), (31000, 15000)) if operation == "add" else ((50000, 20000), (75000, 32000))
         left, right = rng.choice(pairs)
         prompt = f"රුපියල් {format_money(left)} {('සහ' if operation == 'add' else 'න්')} රුපියල් {format_money(right)} {('එකතු කරන්න.' if operation == 'add' else 'අඩු කරන්න.')}"
         game = {"operation": operation, "left_amount_in_cents": left, "right_amount_in_cents": right}
@@ -206,6 +225,9 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> MoneyItem:
         scenario = rng.choice(("total", "change"))
         selected = ["lime-1kg", "papaya-1kg"] if scenario == "total" else ["lime-1kg", "papaya-1kg", "sugar-1kg"]
         quantities = [2, 1] if scenario == "total" else [1, 1, 1]
+        if simpler:
+            # One of each of two products, and no change to work out.
+            scenario, selected, quantities = "total", ["lime-1kg", "papaya-1kg"], [1, 1]
         line_totals, total = shopping_totals(selected, quantities)
         paid = total if scenario == "total" else 100000
         prompt = "මිල වගුව බලන්න. ඉල්ලූ ප්‍රමාණවල මුළු මිල සහ ඉතිරි මුදල සොයන්න."
@@ -219,16 +241,18 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> MoneyItem:
             "line_count": len(line_totals),
         }
     game["response_kind"] = skill.response_kind
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return MoneyItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 
 def correct_response(game: Mapping[str, object]) -> dict[str, object]:
     kind = str(game["response_kind"])
     if kind == "currency_recognition":
+        # The item's own tokens, smallest value first (every denomination, or fewer in the simpler version).
+        shown = {str(token["denomination_id"]) for token in game["tokens"]}  # type: ignore[union-attr]
         placements = [
             {"denomination_id": row[0], "currency_type": row[1], "value_in_cents": row[2], "ordered_position": index}
-            for index, row in enumerate(DENOMINATIONS)
+            for index, row in enumerate(row for row in DENOMINATIONS if row[0] in shown)
         ]
         return {"kind": kind, "denomination_id": "all", "currency_type": "mixed", "value_in_cents": 0, "ordered_position": 10, "placements": placements}
     if kind == "amount_construction":

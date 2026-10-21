@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.gamification.api.dependencies import NOT_FOR_PRODUCTION
 from app.gamification.api.router import VisualFeatureWindow
-from app.gamification.application.delivery import RateLimiter, get_rate_limiter
+from app.gamification.application.delivery import RateLimiter, get_learning_flow_rate_limiter
 from app.gamification.application.fixture_round import FixtureRoundError, FixtureRoundService
 from app.gamification.application.learner_state_answers import (
     LEARNER_STATE_CAMERA_CONSENT_VERSION,
@@ -35,6 +35,11 @@ from app.gamification.content.draft_mission_catalog import (
     DraftMissionRecord,
     load_draft_mission_catalog,
 )
+from app.gamification.content.support_types import (
+    ENGLISH_TAGS,
+    EnglishTagKey,
+    SupportType,
+)
 from app.gamification.infrastructure.db.consent_store import (
     CONSENT_CONTRACT,
     SqlAlchemyConsentStore,
@@ -50,8 +55,12 @@ from app.gamification.infrastructure.db.models import LearningFlowProbeReservati
 from app.gamification.infrastructure.gateways.learner_state_answers import (
     learner_state_answer_gateway,
 )
+from app.gamification.infrastructure.gateways.research_learning_state import (
+    ResearchLearningStateGateway,
+)
 from app.shared.database.session import get_db
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
+from app.shared.learning_state_provider import stored_learning_state_provider
 
 routes = APIRouter(tags=["gamification-learning-flow-development"])
 
@@ -168,10 +177,21 @@ class HalfSetGameManifest(Boundary):
     instruction_si: str
 
 
+class SupportedAnswerRequest(Boundary):
+    """An attempt made inside the current help round. The server picks the item and the type."""
+
+    constructed_response: dict[str, object] = Field(max_length=20)
+    response_time_ms: int | None = Field(default=None, ge=0, le=86_400_000)
+    interaction_summary: dict[str, object] = Field(default_factory=dict, max_length=12)
+
+
 class SupportView(Boundary):
     scaffold_id: str
     revision_id: str
-    scaffold_type: Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
+    scaffold_type: SupportType
+    english_tag_key: EnglishTagKey | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
     title_si: str
     body_si: tuple[str, ...]
     visual_alt_text_si: str | None
@@ -198,6 +218,20 @@ class ServerScore(Boundary):
     feedback_column: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
+class SupportRoundStatus(Boundary):
+    """Where the multi-help loop stands. It never names a later help type."""
+
+    round_number: int = Field(ge=1)
+    scaffold_type: SupportType
+    english_tag_key: EnglishTagKey = Field(json_schema_extra={"x-english-tags": ENGLISH_TAGS})
+    stage_kind: Literal["practice", "target", "view"] | None
+    previous_attempt_correct: bool | None
+    another_round_required: bool
+    withdrawal_allowed: bool
+    support_revision_id: str
+    manifest_revision_id: str
+
+
 class ChildEpisodeResponse(Boundary):
     model_config = ConfigDict(extra="ignore")
 
@@ -218,6 +252,9 @@ class ChildEpisodeResponse(Boundary):
         ]
         | None
     ) = None
+    support_round: SupportRoundStatus | None = Field(
+        default=None, exclude_if=lambda value: value is None
+    )
 
 
 class TelemetryAcknowledgement(Boundary):
@@ -323,9 +360,7 @@ class PublicAreaSupportRow(Boundary):
     name_en: str
     subject: Literal["MAT", "SIN", "ENV"]
     template_id: str
-    eligible_support_types: tuple[
-        Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"], ...
-    ]
+    eligible_support_types: tuple[SupportType, ...]
     rule: str
     rendering_constraint: str
     authoring_basis: str
@@ -358,6 +393,7 @@ def get_learning_flow_orchestrator(db: Session = Depends(get_db)) -> LearningFlo
             lambda: Session(bind=engine, autoflush=False, expire_on_commit=False)
         ),
         camera_consent=SqlAlchemyConsentStore(db),
+        support_need_provider=ResearchLearningStateGateway(stored_learning_state_provider(db)),
     )
 
 
@@ -381,7 +417,7 @@ def _principal(
 
 def _learner(
     principal: tuple[str, UUID | None] = Depends(_principal),
-    limiter: RateLimiter = Depends(get_rate_limiter),
+    limiter: RateLimiter = Depends(get_learning_flow_rate_limiter),
 ) -> UUID:
     if principal[0] != "learner" or principal[1] is None:
         raise HTTPException(status_code=403, detail={"code": "ROLE_FORBIDDEN"})
@@ -498,6 +534,26 @@ def complete_support(
             manifest_revision_id=body.manifest_revision_id,
             grouped_count=body.grouped_count,
             group_sizes=body.group_sizes,
+            interaction_summary=body.interaction_summary,
+            idempotency_key=key,
+        )
+    )
+
+
+@routes.post("/episodes/{episode_id}/support/answer", response_model=ChildEpisodeResponse)
+def answer_supported(
+    episode_id: UUID,
+    body: SupportedAnswerRequest,
+    key: str = Depends(_key),
+    learner_id: UUID = Depends(_learner),
+    orchestrator: LearningFlowOrchestrator = Depends(get_learning_flow_orchestrator),
+) -> dict[str, object]:
+    _owned(orchestrator, episode_id, learner_id)
+    return _call(
+        lambda: orchestrator.submit_supported(
+            episode_id,
+            constructed_response=body.constructed_response,
+            response_time_ms=body.response_time_ms,
             interaction_summary=body.interaction_summary,
             idempotency_key=key,
         )

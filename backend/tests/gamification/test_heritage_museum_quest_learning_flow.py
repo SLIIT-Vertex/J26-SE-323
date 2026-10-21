@@ -14,6 +14,7 @@ from app.gamification.content.heritage_museum_quest import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000816")
 
@@ -81,32 +82,16 @@ def test_complete_durable_lifecycle_for_each_skill_and_condition(condition, skil
     )
     support = supported["support"]
     support_manifest = support["game_manifest"]
-    assert support_manifest["schema_version"] == "heritage-museum-support-v1"
-    flow.complete_support(
-        episode_id,
-        duration_ms=100,
-        steps_viewed=support_manifest["required_actions"],
-        manifest_revision_id=support_manifest["revision_id"],
-        grouped_count=0,
-        group_sizes=(),
-        interaction_summary={
-            "completed": True,
-            "renderer_id": support_manifest["renderer_id"],
-            "parallel_example_id": support_manifest["parallel_example_id"],
-            "support_actions": support_manifest["required_actions"],
-        },
-        idempotency_key=f"support-{condition}-{key}",
-    )
+    assert support_manifest["schema_version"] == "support-round-v1"
+    help_done = finish_help(flow, episode_id, supported)
     flow.withdraw_support(
         episode_id,
+        **help_done,
         request_id=uuid4(),
-        support_revision_id=support["revision_id"],
-        manifest_revision_id=support_manifest["revision_id"],
         all_support_removed=True,
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
-        idempotency_key=f"withdraw-{condition}-{key}",
-    )
+        idempotency_key=f"withdraw-{condition}-{key}",)
     after = flow.present_after(episode_id, idempotency_key=f"present-{condition}-{key}")
     after_item = next(
         item

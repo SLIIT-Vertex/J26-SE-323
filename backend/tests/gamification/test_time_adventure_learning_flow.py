@@ -9,7 +9,6 @@ from app.gamification.application.learning_flow_orchestration import (
     LocalProbeGateway,
     RecordingEvidencePublisher,
 )
-from app.gamification.application.time_adventure_flow import TIME_SUPPORT_SEQUENCE
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
@@ -17,7 +16,7 @@ from app.shared.learner.model import LearnerModel
 LEARNER = UUID("00000000-0000-4000-8000-000000000757")
 
 
-def test_time_episode_is_server_scored_and_uses_deterministic_support():
+def test_time_episode_is_server_scored_and_opens_the_server_order():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
     session = Session(engine)
@@ -37,7 +36,7 @@ def test_time_episode_is_server_scored_and_uses_deterministic_support():
     wrong = {"kind": "analog_clock", "hour": wrong_hour, "minute": item["game_data"]["target_minute"], "presentation_id": item["presentation_id"], "item_revision_id": item["revision_id"], "interaction_version": "constructed-response-v1"}
     result = flow.submit_before(episode, option_id=None, constructed_response=wrong, response_time_ms=700, interaction_summary={"move_count": 2, "correction_count": 0, "first_action_ms": 100, "active_time_ms": 600, "attempt_count": 1, "evidence_quality": 0.8, "all_objects_placed": True}, idempotency_key="wrong-time")
     assert result["status"] == "support_active"
-    assert result["support"]["scaffold_type"] == TIME_SUPPORT_SEQUENCE[skill][0]
+    assert result["support"]["scaffold_type"] == flow.reconstruct(episode)["state"]["model2"]["support_order"][0]
     state = flow.reconstruct(episode)["state"]
     assert state["universal_skill_id"] == "MAT-TIME"
     assert publisher.records[-1]["universal_skill_id"] == "MAT-TIME"

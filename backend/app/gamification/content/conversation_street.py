@@ -6,10 +6,13 @@ import hashlib
 import json
 import random
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
+from app.gamification.content.simpler_items import shown_tokens, simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-18"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-conversation-street-draft-v1"
 CATALOGUE_VERSION = "g5-eng-conversation-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-conversation-features-v1"
@@ -111,6 +114,8 @@ SCENES = (
     ("bag", "What is in my hand?", "A bag.", "🎒"),
     ("umbrella", "What is in my hand?", "An umbrella.", "☂️"),
 )
+# A simpler dialogue keeps at least this many turns to order.
+SIMPLER_MINIMUM_TURNS = 2
 REVIEWED_DIALOGUES = (
     (
         ("Can you sing?", "speaker-a"),
@@ -177,7 +182,7 @@ ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-ENG-CONV-FRAME-03",
         "fictional_profile_reply_lab",
-        "කල්පිත චරිතයක පිළිතුර සකසීම",
+        "චරිතයක පිළිතුර සකසීම",
         "easy-to-hard",
         "fictional_profile_reply",
     ),
@@ -241,7 +246,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ConversationStreetI
         ]
         mapping = {_token("q", q, salt): _token("r", a, salt) for q, a in rows}
         game = {**common, "questions": questions, "responses": responses, "target_mapping": mapping}
-        prompt = "කල්පිත සංවාදයේ සෑම ප්‍රශ්නයකටම ගැළපෙන පිළිතුර සම්බන්ධ කරන්න."
+        prompt = "සංවාදයේ සෑම ප්‍රශ්නයකටම ගැළපෙන පිළිතුර සම්බන්ධ කරන්න."
     elif skill.response_kind == "conversation_turn_sequence":
         dialogue = rng.choice(REVIEWED_DIALOGUES)
         speakers = {name: _token("sp", name, salt) for name in {speaker for _, speaker in dialogue}}
@@ -267,7 +272,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ConversationStreetI
             "target_sequence": target_sequence,
             "target_speakers": target_speakers,
         }
-        prompt = "සමාලෝචිත කල්පිත සංවාදයේ වාර නිවැරදි අනුපිළිවෙළට දමන්න."
+        prompt = "සංවාදයේ වාර නිවැරදි අනුපිළිවෙළට දමන්න."
     elif skill.response_kind == "fictional_profile_reply":
         profile = rng.choice(FICTIONAL_PROFILES)
         question, frame, fact = rng.choice(PROFILE_FRAMES)
@@ -294,7 +299,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ConversationStreetI
             "target_sequence": target,
             "bound_fact": fact,
         }
-        prompt = "ඔබ ගැන නොව, මේ කල්පිත චරිත කාඩ්පතෙන් පිළිතුර සකසන්න."
+        prompt = "ඔබ ගැන නොව, මේ චරිත කාඩ්පතෙන් පිළිතුර සකසන්න."
     else:
         scene, question, answer, emoji = rng.choice(SCENES)
         decoy = next(row[2] for row in SCENES if row[0] != scene)
@@ -317,7 +322,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ConversationStreetI
             "response_mode": "select_one",
             "target_response": _token("r", answer, salt),
         }
-        prompt = "කේතයෙන් සාදා ඇති කල්පිත දර්ශනයට ගැළපෙන පිළිතුර තෝරන්න."
+        prompt = "දර්ශනයට ගැළපෙන පිළිතුර තෝරන්න."
     revision = f"{skill_id}:{role}:{seed % 100000}@v1"
     return ConversationStreetItem(
         f"{skill_id}:{role}",
@@ -332,6 +337,38 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ConversationStreetI
         {},
         game,
     )
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> ConversationStreetItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    if item.game_data["response_kind"] == "conversation_turn_sequence":
+        return _shorter_dialogue(item)
+    return simpler_matching_item(item, than=than)
+
+
+def _shorter_dialogue(item: ConversationStreetItem) -> ConversationStreetItem | None:
+    """The same reviewed dialogue without its last turn: fewer turns to put in order.
+
+    Turns are whole utterances, so the opening turns are still a dialogue. Sentence chunks are
+    not shortened this way, because a cut sentence is no longer English.
+    """
+
+    game = dict(item.game_data)
+    sequence = list(game["target_sequence"])  # type: ignore[call-overload]
+    if len(sequence) <= SIMPLER_MINIMUM_TURNS:
+        return None
+    kept = sequence[:-1]
+    speakers = game["target_speakers"]
+    assert isinstance(speakers, Mapping)
+    game.update(
+        turns=[row for row in game["turns"] if row["turn_token"] in kept],  # type: ignore[union-attr,index]
+        target_sequence=kept,
+        target_speakers={token: speakers[token] for token in kept},
+    )
+    stem, _, version = item.revision_id.rpartition("@")
+    return replace(item, game_data=game, revision_id=f"{stem}:simpler@{version}")
+
 
 
 def public_game_data(item: ConversationStreetItem) -> dict[str, object]:
@@ -452,7 +489,7 @@ def validate_constructed_response(
                 or set(row) != {"sequence", "question_token", "response_token"}
                 or row["sequence"] != i
                 or row["question_token"] not in mapping
-                or row["response_token"] not in set(mapping.values())
+                or row["response_token"] not in set(mapping.values()) | shown_tokens(game, "response_token")
             ):
                 raise ValueError("INVALID_CONVERSATION_STREET_TOKEN")
             submitted[str(row["question_token"])] = str(row["response_token"])
@@ -542,10 +579,10 @@ def scaffold_decision(
 def worked_steps(game: Mapping[str, object], scaffold_type: str) -> list[str]:
     del game
     if scaffold_type == "visual_guidance":
-        return ["කල්පිත කථිකයා, ප්‍රශ්නය සහ පිළිතුරු ආකාරය සසඳන්න; නිවැරදි පිළිතුර හෙළි නොවේ."]
+        return ["කථිකයා, ප්‍රශ්නය සහ පිළිතුරු ආකාරය සසඳන්න; නිවැරදි පිළිතුර හෙළි නොවේ."]
     if scaffold_type == "worked_parallel_example":
-        return ["වෙනත් කල්පිත සංවාදයක් බලමු.", "කථික වාර සසඳමු.", "නව ප්‍රතිචාරයක් සකසමු."]
-    return ["ප්‍රශ්නය හඳුනාගන්න.", "කල්පිත කරුණ හෝ දර්ශනය බලන්න.", "ප්‍රතිචාරය සකසා නැවත පරීක්ෂා කරන්න."]
+        return ["වෙනත් සංවාදයක් බලමු.", "කථික වාර සසඳමු.", "නව ප්‍රතිචාරයක් සකසමු."]
+    return ["ප්‍රශ්නය හඳුනාගන්න.", "කරුණ හෝ දර්ශනය බලන්න.", "ප්‍රතිචාරය සකසා නැවත පරීක්ෂා කරන්න."]
 
 
 def package_hash() -> str:

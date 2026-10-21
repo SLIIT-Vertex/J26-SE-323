@@ -28,16 +28,17 @@ class AtomicSkill:
     skill_id: str
     chapter: Chapter
     name_si: str
+    difficulty: str
     source_page: int
     response_kind: str
 
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-TIME-UNITS-01", "time_tools", "කාල ඒකක යුගල", 73, "time_unit_match"),
-    AtomicSkill("G5-MAT-TIME-ANALOG-01", "time_tools", "ඔරලෝසු අත් සකසමු", 73, "analog_clock"),
-    AtomicSkill("G5-MAT-TIME-24H-01", "twenty_four_hour_mission", "පැය 24 ඔරලෝසුව", 73, "time_conversion"),
-    AtomicSkill("G5-MAT-TIME-ELAPSED-01", "time_journey", "ගමනේ ගත වූ කාලය", 74, "elapsed_time"),
-    AtomicSkill("G5-MAT-TIME-ARITHMETIC-01", "time_journey", "කාල අභියෝගය", 74, "time_arithmetic"),
+    AtomicSkill("G5-MAT-TIME-UNITS-01", "time_tools", "කාල ඒකක යුගල", "easy", 73, "time_unit_match"),
+    AtomicSkill("G5-MAT-TIME-ANALOG-01", "time_tools", "ඔරලෝසු අත් සකසමු", "easy", 73, "analog_clock"),
+    AtomicSkill("G5-MAT-TIME-24H-01", "twenty_four_hour_mission", "පැය 24 ඔරලෝසුව", "medium", 73, "time_conversion"),
+    AtomicSkill("G5-MAT-TIME-ELAPSED-01", "time_journey", "ගමනේ ගත වූ කාලය", "medium", 74, "elapsed_time"),
+    AtomicSkill("G5-MAT-TIME-ARITHMETIC-01", "time_journey", "කාල අභියෝගය", "hard", 74, "time_arithmetic"),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
 MISCONCEPTIONS = (
@@ -86,7 +87,17 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> TimeItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> TimeItem:
+    """The same time skill with fewer unit pairs, whole or half hours, or no regrouping."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> TimeItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("TIME_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
@@ -96,7 +107,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> TimeItem:
         "mapping_basis": "photographed_textbook_pages_73_74",
     }
     if skill.response_kind == "time_unit_match":
-        indices = rng.sample(range(len(UNIT_RELATIONSHIPS)), 4)
+        indices = rng.sample(range(len(UNIT_RELATIONSHIPS)), 2 if simpler else 4)
         relationships = [UNIT_RELATIONSHIPS[index] for index in indices]
         left_options = [[row[0], row[1]] for row in relationships]
         right_options = [[row[2], row[3]] for row in relationships]
@@ -108,28 +119,35 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> TimeItem:
         )
         prompt = "ගැළපෙන කාල ඒකක සම්බන්ධතා සකසන්න."
     elif skill.response_kind == "analog_clock":
-        hour, minute = rng.randint(1, 12), rng.choice((0, 5, 10, 20, 25, 35, 40, 50, 55))
+        minutes = (0, 30) if simpler else (0, 5, 10, 20, 25, 35, 40, 50, 55)
+        hour, minute = rng.randint(1, 12), rng.choice(minutes)
         game.update(target_hour=hour, target_minute=minute)
         prompt = f"ඔරලෝසුව {hour}:{minute:02d} වේලාවට සකසන්න."
     elif skill.response_kind == "time_conversion":
         hour12, minute, period = rng.randint(1, 12), rng.choice((0, 15, 30, 45)), rng.choice(("am", "pm"))
+        if simpler:
+            # A whole hour in the afternoon: only the hour changes.
+            hour12, minute, period = rng.randint(1, 11), 0, "pm"
         game.update(source_hour=hour12, source_minute=minute, period=period)
         prompt = "පෙන්වා ඇති වේලාව පැය 24 ආකාරයට සකසන්න."
     elif skill.response_kind == "elapsed_time":
         start_hour, start_minute = rng.choice((7, 8, 9, 13)), rng.choice((0, 10, 20, 30))
         duration_hours, duration_minutes = rng.choice((1, 2, 3)), rng.choice((10, 20, 30))
+        if simpler:
+            start_minute, duration_hours, duration_minutes = 0, 1, rng.choice((0, 30))
         end_total = start_hour * 60 + start_minute + duration_hours * 60 + duration_minutes
         game.update(start_hour=start_hour, start_minute=start_minute, end_hour=end_total // 60, end_minute=end_total % 60)
         prompt = "ගමනේ ගත වූ පැය සහ මිනිත්තු සකසන්න."
     else:
         operation = rng.choice(("add", "subtract"))
+        # The simpler version keeps the one regroup this skill is about, with smaller times.
         if operation == "add":
-            left, right = (3, 45), (2, 35)
+            left, right = ((1, 40), (1, 30)) if simpler else ((3, 45), (2, 35))
         else:
-            left, right = (6, 20), (2, 45)
+            left, right = ((3, 10), (1, 30)) if simpler else ((6, 20), (2, 45))
         game.update(operation=operation, left_hours=left[0], left_minutes=left[1], right_hours=right[0], right_minutes=right[1])
         prompt = "පැය හා මිනිත්තු වගුව භාවිත කර පිළිතුර සකසන්න."
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return TimeItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 
@@ -226,7 +244,7 @@ def scaffold_decision(skill_id: str, condition: str, belief: Mapping[str, object
 
 
 def package_hash() -> str:
-    payload = {"version": PACKAGE_VERSION, "skills": [[s.skill_id, s.source_page] for s in ATOMIC_SKILLS], "misconceptions": MISCONCEPTIONS}
+    payload = {"version": PACKAGE_VERSION, "skills": [[s.skill_id, s.source_page, s.difficulty] for s in ATOMIC_SKILLS], "misconceptions": MISCONCEPTIONS}
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 

@@ -1197,6 +1197,39 @@ class LearningFlowEpisodeEventModel(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
+class LearningFlowSupportRoundModel(Base):
+    """One delivered help type inside a multi-help episode.
+
+    Written in the same transaction as the score, the episode state, and the idempotency receipt.
+    The unique constraints make a repeated type or a second copy of a round impossible.
+    """
+
+    __tablename__ = "learning_flow_support_rounds"
+    __table_args__ = (
+        UniqueConstraint("episode_id", "round_number", name="uq_learning_flow_support_round"),
+        UniqueConstraint("episode_id", "scaffold_type", name="uq_learning_flow_support_type"),
+        CheckConstraint("round_number >= 1", name="ck_learning_flow_support_round_number"),
+        CheckConstraint(
+            "outcome IS NULL OR outcome IN ('succeeded', 'failed')",
+            name="ck_learning_flow_support_round_outcome",
+        ),
+        Index("ix_learning_flow_support_rounds_episode", "episode_id", "round_number"),
+    )
+
+    round_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    episode_id: Mapped[UUID] = mapped_column(
+        ForeignKey("learning_flow_episode_runs.episode_id", ondelete="CASCADE"), nullable=False
+    )
+    round_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    scaffold_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    english_tag_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    order_position: Mapped[int] = mapped_column(Integer, nullable=False)
+    outcome: Mapped[str | None] = mapped_column(String(16))
+    supported_correct: Mapped[bool | None] = mapped_column(Boolean)
+    opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class LearningFlowIdempotencyReceiptModel(Base):
     __tablename__ = "learning_flow_idempotency_receipts"
     __table_args__ = (

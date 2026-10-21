@@ -79,26 +79,45 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> ShapeItem:
+# The simpler version uses two clearly different solids instead of four.
+SIMPLER_SOLIDS = ("cube", "cylinder")
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> ShapeItem:
+    """The same shape skill with two solids or two pictures instead of the full set."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> ShapeItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("SHAPE_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
+    solids = list(SIMPLER_SOLIDS if simpler else SOLIDS)
     if skill.response_kind == "shape_property_table":
-        rows = list(SOLIDS)
+        rows = list(solids)
         if role == "unsupported_after": rows = rows[1:] + rows[:1]
         game: dict[str, object] = {"response_kind": skill.response_kind, "row_ids": rows, "property_fields": ["faces", "vertices", "edges"]}
         prompt = "රූප බලමින් මුහුණත්, ශීර්ෂ සහ දාර ගණන වගුවේ පුරවන්න."
     elif skill.response_kind == "orientation_identification":
         examples = list(ORIENTATIONS)
         rng.shuffle(examples)
+        if simpler:
+            # One horizontal and one vertical picture.
+            examples = [next(e for e in examples if ORIENTATIONS[e] == kind) for kind in ("horizontal", "vertical")]
+            rng.shuffle(examples)
         game = {"response_kind": skill.response_kind, "example_ids": examples}
         prompt = "එක් එක් රූපයේ පෙන්වන දිශාව තිරස් ද සිරස් ද තෝරන්න."
     else:
-        nets = list(SOLIDS)
+        nets = list(solids)
         rng.shuffle(nets)
-        game = {"response_kind": skill.response_kind, "solid_ids": list(SOLIDS), "net_ids": nets}
+        game = {"response_kind": skill.response_kind, "solid_ids": solids, "net_ids": nets}
         prompt = "ඝන වස්තුව තෝරා එය සාදන නිවැරදි පතරොමට ගළපන්න."
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return ShapeItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 
@@ -156,7 +175,7 @@ def validate_constructed_response(item: Mapping[str, object] | ShapeItem, respon
     first = next((row for index, row in enumerate(matches) if index >= len(expected["matches"]) or row != expected["matches"][index]), None)  # type: ignore[arg-type]
     normalized["_feedback_column"] = str(first.get("solid_id", "nets")) if first else "nets"
     correct = matches == expected["matches"] and bool(trace)
-    error = "incomplete_match" if len(matches) != len(SOLIDS) else ("cylinder_net_missing_circle" if first and first.get("solid_id") == "cylinder" else "triangular_pyramid_net_confused" if first and first.get("solid_id") == "triangular_pyramid" else "cube_cuboid_net_confused")
+    error = "incomplete_match" if len(matches) != len(game["solid_ids"]) else ("cylinder_net_missing_circle" if first and first.get("solid_id") == "cylinder" else "triangular_pyramid_net_confused" if first and first.get("solid_id") == "triangular_pyramid" else "cube_cuboid_net_confused")
     return correct, "correct" if correct else error, normalized
 
 

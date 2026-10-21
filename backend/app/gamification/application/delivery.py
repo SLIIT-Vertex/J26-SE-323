@@ -184,6 +184,15 @@ def get_rate_limiter() -> RateLimiter:
     return LIMITER
 
 
+# The learning flow makes several calls per answer (consent, telemetry, support, after-present),
+# so a learner moving between games would exhaust the shared 60/minute budget mid-play.
+LEARNING_FLOW_LIMITER = RateLimiter(limit=600)
+
+
+def get_learning_flow_rate_limiter() -> RateLimiter:
+    return LEARNING_FLOW_LIMITER
+
+
 @dataclass
 class DeliveryJob:
     job_id: UUID

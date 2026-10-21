@@ -9,7 +9,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-08"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-water-works-draft-v1"
 CATALOGUE_VERSION = "g5-eng-water-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-water-features-v1"
@@ -114,6 +117,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> WaterWorksItem:
     revision = f"{skill_id}:{role}:{seed % 100000}@v1"
     prompt = "ඉංග්‍රීසි ක්‍රියාව ගැළපෙන ජල දර්ශනයට සම්බන්ධ කරන්න."
     return WaterWorksItem(f"{skill_id}:{role}", revision, f"{skill_id}:{chapter}:parallel-v1", skill_id, chapter, role, prompt, (), "constructed-response", {}, game)  # type: ignore[arg-type]
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> WaterWorksItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
 
 
 def public_game_data(item: WaterWorksItem) -> dict[str, object]:

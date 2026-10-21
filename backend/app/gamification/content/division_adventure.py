@@ -126,34 +126,48 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> DivisionItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> DivisionItem:
+    """The same division skill with fewer objects, a smaller divisor, and fewer written steps."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> DivisionItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("DIVISION_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill_id == "G5-MAT-DIV-SHARE-01":
-        dividend, divisor = rng.choice((20, 30, 50, 80)), 2
+        dividend, divisor = rng.choice((6, 8, 10) if simpler else (20, 30, 50, 80)), 2
         prompt = f"{dividend} වස්තු කණ්ඩායම් දෙකට සමානව බෙදන්න."
         game: dict[str, object] = {"dividend": dividend, "divisor": divisor}
     elif skill_id == "G5-MAT-DIV-PLAN-01":
-        divisor = rng.choice((2, 3, 4))
-        dividend = divisor * rng.choice((11, 12, 21))
+        divisor = 2 if simpler else rng.choice((2, 3, 4))
+        dividend = divisor * (11 if simpler else rng.choice((11, 12, 21)))
         prompt = f"{dividend} ÷ {divisor} හි පළමු කඩදාසි පියවර පුරවන්න."
         game = {"dividend": dividend, "divisor": divisor, "trace_limit": 1}
     elif skill_id == "G5-MAT-DIV-WRITTEN-01":
-        divisor = rng.choice((2, 3, 4, 5))
-        quotient = rng.choice((12, 21, 102, 111))
+        divisor = 2 if simpler else rng.choice((2, 3, 4, 5))
+        quotient = rng.choice((12, 21) if simpler else (12, 21, 102, 111))
         dividend = divisor * quotient
         prompt = f"{dividend} ÷ {divisor} කඩදාසි ක්‍රමයෙන් විසඳන්න."
         game = {"dividend": dividend, "divisor": divisor}
     elif skill_id == "G5-MAT-DIV-REMAINDER-01":
-        divisor = rng.choice((3, 4, 5, 6))
-        quotient, remainder = rng.choice((12, 21, 31)), rng.randint(1, divisor - 1)
+        divisor = 3 if simpler else rng.choice((3, 4, 5, 6))
+        quotient = 12 if simpler else rng.choice((12, 21, 31))
+        remainder = rng.randint(1, divisor - 1)
         dividend = divisor * quotient + remainder
         prompt = f"{dividend} ÷ {divisor} විසඳා ඉතිරිය සොයන්න."
         game = {"dividend": dividend, "divisor": divisor}
     else:
-        divisor = rng.choice((3, 4, 5))
-        quotient, remainder = rng.choice((12, 14, 21)), rng.randint(1, divisor - 1)
+        divisor = 3 if simpler else rng.choice((3, 4, 5))
+        quotient = rng.choice((3, 4)) if simpler else rng.choice((12, 14, 21))
+        remainder = rng.randint(1, divisor - 1)
         dividend = divisor * quotient + remainder
         story_id = "basket_groups"
         prompt = f"පලතුරු {dividend}ක් බැගින් {divisor}ක් දමන කූඩවලට දමමු."
@@ -172,7 +186,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> DivisionItem:
         dividend_digit_count=len(str(dividend)),
         step_count=len(canonical_long_division(dividend, divisor)),
     )
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return DivisionItem(
         f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id,
         skill.chapter, role, prompt, (), "constructed-response", {}, game,

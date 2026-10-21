@@ -14,6 +14,7 @@ from app.gamification.content.everyday_object_quest import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000805")
 
@@ -41,10 +42,8 @@ def test_object_flow_support_withdrawal_and_gain(condition: str) -> None:
     wrong.update(presentation_id=before["presentation_id"], item_revision_id=before["revision_id"], interaction_version="constructed-response-v1")
     summary = {"move_count": 4, "correction_count": 0, "first_action_ms": 50, "active_time_ms": 500, "attempt_count": 1, "invalid_drop_count": 0, "tap_alternative_used": True}
     supported = flow.submit_before(episode, option_id=None, constructed_response=wrong, response_time_ms=500, interaction_summary=summary, idempotency_key=f"wrong-object-{condition}")
-    support = supported["support"]
-    manifest = support["game_manifest"]
-    flow.complete_support(episode, duration_ms=500, steps_viewed=manifest["required_actions"], manifest_revision_id=manifest["revision_id"], grouped_count=0, group_sizes=(), interaction_summary={"completed": True, "renderer_id": manifest["renderer_id"], "parallel_example_id": manifest["parallel_example_id"], "support_actions": manifest["required_actions"]}, idempotency_key=f"support-object-{condition}")
-    flow.withdraw_support(episode, request_id=uuid4(), support_revision_id=support["revision_id"], manifest_revision_id=manifest["revision_id"], all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key=f"withdraw-object-{condition}")
+    help_done = finish_help(flow, episode, supported)
+    flow.withdraw_support(episode, **help_done, request_id=uuid4(), all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key=f"withdraw-object-{condition}")
     after = flow.present_after(episode, idempotency_key=f"after-object-{condition}")
     state = flow.reconstruct(episode)["state"]
     item = next(row for row in state["presentations"] if row["role"] == "unsupported_after")

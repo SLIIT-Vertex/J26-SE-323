@@ -15,10 +15,7 @@ from app.gamification.content.playable_area_package import (
 )
 
 NOTICE_SI = "මෙය තවම සමාලෝචනය නොකළ කෙටුම්පතකි."
-NO_GRADE5_SOURCE_NOTICE_SI = (
-    "මෙම ක්ෂේත්‍රයට 5 ශ්‍රේණියේ මූලාශ්‍රයක් නොමැත. "
-    "මෙය සමාලෝචනය නොකළ සංවර්ධක කෙටුම්පතකි."
-)
+NO_GRADE5_SOURCE_NOTICE_SI = "මෙම ක්ෂේත්‍රයට 5 ශ්‍රේණියේ මූලාශ්‍රයක් නොමැත. මෙය සමාලෝචනය නොකළ සංවර්ධක කෙටුම්පතකි."
 PROHIBITED_LEARNER_STATE_FIELDS = (
     "overlap_time",
     "first_action",
@@ -233,9 +230,7 @@ class FixtureRoundService:
             "template_id": row.template_id,
             "phase": phase,
             "notice_si": (
-                NO_GRADE5_SOURCE_NOTICE_SI
-                if row.source_status == "no_grade5_source"
-                else NOTICE_SI
+                NO_GRADE5_SOURCE_NOTICE_SI if row.source_status == "no_grade5_source" else NOTICE_SI
             ),
             "prompt_si": state["public_prompt"],
             "assistance_state": state["assistance_state"],

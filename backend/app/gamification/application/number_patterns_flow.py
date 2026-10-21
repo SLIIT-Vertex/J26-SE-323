@@ -18,6 +18,7 @@ from app.gamification.content.number_patterns import (
     SKILLS,
     NumberPatternItem,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     scaffold_decision,
@@ -26,14 +27,6 @@ from app.gamification.content.number_patterns import (
 
 _VISUAL_FIRST = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 _WORKED_FIRST = ("worked_parallel_example", "visual_guidance", "step_by_step_guidance")
-NUMBER_PATTERN_SUPPORT_SEQUENCE = {
-    "G5-MAT-PAT-DIFF-ASC-01": _VISUAL_FIRST,
-    "G5-MAT-PAT-DIFF-DESC-01": _WORKED_FIRST,
-    "G5-MAT-PAT-RATIO-2-01": _VISUAL_FIRST,
-    "G5-MAT-PAT-RATIO-3-01": _WORKED_FIRST,
-    "G5-MAT-PAT-RATIO-4-01": _WORKED_FIRST,
-    "G5-MAT-PAT-RATIO-5-01": _WORKED_FIRST,
-}
 
 
 class NumberPatternsFlow(NumberWorldFlow):
@@ -55,6 +48,7 @@ class NumberPatternsFlow(NumberWorldFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -62,13 +56,6 @@ class NumberPatternsFlow(NumberWorldFlow):
     missing_skill_error = "NUMBER_PATTERN_SKILL_NOT_FOUND"
     episode_type_error = "NUMBER_PATTERN_EPISODE_REQUIRED"
     operation_prefix = "number_patterns"
-    support_sequences = NUMBER_PATTERN_SUPPORT_SEQUENCE
-    activity_support_memory = True
-    answer_revealing_support = True
-
-    @staticmethod
-    def _required_support_actions(scaffold_type: str) -> int:
-        return 6 if scaffold_type == "step_by_step_guidance" else 3
 
     @staticmethod
     def _public_game_data(item: NumberPatternItem) -> dict[str, object]:
@@ -169,57 +156,6 @@ class NumberPatternsFlow(NumberWorldFlow):
             if before_game.get(field) != after_game.get(field):
                 exclusions.append(code)
         return exclusions
-
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        assert isinstance(exposure, dict)
-        kind = str(exposure["scaffold_type"])
-        copy = {
-            "visual_guidance": (
-                "අසල්වැසි සංඛ්‍යා දෙක සහ ඒ අතර හිස් මාර්ගය බලමු.",
-                "එකම රීතිය ඊළඟ මාර්ගයටත් යොදන්න.",
-            ),
-            "worked_parallel_example": (
-                "ඔබට ලැබුණු රටාව පද්ධතිය විසඳන ආකාරය බලමු.",
-                "පෙර සංඛ්‍යාවෙන් ඊළඟ සංඛ්‍යාව පියවරෙන් පියවර ගොඩනඟමු.",
-            ),
-            "step_by_step_guidance": (
-                "අසල්වැසි සංඛ්‍යා දෙක තෝරන්න.",
-                "ක්‍රියාව සහ රීතිය සකස් කරන්න.",
-                "ඊළඟ අගය ගණනය කර හිස් තැනට තබන්න.",
-            ),
-        }[kind]
-        failed_item = self._stored_item(state, "unsupported_before")
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": {
-                "visual_guidance": "දෘශ්‍ය මඟ පෙන්වීම",
-                "worked_parallel_example": "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
-                "step_by_step_guidance": "පියවරෙන් පියවර මඟ පෙන්වීම",
-            }[kind],
-            "body_si": list(copy),
-            "visual_alt_text_si": "අසල්වැසි සංඛ්‍යා අතර එකම රීතිය නැවත යොදන අන්තර්ක්‍රියාකාරී සහාය",
-            "maximum_steps": 6,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": f"{state['chapter']}:{kind}",
-                # Keep the shared learning-flow completion contract while the
-                # manifest itself explicitly marks this as the learner's exact
-                # failed activity (rather than a different parallel question).
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": [],
-                "required_actions": self._required_support_actions(kind),
-                "worked_example": self._worked_example(failed_item, scaffold_type=kind),
-            },
-        }
 
     @staticmethod
     def _worked_example(

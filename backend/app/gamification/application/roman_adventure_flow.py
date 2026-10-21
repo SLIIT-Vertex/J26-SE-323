@@ -19,17 +19,13 @@ from app.gamification.content.roman_adventure import (
     RomanItem,
     correct_response,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     scaffold_decision,
     validate_constructed_response,
     worked_steps,
 )
-
-ROMAN_SUPPORT_SEQUENCE = {
-    skill_id: ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
-    for skill_id in SKILLS
-}
 
 
 class RomanAdventureFlow(NumberWorldFlow):
@@ -51,6 +47,7 @@ class RomanAdventureFlow(NumberWorldFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -58,9 +55,6 @@ class RomanAdventureFlow(NumberWorldFlow):
     missing_skill_error = "ROMAN_SKILL_NOT_FOUND"
     episode_type_error = "ROMAN_EPISODE_REQUIRED"
     operation_prefix = "roman_adventure"
-    support_sequences = ROMAN_SUPPORT_SEQUENCE
-    activity_support_memory = True
-    answer_revealing_support = True
 
     @staticmethod
     def _summary(state: dict[str, object]) -> dict[str, object]:
@@ -107,49 +101,6 @@ class RomanAdventureFlow(NumberWorldFlow):
             if key not in (summary or {}):
                 missing.append(key)
         return missing
-
-    @staticmethod
-    def _required_support_actions(scaffold_type: str) -> int:
-        return 1 if scaffold_type == "visual_guidance" else 3
-
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        assert isinstance(exposure, dict)
-        kind = str(exposure["scaffold_type"])
-        worked = self._worked_example(
-            self._stored_item(state, "unsupported_before"), scaffold_type=kind
-        )
-        latest = state["attempts"][-1]  # type: ignore[index]
-        normalized = latest.get("constructed_response", {})
-        focus = normalized.get("_feedback_column") if isinstance(normalized, Mapping) else "roman"
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": {
-                "visual_guidance": "බලන්න ඕන තැන",
-                "worked_parallel_example": "ඔබේ ප්‍රශ්නය විසඳන හැටි",
-                "step_by_step_guidance": "පියවරෙන් පියවර එක්ව කරමු",
-            }[kind],
-            "body_si": worked["steps_si"],
-            "visual_alt_text_si": "රෝම සංකේත, ඉමෝජි ගණන සහ ගණිත පියවර දෘශ්‍යව පෙන්වයි",
-            "maximum_steps": 6,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": f"{state['chapter']}:{kind}",
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": [],
-                "required_actions": min(6, len(worked["steps_si"])),
-                "focus_column": str(focus),
-                "worked_example": worked,
-            },
-        }
 
     @staticmethod
     def _worked_example(

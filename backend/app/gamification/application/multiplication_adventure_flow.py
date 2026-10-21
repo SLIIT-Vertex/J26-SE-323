@@ -18,6 +18,7 @@ from app.gamification.content.multiplication_adventure import (
     SKILLS,
     MultiplicationItem,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     scaffold_decision,
@@ -26,7 +27,6 @@ from app.gamification.content.multiplication_adventure import (
 )
 
 _SEQUENCE = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
-MULTIPLICATION_SUPPORT_SEQUENCE = {skill_id: _SEQUENCE for skill_id in SKILLS}
 
 
 class MultiplicationAdventureFlow(NumberWorldFlow):
@@ -48,6 +48,7 @@ class MultiplicationAdventureFlow(NumberWorldFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -55,12 +56,6 @@ class MultiplicationAdventureFlow(NumberWorldFlow):
     missing_skill_error = "MULTIPLICATION_SKILL_NOT_FOUND"
     episode_type_error = "MULTIPLICATION_EPISODE_REQUIRED"
     operation_prefix = "multiplication_adventure"
-    support_sequences = MULTIPLICATION_SUPPORT_SEQUENCE
-    activity_support_memory = True
-
-    @staticmethod
-    def _required_support_actions(scaffold_type: str) -> int:
-        return 3 if scaffold_type == "visual_guidance" else 4
 
     @staticmethod
     def _public_game_data(item: MultiplicationItem) -> dict[str, object]:
@@ -95,7 +90,9 @@ class MultiplicationAdventureFlow(NumberWorldFlow):
             )
         return public
 
-    def _validate_interaction_summary(self, interaction_summary: Mapping[str, object] | None) -> None:
+    def _validate_interaction_summary(
+        self, interaction_summary: Mapping[str, object] | None
+    ) -> None:
         summary = dict(interaction_summary or {})
         if len(summary) > 12:
             raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
@@ -111,44 +108,13 @@ class MultiplicationAdventureFlow(NumberWorldFlow):
             raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
         return summary
 
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        assert isinstance(exposure, dict)
-        kind = str(exposure["scaffold_type"])
-        failed = self._stored_item(state, "unsupported_before")
-        titles = {
-            "visual_guidance": "දෘශ්‍ය මඟ පෙන්වීම",
-            "worked_parallel_example": "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
-            "step_by_step_guidance": "පියවරෙන් පියවර මඟ පෙන්වීම",
-        }
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": titles[kind],
-            "body_si": worked_steps(failed["game_data"], kind),  # type: ignore[index]
-            "visual_alt_text_si": "ගුණ කිරීමේ ස්ථාන හෝ කණ්ඩායම් පෙන්වන අන්තර්ක්‍රියාකාරී සහාය",
-            "maximum_steps": 4,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": f"{state['chapter']}:{kind}",
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": [],
-                "required_actions": self._required_support_actions(kind),
-                "worked_example": self._worked_example(failed, scaffold_type=kind),
-            },
-        }
-
     def _worked_example(self, item: dict[str, object], *, scaffold_type: str) -> dict[str, object]:
         game = dict(item["game_data"])  # type: ignore[arg-type]
         reveal = scaffold_type != "visual_guidance"
-        public = {"schema_version": self.item_schema_version, **self._public_game_data_from_mapping(item)}
+        public = {
+            "schema_version": self.item_schema_version,
+            **self._public_game_data_from_mapping(item),
+        }
         if reveal and game["response_kind"] == "written_multiplication":
             public["staged_digits"] = list(game["result_digits"])
         response = None

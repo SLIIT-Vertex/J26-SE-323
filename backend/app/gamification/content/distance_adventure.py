@@ -84,27 +84,43 @@ def canonical_arithmetic(operation: str, left_km: int, left_m: int, right_km: in
 def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(hashlib.sha256(f"{skill_id}:{role}:{seed}".encode()).digest()[:8], "big"))
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> DistanceItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> DistanceItem | None:
+    """The same distance skill with whole kilometres or no metre exchange.
+
+    The km-to-m relationship chain is a single fixed fact, so it has no smaller form.
+    """
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+    if SKILLS[skill_id].response_kind == "unit_relationship":
+        return None
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> DistanceItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}: raise ValueError("DISTANCE_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill.response_kind == "unit_relationship":
         prompt = "මීටර්, සෙන්ටිමීටර් සහ කිලෝමීටර් සම්බන්ධය ගොඩනගන්න."
         game = {"relation_id": "metric_bridge", "left_unit": "km", "right_unit": "m", "conversion_factor": 1000}
     elif skill.response_kind == "distance_conversion":
-        total = rng.choice((2021, 4075, 6308, 8040)); prompt = f"{total} m, km සහ m ලෙස ලියන්න."
+        total = rng.choice((1000, 2000, 3000) if simpler else (2021, 4075, 6308, 8040)); prompt = f"{total} m, km සහ m ලෙස ලියන්න."
         game = {"source_value": total, "source_unit": "m"}
     else:
         operation = "add" if skill.skill_id == "G5-MAT-LENGTH-ADD-01" else "subtract"
         if skill.response_kind == "distance_story": operation = rng.choice(("add", "subtract"))
         if operation == "add": left_km, left_m, right_km, right_m = rng.choice(((3, 650, 2, 475), (4, 725, 1, 390)))
         else: left_km, left_m, right_km, right_m = rng.choice(((8, 125, 3, 460), (7, 210, 2, 545)))
+        # The simpler version needs no exchange between metres and kilometres.
+        if simpler: left_km, left_m, right_km, right_m = (2, 300, 1, 400) if operation == "add" else (5, 600, 2, 200)
         prompt = (f"{left_km} km {left_m:03d} m සහ {right_km} km {right_m:03d} m " + ("එකතු කරන්න." if operation == "add" else "අඩු කරන්න."))
         game = {"operation": operation, "left_kilometres": left_km, "left_metres": left_m, "right_kilometres": right_km, "right_metres": right_m}
         if skill.response_kind == "distance_story":
             game.update(problem_id="route_distance", context_mode="journey_total" if operation == "add" else "distance_remaining")
             prompt = "සලකුණු කළ දුර දෙක බලන්න. කතාවට ගැළපෙන ක්‍රියාව තෝරා වගුවෙන් විසඳන්න."
     game.update(response_kind=skill.response_kind)
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return DistanceItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 def _strict(response: Mapping[str, object], keys: set[str]) -> None:

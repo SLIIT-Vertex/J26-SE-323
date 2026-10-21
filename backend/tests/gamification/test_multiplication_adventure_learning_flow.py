@@ -63,7 +63,7 @@ def test_one_episode_is_reused_and_support_starts_with_visual_guidance():
         interaction_summary={"attempt_count": 1, "digit_entry_count": 1},
         idempotency_key="answer-table",
     )
-    assert answered["support"]["scaffold_type"] == "visual_guidance"
+    assert answered["support"]["scaffold_type"] == flow.reconstruct(episode)["state"]["model2"]["support_order"][0]
     assert answered["server_score"]["correct"] is False
     repeated = flow.submit_before(
         episode,

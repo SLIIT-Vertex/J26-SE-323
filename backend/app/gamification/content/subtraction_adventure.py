@@ -53,6 +53,7 @@ class AtomicSkill:
     skill_id: str
     chapter: Chapter
     name_si: str
+    difficulty: str
     source_node_id: str
     source_status: str
     response_kind: str
@@ -64,6 +65,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-SUB-NO-REGROUP-01",
         "place_value_board",
         "ස්ථාන අගය එකට ගැලපූ අඩු කිරීම",
+        "easy",
         "G5-MAT-C07-L01",
         "provisional_source_linked",
         "column_subtraction",
@@ -72,6 +74,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-SUB-EXPANDED-01",
         "place_value_board",
         "විහිදුණු ආකාරයෙන් අඩු කිරීම",
+        "easy_medium",
         "G5-MAT-C07-L01",
         "provisional_source_linked",
         "expanded_subtraction",
@@ -80,6 +83,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C07-L01-O01",
         "regrouping_workshop",
         "ගෙන ඒම් එකක් සහිත අඩු කිරීම",
+        "medium",
         "G5-MAT-C07-L01-O01",
         "draft_medium_confidence",
         "column_subtraction",
@@ -88,6 +92,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C07-L01-O02",
         "regrouping_workshop",
         "ගෙන ඒම් දෙකක් සහිත අඩු කිරීම",
+        "medium_hard",
         "G5-MAT-C07-L01-O02",
         "draft_medium_confidence_repository_not_photograph",
         "column_subtraction",
@@ -96,6 +101,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-SUB-DIFF-BETWEEN-01",
         "difference_story",
         "කාණ්ඩ දෙකක වෙනස",
+        "medium",
         "G5-MAT-C07-L01-O03",
         "provisional_source_linked",
         "difference_story",
@@ -105,6 +111,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-SUB-HOW-MANY-MORE-01",
         "difference_story",
         "කොපමණ වැඩියිද",
+        "medium",
         "G5-MAT-C07-L01-O03",
         "provisional_source_linked",
         "difference_story",
@@ -306,6 +313,27 @@ def _family_seed(skill_id: str, seed: int) -> random.Random:
     return random.Random(value)
 
 
+# Simpler version: the fewest columns and exchanges that still practise the same skill.
+_SIMPLER_PROFILES: dict[str, tuple[int, tuple[str, ...], bool]] = {
+    "G5-MAT-SUB-NO-REGROUP-01": (2, (), False),
+    "G5-MAT-SUB-EXPANDED-01": (3, (), False),
+    "G5-MAT-C07-L01-O01": (3, ("ones",), False),
+    "G5-MAT-C07-L01-O02": (3, ("tens", "ones"), True),
+}
+_SIMPLER_STORY_PROFILE = (3, (), False)
+
+
+def _simpler_profile(skill: AtomicSkill) -> dict[str, object]:
+    width, destinations, sequential = _SIMPLER_PROFILES.get(skill.skill_id, _SIMPLER_STORY_PROFILE)
+    return {
+        "width": width,
+        "destinations": destinations,
+        "sequential": sequential,
+        "zero_indexes": (),
+        "relationship": skill.relationship,
+    }
+
+
 def _profile(skill: AtomicSkill, family: random.Random) -> dict[str, object]:
     if skill.skill_id == "G5-MAT-SUB-NO-REGROUP-01":
         width = family.choice((2, 3, 4))
@@ -423,6 +451,9 @@ def _column_error(
         if len(digits) < width and 0 in expected_digits:
             return "omits_internal_zero"
         return "incomplete_response" if len(digits) != width else "unknown_or_other"
+    # A right answer is right even when it looks like a copied number (82 − 41 = 41).
+    if digits == expected_digits and exchanges == expected_exchanges:
+        return "correct"
     if digits == list(reversed(expected_digits)) and digits != expected_digits:
         return "digits_wrong_order"
     minuend_digits = list(analysed["minuend_digits"])  # type: ignore[arg-type]
@@ -595,14 +626,26 @@ def apply_interaction_evidence(error_code: str, summary: Mapping[str, object] | 
     return error_code
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> SubtractionItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> SubtractionItem:
+    """The same subtraction skill with fewer columns and the fewest exchanges it needs."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> SubtractionItem:
     if skill_id not in SKILLS:
         raise ValueError("SUBTRACTION_SKILL_NOT_FOUND")
     if role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("INVALID_MEASUREMENT_ROLE")
     skill = SKILLS[skill_id]
     family = _family_seed(skill_id, seed)
-    profile = _profile(skill, family)
+    profile = _simpler_profile(skill) if simpler else _profile(skill, family)
     rng = _seed(skill_id, role, seed)
     width = int(profile["width"])
     destinations = tuple(profile["destinations"])  # type: ignore[arg-type]
@@ -671,10 +714,10 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> SubtractionItem:
         f"zeros-{','.join(map(str, zero_indexes)) or 'none'}:"
         f"rel-{skill.relationship or 'none'}"
     )
-    suffix = "B" if role == "unsupported_before" else "A"
+    suffix = ("B" if role == "unsupported_before" else "A") + ("S" if simpler else "")
     fingerprint = hashlib.sha256(
         json.dumps(
-            {"minuend": game["minuend"], "subtrahend": game["subtrahend"], "role": role},
+            {"minuend": game["minuend"], "subtrahend": game["subtrahend"], "role": role + suffix},
             sort_keys=True,
         ).encode()
     ).hexdigest()[:12]
@@ -823,6 +866,7 @@ def package_hash() -> str:
             {
                 "skill_id": skill.skill_id,
                 "chapter": skill.chapter,
+                "difficulty": skill.difficulty,
                 "source_node_id": skill.source_node_id,
                 "source_status": skill.source_status,
                 "response_kind": skill.response_kind,

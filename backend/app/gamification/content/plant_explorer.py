@@ -9,6 +9,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-03"
 UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-plant-explorer-draft-v1"
@@ -234,6 +236,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> PlantExplorerItem:
         {},
         game,
     )  # type: ignore[arg-type]
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> PlantExplorerItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
 
 
 def public_game_data(item: PlantExplorerItem) -> dict[str, object]:
