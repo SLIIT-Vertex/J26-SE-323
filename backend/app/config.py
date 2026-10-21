@@ -24,6 +24,13 @@ class Settings(BaseSettings):
     # some play history to build it from. 0 turns the rule off (useful when testing).
     paper_min_days_after_joining: int = 7
 
+    # Read the game's new scored answers into the knowledge model right before it is asked (mastery,
+    # weekly paper), so nothing has to be run by hand. Off by default. Only records the game has released
+    # for models are read. game_evidence_include_development ALSO reads development and test records:
+    # for a local development database only, never a shared or real one.
+    game_evidence_auto_read: bool = False
+    game_evidence_include_development: bool = False
+
     # Photos of answered pages (and the question crops) are deleted this many days after upload
     # by scripts/delete_old_photos.py. A page's photos go sooner (7 days) once the parent has
     # opened its report.

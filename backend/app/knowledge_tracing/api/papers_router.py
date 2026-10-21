@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.knowledge_tracing.api.game_sync import sync_game_answers
 from app.knowledge_tracing.api.mastery_router import get_estimator
 from app.knowledge_tracing.application.mastery_service import (
     LearnerNotFoundError,
@@ -215,6 +216,7 @@ ServiceDep = Annotated[PaperService, Depends(get_paper_service)]
     "/learners/{learner_id}/papers",
     response_model=PaperRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(sync_game_answers)],
 )
 def create_weekly_paper(
     learner_id: UUID,
