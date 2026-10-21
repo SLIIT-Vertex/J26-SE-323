@@ -8,11 +8,12 @@ import {
 } from "react";
 import type {
 	ConstructedResponse,
+	ChildEpisodeResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdaptiveSupportActivity,
@@ -22,6 +23,7 @@ import {
 	AdventureBackButton,
 	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	MULTIPLICATION_CHAPTERS,
 	MULTIPLICATION_SKILLS,
@@ -44,15 +46,7 @@ export function MultiplicationAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Pick<
-		LearningFlowClient,
-		| "open"
-		| "answerBefore"
-		| "completeSupport"
-		| "withdrawSupport"
-		| "presentAfter"
-		| "answerAfter"
-	>;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -75,6 +69,7 @@ export function MultiplicationAdventureJourney({
 	const [digitEntries, setDigitEntries] = useState(0);
 	const openInFlight = useRef(false);
 	const requestInFlight = useRef(false);
+	const [pendingWithdrawal, setPendingWithdrawal] = useState<{ supportRevisionId: string; manifestRevisionId: string } | null>(null);
 	const skills = useMemo(
 		() => MULTIPLICATION_SKILLS.filter((skill) => skill.chapter === chapter),
 		[chapter],
@@ -111,7 +106,7 @@ export function MultiplicationAdventureJourney({
 	);
 
 	useEffect(() => {
-		if (step !== "withdrawing" || !episodeId || !support || !manifest) return;
+		if (step !== "withdrawing" || !episodeId || !pendingWithdrawal) return;
 		let cancelled = false;
 		void (async () => {
 			const withdrawn = await run(() =>
@@ -119,8 +114,8 @@ export function MultiplicationAdventureJourney({
 					episodeId,
 					{
 						request_id: crypto.randomUUID(),
-						support_revision_id: support.revision_id,
-						manifest_revision_id: manifest.revision_id,
+						support_revision_id: pendingWithdrawal.supportRevisionId,
+						manifest_revision_id: pendingWithdrawal.manifestRevisionId,
 						all_support_removed: true,
 						answer_revealing_state_cleared: true,
 						input_handlers_cleared: true,
@@ -141,7 +136,7 @@ export function MultiplicationAdventureJourney({
 		return () => {
 			cancelled = true;
 		};
-	}, [api, episodeId, manifest, resetWork, run, step, support]);
+	}, [api, episodeId, pendingWithdrawal, resetWork, run, step]);
 
 	const openSkill = async (skillId: string, selectedChapter = chapter) => {
 		if (openInFlight.current) return;
@@ -244,10 +239,17 @@ export function MultiplicationAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!completed) return;
-		setSupport(null);
-		resetWork();
-		setStep("withdrawing");
+		if (completed) advanceSupport(completed);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) { setPendingWithdrawal({ supportRevisionId: next.support_round.support_revision_id, manifestRevisionId: next.support_round.manifest_revision_id }); setSupport(null); resetWork(); setStep("withdrawing"); return; }
+		if (next.support) { setSupport(next.support); resetWork(); }
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported; const game = support?.game_manifest;
+		if (!submit || !episodeId || !response || !game || game.schema_version !== "support-round-v1" || !game.activity) return; const activity = game.activity;
+		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Math.max(0, Date.now() - startedAt), interaction_summary: { move_count: digitEntries } }, crypto.randomUUID()));
+		if (next) advanceSupport(next);
 	};
 
 	const advance = () => {
@@ -311,7 +313,7 @@ export function MultiplicationAdventureJourney({
 				</div>
 			)}
 			{(step === "question" || step === "feedback") && manifest && (
-				<div className="adventure-play">
+				<div className="adventure-play game-play-surface">
 					<ChallengeProgress
 						index={activeChallengeIndex}
 						count={skills.length}
@@ -349,7 +351,10 @@ export function MultiplicationAdventureJourney({
 				</div>
 			)}
 			{step === "support" && support && (
-				<div className="adventure-play" data-support-visible="true">
+				<div className="adventure-play game-play-surface" data-support-visible="true">
+					{support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <MultiplicationMechanic key={activity.revision_id} game={activity.game} onChange={(next, entries) => { setResponse(next); setDigitEntries(entries); }} />}>
+						{support.game_manifest.stage_kind !== "view" && <button type="button" className="primary-action" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
+					</SupportRoundFrame> : <>
 					<p
 						className="support-badge"
 						data-support-type={support.scaffold_type}
@@ -376,6 +381,7 @@ export function MultiplicationAdventureJourney({
 					>
 						උදව්ව අවසන් කරන්න
 					</button>
+					</>}
 				</div>
 			)}
 			{step === "withdrawing" && (

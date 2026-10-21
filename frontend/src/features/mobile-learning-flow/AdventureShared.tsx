@@ -69,7 +69,7 @@ export function GameSuccessScreen({
 			data-game-count={gameCount}
 			role="status"
 		>
-			{gameCount <= 3 ? (
+			{gameCount === 3 ? (
 				<AdventureProgress stage={progressStage} />
 			) : (
 				<AdventureProgress

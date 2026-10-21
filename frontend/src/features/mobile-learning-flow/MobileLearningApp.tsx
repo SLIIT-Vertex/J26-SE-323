@@ -4,8 +4,8 @@ import { Capacitor } from "@capacitor/core";
 import {
 	type ComponentType,
 	type FunctionComponent,
-	lazy,
 	type LazyExoticComponent,
+	lazy,
 	type ReactNode,
 	Suspense,
 	useCallback,
@@ -14,6 +14,8 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
+import { SHARED_LEARNER_ID } from "../papers/hooks";
 import { PapersApp } from "../papers/PapersApp";
 import { go, usePapersRoute } from "../papers/router";
 import { CameraConsentCard } from "../learner-state/game/CameraConsentCard";
@@ -27,7 +29,8 @@ import {
 	type PromptMemory,
 	type SupportPrompt,
 } from "../learner-state/game/supportPrompts";
-import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
+import { ResearchButton } from "../research-dashboard/ResearchButton";
+import { isResearchMode } from "../research-dashboard/researchMode";
 import {
 	createFixtureRoundClient,
 	type FixtureRoundClient,
@@ -343,9 +346,19 @@ export interface MobileLearningService
 			| "answerAfter"
 			| "telemetry"
 		>,
-		Partial<Pick<LearningFlowClient, "cameraConsent" | "setCameraConsent">> {}
+		Partial<
+			Pick<
+				LearningFlowClient,
+				"answerSupported" | "cameraConsent" | "setCameraConsent" | "saveProfile"
+			>
+		> {}
 
-const DEV_LEARNER = "00000000-0000-4000-8000-000000000721";
+const EPISODE_ENVIRONMENT: "development" | "test" | "pilot" =
+	import.meta.env.VITE_MOBILE_LEARNING_ENVIRONMENT === "pilot"
+		? "pilot"
+		: import.meta.env.VITE_MOBILE_LEARNING_ENVIRONMENT === "test"
+			? "test"
+			: "development";
 const FIXTURE_LOOPS: Partial<Record<string, DraftTemplateId>> = {
 	"G5-AREA-MAT-05": "half_set",
 	"G5-AREA-MAT-04": "market_mission",
@@ -440,7 +453,8 @@ export function MobileLearningApp({
 	service,
 	initialScreen = "splash",
 	enableOnboarding = false,
-	learnerId = import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEV_LEARNER,
+	// The same child account the Adaptive Tutor (papers) uses.
+	learnerId = SHARED_LEARNER_ID,
 	engineeringCondition = import.meta.env.VITE_MOBILE_LEARNING_CONDITION ===
 	"proposed"
 		? "proposed"
@@ -457,6 +471,7 @@ export function MobileLearningApp({
 	fixtureRounds?: Pick<FixtureRoundClient, "open" | "answer" | "continue">;
 }) {
 	const [screen, setScreen] = useState<Screen>(initialScreen);
+	const [researchMode] = useState(isResearchMode);
 	const papersRoute = usePapersRoute();
 	const [learnerName, setLearnerName] = useState("කවිඳු");
 	const [avatarTone, setAvatarTone] = useState<AvatarTone>("violet");
@@ -674,13 +689,15 @@ export function MobileLearningApp({
 			const payload: Record<string, string | number | boolean> = {
 				event_type: event.type,
 			};
+			if (manifest?.presentation_id)
+				payload.presentation_id = manifest.presentation_id;
 			if ("groupedCount" in event) payload.grouped_count = event.groupedCount;
 			if ("group" in event) payload.group = event.group;
 			if ("step" in event) payload.step = event.step;
 			await queue.enqueue(episode.episode_id, payload, critical);
 			setSyncState(navigator.onLine ? "pending" : "offline");
 		},
-		[episode, queue],
+		[episode, manifest, queue],
 	);
 
 	const chooseMission = (areaId: string) => {
@@ -863,7 +880,7 @@ export function MobileLearningApp({
 						grade: 5,
 						medium: "si",
 						condition: engineeringCondition,
-						environment: "development",
+						environment: EPISODE_ENVIRONMENT,
 						allow_draft: true,
 					},
 					crypto.randomUUID(),
@@ -898,7 +915,7 @@ export function MobileLearningApp({
 						grade: 5,
 						medium: "si",
 						condition: engineeringCondition,
-						environment: "development",
+						environment: EPISODE_ENVIRONMENT,
 						allow_draft: true,
 					},
 					crypto.randomUUID(),
@@ -1219,7 +1236,10 @@ export function MobileLearningApp({
 						avatarTone={avatarTone}
 						onAvatarToneChange={setAvatarTone}
 						onBack={() => setScreen("language")}
-						onContinue={() => setScreen(papersRoute ? "practice" : "home")}
+						onContinue={async () => {
+							await api.saveProfile?.(learnerName);
+							setScreen(papersRoute ? "practice" : "home");
+						}}
 					/>
 				)}
 				{screen === "home" && (
@@ -1776,6 +1796,9 @@ export function MobileLearningApp({
 					/>
 				)}
 			</Suspense>
+			{researchMode && (screen === "learn" || GAME_SCREENS.has(screen)) && (
+				<ResearchButton learnerId={learnerId} />
+			)}
 		</main>
 	);
 }
@@ -2120,8 +2143,10 @@ function ProfileSetup({
 	avatarTone: AvatarTone;
 	onAvatarToneChange(value: AvatarTone): void;
 	onBack(): void;
-	onContinue(): void;
+	onContinue(): void | Promise<void>;
 }) {
+	const [saving, setSaving] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const tones: AvatarTone[] = ["violet", "sky", "teal", "orange"];
 	const toneLabels: Record<AvatarTone, string> = {
 		violet: "දම්",
@@ -2186,10 +2211,22 @@ function ProfileSetup({
 				<AppIcon name="shield" size={20} />
 				<span>ඔබගේ තොරතුරු ආරක්ෂිතව තබා ගනී.</span>
 			</div>
+			{error && <p role="alert">{error}</p>}
 			<button
 				className="primary-action setup-continue"
-				disabled={!name.trim()}
-				onClick={onContinue}
+				disabled={saving || !name.trim()}
+				onClick={async () => {
+					if (saving) return;
+					setSaving(true);
+					setError(null);
+					try {
+						await onContinue();
+					} catch {
+						setError("නම සුරැකීමට නොහැකි විය. නැවත උත්සාහ කරන්න.");
+					} finally {
+						setSaving(false);
+					}
+				}}
 			>
 				මගේ ගමන අරඹන්න
 			</button>
@@ -2503,12 +2540,6 @@ function GamesHome({
 				</section>
 			) : (
 				<>
-					<img
-						src="/curriculum/mobile_adventure_frame.svg"
-						alt=""
-						aria-hidden="true"
-						className="games-frame"
-					/>
 					<header className="games-hero">
 						<div className="games-title">
 							<span>ක්‍රීඩා</span>

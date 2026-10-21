@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ClassroomActionWorkedExample,
@@ -15,7 +15,12 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	type BodyActionId,
@@ -28,7 +33,7 @@ import {
 	CLASSROOM_ASSET_ROOT,
 	CLASSROOM_SKILLS,
 } from "./manifest";
-import "./classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 
 type Step =
 	| "games"
@@ -37,15 +42,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 
 export function ClassroomActionQuest({
 	api,
@@ -55,7 +51,7 @@ export function ClassroomActionQuest({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -140,6 +136,25 @@ export function ClassroomActionQuest({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 
 	const openSkill = async (id: string) => {
 		if (lock.current) return;
@@ -280,7 +295,6 @@ export function ClassroomActionQuest({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 1</p>
 					<h1>Our Good Behaviour</h1>
 				</div>
 			</header>
@@ -305,13 +319,15 @@ export function ClassroomActionQuest({
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={3}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={3}
+							currentActivity={index + 1}
+							completedActivities={completed.length}
+						/>
+					)}
 					<p className="caq-position">
 						Activity {index + 1}/3 · {active.name}
 					</p>
@@ -336,7 +352,35 @@ export function ClassroomActionQuest({
 								</button>
 							</>
 						)}
-					{step === "support" && support && (
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null}
+							checkLabel="Check my action"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<ClassroomActivity
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={record}
+								/>
+							)}
+						/>
+					)}
+					{step === "support" && support && !isSupportRound(support) && (
 						<ClassroomSupport
 							support={support}
 							stage={supportStage}
@@ -362,15 +406,11 @@ export function ClassroomActionQuest({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<img
-								src={`${CLASSROOM_ASSET_ROOT}/action-quest-badge.png`}
-								alt=""
-							/>
-							<SuccessCelebration />
-							<h2>Classroom Action Quest complete!</h2>
-							<p>You read and acted on English instructions independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={3}
+							gameCount={3}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}
@@ -453,6 +493,12 @@ function ClassroomDash({
 	onResponse(value: ConstructedResponse): void;
 }) {
 	const start = String(game.character_start_location);
+	// The simpler version offers fewer places; the scene shows only the places the server allows.
+	const allowed = new Set(
+		Array.isArray(game.allowed_destination_ids)
+			? game.allowed_destination_ids.map(String)
+			: ["wall-zone", "blackboard-zone", "start-a"],
+	);
 	const [location, setLocation] = useState(start);
 	const [trace, setTrace] = useState<string[]>([]);
 	const [revisions, setRevisions] = useState(0);
@@ -481,28 +527,34 @@ function ClassroomDash({
 			}}
 			aria-label="Move the student around the classroom"
 		>
-			<button
-				className="destination wall"
-				aria-label="Move to the wall"
-				onClick={() => move("wall-zone")}
-			>
-				<span>Wall</span>
-			</button>
-			<button
-				className="destination blackboard"
-				aria-label="Move to the blackboard"
-				onClick={() => move("blackboard-zone")}
-			>
-				<span>Blackboard</span>
-			</button>
-			<button
-				className="destination origin"
-				aria-label="Return to the starting place"
-				onClick={() => move("start-a")}
-			>
-				<img src={`${CLASSROOM_ASSET_ROOT}/start-position-mat.png`} alt="" />
-				<span>Start</span>
-			</button>
+			{allowed.has("wall-zone") && (
+				<button
+					className="destination wall"
+					aria-label="Move to the wall"
+					onClick={() => move("wall-zone")}
+				>
+					<span>Wall</span>
+				</button>
+			)}
+			{allowed.has("blackboard-zone") && (
+				<button
+					className="destination blackboard"
+					aria-label="Move to the blackboard"
+					onClick={() => move("blackboard-zone")}
+				>
+					<span>Blackboard</span>
+				</button>
+			)}
+			{allowed.has("start-a") && (
+				<button
+					className="destination origin"
+					aria-label="Return to the starting place"
+					onClick={() => move("start-a")}
+				>
+					<img src={`${CLASSROOM_ASSET_ROOT}/start-position-mat.png`} alt="" />
+					<span>Start</span>
+				</button>
+			)}
 			<img
 				className={`runner at-${location}`}
 				src={`${CLASSROOM_ASSET_ROOT}/${location === "start-a" ? "student-standing-neutral.png" : "student-running.png"}`}

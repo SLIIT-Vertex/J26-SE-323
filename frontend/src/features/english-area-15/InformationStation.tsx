@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -14,28 +14,25 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./information-station.css";
 import {
 	bilingualResponse,
 	type Link,
 	objectResponse,
 } from "./informationLogic";
+
 const SKILLS = [
 	{ id: "G5-ENG-INFO-BILINGUAL-01", name: "Word Signal Bridge", icon: "🔤" },
 	{ id: "G5-ENG-INFO-VISUAL-02", name: "Information Object Dock", icon: "📡" },
 ] as const;
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 type Step =
 	| "games"
 	| "question"
@@ -53,7 +50,7 @@ export function InformationStation({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -133,6 +130,25 @@ export function InformationStation({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId: episode,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				e: withdrawal.episodeId,
+				s: withdrawal.supportRevisionId,
+				m: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const open = async (id: string) => {
 		if (lock.current) return;
 		lock.current = true;
@@ -255,7 +271,6 @@ export function InformationStation({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 15</p>
 					<h1>Man &amp; Information</h1>
 				</div>
 			</header>
@@ -265,9 +280,6 @@ export function InformationStation({
 						<i />
 						<b />📡
 					</div>
-					<p className="is-privacy">
-						Fictional offline word station · no calls or messages
-					</p>
 					{SKILLS.map((x) => (
 						<button
 							className="caq-game-card"
@@ -283,13 +295,18 @@ export function InformationStation({
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={2}
-						currentActivity={index + 1}
-						completedActivities={done.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
+							activityCount={2}
+							currentActivity={index + 1}
+							completedActivities={done.length}
+						/>
+					)}
 					{step === "question" && game && (
 						<>
 							<div className="caq-command">
@@ -311,6 +328,37 @@ export function InformationStation({
 								Check my signals
 							</button>
 						</>
+					)}
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null && !incomplete(response)}
+							checkLabel="Check my signals"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - start,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - start)
+							}
+							renderActivity={(activity) => (
+								<StationBoard
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={(value) => {
+										setResponse(value);
+										setMoves((count) => count + 1);
+									}}
+								/>
+							)}
+						/>
 					)}
 					{step === "support" &&
 						support?.game_manifest.schema_version ===
@@ -352,11 +400,11 @@ export function InformationStation({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<SuccessCelebration />
-							<h2>Information Station complete!</h2>
-							<p>You connected the lesson vocabulary independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={2}
+							gameCount={2}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}
@@ -455,7 +503,7 @@ function ObjectGlyph({ variant, index }: { variant: number; index: number }) {
 			className="is-object"
 			data-v={variant}
 			role="img"
-			aria-label={`Fictional information object card ${index + 1}`}
+			aria-label={`Information object card ${index + 1}`}
 		>
 			<i />
 			<i />

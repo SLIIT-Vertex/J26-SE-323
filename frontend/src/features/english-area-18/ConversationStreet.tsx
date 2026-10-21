@@ -1,12 +1,24 @@
 // biome-ignore-all lint/a11y/useButtonType: mobile application controls, no forms.
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
+import { CLASSROOM_ASSET_ROOT } from "../english-area-1/manifest";
+import { ConversationScene } from "./ConversationScene";
+
+const MotionContext = createContext(false);
+
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -14,41 +26,49 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./conversation-street.css";
 import {
+	type ConversationLink,
 	pairLinksResponse,
 	profileReplyResponse,
 	sceneReplyResponse,
 	turnSequenceResponse,
-	type ConversationLink,
 } from "./conversationStreetLogic";
 
 const SKILLS = [
-	{ id: "G5-ENG-CONV-PAIR-01", name: "Conversation Matchmaker", icon: "🤝" },
-	{ id: "G5-ENG-CONV-TURN-02", name: "Dialogue Director", icon: "🎭" },
+	{
+		id: "G5-ENG-CONV-PAIR-01",
+		name: "Conversation Matchmaker",
+		asset: "student-standing-neutral.png",
+		description: "Match each question with a reply.",
+	},
+	{
+		id: "G5-ENG-CONV-TURN-02",
+		name: "Dialogue Director",
+		asset: "student-arms-stretched.png",
+		description: "Put the conversation in order.",
+	},
 	{
 		id: "G5-ENG-CONV-FRAME-03",
-		name: "Fictional Profile Reply Lab",
-		icon: "🪪",
+		name: "Character Reply Lab",
+		asset: "student-standing-straight.png",
+		description: "Use a character card to build a reply.",
 	},
 	{
 		id: "G5-ENG-CONV-DESCRIBE-04",
 		name: "Show-and-Tell Conversation",
-		icon: "🎤",
+		asset: "school-bag.png",
+		description: "Look at the picture and choose a reply.",
 	},
 ] as const;
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 type Step =
 	| "games"
 	| "question"
@@ -67,7 +87,7 @@ export function ConversationStreet({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -147,6 +167,25 @@ export function ConversationStreet({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId: episode,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const openSkill = async (skillId: string) => {
 		if (lock.current) return;
 		lock.current = true;
@@ -270,131 +309,170 @@ export function ConversationStreet({
 			? (manifest.game as Game)
 			: null;
 	return (
-		<main className="classroom-action-quest conversation-street">
-			<header className="caq-header">
-				<AdventureBackButton
-					onClick={step === "games" ? onBack : () => setStep("games")}
-				/>
-				<div>
-					<p>Useful Expressions</p>
-					<h1>Conversation Street</h1>
-				</div>
-			</header>
-			{step === "games" ? (
-				<section className="caq-game-list">
-					<div className="cs-street" aria-hidden="true">
-						<i>🏫</i>
-						<b>💬</b>
-						<i>🏠</i>
-					</div>
-					<p className="cs-privacy">
-						<strong>Fictional conversations only.</strong> Never enter your
-						name, age, address, school, family facts, likes, abilities, or pets.
-					</p>
-					{SKILLS.map((entry) => (
-						<button
-							className="caq-game-card"
-							key={entry.id}
-							onClick={() => void openSkill(entry.id)}
-						>
-							<span>{entry.icon}</span>
-							<span>
-								<strong>{entry.name}</strong>
-								<small>Read and respond as the fictional people.</small>
-							</span>
-						</button>
-					))}
-				</section>
-			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={4}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
+		<MotionContext.Provider value={reducedMotion}>
+			<main
+				className="classroom-action-quest conversation-street"
+				data-reduced-motion={reducedMotion || undefined}
+				aria-busy={busy}
+			>
+				<header className="caq-header">
+					<AdventureBackButton
+						onClick={step === "games" ? onBack : () => setStep("games")}
 					/>
-					{step === "question" && game && (
-						<>
-							<div className="caq-command">
-								<strong>{manifest?.prompt_si}</strong>
-							</div>
-							<p className="cs-fictional-label">
-								🎭 {String(game.fictional_notice)}
-							</p>
-							<ConversationBoard
-								key={manifest?.revision_id}
-								game={game}
-								onResponse={(next) => {
-									setResponse(next);
-									setMoves((value) => value + 1);
-								}}
-							/>
+					<div>
+						<p>Useful Expressions</p>
+						<h1>Conversation Street</h1>
+					</div>
+				</header>
+				{step === "games" ? (
+					<section className="caq-game-list">
+						{SKILLS.map((entry, skillIndex) => (
 							<button
-								className="caq-primary"
-								disabled={busy || !response || incomplete(response)}
-								onClick={submit}
+								className="caq-game-card"
+								key={entry.id}
+								disabled={busy}
+								onClick={() => void openSkill(entry.id)}
 							>
-								Send this fictional turn
+								<img src={`${CLASSROOM_ASSET_ROOT}/${entry.asset}`} alt="" />
+								<span>
+									<strong>{entry.name}</strong>
+									<small>{entry.description}</small>
+									<em>
+										{skillIndex + 1}/4 ·{" "}
+										{completed.includes(entry.id)
+											? "Completed ✓"
+											: "Easy to challenging"}
+									</em>
+								</span>
 							</button>
-						</>
-					)}
-					{step === "support" &&
-						support?.game_manifest.schema_version ===
-							"conversation-street-support-v1" && (
-							<section className="caq-support">
-								<h2>{support.title_si}</h2>
-								<p>
-									{
-										support.body_si[
-											Math.min(supportStage, support.body_si.length - 1)
-										]
-									}
-								</p>
+						))}
+					</section>
+				) : (
+					<section className="caq-play game-play-surface">
+						{step !== "result" && (
+							<AdventureProgress
+								stage={adaptiveGameProgressStage(
+									step,
+									manifest?.measurement_role,
+								)}
+								activityCount={4}
+								currentActivity={index + 1}
+								completedActivities={completed.length}
+							/>
+						)}
+						<p className="caq-position">
+							Activity {index + 1}/4 · {SKILLS[index].name}
+						</p>
+						{step === "question" && game && (
+							<>
+								<div className="caq-command" aria-live="polite">
+									<span>Read and reply</span>
+									<strong>
+										{game.response_kind === "conversation_scene_reply"
+											? "පින්තූරය බලන්න. ගැළපෙන පිළිතුර තෝරන්න."
+											: manifest?.prompt_si.replaceAll("කල්පිත ", "")}
+									</strong>
+								</div>
+								<ConversationBoard
+									key={manifest?.revision_id}
+									game={game}
+									onResponse={(next) => {
+										setResponse(next);
+										setMoves((value) => value + 1);
+									}}
+								/>
 								<button
 									className="caq-primary"
-									onClick={
-										supportStage < support.game_manifest.required_actions
-											? () => setSupportStage((value) => value + 1)
-											: finishSupport
-									}
+									disabled={busy || !response || incomplete(response)}
+									onClick={submit}
 								>
-									{supportStage < support.game_manifest.required_actions
-										? "Next conversation step"
-										: "I’m ready to talk as the character alone"}
+									Check my reply
+								</button>
+							</>
+						)}
+						{step === "support" && isSupportRound(support) && (
+							<SupportRoundPlay
+								support={support}
+								busy={busy}
+								ready={response !== null && !incomplete(response)}
+								checkLabel="Check my reply"
+								checkClassName="caq-primary"
+								onCheck={() => {
+									if (response)
+										void round.answer(
+											support,
+											response,
+											Date.now() - startedAt,
+											moves,
+										);
+								}}
+								onViewComplete={() =>
+									void round.viewComplete(support, Date.now() - startedAt)
+								}
+								renderActivity={(activity) => (
+									<ConversationBoard
+										key={activity.revision_id}
+										game={activity.game as Record<string, unknown>}
+										onResponse={(value) => {
+											setResponse(value);
+											setMoves((count) => count + 1);
+										}}
+									/>
+								)}
+							/>
+						)}
+						{step === "support" &&
+							support?.game_manifest.schema_version ===
+								"conversation-street-support-v1" && (
+								<section className="caq-support">
+									<h2>{support.title_si.replaceAll("කල්පිත ", "")}</h2>
+									<p>
+										{support.body_si[
+											Math.min(supportStage, support.body_si.length - 1)
+										]?.replaceAll("කල්පිත ", "")}
+									</p>
+									<button
+										className="caq-primary"
+										onClick={
+											supportStage < support.game_manifest.required_actions
+												? () => setSupportStage((value) => value + 1)
+												: finishSupport
+										}
+									>
+										{supportStage < support.game_manifest.required_actions
+											? "Next conversation step"
+											: "Now I will try alone"}
+									</button>
+								</section>
+							)}
+						{step === "withdrawing" && (
+							<p className="caq-status" role="status">
+								The help is going away. Try a new conversation on your own.
+							</p>
+						)}
+						{step === "feedback" && (
+							<section className="caq-feedback">
+								<h2>
+									{correct
+										? "Conversation turn complete!"
+										: "Read the conversation and try again."}
+								</h2>
+								<button className="caq-primary" onClick={advance}>
+									{correct ? "Continue" : "Try a fresh conversation"}
 								</button>
 							</section>
 						)}
-					{step === "withdrawing" && (
-						<p className="caq-status">
-							The practice transcript, profile hints, scene cues, selected
-							bubbles, and animation state are clearing.
-						</p>
-					)}
-					{step === "feedback" && (
-						<section className="caq-feedback">
-							<h2>
-								{correct
-									? "Conversation turn complete!"
-									: "Read the fictional conversation and try again."}
-							</h2>
-							<button className="caq-primary" onClick={advance}>
-								{correct ? "Continue" : "Try a fresh conversation"}
-							</button>
-						</section>
-					)}
-					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<SuccessCelebration />
-							<h2>Conversation Street complete!</h2>
-							<p>
-								You connected reviewed English turns using fictional
-								information.
-							</p>
-						</section>
-					)}
-				</section>
-			)}
-		</main>
+						{step === "result" && (
+							<GameSuccessScreen
+								gameNumber={4}
+								gameCount={4}
+								onContinue={() => setStep("games")}
+							/>
+						)}
+					</section>
+				)}
+			</main>
+		</MotionContext.Provider>
 	);
 }
 
@@ -413,7 +491,7 @@ function incomplete(response: ConstructedResponse) {
 	}
 }
 
-function ConversationBoard({
+export function ConversationBoard({
 	game,
 	onResponse,
 }: {
@@ -446,11 +524,13 @@ function PairBoard({
 		const remaining = links.filter(
 				(row) => row.question !== selected && row.response !== response,
 			),
-			next = [
-				...remaining,
-				{ sequence: remaining.length + 1, question: selected, response },
-			],
-			nextTrace = [...trace, `link:${response}`];
+			next = [...remaining, { sequence: 0, question: selected, response }].map(
+				(item, index) => ({ ...item, sequence: index + 1 }),
+			),
+			nextTrace = [
+				...trace,
+				`${links.some((item) => item.question === selected || item.response === response) ? "replace" : "link"}:${response}`,
+			];
 		setLinks(next);
 		setTrace(nextTrace);
 		setSelected(null);
@@ -465,11 +545,30 @@ function PairBoard({
 	};
 	return (
 		<section className="cs-venue">
-			<SpeakerPair />
+			<SpeakerPair
+				progress={links.length}
+				message={String(
+					responses.find((row) => row.response_token === links.at(-1)?.response)
+						?.text_en ?? "",
+				)}
+			/>
+			<p className="cs-instruction" role="status">
+				{selected
+					? "Now choose a reply below."
+					: "Tap a question, then tap its reply."}{" "}
+				· {links.length}/{questions.length} matched
+			</p>
 			<div className="cs-timeline">
 				{questions.map((row, index) => (
 					<button
-						className={selected === row.question_token ? "selected" : ""}
+						aria-pressed={selected === row.question_token}
+						className={
+							selected === row.question_token
+								? "selected"
+								: links.some((item) => item.question === row.question_token)
+									? "linked"
+									: ""
+						}
 						data-opaque-token={String(row.question_token)}
 						key={String(row.question_token)}
 						onClick={() => {
@@ -480,15 +579,31 @@ function PairBoard({
 							]);
 						}}
 					>
-						<span>Fictional speaker {index + 1}</span>
+						<span>Question {index + 1}</span>
 						<strong>{String(row.text_en)}</strong>
+						<small className="cs-linked-reply">
+							{String(
+								responses.find(
+									(reply) =>
+										reply.response_token ===
+										links.find((item) => item.question === row.question_token)
+											?.response,
+								)?.text_en ?? "Choose a reply…",
+							)}
+						</small>
 					</button>
 				))}
 			</div>
-			<p className="cs-missing">Missing response turn</p>
+			<p className="cs-choice-label">
+				Choose a reply · Tap a matched question to change it
+			</p>
 			<div className="cs-response-sheet">
 				{responses.map((row) => (
 					<button
+						aria-pressed={links.some(
+							(item) => item.response === row.response_token,
+						)}
+						disabled={!selected}
 						data-opaque-token={String(row.response_token)}
 						key={String(row.response_token)}
 						onClick={() => link(String(row.response_token))}
@@ -497,7 +612,6 @@ function PairBoard({
 					</button>
 				))}
 			</div>
-			<ConversationTranscript rows={questions} field="text_en" />
 		</section>
 	);
 }
@@ -533,11 +647,45 @@ function TurnBoard({
 	};
 	return (
 		<section className="cs-venue">
-			<SpeakerPair />
+			<SpeakerPair
+				progress={ordered.length}
+				message={String(
+					turns.find((row) => row.turn_token === ordered.at(-1)?.turn)
+						?.text_en ?? "",
+				)}
+			/>
+			<p className="cs-instruction">
+				Tap the lines in conversation order. Tap an added line to remove it.
+			</p>
+			<p className="cs-choice-label" role="status">
+				{ordered.length}/{turns.length} lines added
+			</p>
 			<ol className="cs-ordered">
 				{ordered.map((item) => (
 					<li key={item.turn}>
-						{String(turns.find((row) => row.turn_token === item.turn)?.text_en)}
+						<button
+							onClick={() => {
+								const next = ordered.filter(
+									(entry) => entry.turn !== item.turn,
+								);
+								setOrdered(next);
+								onResponse(
+									turnSequenceResponse(
+										String(game.command_token),
+										String(game.dialogue_token),
+										next,
+										all,
+										[`replace:${item.turn}`],
+									),
+								);
+							}}
+						>
+							<small>{speakerLabel(game, item.speaker)}</small>
+							{String(
+								turns.find((row) => row.turn_token === item.turn)?.text_en,
+							)}
+							<span aria-hidden="true"> ×</span>
+						</button>
 					</li>
 				))}
 			</ol>
@@ -568,9 +716,8 @@ function TurnBoard({
 					);
 				}}
 			>
-				Clear current timeline
+				Start again
 			</button>
-			<ConversationTranscript rows={turns} field="text_en" />
 		</section>
 	);
 }
@@ -599,9 +746,27 @@ function ProfileBoard({
 		);
 	return (
 		<section className="cs-venue">
+			<SpeakerPair
+				progress={ordered.length}
+				message={ordered
+					.map((token) =>
+						String(
+							chunks.find((row) => row.chunk_token === token)?.text_en ?? "",
+						),
+					)
+					.join(" ")}
+			/>
+			<p className="cs-instruction">
+				Read the card. Tap the words in order to answer as this character.
+			</p>
 			<article className="cs-profile">
-				<strong>🎭 Talk as this fictional character</strong>
-				<h2>{String(game.profile_label)}</h2>
+				<strong>Character card</strong>
+				<h2>
+					{String(game.profile_label).replace(
+						/^Fictional profile/i,
+						"Character",
+					)}
+				</h2>
 				{facts.map((row) => (
 					<p key={String(row.fact_token)}>
 						<b>{String(row.label)}:</b> {String(row.value)}
@@ -609,17 +774,29 @@ function ProfileBoard({
 				))}
 			</article>
 			<div className="cs-question-bubble">
-				Fictional interviewer: <strong>{String(game.question_text)}</strong>
+				Question: <strong>{String(game.question_text)}</strong>
 			</div>
-			<div className="cs-slots">
-				{all.map((token) => (
-					<span key={`slot-${token}`}>
-						{ordered.includes(token)
-							? String(chunks.find((row) => row.chunk_token === token)?.text_en)
-							: "…"}
-					</span>
-				))}
-			</div>
+			<fieldset className="cs-slots" aria-label="Your reply" aria-live="polite">
+				{all.map((slot, index) => {
+					const token = ordered[index];
+					return token ? (
+						<button
+							key={slot}
+							aria-label={`Remove ${String(chunks.find((row) => row.chunk_token === token)?.text_en)}`}
+							onClick={() => {
+								const next = ordered.filter((entry) => entry !== token);
+								setOrdered(next);
+								emit(next, [`replace:${token}`]);
+							}}
+						>
+							{String(chunks.find((row) => row.chunk_token === token)?.text_en)}{" "}
+							<span aria-hidden="true">×</span>
+						</button>
+					) : (
+						<span key={slot}>{index + 1}. …</span>
+					);
+				})}
+			</fieldset>
 			<div className="cs-response-sheet">
 				{chunks.map((row) => (
 					<button
@@ -645,16 +822,8 @@ function ProfileBoard({
 					emit([], ["clear:all"]);
 				}}
 			>
-				Clear current reply
+				Start again
 			</button>
-			<details>
-				<summary>Accessible fictional profile</summary>
-				{facts.map((row) => (
-					<p key={`detail-${String(row.fact_token)}`}>
-						{String(row.label)}: {String(row.value)}
-					</p>
-				))}
-			</details>
 		</section>
 	);
 }
@@ -668,26 +837,32 @@ function SceneBoard({
 }) {
 	const responses = game.responses as Row[],
 		renderer = game.scene_renderer as Row;
+	const [selected, setSelected] = useState<string | null>(null);
 	return (
 		<section className="cs-venue">
-			<SpeakerPair />
-			<div
-				className="cs-code-scene"
-				role="img"
-				aria-label={`Code-built fictional ${String(renderer.non_colour_cue)} scene`}
-			>
-				<span>{String(renderer.emoji)}</span>
-				<i />
-			</div>
+			<SpeakerPair
+				progress={selected ? 1 : 0}
+				message={String(
+					responses.find((row) => row.response_token === selected)?.text_en ??
+						"",
+				)}
+				cue={String(renderer.non_colour_cue)}
+			/>
+			<p className="cs-instruction">
+				Look at the picture. Choose the reply that fits.
+			</p>
 			<div className="cs-question-bubble">
-				Show-and-tell speaker: <strong>{String(game.prompt_text)}</strong>
+				Question: <strong>{String(game.prompt_text)}</strong>
 			</div>
 			<div className="cs-response-sheet">
 				{responses.map((row) => (
 					<button
+						aria-pressed={selected === row.response_token}
+						className={selected === row.response_token ? "selected" : ""}
 						data-opaque-token={String(row.response_token)}
 						key={String(row.response_token)}
-						onClick={() =>
+						onClick={() => {
+							setSelected(String(row.response_token));
 							onResponse(
 								sceneReplyResponse(
 									String(game.command_token),
@@ -695,8 +870,8 @@ function SceneBoard({
 									String(game.prompt_token),
 									String(row.response_token),
 								),
-							)
-						}
+							);
+						}}
 					>
 						{String(row.text_en)}
 					</button>
@@ -706,39 +881,31 @@ function SceneBoard({
 	);
 }
 
-function SpeakerPair() {
-	return (
-		<section className="cs-speakers" aria-label="Two fictional speakers">
-			<span>
-				<i />
-				Speaker A
-			</span>
-			<span>
-				<i />
-				Speaker B
-			</span>
-		</section>
-	);
-}
-function ConversationTranscript({
-	rows,
-	field,
+function SpeakerPair({
+	progress = 0,
+	cue,
+	message,
 }: {
-	rows: Row[];
-	field: string;
+	progress?: number;
+	cue?: string;
+	message?: string;
 }) {
+	const reducedMotion = useContext(MotionContext);
 	return (
-		<details className="cs-transcript">
-			<summary>Accessible transcript choices</summary>
-			{rows.map((row) => (
-				<p key={String(Object.values(row)[0])}>{String(row[field])}</p>
-			))}
-		</details>
+		<ConversationScene
+			progress={progress}
+			message={message}
+			cue={cue}
+			reducedMotion={reducedMotion}
+		/>
 	);
 }
 function speakerLabel(game: Game, token: string) {
-	return String(
-		(game.speaker_labels as Row[]).find((row) => row.speaker_token === token)
-			?.label ?? "Fictional speaker",
-	);
+	const speakers = game.speaker_labels as Row[];
+	const index = speakers.findIndex((row) => row.speaker_token === token);
+	return index === 0
+		? "Speaker A"
+		: index === 1
+			? "Speaker B"
+			: "Story character";
 }

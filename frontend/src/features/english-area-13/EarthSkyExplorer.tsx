@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -14,9 +14,14 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./earth-sky-explorer.css";
 import {
 	type ExplorerLink,
@@ -32,15 +37,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 type Game = Record<string, unknown>;
 type TokenRow = Record<string, unknown>;
 
@@ -52,7 +48,7 @@ export function EarthSkyExplorer({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -134,6 +130,25 @@ export function EarthSkyExplorer({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const openSkill = async (id: string) => {
 		if (lock.current) return;
 		lock.current = true;
@@ -271,7 +286,6 @@ export function EarthSkyExplorer({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 13</p>
 					<h1>Earth &amp; Sky</h1>
 				</div>
 			</header>
@@ -309,13 +323,15 @@ export function EarthSkyExplorer({
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={2}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={2}
+							currentActivity={index + 1}
+							completedActivities={completed.length}
+						/>
+					)}
 					<p className="caq-position">
 						Activity {index + 1}/2 · {active.name}
 					</p>
@@ -342,7 +358,38 @@ export function EarthSkyExplorer({
 							</button>
 						</>
 					)}
-					{step === "support" && support && (
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null && !incomplete(response)}
+							checkLabel="Check my explorer links"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<ExplorerActivity
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={(value) => {
+										setResponse(value);
+										setMoves((count) => count + 1);
+									}}
+								/>
+							)}
+						/>
+					)}
+					{step === "support" && support && !isSupportRound(support) && (
 						<ExplorerSupport
 							support={support}
 							stage={supportStage}
@@ -373,17 +420,11 @@ export function EarthSkyExplorer({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<div className="es-medal" aria-hidden="true">
-								🔭🏅
-							</div>
-							<SuccessCelebration />
-							<h2>Earth &amp; Sky Explorer complete!</h2>
-							<p>You linked the lesson words independently.</p>
-							<button className="caq-primary" onClick={() => setStep("games")}>
-								Explore again
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={2}
+							gameCount={2}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}

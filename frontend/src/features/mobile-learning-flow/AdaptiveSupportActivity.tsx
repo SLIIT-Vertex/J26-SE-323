@@ -59,6 +59,9 @@ export const SUPPORT_TYPE_LABELS: Record<SupportView["scaffold_type"], string> =
 		visual_guidance: "දෘශ්‍ය මඟ පෙන්වීම",
 		worked_parallel_example: "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
 		step_by_step_guidance: "පියවරෙන් පියවර මඟ පෙන්වීම",
+		simpler_same_game: "එකම ක්‍රීඩාවේ පහසු අනුවාදය",
+		prerequisite_repair: "පෙර කුසලතාව නැවත පුහුණු කිරීම",
+		conceptual_reexplanation: "අදහස වෙනත් ආකාරයකින්",
 	};
 
 const PLACE_LABELS = ["ලක්ෂ", "දස දහස්", "දහස්", "සිය", "දහය", "එක"];

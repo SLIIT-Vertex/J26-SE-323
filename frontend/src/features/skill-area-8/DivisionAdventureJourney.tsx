@@ -1,12 +1,13 @@
 // biome-ignore-all lint/a11y/useButtonType: application controls do not submit forms.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+	ChildEpisodeResponse,
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdventureProgress,
@@ -16,6 +17,7 @@ import {
 	AdventureBackButton,
 	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	contextualRemainderInterpretation,
 	type LongDivisionStep,
@@ -57,15 +59,7 @@ export function DivisionAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Pick<
-		LearningFlowClient,
-		| "open"
-		| "answerBefore"
-		| "completeSupport"
-		| "withdrawSupport"
-		| "presentAfter"
-		| "answerAfter"
-	>;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -270,8 +264,11 @@ export function DivisionAdventureJourney({
 		if (!episodeId || !support) return;
 		const supportManifest = support.game_manifest;
 		if (supportManifest.schema_version === "half-set-manifest-v1") return;
-		const required = Number(supportManifest.required_actions);
-		if (supportStage < required) return;
+		if (
+			supportManifest.schema_version !== "support-round-v1" &&
+			supportStage < Number(supportManifest.required_actions)
+		)
+			return;
 		const completed = await run(() =>
 			api.completeSupport(
 				episodeId,
@@ -289,15 +286,58 @@ export function DivisionAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!completed) return;
-		setPendingWithdrawal({
-			episodeId,
-			supportRevisionId: support.revision_id,
-			manifestRevisionId: supportManifest.revision_id,
-		});
-		setSupport(null);
-		setResponse(null);
-		setStep("withdrawing");
+		if (completed) advanceSupport(completed);
+	};
+
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) {
+			setPendingWithdrawal({
+				episodeId: next.episode_id,
+				supportRevisionId: next.support_round.support_revision_id,
+				manifestRevisionId: next.support_round.manifest_revision_id,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+			return;
+		}
+		if (next.support) {
+			setSupport(next.support);
+			setSupportStage(0);
+			resetWork();
+		}
+	};
+
+	const answerSupport = async () => {
+		const submit = api.answerSupported;
+		const game = support?.game_manifest;
+		if (
+			!submit ||
+			!episodeId ||
+			!response ||
+			!game ||
+			game.schema_version !== "support-round-v1" ||
+			!game.activity
+		)
+			return;
+		const activity = game.activity;
+		const next = await run(() =>
+			submit(
+				episodeId,
+				{
+					constructed_response: {
+						...response,
+						presentation_id: activity.presentation_id,
+						item_revision_id: activity.revision_id,
+						interaction_version: "constructed-response-v1",
+					},
+					response_time_ms: reducedMotion ? undefined : Date.now() - startedAt,
+					interaction_summary: { move_count: moves },
+				},
+				crypto.randomUUID(),
+			),
+		);
+		if (next) advanceSupport(next);
 	};
 
 	const continueAfterFeedback = () => {
@@ -358,7 +398,7 @@ export function DivisionAdventureJourney({
 					))}
 				</section>
 			) : (
-				<section className="division-play-shell">
+				<section className="division-play-shell game-play-surface">
 					<AdventureProgress
 						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
 						activityCount={5}
@@ -388,14 +428,39 @@ export function DivisionAdventureJourney({
 							</button>
 						</>
 					)}
-					{step === "support" && support && (
-						<DivisionSupport
-							support={support}
-							stage={supportStage}
-							onNext={() => setSupportStage((value) => value + 1)}
-							onComplete={finishSupport}
-						/>
-					)}
+					{step === "support" &&
+						support &&
+						(support.game_manifest.schema_version === "support-round-v1" ? (
+							<SupportRoundFrame
+								support={support}
+								busy={busy}
+								onViewComplete={() => void finishSupport()}
+								renderActivity={(activity) => (
+									<DivisionActivity
+										key={activity.revision_id}
+										game={activity.game}
+										onResponse={record}
+									/>
+								)}
+							>
+								{support.game_manifest.stage_kind !== "view" && (
+									<button
+										className="division-primary"
+										disabled={busy || !response}
+										onClick={() => void answerSupport()}
+									>
+										තහවුරු කරන්න
+									</button>
+								)}
+							</SupportRoundFrame>
+						) : (
+							<DivisionSupport
+								support={support}
+								stage={supportStage}
+								onNext={() => setSupportStage((value) => value + 1)}
+								onComplete={finishSupport}
+							/>
+						))}
 					{step === "withdrawing" && (
 						<p className="division-status" role="status">
 							පිළිතුරු සහිත සහාය ඉවත් කර අලුත් ප්‍රශ්නය සූදානම් කරමින්…
@@ -405,8 +470,8 @@ export function DivisionAdventureJourney({
 						<section className="division-feedback">
 							<h2>
 								{feedbackStep === null
-										? "පළමු වැරදි පියවර නැවත බලමු."
-										: `පියවර ${feedbackStep + 1} නැවත බලමු.`}
+									? "පළමු වැරදි පියවර නැවත බලමු."
+									: `පියවර ${feedbackStep + 1} නැවත බලමු.`}
 							</h2>
 							<button
 								className="division-primary"
@@ -422,7 +487,9 @@ export function DivisionAdventureJourney({
 							gameCount={DIVISION_GAMES.length}
 							onContinue={() => {
 								const nextGame = DIVISION_GAMES[activeGameIndex + 1];
-								const nextSkill = nextGame && DIVISION_SKILLS.find((item) => item.chapter === nextGame.id);
+								const nextSkill =
+									nextGame &&
+									DIVISION_SKILLS.find((item) => item.chapter === nextGame.id);
 								if (nextSkill) void openSkill(nextSkill.id);
 								else setStep("chapters");
 							}}

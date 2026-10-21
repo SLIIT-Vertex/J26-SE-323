@@ -1,0 +1,18 @@
+/* All English and Maths games keep their progress, instructions and controls
+   together on an opaque surface above the illustrated app background. */
+.mobile-shell .game-play-surface {
+	box-sizing: border-box;
+	min-width: 0;
+	max-width: 100%;
+	padding: clamp(12px, 2.5vw, 20px);
+	border: 1px solid #e2dcec;
+	border-radius: 24px;
+	background: #fffdf7;
+	box-shadow: 0 8px 24px rgb(40 34 65 / 10%);
+}
+
+.mobile-shell .game-play-surface > :is(h2, p) {
+	color: #173c47;
+	line-height: 1.6;
+	overflow-wrap: anywhere;
+}

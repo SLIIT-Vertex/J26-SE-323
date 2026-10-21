@@ -1,8 +1,12 @@
 import type {
 	AdditionAdventureSupportManifest,
+	BloomBuilderSupportManifest,
+	BlueprintSupportManifest,
 	CapacityAdventureSupportManifest,
 	ChildEpisodeResponse,
 	ClassroomActionSupportManifest,
+	ClassroomLanguageLiveSupportManifest,
+	ConversationStreetSupportManifest,
 	DecimalAdventureSupportManifest,
 	DirectionAdventureSupportManifest,
 	DistanceAdventureSupportManifest,
@@ -10,8 +14,14 @@ import type {
 	DraftMissionCatalog,
 	DraftMissionRecord,
 	DraftTemplateId,
+	EarthSkySupportManifest,
+	EverydayObjectSupportManifest,
+	FamilyConstellationSupportManifest,
 	FractionAdventureSupportManifest,
+	HeritageMuseumSupportManifest,
 	HeldOutcomeSlot,
+	InformationStationSupportManifest,
+	IslandFoodSupportManifest,
 	LearnerStateAction,
 	MassAdventureSupportManifest,
 	MathematicsOutcomeSlot,
@@ -19,15 +29,22 @@ import type {
 	MultiplicationAdventureSupportManifest,
 	NumberPatternSupportManifest,
 	NumberWorldSupportManifest,
+	PlantExplorerSupportManifest,
 	PresentationManifest,
+	RainbowWardrobeSupportManifest,
 	RomanAdventureSupportManifest,
 	ServerScore,
 	ShapeAdventureSupportManifest,
 	SinhalaDraftItemSlot,
+	SriLankaDiscoverySupportManifest,
 	SubtractionAdventureSupportManifest,
 	SupportView,
 	TelemetryAcknowledgement,
 	TimeAdventureSupportManifest,
+	TransitTerminalSupportManifest,
+	WaterWorksSupportManifest,
+	WildlifeRangerSupportManifest,
+	WorkplaceLinkSupportManifest,
 } from "./generated";
 
 export type { ServerScore } from "./generated";
@@ -130,7 +147,24 @@ function parseManifest(value: unknown): PresentationManifest | null {
 							game.schema_version !== "direction-adventure-item-v1" &&
 							game.schema_version !== "decimal-adventure-item-v1" &&
 							game.schema_version !== "roman-adventure-item-v1" &&
-							game.schema_version !== "classroom-action-item-v1"
+							game.schema_version !== "classroom-action-item-v1" &&
+							game.schema_version !== "sri-lanka-discovery-item-v1" &&
+							game.schema_version !== "plant-explorer-item-v1" &&
+							game.schema_version !== "wildlife-ranger-item-v1" &&
+							game.schema_version !== "everyday-object-quest-item-v1" &&
+							game.schema_version !== "island-food-festival-item-v1" &&
+							game.schema_version !== "water-works-adventure-item-v1" &&
+							game.schema_version !== "transit-terminal-quest-item-v1" &&
+							game.schema_version !== "rainbow-wardrobe-item-v1" &&
+							game.schema_version !== "bloom-builder-garden-item-v1" &&
+							game.schema_version !== "workplace-link-city-item-v1" &&
+							game.schema_version !== "family-word-constellation-item-v1" &&
+							game.schema_version !== "earth-sky-explorer-item-v1" &&
+							game.schema_version !== "blueprint-quest-item-v1" &&
+							game.schema_version !== "information-station-item-v1" &&
+							game.schema_version !== "heritage-museum-item-v1" &&
+							game.schema_version !== "classroom-language-live-item-v1" &&
+							game.schema_version !== "conversation-street-item-v1"
 						) {
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						}
@@ -242,11 +276,129 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																									"kilogram_machine",
 																									"market_delivery",
 																								]
-																							: [
-																									"equal_share_studio",
-																									"quarter_orchard",
-																									"tenths_mosaic",
-																								];
+																							: game.schema_version ===
+																									"sri-lanka-discovery-item-v1"
+																								? [
+																										"word_explorer",
+																										"national_gallery",
+																										"community_sort",
+																									]
+																								: game.schema_version ===
+																										"plant-explorer-item-v1"
+																									? [
+																											"garden_word_hunt",
+																											"build_a_plant",
+																											"one_or_many",
+																										]
+																									: game.schema_version ===
+																											"wildlife-ranger-item-v1"
+																										? [
+																												"animal_spotter",
+																												"lesson_trail_sort",
+																												"body_part_detective",
+																											]
+																										: game.schema_version ===
+																												"everyday-object-quest-item-v1"
+																											? [
+																													"object_pop",
+																													"two_room_tidy",
+																													"name_builder",
+																												]
+																											: game.schema_version ===
+																													"island-food-festival-item-v1"
+																												? [
+																														"market_match",
+																														"festival_stall_sort",
+																														"recipe_word_kitchen",
+																													]
+																												: game.schema_version ===
+																														"water-works-adventure-item-v1"
+																													? [
+																															"droplet_match",
+																															"pipe_route",
+																															"splash_detective",
+																														]
+																													: game.schema_version ===
+																															"transit-terminal-quest-item-v1"
+																														? [
+																																"ticket_match",
+																																"departure_board",
+																																"signal_detective",
+																															]
+																														: game.schema_version ===
+																																"rainbow-wardrobe-item-v1"
+																															? [
+																																	"rainbow_wardrobe",
+																																]
+																															: game.schema_version ===
+																																	"bloom-builder-garden-item-v1"
+																																? [
+																																		"seed_packet_match",
+																																		"garden_bed_relay",
+																																		"petal_pattern_detective",
+																																	]
+																																: game.schema_version ===
+																																		"workplace-link-city-item-v1"
+																																	? [
+																																			"job_badge_match",
+																																			"work_route_connector",
+																																			"city_network_challenge",
+																																		]
+																																	: game.schema_version ===
+																																			"family-word-constellation-item-v1"
+																																		? [
+																																				"word_star",
+																																				"constellation",
+																																			]
+																																		: game.schema_version ===
+																																				"earth-sky-explorer-item-v1"
+																																			? [
+																																					"skyword_signal_bridge",
+																																					"panorama_label_quest",
+																																					"nature_lens_detective",
+																																				]
+																																			: game.schema_version ===
+																																					"blueprint-quest-item-v1"
+																																				? [
+																																						"place_card_explorer",
+																																						"blueprint_zone_sort",
+																																						"room_name_workshop",
+																																					]
+																																				: game.schema_version ===
+																																						"information-station-item-v1"
+																																					? [
+																																							"word_signal_bridge",
+																																							"information_object_dock",
+																																							"signal_console_challenge",
+																																						]
+																																					: game.schema_version ===
+																																							"heritage-museum-item-v1"
+																																						? [
+																																								"museum_word_bridge",
+																																								"exhibit_label_match",
+																																								"curator_lens_challenge",
+																																							]
+																																						: game.schema_version ===
+																																								"classroom-language-live-item-v1"
+																																							? [
+																																									"phrase_portal_sort",
+																																									"command_stage_director",
+																																									"situation_bubble_match",
+																																									"question_tile_studio",
+																																								]
+																																							: game.schema_version ===
+																																									"conversation-street-item-v1"
+																																								? [
+																																										"conversation_matchmaker",
+																																										"dialogue_director",
+																																										"fictional_profile_reply_lab",
+																																										"show_and_tell_conversation",
+																																									]
+																																								: [
+																																										"equal_share_studio",
+																																										"quarter_orchard",
+																																										"tenths_mosaic",
+																																									];
 						if (!allowedChapters.includes(chapter))
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						return game as PresentationManifest["game"];
@@ -264,6 +416,9 @@ function parseSupport(value: unknown): SupportView | null {
 			"visual_guidance",
 			"worked_parallel_example",
 			"step_by_step_guidance",
+			"simpler_same_game",
+			"prerequisite_repair",
+			"conceptual_reexplanation",
 		].includes(scaffoldType)
 	) {
 		throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
@@ -278,6 +433,134 @@ function parseSupport(value: unknown): SupportView | null {
 	const totalObjects = Number(game.total_objects);
 	const groupCount = Number(game.group_count);
 	const maximumSteps = Number(row.maximum_steps);
+	if (game.schema_version === "support-round-v1") {
+		const englishTagKey = text(row.english_tag_key);
+		const allowedTags = new Set([
+			"VISUAL_GUIDANCE",
+			"GUIDED_REASONING",
+			"WORKED_EXAMPLE",
+			"SIMPLER_VERSION",
+			"PREREQUISITE_REPAIR",
+			"CONCEPTUAL_REEXPLANATION",
+		]);
+		if (!allowedTags.has(englishTagKey))
+			throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+		const stageKind = text(game.stage_kind);
+		if (!["practice", "target", "view"].includes(stageKind))
+			throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+		const activity =
+			game.activity == null
+				? null
+				: (() => {
+						const source = object(game.activity);
+						const parsed = parseManifest({
+							presentation_id: source.presentation_id,
+							revision_id: source.revision_id,
+							measurement_role: "supported_practice",
+							assistance_state: "none",
+							prompt_si: source.prompt_si,
+							accessibility_label_si: source.prompt_si,
+							options: [],
+							content_version: "support-round-v1",
+							game: source.game,
+						});
+						if (
+							!parsed?.game ||
+							typeof source.returns_to_failed_item !== "boolean"
+						)
+							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+						return {
+							presentation_id: parsed.presentation_id,
+							revision_id: parsed.revision_id,
+							skill_id: text(source.skill_id),
+							prompt_si: parsed.prompt_si,
+							game: parsed.game,
+							returns_to_failed_item: source.returns_to_failed_item,
+						};
+					})();
+		const worked =
+			game.worked_example == null
+				? null
+				: (() => {
+						const source = object(game.worked_example);
+						const parsed = parseManifest({
+							presentation_id: source.presentation_id,
+							revision_id: source.revision_id,
+							measurement_role: "supported_practice",
+							assistance_state: "none",
+							prompt_si: source.prompt_si,
+							accessibility_label_si: source.prompt_si,
+							options: [],
+							content_version: "support-round-v1",
+							game: source.game,
+						});
+						if (!parsed?.game || !Array.isArray(source.steps_si))
+							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+						return {
+							presentation_id: parsed.presentation_id,
+							revision_id: parsed.revision_id,
+							skill_id: text(source.skill_id),
+							prompt_si: parsed.prompt_si,
+							game: parsed.game,
+							steps_si: source.steps_si.map(text),
+							solution: object(source.solution) as never,
+						};
+					})();
+		const cues = Array.isArray(game.cues_si) ? game.cues_si.map(text) : null;
+		const roundNumber = Number(game.round_number);
+		const stageIndex = Number(game.stage_index);
+		const stageCount = Number(game.stage_count);
+		if (
+			!cues ||
+			!Number.isSafeInteger(roundNumber) ||
+			roundNumber < 1 ||
+			!Number.isSafeInteger(stageIndex) ||
+			stageIndex < 0 ||
+			!Number.isSafeInteger(stageCount) ||
+			stageCount < 1 ||
+			stageIndex >= stageCount ||
+			(stageKind === "view"
+				? worked === null || activity !== null
+				: activity === null)
+		)
+			throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+		return {
+			scaffold_id: text(row.scaffold_id),
+			revision_id: text(row.revision_id),
+			scaffold_type: scaffoldType as SupportView["scaffold_type"],
+			english_tag_key: englishTagKey as NonNullable<
+				SupportView["english_tag_key"]
+			>,
+			title_si: text(row.title_si),
+			body_si: row.body_si as string[],
+			visual_alt_text_si:
+				row.visual_alt_text_si === null ? null : text(row.visual_alt_text_si),
+			maximum_steps: maximumSteps,
+			game_manifest: {
+				schema_version: "support-round-v1",
+				activity_id: text(game.activity_id),
+				revision_id: text(game.revision_id),
+				deterministic_seed: Number(game.deterministic_seed),
+				skill_id: text(game.skill_id),
+				scaffold_type: scaffoldType as SupportView["scaffold_type"],
+				english_tag_key: englishTagKey as NonNullable<
+					SupportView["english_tag_key"]
+				>,
+				renderer_id: text(game.renderer_id),
+				parallel_example_id: text(game.parallel_example_id),
+				parallel_example_version: "v1",
+				parallel_values: [],
+				required_actions: 1,
+				round_number: roundNumber,
+				stage_index: stageIndex,
+				stage_count: stageCount,
+				stage_kind: stageKind as "practice" | "target" | "view",
+				cues_si: cues,
+				activity,
+				worked_example: worked,
+			},
+		};
+	}
 	const requiredActions = Number(game.required_actions);
 	const isAdaptiveGame = [
 		"number-world-support-v1",
@@ -297,6 +580,23 @@ function parseSupport(value: unknown): SupportView | null {
 		"decimal-adventure-support-v1",
 		"roman-adventure-support-v1",
 		"classroom-action-support-v1",
+		"sri-lanka-discovery-support-v1",
+		"plant-explorer-support-v1",
+		"wildlife-ranger-support-v1",
+		"everyday-object-quest-support-v1",
+		"island-food-festival-support-v1",
+		"water-works-adventure-support-v1",
+		"transit-terminal-quest-support-v1",
+		"rainbow-wardrobe-support-v1",
+		"bloom-builder-garden-support-v1",
+		"workplace-link-city-support-v1",
+		"family-word-constellation-support-v1",
+		"earth-sky-explorer-support-v1",
+		"blueprint-quest-support-v1",
+		"information-station-support-v1",
+		"heritage-museum-support-v1",
+		"classroom-language-live-support-v1",
+		"conversation-street-support-v1",
 	].includes(String(game.schema_version));
 	if (
 		(!isAdaptiveGame && game.schema_version !== "half-set-manifest-v1") ||
@@ -395,7 +695,24 @@ function parseSupport(value: unknown): SupportView | null {
 							| "direction-adventure-support-v1"
 							| "decimal-adventure-support-v1"
 							| "roman-adventure-support-v1"
-							| "classroom-action-support-v1",
+							| "classroom-action-support-v1"
+							| "sri-lanka-discovery-support-v1"
+							| "plant-explorer-support-v1"
+							| "wildlife-ranger-support-v1"
+							| "everyday-object-quest-support-v1"
+							| "island-food-festival-support-v1"
+							| "water-works-adventure-support-v1"
+							| "transit-terminal-quest-support-v1"
+							| "rainbow-wardrobe-support-v1"
+							| "bloom-builder-garden-support-v1"
+							| "workplace-link-city-support-v1"
+							| "family-word-constellation-support-v1"
+							| "earth-sky-explorer-support-v1"
+							| "blueprint-quest-support-v1"
+							| "information-station-support-v1"
+							| "heritage-museum-support-v1"
+							| "classroom-language-live-support-v1"
+							| "conversation-street-support-v1",
 						activity_id: text(game.activity_id),
 						revision_id: text(game.revision_id),
 						deterministic_seed: deterministicSeed,
@@ -473,7 +790,58 @@ function parseSupport(value: unknown): SupportView | null {
 																							: game.schema_version ===
 																									"mass-adventure-support-v1"
 																								? "mass-adventure-item-v1"
-																								: "addition-adventure-item-v1") ||
+																								: game.schema_version ===
+																										"sri-lanka-discovery-support-v1"
+																									? "sri-lanka-discovery-item-v1"
+																									: game.schema_version ===
+																											"plant-explorer-support-v1"
+																										? "plant-explorer-item-v1"
+																										: game.schema_version ===
+																												"wildlife-ranger-support-v1"
+																											? "wildlife-ranger-item-v1"
+																											: game.schema_version ===
+																													"everyday-object-quest-support-v1"
+																												? "everyday-object-quest-item-v1"
+																												: game.schema_version ===
+																														"island-food-festival-support-v1"
+																													? "island-food-festival-item-v1"
+																													: game.schema_version ===
+																															"water-works-adventure-support-v1"
+																														? "water-works-adventure-item-v1"
+																														: game.schema_version ===
+																																"transit-terminal-quest-support-v1"
+																															? "transit-terminal-quest-item-v1"
+																															: game.schema_version ===
+																																	"rainbow-wardrobe-support-v1"
+																																? "rainbow-wardrobe-item-v1"
+																																: game.schema_version ===
+																																		"bloom-builder-garden-support-v1"
+																																	? "bloom-builder-garden-item-v1"
+																																	: game.schema_version ===
+																																			"workplace-link-city-support-v1"
+																																		? "workplace-link-city-item-v1"
+																																		: game.schema_version ===
+																																				"family-word-constellation-support-v1"
+																																			? "family-word-constellation-item-v1"
+																																			: game.schema_version ===
+																																					"earth-sky-explorer-support-v1"
+																																				? "earth-sky-explorer-item-v1"
+																																				: game.schema_version ===
+																																						"blueprint-quest-support-v1"
+																																					? "blueprint-quest-item-v1"
+																																					: game.schema_version ===
+																																							"information-station-support-v1"
+																																						? "information-station-item-v1"
+																																						: game.schema_version ===
+																																								"heritage-museum-support-v1"
+																																							? "heritage-museum-item-v1"
+																																							: game.schema_version ===
+																																									"classroom-language-live-support-v1"
+																																								? "classroom-language-live-item-v1"
+																																								: game.schema_version ===
+																																										"conversation-street-support-v1"
+																																									? "conversation-street-item-v1"
+																																									: "addition-adventure-item-v1") ||
 								(response !== null && typeof response.kind !== "string") ||
 								!Array.isArray(worked.steps_si) ||
 								worked.steps_si.some((step) => typeof step !== "string")
@@ -498,7 +866,24 @@ function parseSupport(value: unknown): SupportView | null {
 									| DirectionAdventureSupportManifest["worked_example"]["game"]
 									| DecimalAdventureSupportManifest["worked_example"]["game"]
 									| RomanAdventureSupportManifest["worked_example"]["game"]
-									| ClassroomActionSupportManifest["worked_example"]["game"],
+									| ClassroomActionSupportManifest["worked_example"]["game"]
+									| SriLankaDiscoverySupportManifest["worked_example"]["game"]
+									| PlantExplorerSupportManifest["worked_example"]["game"]
+									| WildlifeRangerSupportManifest["worked_example"]["game"]
+									| EverydayObjectSupportManifest["worked_example"]["game"]
+									| IslandFoodSupportManifest["worked_example"]["game"]
+									| WaterWorksSupportManifest["worked_example"]["game"]
+									| TransitTerminalSupportManifest["worked_example"]["game"]
+									| RainbowWardrobeSupportManifest["worked_example"]["game"]
+									| BloomBuilderSupportManifest["worked_example"]["game"]
+									| WorkplaceLinkSupportManifest["worked_example"]["game"]
+									| FamilyConstellationSupportManifest["worked_example"]["game"]
+									| EarthSkySupportManifest["worked_example"]["game"]
+									| BlueprintSupportManifest["worked_example"]["game"]
+									| InformationStationSupportManifest["worked_example"]["game"]
+									| HeritageMuseumSupportManifest["worked_example"]["game"]
+									| ClassroomLanguageLiveSupportManifest["worked_example"]["game"]
+									| ConversationStreetSupportManifest["worked_example"]["game"],
 								correct_response: response as
 									| AdditionAdventureSupportManifest["worked_example"]["correct_response"]
 									| NumberPatternSupportManifest["worked_example"]["correct_response"]
@@ -515,7 +900,24 @@ function parseSupport(value: unknown): SupportView | null {
 									| DirectionAdventureSupportManifest["worked_example"]["correct_response"]
 									| DecimalAdventureSupportManifest["worked_example"]["correct_response"]
 									| RomanAdventureSupportManifest["worked_example"]["correct_response"]
-									| ClassroomActionSupportManifest["worked_example"]["correct_response"],
+									| ClassroomActionSupportManifest["worked_example"]["correct_response"]
+									| SriLankaDiscoverySupportManifest["worked_example"]["correct_response"]
+									| PlantExplorerSupportManifest["worked_example"]["correct_response"]
+									| WildlifeRangerSupportManifest["worked_example"]["correct_response"]
+									| EverydayObjectSupportManifest["worked_example"]["correct_response"]
+									| IslandFoodSupportManifest["worked_example"]["correct_response"]
+									| WaterWorksSupportManifest["worked_example"]["correct_response"]
+									| TransitTerminalSupportManifest["worked_example"]["correct_response"]
+									| RainbowWardrobeSupportManifest["worked_example"]["correct_response"]
+									| BloomBuilderSupportManifest["worked_example"]["correct_response"]
+									| WorkplaceLinkSupportManifest["worked_example"]["correct_response"]
+									| FamilyConstellationSupportManifest["worked_example"]["correct_response"]
+									| EarthSkySupportManifest["worked_example"]["correct_response"]
+									| BlueprintSupportManifest["worked_example"]["correct_response"]
+									| InformationStationSupportManifest["worked_example"]["correct_response"]
+									| HeritageMuseumSupportManifest["worked_example"]["correct_response"]
+									| ClassroomLanguageLiveSupportManifest["worked_example"]["correct_response"]
+									| ConversationStreetSupportManifest["worked_example"]["correct_response"],
 								steps_si: worked.steps_si as string[],
 							};
 						})(),
@@ -551,10 +953,12 @@ export function parseChildEpisodeResponse(
 			: null,
 	};
 	const serverScore = parseServerScore(row.server_score);
+	const supportRound = parseSupportRoundStatus(row.support_round);
 	const learnerStateAction = parseLearnerStateAction(row.learner_state_action);
 	return {
 		...parsed,
 		...(serverScore ? { server_score: serverScore } : {}),
+		...(supportRound ? { support_round: supportRound } : {}),
 		...(learnerStateAction ? { learner_state_action: learnerStateAction } : {}),
 	};
 }
@@ -570,6 +974,38 @@ const LEARNER_STATE_ACTIONS: readonly LearnerStateAction[] = [
 /** An unknown action is ignored: learner-state is optional evidence and never fails an answer. */
 function parseLearnerStateAction(value: unknown): LearnerStateAction | null {
 	return LEARNER_STATE_ACTIONS.find((action) => action === value) ?? null;
+}
+
+function parseSupportRoundStatus(value: unknown) {
+	if (value == null) return null;
+	const row = object(value);
+	const roundNumber = Number(row.round_number);
+	const scaffoldType = text(row.scaffold_type) as NonNullable<
+		ChildEpisodeResponse["support_round"]
+	>["scaffold_type"];
+	const stageKind = row.stage_kind == null ? null : text(row.stage_kind);
+	if (
+		!Number.isSafeInteger(roundNumber) ||
+		roundNumber < 1 ||
+		(stageKind !== null && !["practice", "target", "view"].includes(stageKind))
+	)
+		throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+	return {
+		round_number: roundNumber,
+		scaffold_type: scaffoldType,
+		english_tag_key: text(row.english_tag_key) as NonNullable<
+			ChildEpisodeResponse["support_round"]
+		>["english_tag_key"],
+		stage_kind: stageKind as "practice" | "target" | "view" | null,
+		previous_attempt_correct:
+			row.previous_attempt_correct == null
+				? null
+				: bool(row.previous_attempt_correct),
+		another_round_required: bool(row.another_round_required),
+		withdrawal_allowed: bool(row.withdrawal_allowed),
+		support_revision_id: text(row.support_revision_id),
+		manifest_revision_id: text(row.manifest_revision_id),
+	};
 }
 
 function parseServerScore(value: unknown): ServerScore | null {

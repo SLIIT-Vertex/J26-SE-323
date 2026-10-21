@@ -2,12 +2,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
 	ConstructedResponse,
+	ChildEpisodeResponse,
 	ExperimentCondition,
 	MoneyAdventureWorkedExample,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	adaptiveGameProgressStage,
@@ -17,6 +18,7 @@ import {
 	AdventureBackButton,
 	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	canonicalMoneyArithmetic,
 	calculateLineTotals,
@@ -40,7 +42,7 @@ export function MoneyAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Pick<LearningFlowClient, "open" | "answerBefore" | "completeSupport" | "withdrawSupport" | "presentAfter" | "answerAfter">;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -145,15 +147,23 @@ export function MoneyAdventureJourney({
 	const finishSupport = async () => {
 		if (!episodeId || !support || support.game_manifest.schema_version === "half-set-manifest-v1") return;
 		const game = support.game_manifest;
-		if (supportStage < game.required_actions) return;
+		if (game.schema_version !== "support-round-v1" && supportStage < game.required_actions) return;
 		const done = await run(() => api.completeSupport(episodeId, {
 			duration_ms: Date.now() - startedAt, steps_viewed: Math.max(1, supportStage),
 			manifest_revision_id: game.revision_id,
 			interaction_summary: { completed: true, renderer_id: game.renderer_id, parallel_example_id: game.parallel_example_id, support_actions: supportStage },
 		}, crypto.randomUUID()));
-		if (!done) return;
-		setPending({ episode: episodeId, support: support.revision_id, manifest: game.revision_id });
-		setSupport(null); setResponse(null); setStep("withdrawing");
+		if (done) advanceSupport(done);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) { setPending({ episode: next.episode_id, support: next.support_round.support_revision_id, manifest: next.support_round.manifest_revision_id }); setSupport(null); setResponse(null); setStep("withdrawing"); return; }
+		if (next.support) { setSupport(next.support); setSupportStage(0); reset(); }
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported; const game = support?.game_manifest;
+		if (!submit || !episodeId || !response || !game || game.schema_version !== "support-round-v1" || !game.activity) return; const activity = game.activity;
+		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Date.now() - startedAt, interaction_summary: { move_count: moves } }, crypto.randomUUID()));
+		if (next) advanceSupport(next);
 	};
 	const advance = () => {
 		if (!skillId) return;
@@ -176,7 +186,7 @@ export function MoneyAdventureJourney({
 			{MONEY_GAMES.map((game) => <button className="money-game-card" key={game.id} onClick={() => {
 				const first = MONEY_SKILLS.find((skill) => skill.chapter === game.id); if (first) void openSkill(first.id);
 			}}><img src={game.asset} alt="" /><span><strong>{game.title}</strong><small>{game.challengeLabel} · {game.difficulty}</small></span></button>)}
-		</section> : <section className="money-play">
+		</section> : <section className="money-play game-play-surface">
 			<AdventureProgress stage={adaptiveGameProgressStage(step, manifest?.measurement_role)} activityCount={5} currentActivity={index + 1} completedActivities={completed.length} />
 			<p className="money-position">ක්‍රියාකාරකම {index + 1}/5 · {active?.name}</p>
 			{step === "question" && manifest?.game && <>
@@ -184,7 +194,9 @@ export function MoneyAdventureJourney({
 				<MoneyActivity key={manifest.revision_id} game={manifest.game as Record<string, unknown>} onResponse={record} />
 				<button className="money-primary" disabled={busy || !response} onClick={confirm}>තහවුරු කරන්න</button>
 			</>}
-			{step === "support" && support && <MoneySupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />}
+			{step === "support" && support && (support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <MoneyActivity key={activity.revision_id} game={activity.game} onResponse={record} />}>
+				{support.game_manifest.stage_kind !== "view" && <button className="money-primary" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
+			</SupportRoundFrame> : <MoneySupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />)}
 			{step === "withdrawing" && <p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
 			{step === "feedback" && !correct && <section className="money-feedback"><h2>{feedbackName(feedbackColumn)} නැවත බලමු.</h2><button className="money-primary" onClick={advance}>නැවත උත්සාහ කරන්න</button></section>}
 			{step === "result" && <GameSuccessScreen gameNumber={activeGameIndex + 1} gameCount={MONEY_GAMES.length} onContinue={() => { const nextGame = MONEY_GAMES[activeGameIndex + 1]; const nextSkill = nextGame && MONEY_SKILLS.find((skill) => skill.chapter === nextGame.id); if (nextSkill) void openSkill(nextSkill.id); else setStep("chapters"); }} />}

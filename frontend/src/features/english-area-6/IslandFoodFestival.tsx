@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -15,13 +15,22 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./island-food-festival.css";
 import {
+	WordDropBoard,
+	WordDropMotionContext,
+	type WordDropState,
+} from "../mobile-learning-flow/word-drop/WordDropBoard";
+import {
 	FOOD_GLYPHS,
-	type FoodLink,
 	foodMappingResponse,
 	foodNameResponse,
 } from "./islandFoodLogic";
@@ -34,15 +43,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 
 export function IslandFoodFestival({
 	api,
@@ -52,7 +52,7 @@ export function IslandFoodFestival({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -134,6 +134,25 @@ export function IslandFoodFestival({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const openSkill = async (id: string) => {
 		if (lock.current) return;
 		lock.current = true;
@@ -163,7 +182,7 @@ export function IslandFoodFestival({
 		reset();
 		setStep("question");
 	};
-	const record = (value: ConstructedResponse) => {
+	const record = (value: ConstructedResponse | null) => {
 		setResponse(value);
 		setMoves((value) => value + 1);
 	};
@@ -258,115 +277,145 @@ export function IslandFoodFestival({
 		else setStep(done.length === FOOD_SKILLS.length ? "result" : "games");
 	};
 	return (
-		<main
-			className="classroom-action-quest island-food-festival"
-			data-reduced-motion={reducedMotion || undefined}
-		>
-			<header className="caq-header">
-				<AdventureBackButton
-					onClick={step === "games" ? onBack : () => setStep("games")}
-				/>
-				<div>
-					<p>Theme 6</p>
-					<h1>Our food</h1>
-				</div>
-			</header>
-			{step === "games" ? (
-				<section className="caq-game-list" aria-label="Our food games">
-					{FOOD_SKILLS.map((skill, position) => (
-						<button
-							className="caq-game-card"
-							key={skill.id}
-							onClick={() => void openSkill(skill.id)}
-						>
-							<span className="food-glyph" aria-hidden="true">
-								{skill.icon}
-							</span>
-							<span>
-								<strong>{skill.name}</strong>
-								<small>{skill.description}</small>
-								<em>{position + 1}/3 · Easy to challenging</em>
-							</span>
-						</button>
-					))}
-				</section>
-			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={3}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
+		<WordDropMotionContext.Provider value={reducedMotion}>
+			<main
+				className="classroom-action-quest island-food-festival"
+				data-reduced-motion={reducedMotion || undefined}
+			>
+				<header className="caq-header">
+					<AdventureBackButton
+						onClick={step === "games" ? onBack : () => setStep("games")}
 					/>
-					<p className="caq-position">
-						Activity {index + 1}/3 · {active.name}
-					</p>
-					{step === "question" &&
-						manifest?.game?.schema_version === "island-food-festival-item-v1" && (
-							<>
-								<div className="caq-command">
-									<span className="food-glyph" aria-hidden="true">
-										👨‍🍳
-									</span>
-									<strong>{manifest.prompt_si}</strong>
-								</div>
-								<FoodActivity
-									key={manifest.revision_id}
-									game={manifest.game as Record<string, unknown>}
-									onResponse={record}
-								/>
-								<button
-									className="caq-primary"
-									disabled={busy || !response}
-									onClick={confirm}
-								>
-									Check my foods
-								</button>
-							</>
-						)}
-					{step === "support" && support && (
-						<FoodSupport
-							support={support}
-							stage={supportStage}
-							onNext={() => setSupportStage((value) => value + 1)}
-							onComplete={finishSupport}
-						/>
-					)}
-					{step === "withdrawing" && (
-						<p className="caq-status" role="status">
-							The help is going away. Now try a fresh festival card on your
-							own.
-						</p>
-					)}
-					{step === "feedback" && (
-						<section className="caq-feedback">
-							<h2>
-								{correct
-									? "Festival stamp earned!"
-									: "Read the word and look at the food again."}
-							</h2>
-							<button className="caq-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "Finish festival"
-										: "Next activity"
-									: "Try another one"}
+					<div>
+						<h1>Our food</h1>
+					</div>
+				</header>
+				{step === "games" ? (
+					<section className="caq-game-list" aria-label="Our food games">
+						{FOOD_SKILLS.map((skill, position) => (
+							<button
+								className="caq-game-card"
+								key={skill.id}
+								onClick={() => void openSkill(skill.id)}
+							>
+								<span className="food-glyph" aria-hidden="true">
+									{skill.icon}
+								</span>
+								<span>
+									<strong>{skill.name}</strong>
+									<small>{skill.description}</small>
+									<em>{position + 1}/3 · Easy to challenging</em>
+								</span>
 							</button>
-						</section>
-					)}
-					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<div className="festival-stamp" aria-hidden="true">
-								⭐
-							</div>
-							<SuccessCelebration />
-							<h2>Island Food Festival complete!</h2>
-							<p>You matched food words independently.</p>
-						</section>
-					)}
-				</section>
-			)}
-		</main>
+						))}
+					</section>
+				) : (
+					<section className="caq-play game-play-surface">
+						{step !== "result" && (
+							<AdventureProgress
+								stage={adaptiveGameProgressStage(
+									step,
+									manifest?.measurement_role,
+								)}
+								activityCount={3}
+								currentActivity={index + 1}
+								completedActivities={completed.length}
+							/>
+						)}
+						<p className="caq-position">
+							Activity {index + 1}/3 · {active.name}
+						</p>
+						{step === "question" &&
+							manifest?.game?.schema_version ===
+								"island-food-festival-item-v1" && (
+								<>
+									<div className="caq-command">
+										<span>🍽️ Read, drag and discover</span>
+										<strong>{manifest.prompt_si}</strong>
+									</div>
+									<FoodActivity
+										key={manifest.revision_id}
+										game={manifest.game as Record<string, unknown>}
+										onResponse={record}
+									/>
+									<button
+										className="caq-primary"
+										disabled={busy || !response}
+										onClick={confirm}
+									>
+										Check my foods
+									</button>
+								</>
+							)}
+						{step === "support" && isSupportRound(support) && (
+							<SupportRoundPlay
+								support={support}
+								busy={busy}
+								ready={response !== null}
+								checkLabel="Check my foods"
+								checkClassName="caq-primary"
+								onCheck={() => {
+									if (response)
+										void round.answer(
+											support,
+											response,
+											Date.now() - startedAt,
+											moves,
+										);
+								}}
+								onViewComplete={() =>
+									void round.viewComplete(support, Date.now() - startedAt)
+								}
+								renderActivity={(activity) => (
+									<FoodActivity
+										key={activity.revision_id}
+										game={activity.game as Record<string, unknown>}
+										onResponse={record}
+									/>
+								)}
+							/>
+						)}
+						{step === "support" && support && !isSupportRound(support) && (
+							<FoodSupport
+								support={support}
+								stage={supportStage}
+								onNext={() => setSupportStage((value) => value + 1)}
+								onComplete={finishSupport}
+							/>
+						)}
+						{step === "withdrawing" && (
+							<p className="caq-status" role="status">
+								The help is going away. Now try a fresh festival card on your
+								own.
+							</p>
+						)}
+						{step === "feedback" && (
+							<section className="caq-feedback">
+								<h2>
+									{correct
+										? "Festival stamp earned!"
+										: "Read the word and look at the food again."}
+								</h2>
+								<button className="caq-primary" onClick={advance}>
+									{correct
+										? index === 2
+											? "Finish festival"
+											: "Next activity"
+										: "Try another one"}
+								</button>
+							</section>
+						)}
+						{step === "result" && (
+							<GameSuccessScreen
+								gameNumber={3}
+								gameCount={3}
+								onContinue={() => setStep("games")}
+							/>
+						)}
+					</section>
+				)}
+			</main>
+		</WordDropMotionContext.Provider>
 	);
 }
 
@@ -383,7 +432,7 @@ export function FoodActivity({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	return game.response_kind === "food_name_sequence" ? (
 		<NameKitchen game={game} onResponse={onResponse} />
@@ -396,158 +445,144 @@ function MappingBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const vocabulary = game.response_kind === "food_vocabulary_mapping";
 	const sources = (vocabulary ? game.words : game.entries) as Row[];
 	const targets = (vocabulary ? game.foods : game.stalls) as Row[];
-	const sourceKey = vocabulary ? "word_token" : "entry_token";
-	const targetKey = vocabulary ? "food_token" : "stall_token";
-	const kind = game.response_kind as
-		| "food_vocabulary_mapping"
-		| "food_lesson_group_sort";
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<FoodLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) =>
-				link.source === selected || (vocabulary && link.target === target),
+	const sourceKey = vocabulary ? "word_token" : "entry_token",
+		targetKey = vocabulary ? "food_token" : "stall_token";
+	const baskets = ["🍞", "🍠", "🥛", "🍉", "🥕"];
+	const basketNames = [
+		"Bread, eggs & fish",
+		"Yams & sweet potatoes",
+		"Drinks",
+		"Fruits",
+		"Vegetables",
+	];
+	const emit = (state: WordDropState) =>
+		onResponse(
+			state.links.length === sources.length
+				? {
+						...foodMappingResponse(
+							game.response_kind as
+								| "food_vocabulary_mapping"
+								| "food_lesson_group_sort",
+							String(game.command_token),
+							state.links,
+							sources.map((row) => String(row[sourceKey])),
+							state.trace,
+						),
+						tap_alternative_used: state.usedTap,
+						invalid_drop_count: state.invalidDrops,
+					}
+				: null,
 		);
-		const next = links.filter(
-			(link) =>
-				link.source !== selected && (!vocabulary || link.target !== target),
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
-				foodMappingResponse(
-					kind,
-					String(game.command_token),
-					next,
-					sources.map((row) => String(row[sourceKey])),
-					nextTrace,
-				),
-			);
-	};
 	return (
 		<section className="food-board">
-			<div className="chunk-rail">
-				{sources.map((row) => {
-					const id = String(row[sourceKey]);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className={vocabulary ? "market-counter" : "stall-row"}>
-				{targets.map((row) => {
-					const id = String(row[targetKey]);
-					const linked = links.filter((entry) => entry.target === id);
-					const labels = linked.map((link) =>
-						String(
-							sources.find((entry) => String(entry[sourceKey]) === link.source)
-								?.text_en ?? "",
-						),
-					);
-					return (
-						<button
-							className="food-target"
-							key={id}
-							disabled={!selected}
-							onClick={() => place(id)}
-						>
-							{vocabulary ? (
-								<FoodGlyph variant={Number(row.renderer_variant)} />
-							) : (
-								<strong>{String(row.display_en)}</strong>
-							)}
-							<span>{labels.length ? labels.join(" · ") : "Choose a word"}</span>
-						</button>
-					);
-				})}
-			</div>
+			<WordDropBoard
+				theme="market"
+				single={vocabulary}
+				instruction={
+					vocabulary
+						? "Drag each English word to its food picture."
+						: "Drag each food into its basket. Look at the basket labels."
+				}
+				cards={sources.map((row) => ({
+					id: String(row[sourceKey]),
+					label: String(row.text_en),
+					emoji: vocabulary ? undefined : foodEmoji(String(row.text_en)),
+				}))}
+				targets={targets.map((row, index) => ({
+					id: String(row[targetKey]),
+					label: vocabulary
+						? `Picture ${index + 1}`
+						: (basketNames[Number(row.stall_variant)] ??
+							String(row.display_en)),
+					emoji: vocabulary
+						? (FOOD_GLYPHS[Number(row.renderer_variant)] ?? "🍽️")
+						: (baskets[Number(row.stall_variant)] ?? "🧺"),
+					hint: vocabulary ? "Choose a word" : "Drop food here",
+				}))}
+				onChange={emit}
+			/>
 		</section>
 	);
+}
+function foodEmoji(label: string) {
+	const names = [
+		"Egg",
+		"Bread",
+		"Fish",
+		"Coconut",
+		"Buns",
+		"Healthy Food",
+		"Fatty Food",
+		"Spicy Food",
+		"Homemade Food",
+		"Junk Food",
+		"Manioc",
+		"Sweet Potatoes",
+		"Tea",
+		"Milk",
+		"Water",
+		"Fruit Juice",
+		"Banana",
+		"Pineapple",
+		"Mango",
+		"Watermelon",
+		"Olive",
+		"Potato",
+		"Cabbage",
+		"Tomato",
+		"Carrot",
+		"Cucumber",
+	];
+	return FOOD_GLYPHS[names.indexOf(label)] ?? "🍽️";
 }
 function NameKitchen({
 	game,
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const chunks = game.chunks as Row[];
-	const [ordered, setOrdered] = useState<string[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const add = (token: string) => {
-		if (ordered.includes(token)) return;
-		const next = [...ordered, token];
-		const nextTrace = [...trace, `slot:${token}:${next.length}`];
-		setOrdered(next);
-		setTrace(nextTrace);
-		if (next.length === chunks.length)
-			onResponse(
-				foodNameResponse(
-					String(game.command_token),
-					String(game.food_token),
-					next,
-					nextTrace,
-				),
-			);
-	};
-	const remove = (token: string) => {
-		const next = ordered.filter((value) => value !== token);
-		setOrdered(next);
-		setTrace((value) => [...value, `remove:${token}`]);
-	};
 	return (
 		<section className="name-kitchen">
 			<FoodGlyph variant={Number(game.renderer_variant)} />
-			<div className="recipe-slots">
-				{Array.from({ length: chunks.length }, (_, index) => {
-					const token = ordered[index];
-					const row = chunks.find((entry) => entry.chunk_token === token);
-					return (
-						<button
-							key={`slot-${String(chunks[index]?.chunk_token)}`}
-							disabled={!token}
-							onClick={() => token && remove(token)}
-						>
-							{row ? String(row.text_en) : `Word ${index + 1}`}
-						</button>
+			<WordDropBoard
+				theme="market"
+				instruction="Look at the food. Drag the words into the numbered spaces to build its name."
+				cards={chunks.map((row) => ({
+					id: String(row.chunk_token),
+					label: String(row.text_en),
+				}))}
+				targets={chunks.map((_, index) => ({
+					id: `slot-${index}`,
+					label: `Word ${index + 1}`,
+					emoji: "🍽️",
+					hint: "Drop a word",
+				}))}
+				onChange={(state) => {
+					if (state.links.length !== chunks.length) return onResponse(null);
+					const ordered = chunks.map(
+						(_, index) =>
+							state.links.find((link) => link.target === `slot-${index}`)
+								?.source ?? "",
 					);
-				})}
-			</div>
-			<div className="chunk-rail">
-				{chunks.map((row) => {
-					const token = String(row.chunk_token);
-					return (
-						<button
-							key={token}
-							disabled={ordered.includes(token)}
-							onClick={() => add(token)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
+					onResponse({
+						...foodNameResponse(
+							String(game.command_token),
+							String(game.food_token),
+							ordered,
+							state.trace,
+						),
+						tap_alternative_used: state.usedTap,
+						invalid_drop_count: state.invalidDrops,
+					});
+				}}
+			/>
 		</section>
 	);
 }
@@ -562,7 +597,9 @@ function FoodSupport({
 	onNext(): void;
 	onComplete(): void;
 }) {
-	if (support.game_manifest.schema_version !== "island-food-festival-support-v1")
+	if (
+		support.game_manifest.schema_version !== "island-food-festival-support-v1"
+	)
 		return null;
 	const game = support.game_manifest;
 	return (
@@ -584,7 +621,9 @@ function FoodSupport({
 				className="caq-primary"
 				onClick={stage < game.required_actions ? onNext : onComplete}
 			>
-				{stage < game.required_actions ? "Next help step" : "Now I will try alone"}
+				{stage < game.required_actions
+					? "Next help step"
+					: "Now I will try alone"}
 			</button>
 		</section>
 	);

@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -14,9 +14,14 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./blueprint-quest.css";
 import {
 	groupResponse,
@@ -29,15 +34,6 @@ const SKILLS = [
 	{ id: "G5-ENG-PLACE-GROUP-02", name: "Blueprint Zone Sort", icon: "📐" },
 	{ id: "G5-ENG-PLACE-NAME-03", name: "Room Name Workshop", icon: "🧩" },
 ] as const;
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 type Step =
 	| "games"
 	| "question"
@@ -55,7 +51,7 @@ export function SchoolHomeBlueprintQuest({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -135,6 +131,25 @@ export function SchoolHomeBlueprintQuest({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId: episode,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				e: withdrawal.episodeId,
+				s: withdrawal.supportRevisionId,
+				m: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const open = async (id: string) => {
 		if (lock.current) return;
 		lock.current = true;
@@ -256,7 +271,6 @@ export function SchoolHomeBlueprintQuest({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 14</p>
 					<h1>Changes we can do</h1>
 				</div>
 			</header>
@@ -280,13 +294,15 @@ export function SchoolHomeBlueprintQuest({
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={3}
-						currentActivity={index + 1}
-						completedActivities={done.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={3}
+							currentActivity={index + 1}
+							completedActivities={done.length}
+						/>
+					)}
 					{step === "question" && game && (
 						<>
 							<div className="caq-command">
@@ -308,6 +324,37 @@ export function SchoolHomeBlueprintQuest({
 								Check my blueprint
 							</button>
 						</>
+					)}
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null && !incomplete(response)}
+							checkLabel="Check my blueprint"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - start,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - start)
+							}
+							renderActivity={(activity) => (
+								<Board
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={(value) => {
+										setResponse(value);
+										setMoves((count) => count + 1);
+									}}
+								/>
+							)}
+						/>
 					)}
 					{step === "support" &&
 						support?.game_manifest.schema_version ===
@@ -349,11 +396,11 @@ export function SchoolHomeBlueprintQuest({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<SuccessCelebration />
-							<h2>Blueprint Quest complete!</h2>
-							<p>You rebuilt the lesson vocabulary independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={3}
+							gameCount={3}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}
@@ -376,9 +423,19 @@ function Board({
 	game: Game;
 	onResponse(r: ConstructedResponse): void;
 }) {
-	return game.response_kind === "place_name_sequence" ? <Sequence game={game} onResponse={onResponse} /> : <MappingBoard game={game} onResponse={onResponse} />;
+	return game.response_kind === "place_name_sequence" ? (
+		<Sequence game={game} onResponse={onResponse} />
+	) : (
+		<MappingBoard game={game} onResponse={onResponse} />
+	);
 }
-function MappingBoard({game,onResponse}:{game:Game;onResponse(r:ConstructedResponse):void}) {
+function MappingBoard({
+	game,
+	onResponse,
+}: {
+	game: Game;
+	onResponse(r: ConstructedResponse): void;
+}) {
 	const vocab = game.response_kind === "place_vocabulary_mapping",
 		sources = (vocab ? game.words : game.entries) as Row[],
 		targets = (vocab ? game.scenes : game.headings) as Row[],
@@ -466,7 +523,10 @@ function Sequence({
 }) {
 	const chunks = game.chunks as Row[],
 		all = chunks.map((x) => String(x.chunk_token)),
-		slots = ["first", "second", "third", "fourth"].slice(0, Number(game.slot_count)),
+		slots = ["first", "second", "third", "fourth"].slice(
+			0,
+			Number(game.slot_count),
+		),
 		[ordered, setOrdered] = useState<string[]>([]),
 		[trace, setTrace] = useState<string[]>([]);
 	const add = (t: string) => {

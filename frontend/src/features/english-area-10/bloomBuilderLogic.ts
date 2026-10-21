@@ -12,8 +12,14 @@ export function flowerMappingResponse(
 	return {
 		kind: "flower_vocabulary_mapping",
 		command_token: commandToken,
-		placements: links.map((link) => ({ sequence: link.sequence, word_token: link.source, flower_token: link.target })),
-		unplaced_word_tokens: wordTokens.filter((token) => !links.some((link) => link.source === token)),
+		placements: links.map((link) => ({
+			sequence: link.sequence,
+			word_token: link.source,
+			flower_token: link.target,
+		})),
+		unplaced_word_tokens: wordTokens.filter(
+			(token) => !links.some((link) => link.source === token),
+		),
 		interaction_trace: trace,
 		revisions: trace.filter((entry) => entry.startsWith("replace:")).length,
 		invalid_drop_count: 0,

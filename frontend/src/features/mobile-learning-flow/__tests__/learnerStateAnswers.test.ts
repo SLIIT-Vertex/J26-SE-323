@@ -37,7 +37,6 @@ function json(body: unknown, status = 200): Response {
 function fakeServer({ probeTaken = false } = {}) {
 	const learners = [{ id: CONFIGURED, grade: 5, preferred_language: "si" }];
 	const consents = new Map<string, boolean>();
-	let episodesOpened = 0;
 	const calls: { url: string; method: string; learner?: string; body?: unknown }[] = [];
 	const request = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
 		const url = String(input).replace(baseUrl, "");
@@ -56,8 +55,8 @@ function fakeServer({ probeTaken = false } = {}) {
 			return json({ granted, decided_at: granted ? "2026-10-20T09:00:00Z" : null });
 		}
 		if (url.endsWith("/episodes")) {
-			episodesOpened += 1;
-			if (probeTaken && episodesOpened === 1) {
+			// Every item for the configured learner is taken, so even new sessions clash.
+			if (probeTaken && learner === CONFIGURED) {
 				return json({ detail: { code: "PROBE_ALREADY_RESERVED_OR_EXPOSED" } }, 409);
 			}
 			return json(EPISODE);

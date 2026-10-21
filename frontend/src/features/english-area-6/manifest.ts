@@ -2,18 +2,18 @@ export const FOOD_SKILLS = [
 	{
 		id: "G5-ENG-FOOD-VOCAB-01",
 		name: "Market Match Dash",
-		description: "Connect English words to festival foods.",
+		description: "Drag English words to food pictures.",
 		icon: "🧺",
 	},
 	{
 		id: "G5-ENG-FOOD-GROUP-02",
-		name: "Festival Stall Sort",
-		description: "Place words at the stall from this lesson.",
+		name: "Food Basket Sort",
+		description: "Drag each food into its labelled basket.",
 		icon: "🎪",
 	},
 	{
 		id: "G5-ENG-FOOD-NAME-03",
-		name: "Recipe-Card Word Kitchen",
+		name: "Food Name Kitchen",
 		description: "Build multiword food names.",
 		icon: "📝",
 	},

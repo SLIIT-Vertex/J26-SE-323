@@ -1,13 +1,14 @@
 // biome-ignore-all lint/a11y/useButtonType: game controls do not submit forms.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+	ChildEpisodeResponse,
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	ShapeAdventureWorkedExample,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	adaptiveGameProgressStage,
@@ -17,6 +18,7 @@ import {
 	AdventureBackButton,
 	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	netMatchResponse,
 	orientationResponse,
@@ -33,15 +35,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type ShapeApi = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 
 export function ShapeAdventureJourney({
 	api,
@@ -51,7 +44,7 @@ export function ShapeAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: ShapeApi;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -214,14 +207,14 @@ export function ShapeAdventureJourney({
 		} else setStep("feedback");
 	};
 	const finishSupport = async () => {
+		if (!episodeId || !support) return;
+		const game = support.game_manifest;
+		if (game.schema_version === "half-set-manifest-v1") return;
 		if (
-			!episodeId ||
-			!support ||
-			support.game_manifest.schema_version !== "shape-adventure-support-v1"
+			game.schema_version !== "support-round-v1" &&
+			supportStage < game.required_actions
 		)
 			return;
-		const game = support.game_manifest;
-		if (supportStage < game.required_actions) return;
 		const done = await run(() =>
 			api.completeSupport(
 				episodeId,
@@ -239,15 +232,57 @@ export function ShapeAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!done) return;
-		setPending({
-			episode: episodeId,
-			support: support.revision_id,
-			manifest: game.revision_id,
-		});
-		setSupport(null);
-		setResponse(null);
-		setStep("withdrawing");
+		if (done) advanceSupport(done);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) {
+			setPending({
+				episode: next.episode_id,
+				support: next.support_round.support_revision_id,
+				manifest: next.support_round.manifest_revision_id,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+			return;
+		}
+		if (next.support) {
+			setSupport(next.support);
+			setSupportStage(0);
+			reset();
+		}
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported,
+			game = support?.game_manifest,
+			activity =
+				game?.schema_version === "support-round-v1" ? game.activity : null;
+		if (
+			!submit ||
+			!episodeId ||
+			!response ||
+			!game ||
+			game.schema_version !== "support-round-v1" ||
+			!activity
+		)
+			return;
+		const next = await run(() =>
+			submit(
+				episodeId,
+				{
+					constructed_response: {
+						...response,
+						presentation_id: activity.presentation_id,
+						item_revision_id: activity.revision_id,
+						interaction_version: "constructed-response-v1",
+					},
+					response_time_ms: Date.now() - startedAt,
+					interaction_summary: { move_count: moves },
+				},
+				crypto.randomUUID(),
+			),
+		);
+		if (next) advanceSupport(next);
 	};
 	const advance = () => {
 		if (!skillId) return;
@@ -304,7 +339,7 @@ export function ShapeAdventureJourney({
 					))}
 				</section>
 			) : (
-				<section className="shape-play">
+				<section className="shape-play game-play-surface">
 					<AdventureProgress
 						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
 						activityCount={3}
@@ -331,22 +366,45 @@ export function ShapeAdventureJourney({
 							</button>
 						</>
 					)}
-					{step === "support" && support && (
-						<ShapeSupport
-							support={support}
-							stage={supportStage}
-							onNext={() => setSupportStage((value) => value + 1)}
-							onComplete={finishSupport}
-						/>
-					)}
+					{step === "support" &&
+						support &&
+						(support.game_manifest.schema_version === "support-round-v1" ? (
+							<SupportRoundFrame
+								support={support}
+								busy={busy}
+								onViewComplete={() => void finishSupport()}
+								renderActivity={(activity) => (
+									<ShapeActivity
+										key={activity.revision_id}
+										game={activity.game}
+										onResponse={record}
+									/>
+								)}
+							>
+								{support.game_manifest.stage_kind !== "view" && (
+									<button
+										className="shape-primary"
+										disabled={busy || !response}
+										onClick={() => void answerSupport()}
+									>
+										තහවුරු කරන්න
+									</button>
+								)}
+							</SupportRoundFrame>
+						) : (
+							<ShapeSupport
+								support={support}
+								stage={supportStage}
+								onNext={() => setSupportStage((value) => value + 1)}
+								onComplete={finishSupport}
+							/>
+						))}
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
 					{step === "feedback" && !correct && (
 						<section className="shape-feedback">
-							<h2>
-								{`${feedbackLabel(feedback)} නැවත බලමු.`}
-							</h2>
+							<h2>{`${feedbackLabel(feedback)} නැවත බලමු.`}</h2>
 							<button className="shape-primary" onClick={advance}>
 								නැවත උත්සාහ කරන්න
 							</button>
@@ -356,7 +414,11 @@ export function ShapeAdventureJourney({
 						<GameSuccessScreen
 							gameNumber={index + 1}
 							gameCount={SHAPE_GAMES.length}
-							onContinue={() => index < SHAPE_SKILLS.length - 1 ? void openSkill(SHAPE_SKILLS[index + 1].id) : setStep("chapters")}
+							onContinue={() =>
+								index < SHAPE_SKILLS.length - 1
+									? void openSkill(SHAPE_SKILLS[index + 1].id)
+									: setStep("chapters")
+							}
 						/>
 					)}
 				</section>
@@ -429,7 +491,12 @@ function ShapeTableActivity({
 		[values, setValues] = useState<Record<string, number | null>>({});
 	const write = (digit: number | null, append = false) => {
 		const current = values[active];
-		const value = digit === null ? null : append ? Number(`${current ?? ""}${digit}`.slice(-2)) : digit;
+		const value =
+			digit === null
+				? null
+				: append
+					? Number(`${current ?? ""}${digit}`.slice(-2))
+					: digit;
 		const next = { ...values, [active]: value };
 		setValues(next);
 		onResponse(shapeTableResponse(rowIds, next));

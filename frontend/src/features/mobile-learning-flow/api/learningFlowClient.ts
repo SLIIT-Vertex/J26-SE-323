@@ -1,6 +1,7 @@
 import type {
 	AnswerRequest,
 	CameraConsentResponse,
+	ConstructedResponse,
 	DraftMissionCatalog,
 	DraftMissionRecord,
 	LearnerStateAction,
@@ -37,6 +38,8 @@ type Requester = (
 	init?: RequestInit,
 ) => Promise<Response>;
 
+const PROBE_CLASH_RETRIES = 5;
+
 export function createLearningFlowClient({
 	baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1",
 	learnerId,
@@ -66,7 +69,10 @@ export function createLearningFlowClient({
 	let cameraConsentLearnerId: string | null = null;
 	// One snapshot per answer: a retried request with the same key must send identical values.
 	const snapshots = new Map<string, VisualFeatureWindow | null>();
-	const withLearnerState = (body: AnswerRequest, key: string): AnswerRequest => {
+	const withLearnerState = (
+		body: AnswerRequest,
+		key: string,
+	): AnswerRequest => {
 		if (!snapshots.has(key)) snapshots.set(key, visualFeatures?.() ?? null);
 		const visual = snapshots.get(key);
 		return {
@@ -120,11 +126,12 @@ export function createLearningFlowClient({
 							row.preferred_language === "si",
 					)
 				: [];
-			const preferredLearners = [
-				...compatibleLearners.filter((row) => row.id === activeLearnerId),
-				...compatibleLearners.filter((row) => row.id !== activeLearnerId),
-			];
-			for (const compatible of preferredLearners) {
+			// The configured learner keeps playing every skill: a fresh after-question is a new
+			// item each session, and the server still refuses any item this learner has seen.
+			if (compatibleLearners.some((row) => row.id === activeLearnerId)) {
+				return activeLearnerId;
+			}
+			for (const compatible of compatibleLearners) {
 				if (typeof compatible.id !== "string") continue;
 				if (!atomicSkillId) return compatible.id;
 				const availability = await request(
@@ -202,7 +209,10 @@ export function createLearningFlowClient({
 			throw new LearningFlowApiError("BACKEND_UNAVAILABLE", 0);
 		}
 		if (!response.ok) {
-			throw new LearningFlowApiError(`HTTP_${response.status}`, response.status);
+			throw new LearningFlowApiError(
+				`HTTP_${response.status}`,
+				response.status,
+			);
 		}
 		const payload = (await response.json()) as Partial<CameraConsentResponse>;
 		cameraConsentGranted = payload.granted === true;
@@ -229,6 +239,24 @@ export function createLearningFlowClient({
 				throw error;
 			}
 			if (error.code === "PROBE_ALREADY_RESERVED_OR_EXPOSED") {
+				// A new session draws other items; only after several clashes does a fresh
+				// development learner take over.
+				for (let attempt = 1; attempt <= PROBE_CLASH_RETRIES; attempt += 1) {
+					try {
+						return await post("/episodes", `${key}:session-${attempt}`, {
+							...body,
+							session_id: crypto.randomUUID(),
+							learner_id: activeLearnerId,
+						});
+					} catch (retryError) {
+						if (
+							!(retryError instanceof LearningFlowApiError) ||
+							retryError.code !== "PROBE_ALREADY_RESERVED_OR_EXPOSED"
+						) {
+							throw retryError;
+						}
+					}
+				}
 				activeLearnerId = await createDevelopmentLearner();
 			} else if (
 				["LEARNER_NOT_FOUND", "GRADE5_SINHALA_REQUIRED"].includes(error.code)
@@ -248,6 +276,19 @@ export function createLearningFlowClient({
 	};
 
 	return {
+		saveProfile: async (displayName: string): Promise<void> => {
+			const name = displayName.trim();
+			if (!name || name.length > 60)
+				throw new Error("Please enter a name of up to 60 characters.");
+			activeLearnerId = await resolveDevelopmentLearner();
+			const response = await request(`${baseUrl}/learners/${activeLearnerId}`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ display_name: name }),
+			});
+			if (!response.ok)
+				throw new Error("The profile could not be saved. Please try again.");
+		},
 		open: async (
 			body: OpenEpisodeRequest,
 			key: string,
@@ -273,6 +314,20 @@ export function createLearningFlowClient({
 		) =>
 			post<ScoredEpisodeResponse>(
 				`/episodes/${episodeId}/support/complete`,
+				key,
+				body,
+			),
+		answerSupported: (
+			episodeId: string,
+			body: {
+				constructed_response: ConstructedResponse;
+				response_time_ms?: number;
+				interaction_summary?: Record<string, string | number | boolean>;
+			},
+			key: string,
+		) =>
+			post<ScoredEpisodeResponse>(
+				`/episodes/${episodeId}/support/answer`,
 				key,
 				body,
 			),

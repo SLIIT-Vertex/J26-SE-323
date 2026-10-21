@@ -3522,26 +3522,28 @@ p {
 
 /* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards > button {
-	min-height: 15rem;
+	min-height: 9.5rem;
 }
 
 /* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards img {
-	max-width: min(48%, 12rem);
-	max-height: 9rem;
+	width: clamp(5rem, 30vw, 8rem);
+	height: clamp(5rem, 30vw, 8rem);
 	object-fit: contain;
 }
 
+/* The title sits beside the picture, inside its own card. */
 /* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards span {
-	position: absolute;
-	top: 1rem;
-	right: 1rem;
-	padding: 0.35rem 0.75rem;
+	flex: 1;
+	color: #35275a;
+}
+
+.pattern-chapter-cards small {
+	justify-self: start;
+	padding: 0.25rem 0.65rem;
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--card-tone) 18%, white);
-	color: #35275a;
-	font-weight: 800;
 }
 
 .pattern-board {
@@ -3556,7 +3558,7 @@ p {
 
 .pattern-machine {
 	width: min(100%, 32rem);
-	max-height: 13rem;
+	max-height: clamp(6rem, 24vw, 13rem);
 	margin-inline: auto;
 	object-fit: contain;
 }
@@ -3620,7 +3622,7 @@ p {
 .worked-pattern-route {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0.9rem 0.35rem;
+	gap: 2.25rem 0.35rem;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -3670,23 +3672,26 @@ p {
 
 .pattern-sequence li:nth-child(3) .pattern-arrow,
 .worked-pattern-route li:nth-child(3) > span {
-	transform: rotate(90deg);
-	top: calc(100% + 0.1rem);
+	transform: translateX(50%) rotate(90deg);
+	top: calc(100% + 0.35rem);
 	right: 50%;
 }
 
 .pattern-sequence li:nth-child(4),
 .worked-pattern-route li:nth-child(4) {
+	grid-row: 2;
 	grid-column: 3;
 }
 
 .pattern-sequence li:nth-child(5),
 .worked-pattern-route li:nth-child(5) {
+	grid-row: 2;
 	grid-column: 2;
 }
 
 .pattern-sequence li:nth-child(6),
 .worked-pattern-route li:nth-child(6) {
+	grid-row: 2;
 	grid-column: 1;
 }
 
@@ -3912,48 +3917,222 @@ p {
 	margin-inline: auto;
 	overflow-x: clip;
 }
+/* Same progress dots as the other math adventures. */
 .multiplication-progress {
 	display: flex;
-	gap: 0.4rem;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0 0 0.65rem;
 	padding: 0;
 	list-style: none;
 }
-.multiplication-progress li,
+.multiplication-progress li {
+	display: grid;
+	width: 38px;
+	height: 38px;
+	place-items: center;
+	border: 2px solid #bdb5d1;
+	border-radius: 50%;
+	background: #fff;
+	font-weight: 900;
+}
+.multiplication-progress li.is-done {
+	color: #fff;
+	border-color: #54cbab;
+	background: #54cbab;
+}
+.multiplication-progress li.is-current {
+	border-color: #57558f;
+	background: #eeeafe;
+}
 .multiplication-adventure .touch-target,
 .multiplication-adventure .primary-action {
 	min-width: 48px;
 	min-height: 48px;
 }
-.multiplication-columns,
-.multiplication-table-board table {
-	width: 100%;
-	table-layout: fixed;
-	border-collapse: collapse;
-	text-align: center;
+
+/* Every board is one card, like the pattern board. */
+.multiplication-table-board,
+.written-multiplication,
+.multiplication-story {
+	display: grid;
+	gap: 0.85rem;
+	min-width: 0;
+	padding: clamp(0.6rem, 3vw, 1.25rem);
+	border: 3px solid #d8c9ff;
+	border-radius: 1.75rem;
+	background: rgba(255, 252, 241, 0.96);
+	color: #35275a;
 }
-.multiplication-adventure .multiplication-columns input,
-.multiplication-adventure .product-input {
-	width: 100%;
-	min-width: 48px;
-	min-height: 48px;
-	font-size: 1.2rem;
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board > p {
+	justify-self: center;
+	margin: 0;
+	padding: 0.35rem 1rem;
+	border-radius: 999px;
+	background: #fff2bd;
+	font-size: 1.4rem;
+	font-weight: 900;
 }
+
+/* The 13-column table fits a phone without sideways scrolling. */
 .table-scroll {
 	max-width: 100%;
 	overflow-x: auto;
+}
+.multiplication-table-board table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 1px;
+	font-size: clamp(0.56rem, 2.55vw, 1rem);
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board th,
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board td {
+	padding: 0.28em 0;
+	border-radius: 4px;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board th {
+	color: #6553a4;
+	font-weight: 900;
 }
 .multiplication-table-board tr.is-active,
 .multiplication-table-board th.is-active {
 	background: #efe6ff;
 }
-.story-expression {
+.multiplication-table-board tr.is-active td:empty {
+	background: #ffd84d;
+	box-shadow: inset 0 0 0 2px #e0a100;
+}
+.multiplication-adventure .product-input,
+.multiplication-adventure .result-digit,
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.story-expression input {
+	width: 100%;
+	min-width: 48px;
+	min-height: 52px;
+	border: 3px solid #6556a0;
+	border-radius: 1rem;
+	background: #fff;
+	color: #35275a;
+	font: inherit;
+	font-size: 1.4rem;
+	font-weight: 900;
+	text-align: center;
+}
+.multiplication-table-board label {
+	justify-self: center;
+	width: min(100%, 10rem);
+}
+
+/* Written multiplication: one column per place, digits large. */
+.multiplication-columns {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0.4rem 0.3rem;
+	text-align: center;
+}
+.multiplication-columns caption {
+	margin-bottom: 0.25rem;
+	font-weight: 900;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-columns th {
+	color: #6553a4;
+	font-size: 0.85rem;
+	font-weight: 800;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-columns tbody td {
+	font-size: clamp(1.35rem, 7vw, 2rem);
+	font-weight: 900;
+	font-variant-numeric: tabular-nums;
+}
+.multiplication-columns tr.result-digits td {
+	padding-top: 0.45rem;
+	border-top: 3px solid #35275a;
+}
+.multiplication-adventure .result-digit {
+	padding: 0;
+}
+
+.multiplication-columns tbody tr:nth-child(2) td {
+	color: #0ba68f;
+	white-space: nowrap;
+}
+
+/* Story: a small picture, then the groups as rows of counters. */
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-story > img {
+	justify-self: center;
+	width: auto;
+	max-width: 60%;
+	max-height: clamp(6rem, 28vw, 9rem);
+	object-fit: contain;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-story > p {
+	margin: 0;
+	font-weight: 900;
+	text-align: center;
+}
+.equal-groups {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.35rem;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.equal-groups li {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.25rem;
+	max-width: 6.5rem;
+	padding: 0.45rem;
+	border: 2px dashed #7b61e8;
+	border-radius: 0.9rem;
+	background: #f5f0ff;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.equal-groups span {
+	width: 0.85rem;
+	height: 0.85rem;
+	border-radius: 50%;
+	background: #ff9f1c;
+	box-shadow: inset 0 -2px 0 rgb(0 0 0 / 15%);
+}
+.story-expression {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.3fr);
+	gap: 0.4rem;
 	align-items: center;
 	border: 0;
 	margin: 0;
 	padding: 0;
+}
+.story-expression legend {
+	margin-bottom: 0.5rem;
+	font-weight: 900;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.story-expression > span {
+	font-size: 1.5rem;
+	font-weight: 900;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.story-expression input {
+	min-width: 0;
 }
 .multiplication-adventure button:focus-visible,
 .multiplication-adventure input:focus-visible {

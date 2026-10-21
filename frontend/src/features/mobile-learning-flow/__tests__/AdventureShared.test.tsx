@@ -86,4 +86,19 @@ describe("shared adventure presentation", () => {
 		expect(host.querySelector(".adventure-progress")?.getAttribute("data-progress-stage")).toBe("4");
 		await act(async () => root.unmount());
 	});
+	it.each([1, 2, 4])("shows exactly %i completed games with a working return button", async (gameCount) => {
+		const host = document.createElement("div");
+		const root = createRoot(host);
+		const onContinue = vi.fn();
+		await act(async () => root.render(
+			<GameSuccessScreen gameNumber={gameCount} gameCount={gameCount} onContinue={onContinue} />,
+		));
+		expect(host.querySelectorAll(".adventure-progress span.is-done")).toHaveLength(gameCount);
+		expect(host.querySelectorAll(".success-celebration-image")).toHaveLength(1);
+		expect(host.querySelector("button")?.textContent).toBe("ක්‍රීඩා තේරීමට");
+		await act(async () => host.querySelector("button")?.click());
+		expect(onContinue).toHaveBeenCalledOnce();
+		await act(async () => root.unmount());
+	});
+
 });

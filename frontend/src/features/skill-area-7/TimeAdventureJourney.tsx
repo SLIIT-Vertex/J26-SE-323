@@ -1,10 +1,11 @@
 // biome-ignore-all lint/a11y/useButtonType: application controls do not submit forms.
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import type { ConstructedResponse, ExperimentCondition, PresentationManifest, SupportView } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { ChildEpisodeResponse, ConstructedResponse, ExperimentCondition, PresentationManifest, SupportView } from "../mobile-learning-flow/api/generated";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import { AdventureBackButton, GameSuccessScreen } from "../mobile-learning-flow/AdventureShared";
 import { AdventureProgress, adaptiveGameProgressStage } from "../mobile-learning-flow/AdventureProgress";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import { TIME_GAMES, TIME_SKILLS, type TimeChapter } from "./manifest";
 import { analogClockResponse, arithmeticResponse, conversionResponse, elapsedResponse, unitMatchResponse } from "./timeLogic";
 import "./time-adventure.css";
@@ -13,7 +14,7 @@ type Step = "chapters" | "question" | "feedback" | "support" | "withdrawing" | "
 const CLOCK_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
 
 export function TimeAdventureJourney({ api, learnerId, condition, reducedMotion, onBack, onFailure }: {
-	api: Pick<LearningFlowClient, "open" | "answerBefore" | "completeSupport" | "withdrawSupport" | "presentAfter" | "answerAfter">;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -86,10 +87,19 @@ export function TimeAdventureJourney({ api, learnerId, condition, reducedMotion,
 	};
 
 	const finishSupport = async () => {
-		if (!episodeId || !manifest || !support || actions < Number((support.game_manifest as { required_actions?: number }).required_actions ?? 1)) return;
-		const completed = await run(() => api.completeSupport(episodeId, { duration_ms: Date.now() - startedAt, steps_viewed: Math.min(8, Math.max(1, actions)), manifest_revision_id: manifest.revision_id, interaction_summary: { action_count: actions, exact_failed_activity: true } }, crypto.randomUUID()));
-		if (!completed) return;
-		setPendingWithdrawal({ episodeId, supportRevisionId: support.revision_id, manifestRevisionId: manifest.revision_id }); setResponse(null); setSupport(null); setStep("withdrawing");
+		if (!episodeId || !support || (support.game_manifest.schema_version !== "support-round-v1" && actions < Number((support.game_manifest as { required_actions?: number }).required_actions ?? 1))) return;
+		const completed = await run(() => api.completeSupport(episodeId, { duration_ms: Date.now() - startedAt, steps_viewed: Math.min(8, Math.max(1, actions)), manifest_revision_id: support.game_manifest.revision_id, interaction_summary: { completed: true, action_count: actions, exact_failed_activity: true } }, crypto.randomUUID()));
+		if (completed) advanceSupport(completed);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) { setPendingWithdrawal({ episodeId: next.episode_id, supportRevisionId: next.support_round.support_revision_id, manifestRevisionId: next.support_round.manifest_revision_id }); setResponse(null); setSupport(null); setStep("withdrawing"); return; }
+		if (next.support) { setSupport(next.support); setActions(0); reset(); }
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported; const game = support?.game_manifest;
+		if (!submit || !episodeId || !response || !game || game.schema_version !== "support-round-v1" || !game.activity) return; const activity = game.activity;
+		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Date.now() - startedAt, interaction_summary: { move_count: moves } }, crypto.randomUUID()));
+		if (next) advanceSupport(next);
 	};
 
 	const continueAfterFeedback = () => {
@@ -102,10 +112,12 @@ export function TimeAdventureJourney({ api, learnerId, condition, reducedMotion,
 	return <main className="time-adventure" data-reduced-motion={reducedMotion || undefined}>
 		<header className="time-header"><AdventureBackButton onClick={step === "chapters" ? onBack : () => setStep("chapters")} /><h1>කාලය</h1></header>
 		{step === "chapters" ? <section className="time-game-list" aria-label="කාල ක්‍රීඩා">{TIME_GAMES.map((game) => <button className="time-game-card" key={game.id} onClick={() => { const first = TIME_SKILLS.find((item) => item.chapter === game.id); if (first) void openSkill(first.id, game.id); }}><img src={game.asset} alt="" /><span><strong>{game.title}</strong><small>අභියෝග {game.challengeCount}ක් · {game.difficulty}</small></span></button>)}</section> :
-		<section className="time-play-shell"><AdventureProgress stage={adaptiveGameProgressStage(step, manifest?.measurement_role)} />
+		<section className="time-play-shell game-play-surface"><AdventureProgress stage={adaptiveGameProgressStage(step, manifest?.measurement_role)} />
 			{chapter && <p className="time-position">ක්‍රීඩාව {chapterIndex + 1} · අභියෝගය {challengeIndex + 1}/{skills.length}</p>}
 			{step === "question" && manifest?.game && <><h2>{manifest.prompt_si}</h2><TimeActivity key={manifest.revision_id} game={manifest.game as Record<string, unknown>} onResponse={record} /><button className="time-primary" disabled={busy || !response} onClick={confirm}>තහවුරු කරන්න</button></>}
-			{step === "support" && support && <TimeSupport support={support} actions={actions} onAction={() => setActions((value) => value + 1)} onComplete={finishSupport} />}
+			{step === "support" && support && (support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <TimeActivity key={activity.revision_id} game={activity.game} onResponse={record} />}>
+				{support.game_manifest.stage_kind !== "view" && <button className="time-primary" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
+			</SupportRoundFrame> : <TimeSupport support={support} actions={actions} onAction={() => setActions((value) => value + 1)} onComplete={finishSupport} />)}
 			{step === "withdrawing" && <p className="time-status" role="status">සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
 			{step === "feedback" && !correct && <div className="time-feedback"><h2>නැවත බලමු.</h2><button className="time-primary" onClick={continueAfterFeedback}>නැවත උත්සාහ කරන්න</button></div>}
 			{step === "result" && chapter && <GameSuccessScreen gameNumber={chapterIndex + 1} gameCount={TIME_GAMES.length} onContinue={() => { const next = TIME_GAMES[chapterIndex + 1]; if (!next) { setStep("chapters"); return; } const first = TIME_SKILLS.find((item) => item.chapter === next.id); if (first) void openSkill(first.id, next.id); }} />}

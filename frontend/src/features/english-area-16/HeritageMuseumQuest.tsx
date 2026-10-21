@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -14,9 +14,14 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./heritage-museum.css";
 import {
 	exhibitMappingResponse,
@@ -28,15 +33,6 @@ const SKILLS = [
 	{ id: "G5-ENG-PAST-BILINGUAL-01", name: "Museum Word Bridge", icon: "🏷️" },
 	{ id: "G5-ENG-PAST-VISUAL-02", name: "Exhibit Label Match", icon: "🔎" },
 ] as const;
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 type Step =
 	| "games"
 	| "question"
@@ -55,7 +51,7 @@ export function HeritageMuseumQuest({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -136,6 +132,25 @@ export function HeritageMuseumQuest({
 			cancelled = true;
 		};
 	}, [api, pendingWithdrawal, resetQuestion, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId: episode,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			resetQuestion();
+		},
+		onWithdraw: (withdrawal) => {
+			setPendingWithdrawal({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 
 	const openSkill = async (skillId: string) => {
 		if (submitLock.current) return;
@@ -275,7 +290,6 @@ export function HeritageMuseumQuest({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 16</p>
 					<h1>Our Past</h1>
 				</div>
 			</header>
@@ -304,13 +318,15 @@ export function HeritageMuseumQuest({
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={2}
-						currentActivity={skillIndex + 1}
-						completedActivities={completed.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={2}
+							currentActivity={skillIndex + 1}
+							completedActivities={completed.length}
+						/>
+					)}
 					{step === "question" && game && (
 						<>
 							<div className="caq-command">
@@ -332,6 +348,37 @@ export function HeritageMuseumQuest({
 								Check my labels
 							</button>
 						</>
+					)}
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null && !isIncomplete(response)}
+							checkLabel="Check my labels"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<MuseumBoard
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={(value) => {
+										setResponse(value);
+										setMoves((count) => count + 1);
+									}}
+								/>
+							)}
+						/>
 					)}
 					{step === "support" &&
 						support?.game_manifest.schema_version ===
@@ -378,11 +425,11 @@ export function HeritageMuseumQuest({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<SuccessCelebration />
-							<h2>Heritage Museum Quest complete!</h2>
-							<p>You connected the lesson vocabulary independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={2}
+							gameCount={2}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}

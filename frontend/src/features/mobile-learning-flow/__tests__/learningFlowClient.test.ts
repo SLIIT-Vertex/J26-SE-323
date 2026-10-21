@@ -48,6 +48,37 @@ function catalog(extra: Record<string, unknown> = {}) {
 	};
 }
 
+function clash(): Response {
+	return jsonResponse(
+		{ detail: { code: "PROBE_ALREADY_RESERVED_OR_EXPOSED" } },
+		409,
+	);
+}
+
+function opened(): Response {
+	return jsonResponse({
+		episode_id: "episode",
+		status: "before_presented",
+		manifest: null,
+		support: null,
+		reward: null,
+	});
+}
+
+function openBody(learner: string) {
+	return {
+		learner_id: learner,
+		session_id: "session",
+		grade: 5 as const,
+		medium: "si" as const,
+		condition: "baseline" as const,
+		environment: "development" as const,
+		allow_draft: true as const,
+		area_id: "G5-AREA-MAT-01",
+		atomic_skill_id: "G5-MAT-NUM-POSITION-01",
+	};
+}
+
 function jsonResponse(body: unknown, status = 200): Response {
 	return new Response(JSON.stringify(body), {
 		status,
@@ -144,9 +175,7 @@ describe("development learner recovery", () => {
 		const request = vi
 			.fn()
 			.mockResolvedValueOnce(
-				jsonResponse([
-					{ id: compatible, grade: 5, preferred_language: "si" },
-				]),
+				jsonResponse([{ id: compatible, grade: 5, preferred_language: "si" }]),
 			)
 			.mockResolvedValueOnce(
 				jsonResponse({
@@ -171,7 +200,7 @@ describe("development learner recovery", () => {
 				medium: "si",
 				condition: "baseline",
 				environment: "development",
-				allow_draft: true,
+				allow_draft: true as const,
 			},
 			"open-key",
 		);
@@ -180,7 +209,9 @@ describe("development learner recovery", () => {
 		if (!open) throw new Error("learning-flow open missing");
 		const openInit = open[1];
 		if (!openInit) throw new Error("learning-flow open options missing");
-		expect(String(open[0])).toBe(`${baseUrl}/development/learning-flow/episodes`);
+		expect(String(open[0])).toBe(
+			`${baseUrl}/development/learning-flow/episodes`,
+		);
 		expect((openInit.headers as Record<string, string>)["X-Learner-Id"]).toBe(
 			compatible,
 		);
@@ -227,7 +258,7 @@ describe("development learner recovery", () => {
 				medium: "si",
 				condition: "baseline",
 				environment: "development",
-				allow_draft: true,
+				allow_draft: true as const,
 			},
 			"open-key",
 		);
@@ -239,22 +270,20 @@ describe("development learner recovery", () => {
 		);
 	});
 
-	it("recovers from an already exposed probe with a fresh development learner", async () => {
+	it("falls back to a fresh development learner only after repeated probe clashes", async () => {
 		const configured = "00000000-0000-4000-8000-000000000721";
 		const fresh = "00000000-0000-4000-8000-000000000799";
 		const request = vi
 			.fn()
 			.mockResolvedValueOnce(
-				jsonResponse([
-					{ id: configured, grade: 5, preferred_language: "si" },
-				]),
+				jsonResponse([{ id: configured, grade: 5, preferred_language: "si" }]),
 			)
-			.mockResolvedValueOnce(
-				jsonResponse(
-					{ detail: { code: "PROBE_ALREADY_RESERVED_OR_EXPOSED" } },
-					409,
-				),
-			)
+			.mockResolvedValueOnce(clash())
+			.mockResolvedValueOnce(clash())
+			.mockResolvedValueOnce(clash())
+			.mockResolvedValueOnce(clash())
+			.mockResolvedValueOnce(clash())
+			.mockResolvedValueOnce(clash())
 			.mockResolvedValueOnce(
 				jsonResponse({ id: fresh, grade: 5, preferred_language: "si" }, 201),
 			)
@@ -281,12 +310,12 @@ describe("development learner recovery", () => {
 				medium: "si",
 				condition: "baseline",
 				environment: "development",
-				allow_draft: true,
+				allow_draft: true as const,
 			},
 			"open-key",
 		);
 
-		const retryInit = request.mock.calls[3]?.[1];
+		const retryInit = request.mock.calls[8]?.[1];
 		if (!retryInit) throw new Error("learning-flow retry options missing");
 		expect((retryInit.headers as Record<string, string>)["X-Learner-Id"]).toBe(
 			fresh,
@@ -296,57 +325,80 @@ describe("development learner recovery", () => {
 		});
 	});
 
-	it("avoids an episode conflict by selecting a learner with an unused skill probe", async () => {
+	it("keeps the configured learner on a skill it has already played", async () => {
 		const configured = "00000000-0000-4000-8000-000000000721";
-		const available = "00000000-0000-4000-8000-000000000722";
 		const request = vi
 			.fn()
 			.mockResolvedValueOnce(
 				jsonResponse([
 					{ id: configured, grade: 5, preferred_language: "si" },
-					{ id: available, grade: 5, preferred_language: "si" },
+					{
+						id: "00000000-0000-4000-8000-000000000722",
+						grade: 5,
+						preferred_language: "si",
+					},
 				]),
 			)
-			.mockResolvedValueOnce(jsonResponse({ available: false }))
-			.mockResolvedValueOnce(jsonResponse({ available: true }))
-			.mockResolvedValueOnce(
-				jsonResponse({
-					episode_id: "episode",
-					status: "before_presented",
-					manifest: null,
-					support: null,
-					reward: null,
-				}),
-			);
+			.mockResolvedValueOnce(opened());
 		const client = createLearningFlowClient({
 			baseUrl,
 			learnerId: configured,
 			request,
 		});
 
-		await client.open(
-			{
-				learner_id: configured,
-				session_id: "session",
-				grade: 5,
-				medium: "si",
-				condition: "baseline",
-				environment: "development",
-				allow_draft: true,
-				area_id: "G5-AREA-MAT-01",
-				atomic_skill_id: "G5-MAT-NUM-POSITION-01",
-			},
-			"open-key",
-		);
+		await client.open(openBody(configured), "open-key");
 
-		const openCalls = request.mock.calls.filter(([input]) =>
-			String(input).endsWith("/development/learning-flow/episodes"),
-		);
-		expect(openCalls).toHaveLength(1);
-		const openInit = openCalls[0]?.[1];
+		expect(request).toHaveBeenCalledTimes(2);
+		const openInit = request.mock.calls[1]?.[1];
 		if (!openInit) throw new Error("learning-flow open options missing");
 		expect((openInit.headers as Record<string, string>)["X-Learner-Id"]).toBe(
-			available,
+			configured,
 		);
+	});
+
+	it("retries a probe clash with a new session for the same learner", async () => {
+		const configured = "00000000-0000-4000-8000-000000000721";
+		const request = vi
+			.fn()
+			.mockResolvedValueOnce(
+				jsonResponse([{ id: configured, grade: 5, preferred_language: "si" }]),
+			)
+			.mockResolvedValueOnce(clash())
+			.mockResolvedValueOnce(opened());
+		const client = createLearningFlowClient({
+			baseUrl,
+			learnerId: configured,
+			request,
+		});
+
+		await client.open(openBody(configured), "open-key");
+
+		const [first, retry] = request.mock.calls.slice(1).map(([, init]) => init);
+		if (!first || !retry) throw new Error("open calls missing");
+		const retryBody = JSON.parse(String(retry.body));
+		expect(retryBody.learner_id).toBe(configured);
+		expect(retryBody.session_id).not.toBe(
+			JSON.parse(String(first.body)).session_id,
+		);
+		expect((retry.headers as Record<string, string>)["Idempotency-Key"]).toBe(
+			"open-key:session-1",
+		);
+	});
+});
+
+it("saves the entered profile name for the configured learner", async () => {
+	const learnerId = "00000000-0000-4000-8000-000000000721";
+	const request = vi
+		.fn()
+		.mockResolvedValueOnce(
+			jsonResponse([{ id: learnerId, grade: 5, preferred_language: "si" }]),
+		)
+		.mockResolvedValueOnce(jsonResponse({}));
+	const client = createLearningFlowClient({ baseUrl, learnerId, request });
+	await client.saveProfile("  Test Learner  ");
+	expect(request.mock.calls[1]?.[0]).toBe(`${baseUrl}/learners/${learnerId}`);
+	expect(request.mock.calls[1]?.[1]?.method).toBe("PATCH");
+	expect(JSON.parse(String(request.mock.calls[1]?.[1]?.body))).toEqual({
+		display_name: "Test Learner",
 	});
 });

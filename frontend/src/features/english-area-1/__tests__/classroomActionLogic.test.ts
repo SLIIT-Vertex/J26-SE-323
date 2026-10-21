@@ -7,12 +7,24 @@ describe("classroom action response builders", () => {
 		expect(response).toMatchObject({
 			kind: "body_state",
 			command_id: "bend",
-			final_body_state: { posture: "bent", arm_position: "down", orientation: "front", seat_state: "standing" },
+			final_body_state: {
+				posture: "bent",
+				arm_position: "down",
+				orientation: "front",
+				seat_state: "standing",
+			},
 			semantic_action_id: "bend",
 		});
 	});
 	it("preserves the ordered movement path and origin", () => {
-		const response = navigationResponse("come_back", "start-a", "start-a", ["move:wall-zone", "move:start-a"], 1, 0);
+		const response = navigationResponse(
+			"come_back",
+			"start-a",
+			"start-a",
+			["move:wall-zone", "move:start-a"],
+			1,
+			0,
+		);
 		expect(response).toMatchObject({
 			kind: "classroom_navigation",
 			origin_id: "start-a",
