@@ -197,11 +197,14 @@ def test_creation_and_transitions_require_aware_timestamps() -> None:
             episode_id=EpisodeId(uuid4()),
             learner_id=uuid4(),
             skill_id=SkillId("skill-provisional-01"),
-            created_at=datetime(2026, 10, 13),
+            created_at=datetime(2026, 10, 13),  # noqa: DTZ001 - validates rejection
         )
 
     with pytest.raises(DomainValidationError, match="UTC offset"):
-        episode().transition_to(EpisodePhase.BASELINE_RESERVED, at=datetime(2026, 10, 13))
+        episode().transition_to(
+            EpisodePhase.BASELINE_RESERVED,
+            at=datetime(2026, 10, 13),  # noqa: DTZ001 - validates rejection
+        )
 
 
 def test_creation_rejects_blank_skill_identifier() -> None:

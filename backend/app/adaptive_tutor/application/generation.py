@@ -9,14 +9,17 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
-    ValidationError,
     field_validator,
     model_validator,
 )
 
 from app.adaptive_tutor.application.skill_mapper_contracts import ConversationTurn
 from app.adaptive_tutor.domain import AssistanceLevel
-from app.curriculum.application import Grade, RetrievedCurriculumPassage
+from app.curriculum.application import (
+    Grade,
+    RetrievedCurriculumPassage,
+    validate_passage_eligibility,
+)
 
 MAX_CONVERSATION_CHARS = 4_000
 MAX_EVIDENCE_CHARS = 20_000
@@ -53,6 +56,8 @@ class GenerationRequest(BaseModel):
     grade: Grade
     curriculum_evidence: tuple[RetrievedCurriculumPassage, ...] = Field(default=(), max_length=10)
     conversation_context: tuple[ConversationTurn, ...] = Field(default=(), max_length=8)
+    draft_attempt: int = Field(default=1, strict=True, ge=1, le=3)
+    revision_reason_codes: tuple[NonBlankText, ...] = Field(default=(), max_length=20)
 
     @field_validator("curriculum_evidence", mode="before")
     @classmethod
@@ -83,10 +88,17 @@ class GenerationRequest(BaseModel):
             raise ValueError("curriculum evidence requires a confirmed skill_id")
 
         for passage in self.curriculum_evidence:
+            validate_passage_eligibility(passage)
             if passage.chunk.grade != self.grade:
                 raise ValueError("curriculum evidence grade does not match request")
             if self.skill_id not in passage.chunk.skill_ids:
                 raise ValueError("curriculum evidence does not include the confirmed skill")
+        if len(self.revision_reason_codes) != len(set(self.revision_reason_codes)):
+            raise ValueError("revision reason codes must be unique")
+        if self.draft_attempt == 1 and self.revision_reason_codes:
+            raise ValueError("the first draft cannot contain revision reasons")
+        if self.draft_attempt > 1 and not self.revision_reason_codes:
+            raise ValueError("a regenerated draft requires structured revision reasons")
         return self
 
 
@@ -147,12 +159,36 @@ class LlmProvider(Protocol):
     def generate(self, prompt: GenerationPrompt) -> str: ...
 
 
+class ProviderFailureReason(StrEnum):
+    """Sanitized provider diagnostics; never carries provider messages or payloads."""
+
+    PROVIDER_NOT_CONFIGURED = "PROVIDER_NOT_CONFIGURED"
+    PROVIDER_SDK_NOT_INSTALLED = "PROVIDER_SDK_NOT_INSTALLED"
+    AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED"
+    MODEL_NOT_FOUND = "MODEL_NOT_FOUND"
+    RATE_LIMITED = "RATE_LIMITED"
+    NETWORK_OR_TIMEOUT = "NETWORK_OR_TIMEOUT"
+    PROVIDER_TEMPORARILY_UNAVAILABLE = "PROVIDER_TEMPORARILY_UNAVAILABLE"
+    INVALID_REQUEST = "INVALID_REQUEST"
+    RESPONSE_BLOCKED = "RESPONSE_BLOCKED"
+    EMPTY_OR_MALFORMED_RESPONSE = "EMPTY_OR_MALFORMED_RESPONSE"
+    UNEXPECTED_PROVIDER_FAILURE = "UNEXPECTED_PROVIDER_FAILURE"
+
+
 class LlmProviderError(RuntimeError):
     """A provider completed unsuccessfully."""
+
+    default_reason = ProviderFailureReason.UNEXPECTED_PROVIDER_FAILURE
+
+    def __init__(self, *args: object, reason: ProviderFailureReason | None = None) -> None:
+        super().__init__(*args)
+        self.reason = reason or self.default_reason
 
 
 class LlmProviderUnavailableError(LlmProviderError):
     """A provider cannot currently accept the request."""
+
+    default_reason = ProviderFailureReason.PROVIDER_TEMPORARILY_UNAVAILABLE
 
 
 @dataclass(frozen=True, slots=True)
@@ -200,6 +236,12 @@ _LEVEL_INSTRUCTIONS = {
 }
 
 
+def assistance_level_instruction(level: AssistanceLevel) -> str:
+    """Return the canonical generation constraint for a Controller-selected level."""
+
+    return _LEVEL_INSTRUCTIONS[level]
+
+
 def validate_generation_skill_id(
     request: GenerationRequest, valid_skill_ids: Collection[str]
 ) -> None:
@@ -217,6 +259,8 @@ def build_generation_prompt(request: GenerationRequest) -> GenerationPrompt:
         and not request.curriculum_evidence
     ):
         raise ValueError("L6 requires approved curriculum evidence")
+    for passage in request.curriculum_evidence:
+        validate_passage_eligibility(passage)
 
     language_name = _LANGUAGE_NAMES[request.response_language]
     system_instruction = "\n".join(
@@ -251,12 +295,18 @@ def build_generation_prompt(request: GenerationRequest) -> GenerationPrompt:
                 "Return only the proposed tutor response. Prompt instructions reduce risk but "
                 "do not verify the resulting draft."
             ),
+            (
+                "For a revision, correct only the listed verification failures while preserving "
+                "the same confirmed skill, language, evidence, and assistance level."
+            ),
         )
     )
     user_payload = {
         "student_question": request.student_question,
         "confirmed_skill_id": request.skill_id,
         "grade": request.grade,
+        "draft_attempt": request.draft_attempt,
+        "revision_reason_codes": list(request.revision_reason_codes),
         "conversation_context": [
             {"role": turn.role.value, "message": turn.message}
             for turn in request.conversation_context
@@ -298,7 +348,9 @@ def generate_tutor_draft(
             if isinstance(request, GenerationRequest)
             else GenerationRequest.model_validate(request)
         )
-    except ValidationError:
+        for passage in validated.curriculum_evidence:
+            validate_passage_eligibility(passage)
+    except ValueError:
         return GenerationResult(status=GenerationStatus.INVALID_REQUEST)
 
     if validated.response_language not in SUPPORTED_RESPONSE_LANGUAGES:

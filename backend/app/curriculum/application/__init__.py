@@ -1,5 +1,15 @@
 """Public shared curriculum contracts."""
 
+from app.curriculum.application.ingestion_validation import (
+    IngestionValidationReason,
+    IngestionValidationResult,
+    validate_extracted_page_for_ingestion,
+)
+from app.curriculum.application.research_import import (
+    ResearchCurriculumApproval,
+    ResearchCurriculumImporter,
+    ResearchCurriculumImportResult,
+)
 from app.curriculum.application.retrieval import (
     RETRIEVER_CONTRACT_VERSION,
     CurriculumChunk,
@@ -15,6 +25,7 @@ from app.curriculum.application.retrieval import (
     RetrievedCurriculumPassage,
     UsageRightsStatus,
     validate_curriculum_skill_ids,
+    validate_passage_eligibility,
     validate_retrieval_result_for_request,
 )
 from app.curriculum.application.source_registry import CurriculumSourceRegistry
@@ -31,9 +42,16 @@ __all__ = [
     "CurriculumSourceRegistry",
     "Grade",
     "IngestionStatus",
+    "IngestionValidationReason",
+    "IngestionValidationResult",
     "MetadataStatus",
+    "ResearchCurriculumApproval",
+    "ResearchCurriculumImportResult",
+    "ResearchCurriculumImporter",
     "RetrievedCurriculumPassage",
     "UsageRightsStatus",
     "validate_curriculum_skill_ids",
+    "validate_extracted_page_for_ingestion",
+    "validate_passage_eligibility",
     "validate_retrieval_result_for_request",
 ]

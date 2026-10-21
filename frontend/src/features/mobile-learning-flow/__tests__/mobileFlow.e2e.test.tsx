@@ -127,7 +127,7 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("leaves home, mindy, and progress empty and opens papers from practice", async () => {
+	it("opens Tutor from Mindy while leaving planned tabs and practice intact", async () => {
 		const container = document.createElement("div");
 		document.body.append(container);
 		const root = createRoot(container);
@@ -137,7 +137,6 @@ describe("baseline mobile flow", () => {
 		await click(container, "මගේ පැතිකඩට");
 		for (const [tab, title] of [
 			["මුල් පිටුව", "මුල් පිටුව"],
-			["Mindy", "Mindy"],
 			["ප්‍රගතිය", "ප්‍රගතිය"],
 		] as const) {
 			await click(container, tab);
@@ -148,6 +147,11 @@ describe("baseline mobile flow", () => {
 			).toBe(title);
 			expect(container.textContent).toContain("To be implemented");
 		}
+		await click(container, "Mindy");
+		await waitForSelector(container, ".tutor-workspace");
+		expect(container.querySelector(".mindy-chat")).not.toBeNull();
+		expect(container.querySelector("[data-planned-page]")).toBeNull();
+		expect(container.querySelectorAll("main.mobile-shell")).toHaveLength(1);
 		await click(container, "පුහුණුව");
 		// the practice tab hosts the papers screens, which use the shared learner (no picker)
 		expect(container.querySelector(".papers-tab .mb")).not.toBeNull();

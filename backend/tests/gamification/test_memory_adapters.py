@@ -72,5 +72,5 @@ def test_learner_state_stub_enforces_freshness_cutoff() -> None:
 
 def test_fixed_clock_rejects_naive_time() -> None:
     with pytest.raises(ValueError, match="UTC offset"):
-        FixedClock(datetime(2026, 10, 13))
+        FixedClock(datetime(2026, 10, 13))  # noqa: DTZ001 - validates rejection
 

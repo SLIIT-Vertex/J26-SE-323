@@ -4,6 +4,7 @@ from typing import Annotated, Literal, Protocol, Self
 from uuid import UUID
 
 from pydantic import (
+    AwareDatetime,
     BaseModel,
     ConfigDict,
     Field,
@@ -34,6 +35,16 @@ NormalizedValue = Annotated[
     Field(strict=True, ge=0.0, le=1.0, allow_inf_nan=False),
 ]
 AttemptCount = Annotated[int, Field(strict=True, ge=0)]
+SessionId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=100, strict=True),
+]
+MaxAgeMilliseconds = Annotated[int, Field(strict=True, ge=0)]
+InteractionId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128, strict=True),
+]
+InteractionSequence = Annotated[int, Field(strict=True, ge=1)]
 
 
 class EvidenceStatus(StrEnum):
@@ -43,6 +54,13 @@ class EvidenceStatus(StrEnum):
     PROVIDER_UNAVAILABLE = "PROVIDER_UNAVAILABLE"
     PROVIDER_ERROR = "PROVIDER_ERROR"
     INVALID_EVIDENCE = "INVALID_EVIDENCE"
+    UNCERTAIN = "UNCERTAIN"
+    STALE = "STALE"
+    SESSION_MISMATCH = "SESSION_MISMATCH"
+    CONTEXT_REQUIRED = "CONTEXT_REQUIRED"
+    POLICY_UNRESOLVED = "POLICY_UNRESOLVED"
+    NOT_DELIVERED = "NOT_DELIVERED"
+    DELIVERY_UNKNOWN = "DELIVERY_UNKNOWN"
 
 
 class EvidenceOrigin(StrEnum):
@@ -97,14 +115,25 @@ class ContextReadinessReason(StrEnum):
     SUPPORT_NEED_PROVIDER_UNAVAILABLE = "SUPPORT_NEED_PROVIDER_UNAVAILABLE"
     SUPPORT_NEED_PROVIDER_ERROR = "SUPPORT_NEED_PROVIDER_ERROR"
     SUPPORT_NEED_INVALID = "SUPPORT_NEED_INVALID"
+    SUPPORT_NEED_UNCERTAIN = "SUPPORT_NEED_UNCERTAIN"
+    SUPPORT_NEED_STALE = "SUPPORT_NEED_STALE"
+    SUPPORT_NEED_SESSION_MISMATCH = "SUPPORT_NEED_SESSION_MISMATCH"
+    SUPPORT_NEED_CONTEXT_REQUIRED = "SUPPORT_NEED_CONTEXT_REQUIRED"
     ASSESSMENT_NOT_FOUND = "ASSESSMENT_NOT_FOUND"
     ASSESSMENT_PROVIDER_UNAVAILABLE = "ASSESSMENT_PROVIDER_UNAVAILABLE"
     ASSESSMENT_PROVIDER_ERROR = "ASSESSMENT_PROVIDER_ERROR"
     ASSESSMENT_INVALID = "ASSESSMENT_INVALID"
+    ASSESSMENT_UNCERTAIN = "ASSESSMENT_UNCERTAIN"
+    ASSESSMENT_STALE = "ASSESSMENT_STALE"
+    ASSESSMENT_SESSION_MISMATCH = "ASSESSMENT_SESSION_MISMATCH"
+    ASSESSMENT_CONTEXT_REQUIRED = "ASSESSMENT_CONTEXT_REQUIRED"
+    ASSESSMENT_POLICY_UNRESOLVED = "ASSESSMENT_POLICY_UNRESOLVED"
     ASSISTANCE_HISTORY_NOT_FOUND = "ASSISTANCE_HISTORY_NOT_FOUND"
     ASSISTANCE_HISTORY_PROVIDER_UNAVAILABLE = "ASSISTANCE_HISTORY_PROVIDER_UNAVAILABLE"
     ASSISTANCE_HISTORY_PROVIDER_ERROR = "ASSISTANCE_HISTORY_PROVIDER_ERROR"
     ASSISTANCE_HISTORY_INVALID = "ASSISTANCE_HISTORY_INVALID"
+    ASSISTANCE_HISTORY_CONTEXT_REQUIRED = "ASSISTANCE_HISTORY_CONTEXT_REQUIRED"
+    ASSISTANCE_HISTORY_DELIVERY_UNKNOWN = "ASSISTANCE_HISTORY_DELIVERY_UNKNOWN"
     CONTEXT_INVALID = "CONTEXT_INVALID"
 
 
@@ -138,6 +167,11 @@ class ContextEvidenceRequest(BaseModel):
 
     learner_id: UUID
     skill_id: NonBlankText
+    session_id: SessionId | None = None
+    as_of: AwareDatetime | None = None
+    max_age_ms: MaxAgeMilliseconds | None = None
+    interaction_id: InteractionId | None = None
+    interaction_sequence: InteractionSequence | None = None
 
 
 class TutorContextAssemblyRequest(BaseModel):
@@ -146,6 +180,11 @@ class TutorContextAssemblyRequest(BaseModel):
     learner_id: UUID
     skill_mapping: SkillMappingResult
     skill_mapping_source: EvidenceSource
+    session_id: SessionId | None = None
+    as_of: AwareDatetime | None = None
+    max_age_ms: MaxAgeMilliseconds | None = None
+    interaction_id: InteractionId | None = None
+    interaction_sequence: InteractionSequence | None = None
 
 
 class LearnerLookupResult(BaseModel):
@@ -185,6 +224,9 @@ class AssessmentEvidenceResult(BaseModel):
     attempt_count: AttemptCount | None = None
     is_correct: StrictBool | None = None
     error_severity: NormalizedValue | None = None
+    assessment_reference: NonBlankText | None = None
+    observed_at: AwareDatetime | None = None
+    severity_policy_version: NonBlankText | None = None
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
@@ -195,12 +237,23 @@ class AssessmentEvidenceResult(BaseModel):
                 or self.error_severity is not None
             ):
                 raise ValueError("NOT_YET_OBSERVED requires an explicit zero-attempt state")
+            if self.severity_policy_version is not None:
+                raise ValueError("zero attempts must not contain a severity policy version")
+            if (self.assessment_reference is None) != (self.observed_at is None):
+                raise ValueError("zero-attempt audit reference and time are all-or-none")
             return self
 
         if self.status is not EvidenceStatus.AVAILABLE:
             if any(
                 value is not None
-                for value in (self.attempt_count, self.is_correct, self.error_severity)
+                for value in (
+                    self.attempt_count,
+                    self.is_correct,
+                    self.error_severity,
+                    self.assessment_reference,
+                    self.observed_at,
+                    self.severity_policy_version,
+                )
             ):
                 raise ValueError("unavailable assessment evidence must not contain values")
             return self
@@ -212,6 +265,15 @@ class AssessmentEvidenceResult(BaseModel):
                 raise ValueError("zero attempts require null correctness and severity")
         elif self.is_correct is None or self.error_severity is None:
             raise ValueError("completed attempts require correctness and severity")
+        metadata = (
+            self.assessment_reference,
+            self.observed_at,
+            self.severity_policy_version,
+        )
+        if any(value is not None for value in metadata) and any(
+            value is None for value in metadata
+        ):
+            raise ValueError("assessment audit metadata must be complete when provided")
         return self
 
 
@@ -386,6 +448,11 @@ class TutorContextAssembler:
         evidence_request = ContextEvidenceRequest(
             learner_id=request.learner_id,
             skill_id=skill_id,
+            session_id=request.session_id,
+            as_of=request.as_of,
+            max_age_ms=request.max_age_ms,
+            interaction_id=request.interaction_id,
+            interaction_sequence=request.interaction_sequence,
         )
         mastery, mastery_issue = self._read_mastery(evidence_request, provenance)
         support, support_issue = self._read_support_need(evidence_request, provenance)
@@ -609,10 +676,16 @@ class TutorContextAssembler:
                 ContextReadinessReason.ASSESSMENT_INVALID,
                 "Assessment evidence violates the canonical attempt semantics.",
             )
+        source_for_result = getattr(self._assessment_provider, "source_for_result", None)
+        source = (
+            source_for_result(result)
+            if callable(source_for_result)
+            else self._assessment_provider.source
+        )
         _append_provider_provenance(
             provenance,
             ContextInput.ASSESSMENT,
-            self._assessment_provider.source,
+            source,
             result.status,
         )
         if result.status in {EvidenceStatus.AVAILABLE, EvidenceStatus.NOT_YET_OBSERVED}:
@@ -655,7 +728,11 @@ class TutorContextAssembler:
             self._history_provider.source,
             result.status,
         )
-        if result.status in {EvidenceStatus.AVAILABLE, EvidenceStatus.NOT_YET_OBSERVED}:
+        if result.status in {
+            EvidenceStatus.AVAILABLE,
+            EvidenceStatus.NOT_YET_OBSERVED,
+            EvidenceStatus.NOT_DELIVERED,
+        }:
             return result, None
         return None, _status_issue(ContextInput.ASSISTANCE_HISTORY, result.status)
 
@@ -760,6 +837,22 @@ def _status_issue(input_name: ContextInput, status: EvidenceStatus) -> ContextIs
             ContextIssueKind.PROVIDER_FAILURE,
             ContextReadinessReason.SUPPORT_NEED_PROVIDER_ERROR,
         ),
+        (ContextInput.SUPPORT_NEED, EvidenceStatus.UNCERTAIN): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.SUPPORT_NEED_UNCERTAIN,
+        ),
+        (ContextInput.SUPPORT_NEED, EvidenceStatus.STALE): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.SUPPORT_NEED_STALE,
+        ),
+        (ContextInput.SUPPORT_NEED, EvidenceStatus.SESSION_MISMATCH): (
+            ContextIssueKind.INVALID,
+            ContextReadinessReason.SUPPORT_NEED_SESSION_MISMATCH,
+        ),
+        (ContextInput.SUPPORT_NEED, EvidenceStatus.CONTEXT_REQUIRED): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.SUPPORT_NEED_CONTEXT_REQUIRED,
+        ),
         (ContextInput.ASSESSMENT, EvidenceStatus.NOT_FOUND): (
             ContextIssueKind.MISSING,
             ContextReadinessReason.ASSESSMENT_NOT_FOUND,
@@ -772,6 +865,26 @@ def _status_issue(input_name: ContextInput, status: EvidenceStatus) -> ContextIs
             ContextIssueKind.PROVIDER_FAILURE,
             ContextReadinessReason.ASSESSMENT_PROVIDER_ERROR,
         ),
+        (ContextInput.ASSESSMENT, EvidenceStatus.UNCERTAIN): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.ASSESSMENT_UNCERTAIN,
+        ),
+        (ContextInput.ASSESSMENT, EvidenceStatus.STALE): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.ASSESSMENT_STALE,
+        ),
+        (ContextInput.ASSESSMENT, EvidenceStatus.SESSION_MISMATCH): (
+            ContextIssueKind.INVALID,
+            ContextReadinessReason.ASSESSMENT_SESSION_MISMATCH,
+        ),
+        (ContextInput.ASSESSMENT, EvidenceStatus.CONTEXT_REQUIRED): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.ASSESSMENT_CONTEXT_REQUIRED,
+        ),
+        (ContextInput.ASSESSMENT, EvidenceStatus.POLICY_UNRESOLVED): (
+            ContextIssueKind.UNSUPPORTED,
+            ContextReadinessReason.ASSESSMENT_POLICY_UNRESOLVED,
+        ),
         (ContextInput.ASSISTANCE_HISTORY, EvidenceStatus.PROVIDER_UNAVAILABLE): (
             ContextIssueKind.PROVIDER_FAILURE,
             ContextReadinessReason.ASSISTANCE_HISTORY_PROVIDER_UNAVAILABLE,
@@ -783,6 +896,14 @@ def _status_issue(input_name: ContextInput, status: EvidenceStatus) -> ContextIs
         (ContextInput.ASSISTANCE_HISTORY, EvidenceStatus.NOT_FOUND): (
             ContextIssueKind.MISSING,
             ContextReadinessReason.ASSISTANCE_HISTORY_NOT_FOUND,
+        ),
+        (ContextInput.ASSISTANCE_HISTORY, EvidenceStatus.CONTEXT_REQUIRED): (
+            ContextIssueKind.MISSING,
+            ContextReadinessReason.ASSISTANCE_HISTORY_CONTEXT_REQUIRED,
+        ),
+        (ContextInput.ASSISTANCE_HISTORY, EvidenceStatus.DELIVERY_UNKNOWN): (
+            ContextIssueKind.INVALID,
+            ContextReadinessReason.ASSISTANCE_HISTORY_DELIVERY_UNKNOWN,
         ),
     }
     if status is EvidenceStatus.INVALID_EVIDENCE:

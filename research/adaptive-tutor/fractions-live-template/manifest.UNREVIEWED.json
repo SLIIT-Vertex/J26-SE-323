@@ -1,0 +1,31 @@
+{
+  "template_status": "UNREVIEWED_TEMPLATE_DO_NOT_IMPORT",
+  "source": {
+    "source_id": "REPLACE_WITH_REVIEWED_SOURCE_ID",
+    "title": "Grade 5 Equivalent Fractions Lesson — UNREVIEWED DRAFT",
+    "publisher_authority": null,
+    "grade": 5,
+    "subject": "Mathematics",
+    "language": "en",
+    "source_type": "researcher-authored",
+    "source_location": null,
+    "source_version": null,
+    "metadata_status": "PROVISIONAL",
+    "ingestion_status": "NOT_INGESTED",
+    "review_status": "UNREVIEWED",
+    "usage_rights_status": "UNKNOWN"
+  },
+  "approval": {
+    "reviewer_id": "REPLACE_WITH_QUALIFIED_HUMAN_REVIEWER_ID",
+    "approval_reference": "REPLACE_WITH_SIGNED_APPROVAL_REFERENCE",
+    "rights_basis": "REPLACE_WITH_DOCUMENTED_OWNERSHIP_AND_USAGE_RIGHTS_BASIS",
+    "skill_ids": ["MAT-FRC"]
+  },
+  "pages": [
+    {
+      "page_number": 1,
+      "text_file": "fractions-content.UNREVIEWED.txt",
+      "conversion_status": "preserved_needs_review"
+    }
+  ]
+}

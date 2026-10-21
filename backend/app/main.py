@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from starlette.middleware.cors import CORSMiddleware
 
+from app.adaptive_tutor.api.router import router as adaptive_tutor_router
 from app.config import get_settings
 from app.gamification.api.learning_flow_router import (
     development_router as development_learning_flow_router,
@@ -136,4 +137,5 @@ app.include_router(gamification_router, prefix=settings.api_v1_prefix)
 app.include_router(learning_flow_router, prefix=settings.api_v1_prefix)
 app.include_router(development_learning_flow_router, prefix=settings.api_v1_prefix)
 app.include_router(legacy_learning_flow_router, prefix=settings.api_v1_prefix)
+app.include_router(adaptive_tutor_router, prefix=settings.api_v1_prefix)
 register_play_errors(app)

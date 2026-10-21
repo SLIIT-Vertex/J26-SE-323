@@ -13,7 +13,11 @@ from app.adaptive_tutor.application import (
     SkillMappingRequest,
     validate_skill_ids_against_taxonomy,
 )
-from app.adaptive_tutor.application.skill_mapper import prepare_text
+from app.adaptive_tutor.application.skill_mapper import (
+    RankedSkill,
+    has_explicit_fraction_notation,
+    prepare_text,
+)
 from app.adaptive_tutor.domain import (
     LearningIntent,
     SkillMappingReasonCode,
@@ -225,6 +229,216 @@ def test_close_candidates_are_ambiguous(
     ]
     assert result.clarification_question
     assert SkillMappingReasonCode.MULTIPLE_CANDIDATES in result.reason_codes
+
+
+class ArithmeticBoundaryRetriever:
+    """Fixed semantic scores isolate the deterministic fraction evidence boundary."""
+
+    def __init__(self, nodes: Sequence[SkillNode]) -> None:
+        self.nodes = tuple(nodes)
+
+    def rank(
+        self,
+        query: str,
+        score_adjustments: dict[str, float] | None = None,
+    ) -> tuple[RankedSkill, ...]:
+        whole_number_operation = "/" not in query and any(character.isdigit() for character in query)
+        base_scores = (
+            {"MAT-FRC": 0.80, "MAT-OPS": 0.84, "MAT-TIM": 0.20}
+            if whole_number_operation
+            else {"MAT-FRC": 0.823, "MAT-OPS": 0.806, "MAT-TIM": 0.20}
+        )
+        adjustments = score_adjustments or {}
+        ranked = (
+            RankedSkill(node, base_scores[node.skill_id] + adjustments.get(node.skill_id, 0.0))
+            for node in self.nodes
+        )
+        return tuple(sorted(ranked, key=lambda candidate: (-candidate.score, candidate.node.skill_id)))
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "How do I calculate 1/4 + 1/5?",
+        "කොහොමද 1/4 + 1/5 සුළු කරන්නේ?",
+        "1/4 + 1/5 பின்னங்களை எப்படி கூட்டுவது?",
+        "මේ fractions 1/4 + 1/5 add කරන්නේ எப்படி?",
+        "1/4 + 1/5",
+    ],
+)
+def test_explicit_fraction_arithmetic_maps_to_fractions_across_languages(
+    skill_nodes: tuple[SkillNode, ...],
+    message: str,
+) -> None:
+    service = ConversationalSkillMapper(ArithmeticBoundaryRetriever(skill_nodes))  # type: ignore[arg-type]
+
+    result = service.map(SkillMappingRequest(learner_message=message))
+
+    assert result.status is SkillMappingStatus.MATCHED
+    assert result.skill_id == "MAT-FRC"
+    assert result.confidence == 0.853
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "How do I calculate 14 + 15?",
+        "14 + 15 එකතු කරන්නේ කොහොමද?",
+        "14 + 15 ஐ எப்படி கூட்டுவது?",
+    ],
+)
+def test_whole_number_arithmetic_is_not_promoted_to_fractions(
+    skill_nodes: tuple[SkillNode, ...],
+    message: str,
+) -> None:
+    service = ConversationalSkillMapper(ArithmeticBoundaryRetriever(skill_nodes))  # type: ignore[arg-type]
+
+    result = service.map(SkillMappingRequest(learner_message=message))
+
+    assert result.status is SkillMappingStatus.MATCHED
+    assert result.skill_id == "MAT-OPS"
+
+
+def test_unspecified_arithmetic_remains_ambiguous(
+    skill_nodes: tuple[SkillNode, ...],
+) -> None:
+    service = ConversationalSkillMapper(ArithmeticBoundaryRetriever(skill_nodes))  # type: ignore[arg-type]
+
+    result = service.map(SkillMappingRequest(learner_message="How do I add these?"))
+
+    assert result.status is SkillMappingStatus.AMBIGUOUS
+
+
+FRACTION_NOTATION_QUESTIONS = (
+    "Why is 1/2 equal to 2/4?",
+    "How do I compare 3/4 and 2/3?",
+    "Can you help me add 1/4 and 1/5?",
+    "I am adding 1/2 and 1/4",
+    "1/2 times 3/4",
+    "What is 3/4 of 12?",
+    "Is 3/4 a proper fraction?",
+    "1/2 සහ 2/4 සමානද?",
+    "1/4 සහ 1/5 එකතු කරන්නේ කොහොමද?",
+    "3/4 සහ 2/3 අතරින් ලොකු භාගය කුමක්ද?",
+    "12 න් 3/4 කීයද?",
+    "1/2 saha 2/4 samanada?",
+    "1/4 saha 1/5 ekathu karanne kohomada?",
+    "3/4 da 2/3 da loku?",
+    "3/4 bhagaye haraya mokakda?",
+    "1/2 மற்றும் 2/4 சமமா?",
+)
+NOT_FRACTION_NOTATION_QUESTIONS = (
+    "What is 3/4?",
+    "Convert 1/2 hour to minutes",
+    "How many minutes is 3/4 of an hour?",
+    "My birthday is on 12/05. How many days until then?",
+    "If today is 3/4, what day is it after 2 weeks?",
+    "What date is 25/12/2026?",
+    "Is 25 / 12 / 2026 a Friday?",
+    "At 3:15 I ate 1/4 + 1/4 of a cake",
+    "Add 1/2 and 1/4 of a day",
+    "පැය 1/2 කට මිනිත්තු කීයද?",
+    "1/2 saha 1/4 paya ekathu karanna",
+    "1/2 மணி நேரம் எத்தனை நிமிடம்?",
+    "How do I calculate 14 + 15?",
+    "bhaga ekathu karanne kohomada?",
+)
+
+
+@pytest.mark.parametrize("message", FRACTION_NOTATION_QUESTIONS)
+def test_explicit_fraction_notation_is_detected_across_languages(message: str) -> None:
+    assert has_explicit_fraction_notation(message) is True
+
+
+@pytest.mark.parametrize("message", NOT_FRACTION_NOTATION_QUESTIONS)
+def test_slashes_with_time_date_or_without_fraction_evidence_are_not_promoted(
+    message: str,
+) -> None:
+    assert has_explicit_fraction_notation(message) is False
+
+
+class ObservedFractionTimeRetriever:
+    """Real E5 scores observed for "Why is 1/2 equal to 2/4?" before any adjustment."""
+
+    def __init__(self, nodes: Sequence[SkillNode], base_scores: dict[str, float]) -> None:
+        self.nodes = tuple(nodes)
+        self.base_scores = base_scores
+
+    def rank(
+        self,
+        query: str,
+        score_adjustments: dict[str, float] | None = None,
+    ) -> tuple[RankedSkill, ...]:
+        adjustments = score_adjustments or {}
+        ranked = (
+            RankedSkill(node, self.base_scores[node.skill_id] + adjustments.get(node.skill_id, 0.0))
+            for node in self.nodes
+        )
+        return tuple(sorted(ranked, key=lambda item: (-item.score, item.node.skill_id)))
+
+
+OBSERVED_FRACTION_VS_TIME = {"MAT-FRC": 0.8195, "MAT-TIM": 0.8083, "MAT-OPS": 0.80}
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Why is 1/2 equal to 2/4?",
+        "1/2 සහ 2/4 සමානද?",
+        "1/2 saha 2/4 samanada?",
+    ],
+)
+def test_fraction_notation_resolves_observed_fraction_time_ambiguity(
+    skill_nodes: tuple[SkillNode, ...],
+    message: str,
+) -> None:
+    retriever = ObservedFractionTimeRetriever(skill_nodes, OBSERVED_FRACTION_VS_TIME)
+    service = ConversationalSkillMapper(retriever)  # type: ignore[arg-type]
+
+    result = service.map(SkillMappingRequest(learner_message=message))
+
+    assert result.status is SkillMappingStatus.MATCHED
+    assert result.skill_id == "MAT-FRC"
+    assert result.confidence == pytest.approx(0.8495)
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "What is 3/4?",
+        "If today is 3/4, what day is it after 2 weeks?",
+        "Convert 1/2 hour to minutes",
+    ],
+)
+def test_same_close_scores_stay_ambiguous_without_unambiguous_fraction_notation(
+    skill_nodes: tuple[SkillNode, ...],
+    message: str,
+) -> None:
+    retriever = ObservedFractionTimeRetriever(skill_nodes, OBSERVED_FRACTION_VS_TIME)
+    service = ConversationalSkillMapper(retriever)  # type: ignore[arg-type]
+
+    result = service.map(SkillMappingRequest(learner_message=message))
+
+    assert result.status is SkillMappingStatus.AMBIGUOUS
+    candidates = [candidate.skill_id for candidate in result.candidate_skills]
+    assert candidates[:2] == ["MAT-FRC", "MAT-TIM"]
+    assert result.clarification_question == (
+        "Is your question about Fractions & Decimals or Time & Calendar?"
+    )
+
+
+def test_fraction_notation_does_not_force_a_semantically_distant_fraction_match(
+    skill_nodes: tuple[SkillNode, ...],
+) -> None:
+    retriever = ObservedFractionTimeRetriever(
+        skill_nodes, {"MAT-FRC": 0.78, "MAT-TIM": 0.79, "MAT-OPS": 0.86}
+    )
+    service = ConversationalSkillMapper(retriever)  # type: ignore[arg-type]
+
+    result = service.map(SkillMappingRequest(learner_message="Is 2/4 bigger than 1/2?"))
+
+    assert result.status is SkillMappingStatus.MATCHED
+    assert result.skill_id == "MAT-OPS"
 
 
 def test_low_evidence_learning_request_abstains_with_no_match(

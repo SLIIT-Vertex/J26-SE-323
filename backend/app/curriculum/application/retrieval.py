@@ -1,3 +1,4 @@
+import re
 from collections.abc import Collection
 from enum import StrEnum
 from typing import Annotated, Literal, Protocol, Self
@@ -11,6 +12,17 @@ RetrievalLimit = Annotated[int, Field(strict=True, ge=1, le=10)]
 RetrievalScore = Annotated[float, Field(strict=True, allow_inf_nan=False)]
 RetrievalPurpose = Literal["TUTOR_ANSWER", "CONTENT_AUTHORING"]
 RETRIEVER_CONTRACT_VERSION = "curriculum-retriever-contract-v1.1"
+_INSTRUCTION_INJECTION_PATTERNS = tuple(
+    re.compile(pattern, re.IGNORECASE)
+    for pattern in (
+        r"\bignore (?:all |any )?(?:previous|prior|system) instructions\b",
+        r"\breveal (?:the )?(?:system prompt|hidden instructions)\b",
+        r"\bexpose (?:the )?(?:system prompt|hidden system instructions)\b",
+        r"\bignore (?:the )?(?:controller|tutor policy)\b",
+        r"\bUSER_DATA_JSON\b",
+        r"\bchange (?:the )?assistance level\b",
+    )
+)
 
 
 class MetadataStatus(StrEnum):
@@ -112,18 +124,7 @@ class RetrievedCurriculumPassage(BaseModel):
 
     @model_validator(mode="after")
     def validate_traceability_and_trust(self) -> Self:
-        if self.chunk.source_id != self.source.source_id:
-            raise ValueError("chunk source_id does not match source reference")
-        if self.source.source_version != self.chunk.source_version:
-            raise ValueError("chunk source_version does not match source reference")
-        if self.source.review_status is CurriculumReviewStatus.REJECTED:
-            raise ValueError("retrieved source must not be rejected")
-        if self.chunk.review_status is CurriculumReviewStatus.REJECTED:
-            raise ValueError("retrieved chunk must not be rejected")
-        if self.source.usage_rights_status is UsageRightsStatus.RESTRICTED:
-            raise ValueError("retrieved source usage rights must not be restricted")
-        if self.source.ingestion_status is IngestionStatus.FAILED:
-            raise ValueError("retrieved source ingestion must not be failed")
+        validate_passage_eligibility(self)
         return self
 
 
@@ -147,6 +148,47 @@ class CurriculumRetriever(Protocol):
     def retrieve(self, request: CurriculumRetrievalRequest) -> CurriculumRetrievalResult: ...
 
 
+def validate_passage_eligibility(passage: RetrievedCurriculumPassage) -> None:
+    """Require every positive trust signal; unknown or incomplete metadata fails closed."""
+
+    source = passage.source
+    chunk = passage.chunk
+    if chunk.source_id != source.source_id:
+        raise ValueError("chunk source_id does not match source reference")
+    if source.source_version is None or source.source_version != chunk.source_version:
+        raise ValueError("chunk source_version does not match source reference")
+    if source.metadata_status is not MetadataStatus.VERIFIED:
+        raise ValueError("retrieved source metadata must be verified")
+    if source.ingestion_status is not IngestionStatus.INGESTED:
+        raise ValueError("retrieved source ingestion must be complete")
+    if source.review_status is not CurriculumReviewStatus.APPROVED:
+        raise ValueError("retrieved source must be approved")
+    if chunk.review_status is not CurriculumReviewStatus.APPROVED:
+        raise ValueError("retrieved chunk must be approved")
+    if source.usage_rights_status is not UsageRightsStatus.PERMITTED:
+        raise ValueError("retrieved source usage rights must be permitted")
+    if not all(
+        (
+            source.publisher_authority,
+            source.source_location,
+            source.grade,
+            source.subject,
+            source.language,
+        )
+    ):
+        raise ValueError("retrieved source provenance and curriculum scope must be complete")
+    if (source.grade, source.subject, source.language) != (
+        chunk.grade,
+        chunk.subject,
+        chunk.language,
+    ):
+        raise ValueError("source and chunk curriculum scope must match")
+    if chunk.page_number is None and chunk.section_locator is None:
+        raise ValueError("retrieved chunk requires a page or section locator")
+    if any(pattern.search(chunk.content) for pattern in _INSTRUCTION_INJECTION_PATTERNS):
+        raise ValueError("retrieved chunk contains an instruction-injection indicator")
+
+
 def validate_curriculum_skill_ids(
     contract: CurriculumChunk | CurriculumRetrievalRequest,
     valid_skill_ids: Collection[str],
@@ -166,6 +208,7 @@ def validate_retrieval_result_for_request(
     if len(result.passages) > request.limit:
         raise ValueError("retrieval result exceeds requested limit")
     for passage in result.passages:
+        validate_passage_eligibility(passage)
         if passage.chunk.grade != request.grade:
             raise ValueError("retrieved passage grade does not match request")
         if request.skill_id not in passage.chunk.skill_ids:

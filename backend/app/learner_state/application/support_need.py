@@ -21,7 +21,7 @@ from enum import StrEnum
 from typing import Annotated, Protocol, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.learner_state.application.service import LearnerStateEvaluation, SignalEvaluation
 
@@ -61,6 +61,7 @@ class SupportNeedRequest(BaseModel):
     # Optional freshness rules. Without them every stored state is returned, as before.
     session_id: Annotated[str, StringConstraints(min_length=1, max_length=100)] | None = None
     max_age_ms: Annotated[int, Field(strict=True, ge=0)] | None = None
+    as_of: AwareDatetime | None = None
 
 
 class SupportNeedResult(BaseModel):
@@ -211,5 +212,5 @@ class StoredSupportNeedProvider:
             return True
         if request.max_age_ms is None:
             return False
-        age = self._now() - _as_utc(state.observed_at)
+        age = _as_utc(request.as_of or self._now()) - _as_utc(state.observed_at)
         return age > timedelta(milliseconds=request.max_age_ms)

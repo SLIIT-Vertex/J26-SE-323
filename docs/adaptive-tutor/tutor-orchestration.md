@@ -197,12 +197,64 @@ mapping quality, LLM quality, verifier accuracy, safety, or educational effectiv
 | Tutor assistance history | Provider contract only; persistence/read service missing |
 | Learner delivery authorization | Not established |
 
-## Task 15C FastAPI handoff
+## Task 15C restricted research API
 
-A future route should construct dependencies in a composition root, validate authentication and
-learner authorization, call `TutorOrchestrator.run`, and translate workflow statuses to a stable API
-schema. It must expose `response_text` only for `APPROVED_RESPONSE`, retain the same synthetic
-separation, and never turn dependency failures into fake fallback responses.
+Task 15C registers `POST /api/v1/adaptive-tutor/responses`. The route appears in Swagger at `/docs`
+and in `/openapi.json` even while execution is disabled. Its bounded public request contains only
+the canonical `TutorWorkflowRequest` fields and maps directly to that application contract: learner
+UUID, student message, response language, bounded conversation context, and optional active skill
+ID. Mastery, support need, assessment evidence, history, assistance level, verification state, and
+curriculum evidence remain server-owned.
 
-Task 15C must not initialize a fake provider by default, accept client evidence fields, expose hidden
-drafts, or claim that current Gemini terms and validation are sufficient for delivery to children.
+Runtime activation is explicit:
+
+```bash
+# Default: route is documented but returns HTTP 503.
+TUTOR_API_MODE=disabled
+
+# Controlled local/offline research demonstration only.
+TUTOR_API_MODE=synthetic-demo
+```
+
+`synthetic-demo` constructs a new `TutorOrchestrator` from Reference Policy V1 fixtures, the
+authoritative spreadsheet taxonomy, Controller V1, deterministic fake generation, fake approved
+curriculum evidence, and a deterministic fake semantic verifier. It uses no database, model
+download, Gemini credential, network request, real KT estimate, or real Learner State prediction.
+There is no automatic fallback from a real provider to this profile.
+
+Example controlled request:
+
+```json
+{
+  "learner_id": "00000000-0000-4000-8000-000000000001",
+  "student_message": "Help me understand this fractions problem.",
+  "response_language": "en",
+  "conversation_context": []
+}
+```
+
+The safe response contains mapping, context-readiness, Controller, curriculum, generation,
+verification, execution-mode, and provenance metadata. A configured fake semantic `PASS` produces
+`SIMULATED_VERIFICATION_PASS`, `delivery_authorized=false`, and no `response_text` field. Rejected or
+indeterminate generated drafts are not copied into the public DTO.
+
+HTTP 200 means only that a normal domain workflow outcome was returned; it does not mean a tutoring
+response was approved. Malformed requests return 422, unknown controlled synthetic learners return
+404, disabled execution returns 503, and unexpected boundary failures return a fixed sanitized 500.
+Ambiguous mapping, unsupported skills, unavailable evidence, generation failure, and verification
+uncertainty remain structured HTTP 200 outcomes.
+
+The router injects a composition factory and invokes the existing orchestrator once. It does not
+reimplement workflow decisions. Synthetic mode must be used only in a controlled local or otherwise
+access-restricted research environment. Authentication and learner authorization are not implemented.
+
+A working API demonstrates software wiring only. It does not prove real learner adaptation, and
+synthetic evidence is not real KT or Learner State inference. Fake semantic verification does not
+establish correctness. Real Gemini use for a Grade 4–5 learner-facing application remains blocked
+pending provider eligibility, privacy, safety, authorization, and governance review.
+
+Before Task 16 evaluation, freeze an evaluation protocol and obtain reviewed multilingual examples,
+a real skill-specific mastery provider, a reviewed numeric support-need adapter, assessment/history
+read services, an approved curriculum corpus, an independently validated semantic verifier, and
+documented child-safety and provider-governance approval. A researcher-only fixture viewer would be
+a separate tool if PP1 needs visible fake hint text; it must not be added to this learner-facing API.

@@ -1,0 +1,42 @@
+{
+  "manifest_version": "skill-mapper-baselines-v2",
+  "frozen_at": "2026-10-20T19:00:53+00:00",
+  "purpose": "Reproducible E5 baselines frozen before any benchmark-tooling changes. Live mapper code is not modified by this benchmark.",
+  "git_head": "9bf4f8b15ba8bf6fcf45bd1196aca1831a0827c2",
+  "model": {
+    "name": "intfloat/multilingual-e5-small",
+    "revision": "d829207ab28e6a5fb3aafb5d4c44111b8146db32",
+    "prefixes": [
+      "query: ",
+      "passage: "
+    ],
+    "normalize_embeddings": true,
+    "similarity": "cosine, max over skill passages"
+  },
+  "policy": {
+    "match_threshold": 0.82,
+    "candidate_threshold": 0.7,
+    "minimum_margin": 0.03,
+    "active_skill_bonus": 0.02
+  },
+  "configuration": "taxonomy passages only (no enrichment, no relevance gate), matching the live research composition",
+  "baselines": {
+    "e5-head": {
+      "source": "research/adaptive-tutor/skill-mapper-v2/baselines/skill_mapper.head.py.txt",
+      "sha256": "c4910b619f061f07b8a37c7cca5b8819bf6dd242376aebe0dd5383a26a4269c8",
+      "note": "skill_mapper.py at commit 9bf4f8b15ba8bf6fcf45bd1196aca1831a0827c2"
+    },
+    "e5-working-tree": {
+      "source": "research/adaptive-tutor/skill-mapper-v2/baselines/skill_mapper.working-tree.py.txt",
+      "sha256": "5df5d97651104e881f64df1f83a51e4ef20c4d335a37fd23cfc33b4e51bf97f2",
+      "note": "uncommitted working tree including explicit_fraction_notation_bonus=0.03 with time/date veto"
+    }
+  },
+  "unchanged_dependencies_sha256": {
+    "backend/app/adaptive_tutor/application/skill_mapper_contracts.py": "80a70fb20626cbf367b6edf1fe832d54579eaaf9f8151d5cf4682f5e85aaa154",
+    "backend/app/adaptive_tutor/domain/skill_mapping.py": "cd72a6d06173fc77386ca49840a49363169126f4bd6f04dfed819a9eb1b5e5da",
+    "backend/app/adaptive_tutor/infrastructure/embeddings.py": "5a0d726270f2af2ab30be46c4310be5741183a721856d6173231772afaabd844",
+    "backend/app/adaptive_tutor/infrastructure/skill_taxonomy.py": "b42dfc926c4896a18ee89204a58ff586a09ecf644a1e344a81a0669237e805a1",
+    "docs/skill_nodes.xlsx": "d1956a1509391a7bbe76f18e37dd8cd6e9034bd76de2a229fc6d555031cc2a28"
+  }
+}

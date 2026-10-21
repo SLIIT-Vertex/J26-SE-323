@@ -159,6 +159,22 @@ class RecordingLlm:
 
 
 @dataclass
+class SequenceLlm:
+    responses: list[str | Exception]
+    name: str = "synthetic-sequence-llm"
+    calls: int = 0
+    prompts: list[GenerationPrompt] = field(default_factory=list)
+
+    def generate(self, prompt: GenerationPrompt) -> str:
+        self.prompts.append(prompt)
+        response = self.responses[self.calls]
+        self.calls += 1
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
+@dataclass
 class FailingLlm:
     unexpected: bool = False
     name: str = "synthetic-failing-llm"
@@ -304,6 +320,7 @@ def orchestrator_for(
     verifier: object = "default",
     answer_provider: FixedAnswerProvider | None = None,
     mapper_error: bool = False,
+    max_regeneration_attempts: int = 2,
 ) -> tuple[TutorOrchestrator, CountingController, object]:
     selected_mapping = mapping or fixture.assembly_request().skill_mapping
     mapper = FixedMapper(selected_mapping, error=mapper_error)
@@ -334,6 +351,7 @@ def orchestrator_for(
         semantic_verifier=selected_verifier,
         trusted_answer_provider=answer_provider or FixedAnswerProvider(),
         semantic_verifier_is_simulated=selected_verifier is not None,
+        max_regeneration_attempts=max_regeneration_attempts,
     )
     return orchestrator, counting_controller, selected_llm
 
@@ -374,6 +392,7 @@ def test_successful_synthetic_l0_to_l5_workflows_are_simulations(
     assert result.verification_simulated is True
     assert result.demonstration_notice == SYNTHETIC_DEMO_NOTICE
     assert controller.calls == 1
+    assert result.draft_attempt_count == 1
 
 
 def test_successful_synthetic_l6_requires_eligible_fake_evidence() -> None:
@@ -605,6 +624,104 @@ def test_rejected_verification_never_exposes_generated_draft(
     assert secret_draft not in result.model_dump_json()
 
 
+def test_retryable_failure_then_pass_regenerates_without_changing_level() -> None:
+    fixture = fixture_for("AT-V1-001")
+    llm = SequenceLlm(["The answer is 999.", "Try the problem once yourself."])
+    orchestrator, _, _ = orchestrator_for(fixture, llm=llm)
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.SIMULATED_VERIFICATION_PASS
+    assert result.draft_attempt_count == 2
+    assert llm.calls == 2
+    assert all(
+        prompt.assistance_level is AssistanceLevel.INDEPENDENT_RETRY for prompt in llm.prompts
+    )
+    assert "LEVEL_STRUCTURE_VIOLATION" in llm.prompts[1].user_content
+    assert result.response_text is None
+    assert "The answer is 999" not in result.model_dump_json()
+
+
+def test_repeated_retryable_failure_stops_after_safe_bound() -> None:
+    fixture = fixture_for("AT-V1-001")
+    secret = "The answer is 999."
+    llm = SequenceLlm([secret, secret, secret])
+    orchestrator, _, _ = orchestrator_for(fixture, llm=llm)
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.VERIFICATION_FAILED
+    assert result.draft_attempt_count == 3
+    assert llm.calls == 3
+    assert result.response_text is None
+    assert secret not in result.model_dump_json()
+
+
+def test_indeterminate_verification_is_not_regenerated() -> None:
+    fixture = fixture_for("AT-V1-001")
+    llm = SequenceLlm(["Try the problem once yourself."])
+    verifier = DeterministicFakeSemanticVerifier(
+        semantic_result(VerificationCheckOutcome.INDETERMINATE)
+    )
+    orchestrator, _, _ = orchestrator_for(fixture, llm=llm, verifier=verifier)
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.VERIFICATION_INDETERMINATE
+    assert result.draft_attempt_count == 1
+    assert llm.calls == 1
+
+
+def test_provider_timeout_during_regeneration_stops_without_fallback() -> None:
+    fixture = fixture_for("AT-V1-001")
+    secret = "The answer is 999."
+    llm = SequenceLlm([secret, TimeoutError("private timeout")])
+    orchestrator, _, _ = orchestrator_for(fixture, llm=llm)
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.GENERATION_FAILED
+    assert result.draft_attempt_count == 2
+    assert llm.calls == 2
+    assert result.response_text is None
+    assert secret not in result.model_dump_json()
+
+
+def test_unsafe_draft_is_non_retryable() -> None:
+    fixture = fixture_for("AT-V1-001")
+    unsafe = "kill yourself"
+    llm = SequenceLlm([unsafe])
+    orchestrator, _, _ = orchestrator_for(fixture, llm=llm)
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.VERIFICATION_FAILED
+    assert result.draft_attempt_count == 1
+    assert llm.calls == 1
+    assert unsafe not in result.model_dump_json()
+
+
+def test_regeneration_never_escalates_assistance_level() -> None:
+    fixture = fixture_for("AT-V1-001")
+    llm = SequenceLlm(
+        [
+            "The answer is 999.",
+            "1. Solve everything.\n2. The answer is 999.",
+            "The answer is 999.",
+        ]
+    )
+    orchestrator, _, _ = orchestrator_for(fixture, llm=llm)
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.VERIFICATION_FAILED
+    assert result.assistance_level is AssistanceLevel.INDEPENDENT_RETRY
+    assert result.draft_attempt_count == 3
+    assert all(
+        prompt.assistance_level is AssistanceLevel.INDEPENDENT_RETRY for prompt in llm.prompts
+    )
+
+
 def test_missing_semantic_verifier_is_indeterminate() -> None:
     fixture = fixture_for("AT-V1-001")
     orchestrator, _, _ = orchestrator_for(fixture, verifier=None)
@@ -690,6 +807,37 @@ def test_gemini_named_provider_is_never_authorized_for_learner_delivery() -> Non
     assert result.verification_outcome is VerificationOutcome.PASS
     assert result.status is TutorWorkflowStatus.DELIVERY_NOT_AUTHORIZED
     assert result.response_text is None
+
+
+def test_gemini_can_be_explicitly_authorized_for_adult_research_path() -> None:
+    fixture = fixture_for("AT-V1-001")
+    real_source = EvidenceSource(source_id="test:real-research", origin=EvidenceOrigin.REAL)
+    providers = ContextProviders(fixture, source=real_source)
+    orchestrator = TutorOrchestrator(
+        skill_mapper=FixedMapper(fixture.assembly_request().skill_mapping),
+        skill_mapper_source=real_source,
+        context_assembler=TutorContextAssembler(
+            learner_provider=providers,
+            mastery_provider=providers,
+            support_need_provider=providers,
+            assessment_provider=providers,
+            history_provider=providers,
+            valid_skill_ids=VALID_SKILLS,
+        ),
+        controller=ScaffoldingController(),
+        llm_provider=RecordingLlm(
+            RESPONSES[AssistanceLevel.INDEPENDENT_RETRY], name="google-gemini"
+        ),
+        valid_skill_ids=VALID_SKILLS,
+        semantic_verifier=PassingSemanticVerifier(),
+        trusted_answer_provider=FixedAnswerProvider(),
+        authorized_generation_providers={"google-gemini"},
+    )
+
+    result = run_fixture(orchestrator, fixture)
+
+    assert result.status is TutorWorkflowStatus.APPROVED_RESPONSE
+    assert result.response_text == RESPONSES[AssistanceLevel.INDEPENDENT_RETRY]
 
 
 def test_context_and_curriculum_provenance_are_preserved() -> None:

@@ -29,7 +29,7 @@ from app.shared.database.base import Base
 from app.shared.learner.domain import Learner
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
 
-OBSERVED_AT = datetime(2026, 10, 14, 9, 30)
+OBSERVED_AT = datetime(2026, 10, 14, 9, 30)  # noqa: DTZ001 - database-style naive time
 
 
 def signal(state: str, temporal_score: float = 0.7) -> SignalEvaluation:
@@ -277,6 +277,22 @@ def test_state_older_than_max_age_is_stale() -> None:
     assert result.support_need is None
 
 
+def test_request_as_of_controls_the_exact_freshness_boundary() -> None:
+    provider, learner_id = stored_provider(seconds_later=3600)
+    at_boundary = AWARE_OBSERVED_AT + timedelta(milliseconds=60_000)
+
+    result = provider.get_support_need(
+        request(
+            learner_id,
+            session_id="session-1",
+            max_age_ms=60_000,
+            as_of=at_boundary,
+        )
+    )
+
+    assert result.status is SupportNeedStatus.AVAILABLE
+
+
 def test_stale_takes_precedence_over_uncertain() -> None:
     provider, learner_id = stored_provider("uncertain", seconds_later=120)
     assert provider.get_support_need(request(learner_id, max_age_ms=60_000)).status is (
@@ -305,7 +321,13 @@ def test_without_freshness_rules_old_states_are_still_returned() -> None:
 
 @pytest.mark.parametrize(
     "freshness",
-    [{"max_age_ms": -1}, {"session_id": ""}, {"session_id": "s" * 101}, {"max_age_ms": 1.5}],
+    [
+        {"max_age_ms": -1},
+        {"session_id": ""},
+        {"session_id": "s" * 101},
+        {"max_age_ms": 1.5},
+        {"as_of": datetime(2026, 10, 16, 9, 30)},  # noqa: DTZ001 - validates rejection
+    ],
 )
 def test_freshness_request_validation(freshness: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
