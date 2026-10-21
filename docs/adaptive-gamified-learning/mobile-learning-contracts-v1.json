@@ -187,6 +187,16 @@
                   "type": "null"
                 }
               ]
+            },
+            "support_round": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SupportRoundStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [
@@ -665,7 +675,10 @@
                 "enum": [
                   "visual_guidance",
                   "worked_parallel_example",
-                  "step_by_step_guidance"
+                  "step_by_step_guidance",
+                  "simpler_same_game",
+                  "prerequisite_repair",
+                  "conceptual_reexplanation"
                 ],
                 "type": "string"
               },
@@ -1101,6 +1114,105 @@
           "title": "SupportCompleteRequest",
           "type": "object"
         },
+        "SupportRoundStatus": {
+          "additionalProperties": false,
+          "description": "Where the multi-help loop stands. It never names a later help type.",
+          "properties": {
+            "another_round_required": {
+              "title": "Another Round Required",
+              "type": "boolean"
+            },
+            "english_tag_key": {
+              "enum": [
+                "VISUAL_GUIDANCE",
+                "GUIDED_REASONING",
+                "WORKED_EXAMPLE",
+                "SIMPLER_VERSION",
+                "PREREQUISITE_REPAIR",
+                "CONCEPTUAL_REEXPLANATION"
+              ],
+              "title": "English Tag Key",
+              "type": "string",
+              "x-english-tags": {
+                "CONCEPTUAL_REEXPLANATION": "Conceptual re-explanation",
+                "GUIDED_REASONING": "Guided reasoning",
+                "PREREQUISITE_REPAIR": "Prerequisite repair",
+                "SIMPLER_VERSION": "Simpler version",
+                "VISUAL_GUIDANCE": "Visual guidance",
+                "WORKED_EXAMPLE": "Worked example"
+              }
+            },
+            "manifest_revision_id": {
+              "title": "Manifest Revision Id",
+              "type": "string"
+            },
+            "previous_attempt_correct": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Previous Attempt Correct"
+            },
+            "round_number": {
+              "minimum": 1.0,
+              "title": "Round Number",
+              "type": "integer"
+            },
+            "scaffold_type": {
+              "enum": [
+                "visual_guidance",
+                "worked_parallel_example",
+                "step_by_step_guidance",
+                "simpler_same_game",
+                "prerequisite_repair",
+                "conceptual_reexplanation"
+              ],
+              "title": "Scaffold Type",
+              "type": "string"
+            },
+            "stage_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "practice",
+                    "target",
+                    "view"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage Kind"
+            },
+            "support_revision_id": {
+              "title": "Support Revision Id",
+              "type": "string"
+            },
+            "withdrawal_allowed": {
+              "title": "Withdrawal Allowed",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "round_number",
+            "scaffold_type",
+            "english_tag_key",
+            "stage_kind",
+            "previous_attempt_correct",
+            "another_round_required",
+            "withdrawal_allowed",
+            "support_revision_id",
+            "manifest_revision_id"
+          ],
+          "title": "SupportRoundStatus",
+          "type": "object"
+        },
         "SupportView": {
           "additionalProperties": false,
           "properties": {
@@ -1110,6 +1222,25 @@
               },
               "title": "Body Si",
               "type": "array"
+            },
+            "english_tag_key": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "VISUAL_GUIDANCE",
+                    "GUIDED_REASONING",
+                    "WORKED_EXAMPLE",
+                    "SIMPLER_VERSION",
+                    "PREREQUISITE_REPAIR",
+                    "CONCEPTUAL_REEXPLANATION"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "English Tag Key"
             },
             "game_manifest": {
               "anyOf": [
@@ -1139,7 +1270,10 @@
               "enum": [
                 "visual_guidance",
                 "worked_parallel_example",
-                "step_by_step_guidance"
+                "step_by_step_guidance",
+                "simpler_same_game",
+                "prerequisite_repair",
+                "conceptual_reexplanation"
               ],
               "title": "Scaffold Type",
               "type": "string"
@@ -1171,6 +1305,42 @@
             "game_manifest"
           ],
           "title": "SupportView",
+          "type": "object"
+        },
+        "SupportedAnswerRequest": {
+          "additionalProperties": false,
+          "description": "An attempt made inside the current help round. The server picks the item and the type.",
+          "properties": {
+            "constructed_response": {
+              "additionalProperties": true,
+              "maxProperties": 20,
+              "title": "Constructed Response",
+              "type": "object"
+            },
+            "interaction_summary": {
+              "additionalProperties": true,
+              "maxProperties": 12,
+              "title": "Interaction Summary",
+              "type": "object"
+            },
+            "response_time_ms": {
+              "anyOf": [
+                {
+                  "maximum": 86400000.0,
+                  "minimum": 0.0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Response Time Ms"
+            }
+          },
+          "required": [
+            "constructed_response"
+          ],
+          "title": "SupportedAnswerRequest",
           "type": "object"
         },
         "TelemetryAcknowledgement": {
@@ -2250,6 +2420,124 @@
             }
           },
           "summary": "Reconstruction",
+          "tags": [
+            "gamification-learning-flow-development"
+          ]
+        }
+      },
+      "/api/v1/development/learning-flow/episodes/{episode_id}/support/answer": {
+        "post": {
+          "operationId": "answer_supported_api_v1_development_learning_flow_episodes__episode_id__support_answer_post",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "episode_id",
+              "required": true,
+              "schema": {
+                "format": "uuid",
+                "title": "Episode Id",
+                "type": "string"
+              }
+            },
+            {
+              "in": "header",
+              "name": "Idempotency-Key",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Idempotency-Key"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Principal",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Principal"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Dev-Role",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Dev-Role"
+              }
+            },
+            {
+              "in": "header",
+              "name": "X-Learner-Id",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "X-Learner-Id"
+              }
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportedAnswerRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ChildEpisodeResponse"
+                  }
+                }
+              },
+              "description": "Successful Response"
+            },
+            "422": {
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              },
+              "description": "Validation Error"
+            }
+          },
+          "summary": "Answer Supported",
           "tags": [
             "gamification-learning-flow-development"
           ]
