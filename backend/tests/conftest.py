@@ -15,6 +15,7 @@ os.environ.setdefault("GRADING_RECHECK_BLANKS", "false")
 # environment variable beats the .env file, so the defaults are pinned here. Tests that need another
 # value set it themselves.
 os.environ.setdefault("PAPER_MIN_DAYS_AFTER_JOINING", "7")
+os.environ.setdefault("PAPER_DEFAULT_MODE", "auto")
 os.environ.setdefault("GAME_EVIDENCE_AUTO_READ", "false")
 os.environ.setdefault("GAME_EVIDENCE_INCLUDE_DEVELOPMENT", "false")
 

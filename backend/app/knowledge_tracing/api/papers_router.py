@@ -226,11 +226,13 @@ def create_weekly_paper(
 ) -> PaperRead:
     """This week's paper. Called again in the same week it returns the same paper (200)."""
     body = body or PaperCreate()
+    # a request that does not choose a mode ("auto") gets the configured default (PAPER_DEFAULT_MODE)
+    mode = get_settings().paper_default_mode if body.mode == "auto" else body.mode
     request = PaperRequest(
         max_questions=body.max_questions,
         max_minutes=body.max_minutes,
         max_pages=body.max_pages,
-        mode=body.mode,
+        mode=mode,
         focus_skills=tuple(body.focus_skills),
         language=body.language,
     )

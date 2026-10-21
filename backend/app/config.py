@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     # A child can ask for the weekly paper only this many days after joining, so that there is
     # some play history to build it from. 0 turns the rule off (useful when testing).
     paper_min_days_after_joining: int = 7
+    # What "Make this week's paper" asks for when it does not say: "auto" lets the planner choose (a
+    # first check-up paper while the child has too little history), "practice" always builds the paper
+    # weighted by what the model knows (for demos and trials), "diagnostic" always the check-up.
+    paper_default_mode: Literal["auto", "practice", "diagnostic"] = "auto"
 
     # Read the game's new scored answers into the knowledge model right before it is asked (mastery,
     # weekly paper), so nothing has to be run by hand. Off by default. Only records the game has released
