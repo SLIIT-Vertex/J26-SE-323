@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -14,9 +14,14 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./classroom-language-live.css";
 import {
 	commandActionResponse,
@@ -36,15 +41,6 @@ const SKILLS = [
 	},
 	{ id: "G5-ENG-CLASS-QUESTION-04", name: "Question Tile Studio", icon: "❓" },
 ] as const;
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 type Step =
 	| "games"
 	| "question"
@@ -63,7 +59,7 @@ export function ClassroomLanguageLive({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -143,6 +139,25 @@ export function ClassroomLanguageLive({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId: episode,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const openSkill = async (skillId: string) => {
 		if (lock.current) return;
 		lock.current = true;
@@ -283,10 +298,6 @@ export function ClassroomLanguageLive({
 						<i />
 						<b>💬</b>
 					</div>
-					<p className="cll-notice">
-						Fictional code classroom · no camera, microphone, gaze, or physical
-						action
-					</p>
 					{SKILLS.map((entry) => (
 						<button
 							className="caq-game-card"
@@ -296,23 +307,32 @@ export function ClassroomLanguageLive({
 							<span>{entry.icon}</span>
 							<span>
 								<strong>{entry.name}</strong>
-								<small>Read, connect, and direct the code scene.</small>
+								<small>Read, connect, and move the character.</small>
 							</span>
 						</button>
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={4}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
+							activityCount={4}
+							currentActivity={index + 1}
+							completedActivities={completed.length}
+						/>
+					)}
 					{step === "question" && game && (
 						<>
 							<div className="caq-command">
-								<strong>{manifest?.prompt_si}</strong>
+								<strong>
+									{manifest?.prompt_si
+										.replaceAll("කල්පිත ", "")
+										.replaceAll("කේත ", "")}
+								</strong>
 							</div>
 							<StudioBoard
 								key={manifest?.revision_id}
@@ -331,11 +351,42 @@ export function ClassroomLanguageLive({
 							</button>
 						</>
 					)}
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null && !incomplete(response)}
+							checkLabel="Check my classroom response"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<StudioBoard
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={(value) => {
+										setResponse(value);
+										setMoves((count) => count + 1);
+									}}
+								/>
+							)}
+						/>
+					)}
 					{step === "support" &&
 						support?.game_manifest.schema_version ===
 							"classroom-language-live-support-v1" && (
 							<section className="caq-support">
-								<h2>{support.title_si}</h2>
+								<h2>{support.title_si.replaceAll("කල්පිත ", "")}</h2>
 								<p>
 									{
 										support.body_si[
@@ -376,11 +427,11 @@ export function ClassroomLanguageLive({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<SuccessCelebration />
-							<h2>Classroom Language Live complete!</h2>
-							<p>You used the printed classroom language independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={4}
+							gameCount={4}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}
@@ -510,12 +561,12 @@ function CommandBoard({
 	return (
 		<section className="cll-command">
 			<h2>{String(game.command_text)}</h2>
-			<p>Direct only the fictional character below.</p>
+			<p>Move the character below.</p>
 			<div
 				className="cll-character"
 				data-pose={selected ?? -1}
 				role="img"
-				aria-label="Fictional code classroom character"
+				aria-label="Classroom character"
 			>
 				<i />
 				<b />
@@ -633,7 +684,7 @@ function SituationCue({ variant, index }: { variant: number; index: number }) {
 			className="cll-situation"
 			data-v={variant}
 			role="img"
-			aria-label={`Fictional classroom situation ${index + 1}`}
+			aria-label={`Classroom situation ${index + 1}`}
 		>
 			<i />
 			<b />

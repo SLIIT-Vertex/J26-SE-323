@@ -9,7 +9,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import shown_tokens, simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-16"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-heritage-museum-draft-v1"
 CATALOGUE_VERSION = "g5-eng-past-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-past-features-v1"
@@ -157,6 +160,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> HeritageItem:
         game,
     )
 
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> HeritageItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
+
 
 def public_game_data(item: HeritageItem) -> dict[str, object]:
     return {
@@ -238,7 +248,7 @@ def validate_constructed_response(
             or set(row) != {"sequence", source_key, target_key}
             or row["sequence"] != index
             or row[source_key] not in mapping
-            or row[target_key] not in set(mapping.values())
+            or row[target_key] not in set(mapping.values()) | shown_tokens(game, target_key)
         ):
             raise ValueError("INVALID_HERITAGE_TOKEN_OR_SEQUENCE")
         submitted[str(row[source_key])] = str(row[target_key])

@@ -18,6 +18,7 @@ from app.gamification.content.addition_adventure import (
     SKILLS,
     UNIVERSAL_SKILL_ID,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     scaffold_decision,
@@ -34,17 +35,6 @@ _WORKED_FIRST = (
     "visual_guidance",
     "step_by_step_guidance",
 )
-ADDITION_SUPPORT_SEQUENCE = {
-    "G5-MAT-ADD-MENTAL-01": _VISUAL_FIRST,
-    "G5-MAT-C06-L01-O01": _WORKED_FIRST,
-    "G5-MAT-C06-L01-O02": _WORKED_FIRST,
-    "G5-MAT-C06-L01-O03": _WORKED_FIRST,
-    "G5-MAT-ADD-RUNNING-TOTAL-01": _VISUAL_FIRST,
-    "G5-MAT-ADD-CONTEXT-01": _VISUAL_FIRST,
-    "G5-MAT-ADD-TABLE-TOTAL-01": _VISUAL_FIRST,
-    "G5-MAT-ADD-TABLE-DIFFERENCE-01": _WORKED_FIRST,
-    "G5-MAT-ADD-TABLE-MAX-01": _VISUAL_FIRST,
-}
 
 
 class AdditionAdventureFlow(NumberWorldFlow):
@@ -68,6 +58,7 @@ class AdditionAdventureFlow(NumberWorldFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -75,9 +66,6 @@ class AdditionAdventureFlow(NumberWorldFlow):
     missing_skill_error = "ADDITION_SKILL_NOT_FOUND"
     episode_type_error = "ADDITION_EPISODE_REQUIRED"
     operation_prefix = "addition_adventure"
-    support_sequences = ADDITION_SUPPORT_SEQUENCE
-    activity_support_memory = True
-    answer_revealing_support = True
 
     @staticmethod
     def _public_game_data(item: object) -> dict[str, object]:
@@ -87,11 +75,15 @@ class AdditionAdventureFlow(NumberWorldFlow):
         if skill_id == "G5-MAT-ADD-MENTAL-01":
             public["addends"] = game["addends"]
         elif skill_id.startswith("G5-MAT-C06-"):
-            public.update(addends=game["addends"], addend_count=game["addend_count"], columns=game["columns"])
+            public.update(
+                addends=game["addends"], addend_count=game["addend_count"], columns=game["columns"]
+            )
         elif skill_id == "G5-MAT-ADD-RUNNING-TOTAL-01":
             public.update(start=game["start"], stops=game["stops"])
         elif skill_id == "G5-MAT-ADD-CONTEXT-01":
-            public.update(addends=game["addends"], addend_count=game["addend_count"], context=game["context"])
+            public.update(
+                addends=game["addends"], addend_count=game["addend_count"], context=game["context"]
+            )
         else:
             public.update(
                 table=game["table"],
@@ -215,55 +207,6 @@ class AdditionAdventureFlow(NumberWorldFlow):
             exclusions.append("INCOMPATIBLE_TABLE_OPERATION")
         return exclusions
 
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        assert isinstance(exposure, dict)
-        kind = str(exposure["scaffold_type"])
-        copy = {
-            "visual_guidance": (
-                "තීරුවක නම බලලා තට්ටු කරන්න.",
-                "දහයක් නම් ඊළඟ තැනට එකක් ගෙන යන්න.",
-            ),
-            "worked_parallel_example": (
-                "ඔබට ලැබුණු ප්‍රශ්නය විසඳන ආකාරය බලමු.",
-                "එකතුව ගොඩනැගෙන ආකාරය පියවරෙන් පියවර බලන්න.",
-            ),
-            "step_by_step_guidance": (
-                "එකක තීරුව එකතු කරන්න.",
-                "දහයක් නම් එකක් ගෙන යන්න.",
-                "ඊළඟ තීරුව බලන්න.",
-            ),
-        }[kind]
-        renderer_id = f"{state['chapter']}:{kind}"
-        failed_item = self._stored_item(state, "unsupported_before")
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": {
-                "visual_guidance": "දෘශ්‍ය මඟ පෙන්වීම",
-                "worked_parallel_example": "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
-                "step_by_step_guidance": "පියවරෙන් පියවර මඟ පෙන්වීම",
-            }[kind],
-            "body_si": list(copy),
-            "visual_alt_text_si": "ස්ථානීය තීරු සහ දහයක් එකක් ලෙස හුවමාරු කිරීම පෙන්වන අන්තර්ක්‍රියාකාරී සහාය",
-            "maximum_steps": 6,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": renderer_id,
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": [3, 4, 7],
-                "required_actions": 3,
-                "worked_example": self._worked_example(failed_item, scaffold_type=kind),
-            },
-        }
-
     @staticmethod
     def _worked_example(
         item: dict[str, object], *, scaffold_type: str = "worked_parallel_example"
@@ -293,7 +236,11 @@ class AdditionAdventureFlow(NumberWorldFlow):
                 "carry_count": int(game["carrying_count"]),
                 "aligned": True,
             }
-            steps = ("එකක තීරුවෙන් එකතු කරමු.", "දහයක් වූ විට ඊළඟ තීරුවට එකක් ගෙන යමු.", "තීරු සියල්ල එකතු කර පිළිතුර ගොඩනඟමු.")
+            steps = (
+                "එකක තීරුවෙන් එකතු කරමු.",
+                "දහයක් වූ විට ඊළඟ තීරුවට එකක් ගෙන යමු.",
+                "තීරු සියල්ල එකතු කර පිළිතුර ගොඩනඟමු.",
+            )
         elif skill_id == "G5-MAT-ADD-RUNNING-TOTAL-01":
             start = int(game["start"])
             stops = [int(value) for value in game["stops"]]  # type: ignore[union-attr]
@@ -304,12 +251,24 @@ class AdditionAdventureFlow(NumberWorldFlow):
                 totals.append(running)
             public_game.update(start=start, stops=stops)
             response = {"kind": "route_progression", "totals": totals}
-            steps = ("ආරම්භක සංඛ්‍යාව තබා ගනිමු.", "ඊළඟ අගය එකතු කර නව එකතුව ලියමු.", "එම එකතුවෙන් මාර්ගය දිගටම ගොඩනඟමු.")
+            steps = (
+                "ආරම්භක සංඛ්‍යාව තබා ගනිමු.",
+                "ඊළඟ අගය එකතු කර නව එකතුව ලියමු.",
+                "එම එකතුවෙන් මාර්ගය දිගටම ගොඩනඟමු.",
+            )
         elif skill_id == "G5-MAT-ADD-CONTEXT-01":
             addends = [int(value) for value in game["addends"]]  # type: ignore[union-attr]
             public_game.update(addends=addends, context=game["context"])
-            response = {"kind": "cargo_loading", "selected_indices": list(range(len(addends))), "total": sum(addends)}
-            steps = ("අදාළ කාණ්ඩ තුන හඳුනා ගනිමු.", "කාණ්ඩ තුනම එකතු තැටියට ගෙන එමු.", "තීරු අනුව එකතු කර මුළු ගණන සොයමු.")
+            response = {
+                "kind": "cargo_loading",
+                "selected_indices": list(range(len(addends))),
+                "total": sum(addends),
+            }
+            steps = (
+                "අදාළ කාණ්ඩ තුන හඳුනා ගනිමු.",
+                "කාණ්ඩ තුනම එකතු තැටියට ගෙන එමු.",
+                "තීරු අනුව එකතු කර මුළු ගණන සොයමු.",
+            )
         else:
             table = [[int(value) for value in row] for row in game["table"]]  # type: ignore[union-attr]
             cells = [tuple(int(part) for part in cell) for cell in game["selected_cells"]]  # type: ignore[union-attr]
@@ -334,7 +293,11 @@ class AdditionAdventureFlow(NumberWorldFlow):
                 "selected_cells": [f"r{row}c{column}" for row, column in cells],
                 "total": total,
             }
-            steps = ("ප්‍රශ්නයේ පේළිය හෝ තීරුව හඳුනා ගනිමු.", "අදාළ කොටු පමණක් තෝරමු.", "තෝරාගත් අගයන් එකතු කර ප්‍රතිඵලය සොයමු.")
+            steps = (
+                "ප්‍රශ්නයේ පේළිය හෝ තීරුව හඳුනා ගනිමු.",
+                "අදාළ කොටු පමණක් තෝරමු.",
+                "තෝරාගත් අගයන් එකතු කර ප්‍රතිඵලය සොයමු.",
+            )
 
         return {
             "mode": "exact_failed_activity",

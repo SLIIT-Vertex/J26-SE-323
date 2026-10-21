@@ -10,12 +10,11 @@ from app.gamification.application.learning_flow_orchestration import (
     LocalProbeGateway,
     RecordingEvidencePublisher,
 )
-from app.gamification.application.number_world_flow import _escalate_scaffold
-from app.gamification.application.subtraction_adventure_flow import SUBTRACTION_SUPPORT_SEQUENCE
 from app.gamification.content.subtraction_adventure import ATOMIC_SKILLS
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000744")
 PRIVATE_KEYS = {
@@ -110,7 +109,7 @@ def _run(flow, skill, *, condition, correct_after, suffix):
     assert manifest_game["schema_version"] == "subtraction-adventure-item-v1"
     assert PRIVATE_KEYS.isdisjoint(manifest_game)
     before = flow.reconstruct(episode)["state"]["presentations"][0]
-    flow.submit_before(
+    shown = flow.submit_before(
         episode,
         option_id=None,
         constructed_response=_bind(before, _payload(before, correct=False)),
@@ -131,29 +130,13 @@ def _run(flow, skill, *, condition, correct_after, suffix):
         },
         idempotency_key=f"before:{suffix}",
     )
-    state = flow.reconstruct(episode)["state"]
-    exposure = state["scaffold_exposure"]
-    support = state["model2"]["selected_action"]
-    flow.complete_support(
-        episode,
-        duration_ms=1000,
-        steps_viewed=6,
-        manifest_revision_id=exposure["manifest_revision_id"],
-        grouped_count=0,
-        group_sizes=(),
-        interaction_summary={
-            "completed": True,
-            "renderer_id": f"{state['chapter']}:{exposure['scaffold_type']}",
-            "parallel_example_id": f"{skill}:parallel-support-v1",
-            "support_actions": 6 if support != "visual_guidance" else 3,
-        },
-        idempotency_key=f"support:{suffix}",
-    )
+    # The first help type the server opened for this episode.
+    support = shown["support"]["scaffold_type"]
+    help_done = finish_help(flow, episode, shown)
     flow.withdraw_support(
         episode,
         request_id=uuid4(),
-        support_revision_id=exposure["revision_id"],
-        manifest_revision_id=exposure["manifest_revision_id"],
+        **help_done,
         all_support_removed=True,
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
@@ -186,12 +169,12 @@ def test_each_subtraction_skill_records_valid_proposed_gain(service, skill) -> N
     assert "unknown_or_other" in final["model1"]["probabilities"]
     assert {record["universal_skill_id"] for record in publisher.records} == {"MAT-OPS"}
     assert all(record["measurement_role"] in {"unsupported_before", "unsupported_after"} for record in publisher.records)
-    assert support == SUBTRACTION_SUPPORT_SEQUENCE[skill][0]
+    assert support == final["model2"]["support_order"][0]
     worked = final["scaffold_exposure"]
     assert worked["fully_withdrawn"] is True
 
 
-def test_baseline_never_updates_policy_and_retry_escalates(service) -> None:
+def test_baseline_never_updates_policy_and_a_failed_episode_is_no_preference(service) -> None:
     flow, _publisher = service
     skill = "G5-MAT-SUB-NO-REGROUP-01"
     _opened, _result, final, support = _run(
@@ -203,13 +186,15 @@ def test_baseline_never_updates_policy_and_retry_escalates(service) -> None:
     _opened, _result, failed, first_support = _run(
         flow, skill, condition="proposed", correct_after=False, suffix="retry-1"
     )
-    assert first_support == "visual_guidance"
+    assert first_support == failed["model2"]["support_order"][0]
     assert failed["validity"] == "valid"
     assert failed["policy_updates"]
-    _opened, _result, _second, second_support = _run(
+    _opened, _result, second, second_support = _run(
         flow, skill, condition="proposed", correct_after=True, suffix="retry-2"
     )
-    assert second_support == "worked_parallel_example"
+    # Help escalates inside an episode; an earlier independent failure is not a preference.
+    assert second_support == second["model2"]["support_order"][0]
+    assert second["model2"]["support_selection_mode"] != "learned_post_withdrawal_preference"
     repeated = flow.open_episode(
         learner_id=LEARNER,
         session_id=uuid4(),
@@ -231,29 +216,34 @@ def test_preference_is_exact_skill_specific(service) -> None:
     _opened, _result, other, support = _run(
         flow, "G5-MAT-C07-L01-O02", condition="proposed", correct_after=False, suffix="pref-two"
     )
-    assert support == "worked_parallel_example"
+    # Skill one's independent success says nothing about skill two.
+    assert support == other["model2"]["support_order"][0]
+    assert other["model2"]["support_selection_mode"] != "learned_post_withdrawal_preference"
     assert other["model2"]["learner_activity_support_preference"]["supported_correctness_used"] is False
 
 
-def test_authored_support_sequences_are_deterministic() -> None:
-    assert _escalate_scaffold(
-        "step_by_step_guidance",
-        condition="proposed",
-        attempt_count=1,
-        skill_id="G5-MAT-SUB-NO-REGROUP-01",
-        support_sequences=SUBTRACTION_SUPPORT_SEQUENCE,
-    ) == ("visual_guidance", "activity_default")
-    assert _escalate_scaffold(
-        "visual_guidance",
-        condition="proposed",
-        attempt_count=2,
-        skill_id="G5-MAT-C07-L01-O02",
-        support_sequences=SUBTRACTION_SUPPORT_SEQUENCE,
-    ) == ("visual_guidance", "activity_support_escalation")
-    assert _escalate_scaffold(
-        "visual_guidance",
-        condition="baseline",
-        attempt_count=3,
-        skill_id="G5-MAT-C07-L01-O01",
-        support_sequences=SUBTRACTION_SUPPORT_SEQUENCE,
-    ) == ("visual_guidance", "baseline_fixed")
+
+
+def test_a_right_answer_that_equals_the_number_taken_away_is_right() -> None:
+    # 82 − 41 = 41: the answer's digits are the subtrahend's, and it is still correct.
+    from app.gamification.content.subtraction_adventure import (
+        analyze_subtraction,
+        validate_constructed_response,
+    )
+
+    analysed = analyze_subtraction(82, 41)
+    item = {
+        "skill_id": "G5-MAT-SUB-NO-REGROUP-01",
+        "game_data": {
+            "response_kind": "column_subtraction",
+            "minuend": 82,
+            "subtrahend": 41,
+            "width": 2,
+            "result_digits": list(analysed["result_digits"]),
+            "exchanges": [],
+        },
+    }
+    correct, code, _ = validate_constructed_response(
+        item, {"kind": "column_subtraction", "result_digits": [4, 1], "exchanges": []}
+    )
+    assert (correct, code) == (True, "correct")

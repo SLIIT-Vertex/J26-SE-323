@@ -13,7 +13,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-06"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-island-food-festival-draft-v1"
 CATALOGUE_VERSION = "g5-eng-food-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-food-features-v1"
@@ -31,8 +34,8 @@ FOODS = (
     ("egg", "Egg", 0, "food", True),
     ("bread", "Bread", 1, "food", True),
     ("fish", "Fish", 2, "food", True),
-    ("coconut", "Coconut", 3, "food", True),
-    ("buns", "Buns", 4, "food", True),
+    ("coconut", "Coconut", 3, "fruits", True),
+    ("buns", "Buns", 4, "food", False),
     ("healthy-food", "Healthy Food", 5, "food", False),
     ("fatty-food", "Fatty Food", 6, "food", False),
     ("spicy-food", "Spicy Food", 7, "food", False),
@@ -90,7 +93,7 @@ MISCONCEPTIONS = (
     "unknown_or_other",
 )
 SCAFFOLDS = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
-HEADINGS = (("food", "Food"), ("yams", "Yams"), ("drinks", "Drinks"), ("fruits", "Fruits"), ("vegetables", "Vegetables"))
+HEADINGS = (("food", "Bread, eggs & fish"), ("yams", "Yams & sweet potatoes"), ("drinks", "Drinks"), ("fruits", "Fruits"), ("vegetables", "Vegetables"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,7 +156,8 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> IslandFoodItem:
     elif skill.chapter == "festival_stall_sort":
         by_heading: dict[str, list[tuple[str, str, int, str, bool]]] = {name: [] for name, _ in HEADINGS}
         for row in FOODS:
-            by_heading[row[3]].append(row)
+            if row[4]:
+                by_heading[row[3]].append(row)
         selected: list[tuple[str, str, int, str, bool]] = []
         for heading, _label in HEADINGS:
             pool = list(by_heading[heading])
@@ -164,9 +168,11 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> IslandFoodItem:
         answer = {_token("e", key, salt): _token("s", heading, salt) for key, _, _, heading, _ in selected}
         rng.shuffle(entries)
         game = {"response_kind": "food_lesson_group_sort", "activity_id": skill.chapter, "command_token": command_token, "entries": entries, "stalls": stalls, "target_mapping": answer}
-        prompt = "මේ පාඩමේ එන තැනට වචනය තබන්න."
+        prompt = "එක් එක් ආහාරය ගැළපෙන කූඩයට ඇද දමන්න."
     else:
-        key, chunks, variant = MULTIWORD_NAMES[seed % len(MULTIWORD_NAMES)]
+        # Use names with a clear matching visual; rose/custard apples need authored pictures.
+        visual_names = tuple(row for row in MULTIWORD_NAMES if row[2] not in {28, 29, 30})
+        key, chunks, variant = visual_names[seed % len(visual_names)]
         food_token = _token("f", key, salt)
         chunk_rows = [{"chunk_token": _token("c", f"{key}:{index}", salt), "text_en": chunk} for index, chunk in enumerate(chunks)]
         answer = [row["chunk_token"] for row in chunk_rows]
@@ -175,6 +181,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> IslandFoodItem:
         prompt = "ආහාරයේ ඉංග්‍රීසි නම නිවැරදි පිළිවෙළට ගොඩනගන්න."
     revision = f"{skill_id}:{role}:{seed % 100000}@v1"
     return IslandFoodItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)  # type: ignore[arg-type]
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> IslandFoodItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
 
 
 def public_game_data(item: IslandFoodItem) -> dict[str, object]:

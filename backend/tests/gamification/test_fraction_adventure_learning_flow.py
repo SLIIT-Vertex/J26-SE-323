@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.gamification.application.fraction_adventure_flow import FRACTION_SUPPORT_SEQUENCE
 from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrator,
     LocalProbeGateway,
@@ -97,8 +96,8 @@ def test_all_fraction_activities_open_without_public_answers_and_use_exact_defau
         idempotency_key=f"before:{skill}",
     )
     assert result["status"] == "support_active"
-    assert result["support"]["scaffold_type"] == FRACTION_SUPPORT_SEQUENCE[skill][0]
-    assert result["support"]["game_manifest"]["worked_example"]["mode"] == "exact_failed_activity"
+    assert result["support"]["scaffold_type"] == flow.reconstruct(episode)["state"]["model2"]["support_order"][0]
+    assert flow._adaptive_flow(episode).support_solution(item)["mode"] == "exact_failed_activity"
     state = flow.reconstruct(episode)["state"]
     assert set(state["model1"]["probabilities"])
     assert state["universal_skill_id"] == "MAT-FRC"

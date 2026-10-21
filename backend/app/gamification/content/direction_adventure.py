@@ -109,32 +109,53 @@ def _scene(seed: int, role: str) -> tuple[list[dict[str, str]], list[dict[str, s
     return placements, statements
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> DirectionItem:
+SIMPLER_POSITION_COUNT = 2
+MAIN_DIRECTIONS = ("north", "east", "south", "west")
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> DirectionItem:
+    """The same direction skill with two compass points, or only the main directions in a scene."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> DirectionItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("DIRECTION_ITEM_REQUEST_INVALID")
     skill = SKILLS[skill_id]
+    pick = random.Random(f"{skill_id}:simpler:{seed}")
     if skill.response_kind == "main_direction_compass":
         game: dict[str, object] = {
-            "response_kind": skill.response_kind, "active_positions": list(MAIN_POSITIONS),
+            "response_kind": skill.response_kind,
+            "active_positions": sorted(pick.sample(MAIN_POSITIONS, SIMPLER_POSITION_COUNT), key=MAIN_POSITIONS.index) if simpler else list(MAIN_POSITIONS),
             "direction_options": ["north", "east", "south", "west"],
         }
         prompt = "මාලිමාවේ ප්‍රධාන දිශා හතර නිවැරදි තැන්වල තෝරන්න."
     elif skill.response_kind == "secondary_direction_compass":
         game = {
-            "response_kind": skill.response_kind, "active_positions": list(SECONDARY_POSITIONS),
+            "response_kind": skill.response_kind,
+            "active_positions": sorted(pick.sample(SECONDARY_POSITIONS, SIMPLER_POSITION_COUNT), key=SECONDARY_POSITIONS.index) if simpler else list(SECONDARY_POSITIONS),
             "anchor_directions": ["north", "east", "south", "west"],
             "direction_options": ["north_east", "south_east", "south_west", "north_west"],
         }
         prompt = "ප්‍රධාන දිශා දෙක අතර ඇති අනු දිශාව තෝරන්න."
     else:
         placements, statements = _scene(seed, role)
+        if simpler:
+            # The whole scene stays; the child names only the places in the four main directions.
+            main_places = {row["place_id"] for row in placements if row["direction"] in MAIN_DIRECTIONS}
+            statements = [row for row in statements if row["place_id"] in main_places]
         scene_digest = hashlib.sha256(json.dumps(placements, sort_keys=True).encode()).hexdigest()[:12]
         game = {
             "response_kind": skill.response_kind, "scene_id": f"scene-{scene_digest}",
             "placements": placements, "statements": statements, "direction_options": list(ALL_DIRECTIONS),
         }
         prompt = "ළමයා සිටින තැනින් බලමින් එක් එක් ස්ථානයේ දිශාව තෝරන්න."
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return DirectionItem(
         f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role,
         prompt, (), "constructed-response", {}, game,
@@ -185,9 +206,11 @@ def validate_scene(game: Mapping[str, object]) -> None:
     directions = [str(row.get("direction")) for row in placements]
     if set(place_ids) != set(PLACES) or len(set(place_ids)) != 8 or set(directions) != set(ALL_DIRECTIONS) or len(set(directions)) != 8:
         raise ValueError("AMBIGUOUS_DIRECTION_SCENE")
-    if not isinstance(statements, list) or len(statements) != 8 or not all(isinstance(row, Mapping) for row in statements):
+    # Every place stays in the scene; the simpler version asks about only some of them.
+    if not isinstance(statements, list) or not 1 <= len(statements) <= 8 or not all(isinstance(row, Mapping) for row in statements):
         raise ValueError("AMBIGUOUS_DIRECTION_SCENE")
-    if {str(row.get("place_id")) for row in statements} != set(PLACES):
+    asked = [str(row.get("place_id")) for row in statements]
+    if len(set(asked)) != len(asked) or not set(asked) <= set(PLACES):
         raise ValueError("AMBIGUOUS_DIRECTION_SCENE")
 
 
@@ -239,7 +262,7 @@ def validate_constructed_response(item: Mapping[str, object] | DirectionItem, re
     if response.get("scene_id") != game.get("scene_id") or type(response.get("revisions")) is not int or not 0 <= response["revisions"] <= 100:
         raise ValueError("INVALID_SCENE_EVIDENCE")
     statement_ids = {str(row["statement_id"]) for row in expected}
-    if len(selections) != 8 or any(set(row) != {"statement_id", "place_id", "selected_direction"} for row in selections):
+    if len(selections) != len(expected) or any(set(row) != {"statement_id", "place_id", "selected_direction"} for row in selections):
         raise ValueError("INVALID_SCENE_EVIDENCE")
     if any(
         str(row["place_id"]) not in PLACES or str(row["selected_direction"]) not in ALL_DIRECTIONS
@@ -250,7 +273,7 @@ def validate_constructed_response(item: Mapping[str, object] | DirectionItem, re
         raise ValueError("INVALID_SCENE_EVIDENCE")
     expected_by_statement = {row["statement_id"]: row for row in expected}
     seen = {str(row["statement_id"]) for row in selections}
-    if seen != statement_ids or len(seen) != 8:
+    if seen != statement_ids or len(seen) != len(expected):
         raise ValueError("INVALID_SCENE_EVIDENCE")
     first = next((row for row in selections if row.get("place_id") != expected_by_statement.get(row.get("statement_id"), {}).get("place_id") or row.get("selected_direction") != expected_by_statement.get(row.get("statement_id"), {}).get("selected_direction")), None)
     if first is None:

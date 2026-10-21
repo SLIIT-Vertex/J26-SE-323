@@ -36,6 +36,7 @@ class AtomicSkill:
     skill_id: str
     chapter: Chapter
     name_si: str
+    difficulty: str
     source_node_id: str
     source_page: str
     operation: Literal["add", "subtract", "multiply"]
@@ -47,6 +48,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-PAT-DIFF-ASC-01",
         "number_step_trail",
         "වැඩිවන පොදු අන්තර රටා",
+        "easy",
         "G5-MAT-C02-L01-O02",
         "66",
         "add",
@@ -56,6 +58,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-PAT-DIFF-DESC-01",
         "number_step_trail",
         "අඩුවන පොදු අන්තර රටා",
+        "easy",
         "G5-MAT-C02-L01",
         "supplied exercise",
         "subtract",
@@ -65,6 +68,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-PAT-RATIO-2-01",
         "multiplication_bridge",
         "දෙගුණ වන සංඛ්‍යා රටා",
+        "medium",
         "G5-MAT-C02-L02-O01",
         "supplied exercise",
         "multiply",
@@ -74,6 +78,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-PAT-RATIO-3-01",
         "multiplication_bridge",
         "තුන්ගුණ වන සංඛ්‍යා රටා",
+        "medium",
         "G5-MAT-C02-L02-O01",
         "66",
         "multiply",
@@ -83,6 +88,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-PAT-RATIO-4-01",
         "pattern_power_machine",
         "හතරගුණ වන සංඛ්‍යා රටා",
+        "hard",
         "G5-MAT-C02-L02-O01",
         "supplied exercise",
         "multiply",
@@ -92,6 +98,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-PAT-RATIO-5-01",
         "pattern_power_machine",
         "පස්ගුණ වන සංඛ්‍යා රටා",
+        "hard",
         "G5-MAT-C02-L02-O01",
         "supplied exercise",
         "multiply",
@@ -238,7 +245,22 @@ def validate_constructed_response(
     return False, error, normalized
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> NumberPatternItem:
+SIMPLER_TERM_COUNT = 4
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> NumberPatternItem:
+    """The same rule and operation as a shorter pattern of small numbers with one blank."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> NumberPatternItem:
     if skill_id not in SKILLS:
         raise ValueError("NUMBER_PATTERN_SKILL_NOT_FOUND")
     if role not in {"unsupported_before", "unsupported_after"}:
@@ -253,22 +275,31 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberPatternItem:
     rule = skill.rule if skill.operation == "multiply" else abs(base[1] - base[0])
     # Keep before/after structurally equivalent but fresh. When only a small photographed
     # family exists, a bounded offset retains the exact rule without exposing the probe.
-    if role == "unsupported_before":
+    if simpler:
+        start = {"add": rule, "subtract": rule * SIMPLER_TERM_COUNT, "multiply": 1}[
+            skill.operation
+        ]
+        sequence = _sequence(start, skill.operation, rule, SIMPLER_TERM_COUNT)
+    elif role == "unsupported_before":
         sequence = base
     elif skill.operation == "multiply":
         sequence = families[(family_index + 1) % len(families)]
     else:
         sequence = _sequence(base[0] + rule, skill.operation, rule, len(base))
-    missing_count = 2
+    missing_count = 1 if simpler else 2
     missing_indices = tuple(range(len(sequence) - missing_count, len(sequence)))
     visible_terms: tuple[int | None, ...] = tuple(
         None if index in missing_indices else value for index, value in enumerate(sequence)
     )
     operation_si = {"add": "එකතු කර", "subtract": "අඩු කර", "multiply": "ගුණ කර"}[skill.operation]
-    prompt = "එකම රීතිය නැවත නැවත යොදා හිස් ස්ථාන දෙක සම්පූර්ණ කරන්න."
+    prompt = (
+        "එකම රීතිය යොදා හිස් ස්ථානය සම්පූර්ණ කරන්න."
+        if simpler
+        else "එකම රීතිය නැවත නැවත යොදා හිස් ස්ථාන දෙක සම්පූර්ණ කරන්න."
+    )
     signature = f"{skill.operation}-{rule}-terms-{len(sequence)}-missing-{missing_count}"
     fingerprint = hashlib.sha256(json.dumps(sequence).encode()).hexdigest()[:12]
-    suffix = "B" if role == "unsupported_before" else "A"
+    suffix = ("B" if role == "unsupported_before" else "A") + ("S" if simpler else "")
     game = {
         "chapter": skill.chapter,
         "operation": skill.operation,
@@ -386,6 +417,7 @@ def package_hash() -> str:
                     "skill_id",
                     "chapter",
                     "name_si",
+                    "difficulty",
                     "source_node_id",
                     "source_page",
                     "operation",

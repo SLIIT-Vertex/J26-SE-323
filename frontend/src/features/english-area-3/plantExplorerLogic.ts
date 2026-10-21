@@ -8,7 +8,10 @@ export function plantMappingResponse(
 	links: Link[],
 	allSources: string[],
 	trace: string[],
-): ConstructedResponse {
+): Extract<
+	ConstructedResponse,
+	{ kind: "plant_vocabulary_mapping" | "plant_part_labeling" }
+> {
 	const common = {
 		command_token: commandToken,
 		interaction_trace: trace,
@@ -51,7 +54,7 @@ export function numberPairResponse(
 		plural_form_token: string;
 	}>,
 	trace: string[],
-): ConstructedResponse {
+): Extract<ConstructedResponse, { kind: "singular_plural_pairing" }> {
 	return {
 		kind: "singular_plural_pairing",
 		command_token: commandToken,

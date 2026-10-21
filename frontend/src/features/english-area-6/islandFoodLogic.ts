@@ -43,7 +43,10 @@ export function foodMappingResponse(
 	links: FoodLink[],
 	sources: string[],
 	trace: string[],
-): ConstructedResponse {
+): Extract<
+	ConstructedResponse,
+	{ kind: "food_vocabulary_mapping" | "food_lesson_group_sort" }
+> {
 	const common = {
 		command_token: commandToken,
 		interaction_trace: trace,
@@ -83,7 +86,7 @@ export function foodNameResponse(
 	foodToken: string,
 	chunks: string[],
 	trace: string[],
-): ConstructedResponse {
+): Extract<ConstructedResponse, { kind: "food_name_sequence" }> {
 	return {
 		kind: "food_name_sequence",
 		command_token: commandToken,

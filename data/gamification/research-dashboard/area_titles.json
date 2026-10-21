@@ -1,0 +1,302 @@
+{
+  "G5-AREA-MAT-01": {
+    "title": "සංඛ්‍යා",
+    "english": "Numbers"
+  },
+  "G5-AREA-MAT-02": {
+    "title": "එකතු කිරීම",
+    "english": "Addition"
+  },
+  "G5-AREA-MAT-03": {
+    "title": "සංඛ්‍යා රටා",
+    "english": "Number Patterns"
+  },
+  "G5-AREA-MAT-04": {
+    "title": "අඩු කිරීම",
+    "english": "Subtraction"
+  },
+  "G5-AREA-MAT-05": {
+    "title": "භාග",
+    "english": "Fractions"
+  },
+  "G5-AREA-MAT-06": {
+    "title": "ගුණ කිරීම",
+    "english": "Multiplication"
+  },
+  "G5-AREA-MAT-07": {
+    "title": "කාලය",
+    "english": "Time"
+  },
+  "G5-AREA-MAT-08": {
+    "title": "බෙදීම",
+    "english": "Division"
+  },
+  "G5-AREA-MAT-09": {
+    "title": "දිග හා දුර",
+    "english": "Length and Distance"
+  },
+  "G5-AREA-MAT-10": {
+    "title": "මුදල්",
+    "english": "Money"
+  },
+  "G5-AREA-MAT-11": {
+    "title": "පරිමාව හා ධාරිතාව",
+    "english": "Volume and Capacity"
+  },
+  "G5-AREA-MAT-12": {
+    "title": "බර මැනීම",
+    "english": "Measuring Weight"
+  },
+  "G5-AREA-MAT-13": {
+    "title": "හැඩතල හා ඝන වස්තු",
+    "english": "Shapes and Solid Objects"
+  },
+  "G5-AREA-MAT-14": {
+    "title": "දිශා",
+    "english": "Directions"
+  },
+  "G5-AREA-MAT-15": {
+    "title": "දශම",
+    "english": "Decimals"
+  },
+  "G5-AREA-MAT-16": {
+    "title": "රෝම සංඛ්‍යාංක",
+    "english": "Roman Numerals"
+  },
+  "G5-AREA-SIN-01": {
+    "title": "පිල්ලම් හඳුනාගනිමු",
+    "english": "Identifying Vowel Signs"
+  },
+  "G5-AREA-SIN-02": {
+    "title": "විරාම ලක්ෂණ හඳුනාගනිමු",
+    "english": "Identifying Punctuation Marks"
+  },
+  "G5-AREA-SIN-03": {
+    "title": "තේරවිලි",
+    "english": "Riddles"
+  },
+  "G5-AREA-SIN-04": {
+    "title": "සමානාර්ථ පද (සමාන පද)",
+    "english": "Synonyms"
+  },
+  "G5-AREA-SIN-05": {
+    "title": "විරුද්ධාර්ථ පද (විරුද්ධ පද)",
+    "english": "Antonyms"
+  },
+  "G5-AREA-SIN-06": {
+    "title": "යුගල පද",
+    "english": "Paired Words"
+  },
+  "G5-AREA-SIN-07": {
+    "title": "ප්‍රස්තාව පිරුළු",
+    "english": "Proverbs"
+  },
+  "G5-AREA-SIN-08": {
+    "title": "ඉඟි වැකි",
+    "english": "Idiomatic Expressions"
+  },
+  "G5-AREA-SIN-09": {
+    "title": "ආප්තෝපදේශ",
+    "english": "Wise Sayings and Maxims"
+  },
+  "G5-AREA-SIN-10": {
+    "title": "උපමා",
+    "english": "Similes"
+  },
+  "G5-AREA-SIN-11": {
+    "title": "පොදු ලිංග පද",
+    "english": "පොදු ලිංග පද"
+  },
+  "G5-AREA-SIN-12": {
+    "title": "ක්‍රියා පද හා ආඛ්‍යාත",
+    "english": "ක්‍රියා පද හා ආඛ්‍යාත"
+  },
+  "G5-AREA-SIN-13": {
+    "title": "ආරාධනා පත්‍ර",
+    "english": "Invitation Letters"
+  },
+  "G5-AREA-SIN-14": {
+    "title": "ස්ත්‍රී ලිංග හා පුරුෂ ලිංග පද",
+    "english": "Feminine and Masculine Nouns"
+  },
+  "G5-AREA-SIN-15": {
+    "title": "ඒකවචන හා බහුවචන පද",
+    "english": "Singular and Plural Words"
+  },
+  "G5-AREA-SIN-16": {
+    "title": "අක්ෂර වින්‍යාසය",
+    "english": "Spelling and Orthography"
+  },
+  "G5-AREA-SIN-17": {
+    "title": "න, ණ යෙදීම",
+    "english": "Usage of න and ණ"
+  },
+  "G5-AREA-SIN-18": {
+    "title": "ල, ළ යෙදීම",
+    "english": "Usage of ල and ළ"
+  },
+  "G5-AREA-SIN-19": {
+    "title": "ස, ශ, ෂ යෙදීම",
+    "english": "Usage of ස, ශ and ෂ"
+  },
+  "G5-AREA-SIN-20": {
+    "title": "අල්පප්‍රාණ සහ මහාප්‍රාණ අක්ෂර",
+    "english": "Unaspirated and Aspirated Consonants"
+  },
+  "G5-AREA-SIN-21": {
+    "title": "නාම පද",
+    "english": "Nouns"
+  },
+  "G5-AREA-SIN-22": {
+    "title": "ක්‍රියා පද",
+    "english": "Verbs"
+  },
+  "G5-AREA-SIN-23": {
+    "title": "උක්ත සහ අනුක්ත පද",
+    "english": "Subject and Non-subject Forms"
+  },
+  "G5-AREA-SIN-24": {
+    "title": "සරල වාක්‍ය",
+    "english": "Simple Sentences"
+  },
+  "G5-AREA-SIN-25": {
+    "title": "ද / ත / ස / හා / සහ යෙදුණු වාක්‍ය රටා",
+    "english": "Sentence Patterns Using ද, ත, ස, හා and සහ"
+  },
+  "G5-AREA-ENV-01": {
+    "title": "අපේ යහපැවැත්ම",
+    "english": "Our Well-being"
+  },
+  "G5-AREA-ENV-02": {
+    "title": "අපි ලක් වැසියෝ",
+    "english": "We Are Sri Lankans"
+  },
+  "G5-AREA-ENV-03": {
+    "title": "පැළෑටි හා ගස්වැල්",
+    "english": "Plants and Trees"
+  },
+  "G5-AREA-ENV-04": {
+    "title": "අප අවට සත්තු",
+    "english": "Animals Around Us"
+  },
+  "G5-AREA-ENV-05": {
+    "title": "අප පරිහරණය කරන දේ",
+    "english": "Things We Use"
+  },
+  "G5-AREA-ENV-06": {
+    "title": "අපේ ආහාර",
+    "english": "Our Food"
+  },
+  "G5-AREA-ENV-07": {
+    "title": "ආරක්ෂාව සහ පරිස්සම",
+    "english": "Safety and Care"
+  },
+  "G5-AREA-ENV-08": {
+    "title": "ජලය",
+    "english": "Water"
+  },
+  "G5-AREA-ENV-09": {
+    "title": "වැඩ පහසු කිරීමේ මං",
+    "english": "Ways to Make Work Easier"
+  },
+  "G5-AREA-ENV-10": {
+    "title": "ගෙවත්ත",
+    "english": "Home Garden"
+  },
+  "G5-AREA-ENV-11": {
+    "title": "ගමනාගමනය",
+    "english": "Transportation"
+  },
+  "G5-AREA-ENV-12": {
+    "title": "මිනිස් හැසිරීම්",
+    "english": "Human Behaviour"
+  },
+  "G5-AREA-ENV-13": {
+    "title": "පොළොව හා අහස",
+    "english": "Earth and Sky"
+  },
+  "G5-AREA-ENV-14": {
+    "title": "අපට කළ හැකි වෙනස්කම්",
+    "english": "Changes We Can Make"
+  },
+  "G5-AREA-ENV-15": {
+    "title": "මිනිසා සහ තොරතුරු",
+    "english": "Humans and Information"
+  },
+  "G5-AREA-ENV-16": {
+    "title": "අපේ අතීත විත්ති",
+    "english": "Stories from Our Past"
+  },
+  "G5-AREA-ENG-01": {
+    "title": "අපේ යහපැවැත්ම",
+    "english": "Our Good Behaviour"
+  },
+  "G5-AREA-ENG-02": {
+    "title": "අපි ලක් වැසියෝ",
+    "english": "We are Sri Lankans"
+  },
+  "G5-AREA-ENG-03": {
+    "title": "පැළෑටි හා ගස්වැල්",
+    "english": "Plants, Trees and Creepers"
+  },
+  "G5-AREA-ENG-04": {
+    "title": "අප අවට සත්තු",
+    "english": "Animals around us"
+  },
+  "G5-AREA-ENG-05": {
+    "title": "අප පරිහරණය කරන දේ",
+    "english": "What we use"
+  },
+  "G5-AREA-ENG-06": {
+    "title": "අපේ ආහාර",
+    "english": "Our food"
+  },
+  "G5-AREA-ENG-07": {
+    "title": "ආරක්ෂාව සහ පරිස්සම",
+    "english": "Safety & protection"
+  },
+  "G5-AREA-ENG-08": {
+    "title": "ජලය",
+    "english": "Water"
+  },
+  "G5-AREA-ENG-09": {
+    "title": "ගමනාගමනය",
+    "english": "Transport"
+  },
+  "G5-AREA-ENG-10": {
+    "title": "ගෙවත්ත",
+    "english": "Home Garden"
+  },
+  "G5-AREA-ENG-11": {
+    "title": "වැඩ පහසු කිරීමේ මං",
+    "english": "Ways of Making work Easy"
+  },
+  "G5-AREA-ENG-12": {
+    "title": "මිනිස් හැසිරීම්",
+    "english": "Human Behaviour"
+  },
+  "G5-AREA-ENG-13": {
+    "title": "පොළොව හා අහස",
+    "english": "Earth & Sky"
+  },
+  "G5-AREA-ENG-14": {
+    "title": "අපට කළ හැකි වෙනස්කම්",
+    "english": "Changes we can do"
+  },
+  "G5-AREA-ENG-15": {
+    "title": "මිනිසා සහ තොරතුරු",
+    "english": "Man & Information"
+  },
+  "G5-AREA-ENG-16": {
+    "title": "අපේ අතීත විත්ති",
+    "english": "Our Past"
+  },
+  "G5-AREA-ENG-17": {
+    "title": "පන්ති කාමර භාෂාව",
+    "english": "Classroom Language"
+  },
+  "G5-AREA-ENG-18": {
+    "title": "ප්‍රයෝජනවත් ප්‍රකාශ සහ සංවාද භාෂාව",
+    "english": "Useful Expressions & Conversation Language"
+  }
+}

@@ -6,7 +6,7 @@ import hashlib
 import json
 import random
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 AREA_ID = "G5-AREA-ENG-01"
@@ -116,6 +116,27 @@ class ClassroomActionItem:
 def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     digest = hashlib.sha256(f"{skill_id}:{role}:{seed}".encode()).digest()
     return random.Random(int.from_bytes(digest[:8], "big"))
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> ClassroomActionItem:
+    """The same command game with two choices: the commanded action or place and one other."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    game = dict(item.game_data)
+    rng = _rng(skill_id, "simpler", seed)
+    if game["response_kind"] == "body_state":
+        field, target = "allowed_interaction_ids", str(game["command_id"])
+    else:
+        field, target = "allowed_destination_ids", str(game["target_location_id"])
+    choices = [str(value) for value in game[field]]  # type: ignore[union-attr]
+    kept = {target, rng.choice([value for value in choices if value != target])}
+    game[field] = [value for value in choices if value in kept]
+    stem, _, version = item.revision_id.rpartition("@")
+    return replace(item, game_data=game, revision_id=f"{stem}:simpler@{version}")
 
 
 def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomActionItem:

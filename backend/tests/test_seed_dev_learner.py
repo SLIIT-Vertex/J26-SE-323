@@ -89,7 +89,7 @@ def test_the_default_id_is_the_one_both_frontends_use() -> None:
     )
 
     in_papers = re.search(r'DEFAULT_SHARED_LEARNER_ID\s*=\s*"([0-9a-f-]{36})"', papers)
-    in_game = re.search(r'DEV_LEARNER\s*=\s*"([0-9a-f-]{36})"', game)
-
-    assert in_papers and in_game
-    assert in_papers.group(1) == in_game.group(1) == command.DEFAULT_LEARNER_ID
+    assert in_papers
+    assert in_papers.group(1) == command.DEFAULT_LEARNER_ID
+    assert re.search(r'import\s*\{\s*SHARED_LEARNER_ID\s*\}\s*from\s*"\.\./papers/hooks"', game)
+    assert re.search(r'learnerId\s*=\s*SHARED_LEARNER_ID\b', game)

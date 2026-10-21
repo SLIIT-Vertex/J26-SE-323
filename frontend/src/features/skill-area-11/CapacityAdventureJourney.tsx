@@ -1,10 +1,11 @@
 // biome-ignore-all lint/a11y/useButtonType: game controls do not submit forms.
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CapacityAdventureWorkedExample, ConstructedResponse, ExperimentCondition, PresentationManifest, SupportView } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { CapacityAdventureWorkedExample, ChildEpisodeResponse, ConstructedResponse, ExperimentCondition, PresentationManifest, SupportView } from "../mobile-learning-flow/api/generated";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import { adaptiveGameProgressStage, AdventureProgress } from "../mobile-learning-flow/AdventureProgress";
-import { AdventureBackButton, SuccessCelebration } from "../mobile-learning-flow/AdventureShared";
+import { AdventureBackButton, GameSuccessScreen } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import { canonicalCapacityArithmetic, formatCapacity, portionCounts, splitCapacity, type CapacityArithmeticResponse } from "./capacityLogic";
 import { CAPACITY_GAMES, CAPACITY_SKILLS } from "./manifest";
 import "./capacity-adventure.css";
@@ -12,7 +13,7 @@ import "./capacity-adventure.css";
 type Step = "chapters" | "question" | "support" | "withdrawing" | "feedback" | "result";
 
 export function CapacityAdventureJourney({ api, learnerId, condition, reducedMotion, onBack, onFailure }: {
-	api: Pick<LearningFlowClient, "open" | "answerBefore" | "completeSupport" | "withdrawSupport" | "presentAfter" | "answerAfter">;
+	api: GameApi;
 	learnerId: string; condition: ExperimentCondition; reducedMotion: boolean; onBack(): void; onFailure(error: unknown): void;
 }) {
 	const [step, setStep] = useState<Step>("chapters"), [skillId, setSkillId] = useState<string | null>(null), [episodeId, setEpisodeId] = useState<string | null>(null);
@@ -20,7 +21,7 @@ export function CapacityAdventureJourney({ api, learnerId, condition, reducedMot
 	const [correct, setCorrect] = useState(false), [feedbackColumn, setFeedbackColumn] = useState<string | null>(null), [busy, setBusy] = useState(false), [supportStage, setSupportStage] = useState(0);
 	const [completed, setCompleted] = useState<string[]>([]), [startedAt, setStartedAt] = useState(Date.now()), [moves, setMoves] = useState(0), [corrections, setCorrections] = useState(0), [exchanges, setExchanges] = useState(0), [overflows, setOverflows] = useState(0);
 	const [pending, setPending] = useState<{ episode: string; support: string; manifest: string } | null>(null); const lock = useRef(false);
-	const index = Math.max(0, CAPACITY_SKILLS.findIndex((skill) => skill.id === skillId)); const active = CAPACITY_SKILLS[index];
+	const index = Math.max(0, CAPACITY_SKILLS.findIndex((skill) => skill.id === skillId)); const active = CAPACITY_SKILLS[index]; const activeGameIndex = CAPACITY_GAMES.findIndex((game) => game.id === active?.chapter);
 	const run = useCallback(async <T,>(job: () => Promise<T>) => { setBusy(true); try { return await job(); } catch (error) { onFailure(error); return undefined; } finally { setBusy(false); } }, [onFailure]);
 	const reset = useCallback(() => { setResponse(null); setStartedAt(Date.now()); setMoves(0); setCorrections(0); setExchanges(0); setOverflows(0); }, []);
 
@@ -54,26 +55,40 @@ export function CapacityAdventureJourney({ api, learnerId, condition, reducedMot
 	};
 	const finishSupport = async () => {
 		if (!episodeId || !support || support.game_manifest.schema_version === "half-set-manifest-v1") return;
-		const game = support.game_manifest; if (supportStage < game.required_actions) return;
+		const game = support.game_manifest; if (game.schema_version !== "support-round-v1" && supportStage < game.required_actions) return;
 		const done = await run(() => api.completeSupport(episodeId, { duration_ms: Date.now() - startedAt, steps_viewed: Math.max(1, supportStage), manifest_revision_id: game.revision_id, interaction_summary: { completed: true, renderer_id: game.renderer_id, parallel_example_id: game.parallel_example_id, support_actions: supportStage } }, crypto.randomUUID()));
-		if (!done) return; setPending({ episode: episodeId, support: support.revision_id, manifest: game.revision_id }); setSupport(null); setResponse(null); setStep("withdrawing");
+		if (done) advanceSupport(done);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) { setPending({ episode: next.episode_id, support: next.support_round.support_revision_id, manifest: next.support_round.manifest_revision_id }); setSupport(null); setResponse(null); setStep("withdrawing"); return; }
+		if (next.support) { setSupport(next.support); setSupportStage(0); reset(); }
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported; const game = support?.game_manifest;
+		if (!submit || !episodeId || !response || !game || game.schema_version !== "support-round-v1" || !game.activity) return; const activity = game.activity;
+		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Date.now() - startedAt, interaction_summary: { move_count: moves } }, crypto.randomUUID()));
+		if (next) advanceSupport(next);
 	};
 	const advance = () => {
 		if (!skillId) return; if (!correct) { void openSkill(skillId); return; }
 		const nextDone = completed.includes(skillId) ? completed : [...completed, skillId]; setCompleted(nextDone);
-		if (index < 4) void openSkill(CAPACITY_SKILLS[index + 1].id); else setStep(nextDone.length === 5 ? "result" : "chapters");
+		const nextSkill = CAPACITY_SKILLS[index + 1]; if (nextSkill?.chapter === active?.chapter) void openSkill(nextSkill.id); else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => { if (step === "feedback" && correct) advance(); }, [step, correct]);
 
 	return <main className="capacity-adventure" data-reduced-motion={reducedMotion || undefined}>
 		<header className="capacity-header"><AdventureBackButton onClick={step === "chapters" ? onBack : () => setStep("chapters")} /><h1>පරිමාව හා ධාරිතාව</h1></header>
-		{step === "chapters" ? <section className="capacity-game-list" aria-label="ධාරිතා ක්‍රීඩා">{CAPACITY_GAMES.map((game) => <button className="capacity-game-card" key={game.id} onClick={() => { const first = CAPACITY_SKILLS.find((skill) => skill.chapter === game.id); if (first) void openSkill(first.id); }}><img src={game.asset} alt="" /><span><strong>{game.title}</strong><small>{game.challengeLabel} · {game.difficulty}</small></span></button>)}</section> : <section className="capacity-play">
+		{step === "chapters" ? <section className="capacity-game-list" aria-label="ධාරිතා ක්‍රීඩා">{CAPACITY_GAMES.map((game) => <button className="capacity-game-card" key={game.id} onClick={() => { const first = CAPACITY_SKILLS.find((skill) => skill.chapter === game.id); if (first) void openSkill(first.id); }}><img src={game.asset} alt="" /><span><strong>{game.title}</strong><small>{game.challengeLabel} · {game.difficulty}</small></span></button>)}</section> : <section className="capacity-play game-play-surface">
 			<AdventureProgress stage={adaptiveGameProgressStage(step, manifest?.measurement_role)} activityCount={5} currentActivity={index + 1} completedActivities={completed.length} />
 			<p className="capacity-position">ක්‍රියාකාරකම {index + 1}/5 · {active?.name}</p>
 			{step === "question" && manifest?.game && <><h2>{manifest.prompt_si}</h2><CapacityActivity key={manifest.revision_id} game={manifest.game as Record<string, unknown>} onResponse={record} /><button className="capacity-primary" disabled={busy || !response} onClick={confirm}>තහවුරු කරන්න</button></>}
-			{step === "support" && support && <CapacitySupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />}
+			{step === "support" && support && (support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <CapacityActivity key={activity.revision_id} game={activity.game} onResponse={record} />}>
+				{support.game_manifest.stage_kind !== "view" && <button className="capacity-primary" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
+			</SupportRoundFrame> : <CapacitySupport support={support} stage={supportStage} onNext={() => setSupportStage((value) => value + 1)} onComplete={finishSupport} />)}
 			{step === "withdrawing" && <p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>}
-			{step === "feedback" && <section className="capacity-feedback"><h2>{correct ? "ක්‍රියාකාරකම සම්පූර්ණයි!" : `${feedbackName(feedbackColumn)} නැවත බලමු.`}</h2><button className="capacity-primary" onClick={advance}>{correct ? index === 4 ? "අවසන් කරන්න" : "ඊළඟ ක්‍රියාකාරකම" : "නැවත උත්සාහ කරන්න"}</button></section>}
-			{step === "result" && <section className="capacity-feedback"><SuccessCelebration /><h2>ධාරිතා ක්‍රියාකාරකම් 5ම සම්පූර්ණයි!</h2><button className="capacity-primary" onClick={() => setStep("chapters")}>ක්‍රීඩා බලන්න</button></section>}
+			{step === "feedback" && !correct && <section className="capacity-feedback"><h2>{feedbackName(feedbackColumn)} නැවත බලමු.</h2><button className="capacity-primary" onClick={advance}>නැවත උත්සාහ කරන්න</button></section>}
+			{step === "result" && <GameSuccessScreen gameNumber={activeGameIndex + 1} gameCount={CAPACITY_GAMES.length} onContinue={() => { const nextGame = CAPACITY_GAMES[activeGameIndex + 1]; const nextSkill = nextGame && CAPACITY_SKILLS.find((skill) => skill.chapter === nextGame.id); if (nextSkill) void openSkill(nextSkill.id); else setStep("chapters"); }} />}
 		</section>}
 	</main>;
 }

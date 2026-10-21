@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
 	ConstructedResponse,
+	ChildEpisodeResponse,
 	ExperimentCondition,
+	NumberWorldWorkedExample,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdaptiveSupportActivity,
@@ -16,9 +18,11 @@ import {
 	type AdventureProgressStage,
 } from "../mobile-learning-flow/AdventureProgress";
 import {
+	AdventureNotice,
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	NUMBER_WORLD_ASSET_ROOT,
 	NUMBER_WORLD_GAMES,
@@ -47,15 +51,7 @@ export function NumberWorldJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Pick<
-		LearningFlowClient,
-		| "open"
-		| "answerBefore"
-		| "completeSupport"
-		| "withdrawSupport"
-		| "presentAfter"
-		| "answerAfter"
-	>;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -329,14 +325,51 @@ export function NumberWorldJourney({
 			),
 		);
 		if (!completed) return;
-		setPendingWithdrawal({
-			episodeId,
-			requestId: crypto.randomUUID(),
-			supportRevisionId: support.revision_id,
-			manifestRevisionId: game.revision_id,
-		});
-		setSupport(null);
-		setStep("withdrawing");
+		advanceSupport(completed);
+	};
+
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) {
+			setPendingWithdrawal({
+				episodeId: next.episode_id,
+				requestId: crypto.randomUUID(),
+				supportRevisionId: next.support_round.support_revision_id,
+				manifestRevisionId: next.support_round.manifest_revision_id,
+			});
+			setSupport(null);
+			setStep("withdrawing");
+			return;
+		}
+		if (next.support) {
+			setSupport(next.support);
+			setResponse(null);
+			setStartedAt(Date.now());
+		}
+	};
+
+	const answerSupport = async () => {
+		const submitSupported = api.answerSupported;
+		if (!episodeId || !support || !response || !submitSupported) return;
+		const game = support.game_manifest;
+		if (game.schema_version !== "support-round-v1" || !game.activity) return;
+		const activity = game.activity;
+		const next = await run(() =>
+			submitSupported(
+				episodeId,
+				{
+					constructed_response: {
+						...response,
+						presentation_id: activity.presentation_id,
+						item_revision_id: activity.revision_id,
+						interaction_version: "constructed-response-v1",
+					},
+					response_time_ms: Math.max(0, Date.now() - startedAt),
+					interaction_summary: { move_count: evidence.moves },
+				},
+				crypto.randomUUID(),
+			),
+		);
+		if (next) advanceSupport(next);
 	};
 
 	return (
@@ -385,7 +418,7 @@ export function NumberWorldJourney({
 				</div>
 			)}
 			{(step === "question" || step === "feedback") && manifest && chapter && (
-				<div className="adventure-play">
+				<div className="adventure-play game-play-surface">
 					<AdventureProgress stage={progressStage} />
 					<p className="game-round-label">
 						ක්‍රීඩාව {(activeGameIndex ?? 0) + 1} · අභියෝගය{" "}
@@ -394,7 +427,6 @@ export function NumberWorldJourney({
 							? 0
 							: NUMBER_WORLD_GAMES[activeGameIndex].skillIds.length}
 					</p>
-					<p className="independent-badge">තනිවම අතින් ගොඩනඟන්න</p>
 					<h2>{manifest.prompt_si}</h2>
 					<div
 						aria-disabled={step === "feedback"}
@@ -425,37 +457,73 @@ export function NumberWorldJourney({
 				</div>
 			)}
 			{step === "support" && support && chapter && (
-				<div className="adventure-play" data-support-visible="true">
+				<div className="adventure-play game-play-surface" data-support-visible="true">
 					<AdventureProgress stage={progressStage} />
-					<p
-						className="support-badge"
-						data-support-type={support.scaffold_type}
-					>
-						උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
-					</p>
-					<h2>{support.title_si}</h2>
-					{support.body_si.map((line) => (
-						<p key={line}>{line}</p>
-					))}
-					{support.game_manifest.schema_version !== "half-set-manifest-v1" &&
-						support.game_manifest.schema_version !==
-							"classroom-action-support-v1" && (
-							<AdaptiveSupportActivity
-								manifest={support.game_manifest}
-								onProgress={(actions, complete) => {
-									setSupportActions(actions);
-									setSupportComplete(complete);
-								}}
-							/>
-						)}
-					<button
-						type="button"
-						className="primary-action"
-						disabled={busy || !supportComplete}
-						onClick={finishSupport}
-					>
-						උදව්ව අවසන් කරන්න
-					</button>
+					{support.game_manifest.schema_version === "support-round-v1" ? (
+						<SupportRoundFrame
+							support={support}
+							busy={busy}
+							onViewComplete={() => void finishSupport()}
+							renderActivity={(activity) => (
+								<NumberManipulation
+									key={activity.revision_id}
+									chapter={activity.game.chapter as NumberWorldChapter}
+									game={activity.game}
+									onChange={record}
+								/>
+							)}
+						>
+							{support.game_manifest.stage_kind !== "view" && (
+								<button
+									type="button"
+									className="primary-action"
+									disabled={busy || !response}
+									onClick={() => void answerSupport()}
+								>
+									තහවුරු කරන්න
+								</button>
+							)}
+						</SupportRoundFrame>
+					) : (
+						<>
+							<p
+								className="support-badge"
+								data-support-type={support.scaffold_type}
+							>
+								උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
+							</p>
+							<h2>{support.title_si}</h2>
+							{support.body_si.map((line) => (
+								<p key={line}>{line}</p>
+							))}
+							{support.game_manifest.schema_version !==
+								"half-set-manifest-v1" &&
+								support.game_manifest.schema_version !==
+									"classroom-action-support-v1" && (
+									<AdaptiveSupportActivity
+										manifest={support.game_manifest}
+										renderNumberWorldExample={(example, actions) => (
+											<NumberWorldSupportReplica
+												example={example}
+												actions={actions}
+											/>
+										)}
+										onProgress={(actions, complete) => {
+											setSupportActions(actions);
+											setSupportComplete(complete);
+										}}
+									/>
+								)}
+							<button
+								type="button"
+								className="primary-action"
+								disabled={busy || !supportComplete}
+								onClick={finishSupport}
+							>
+								උදව්ව අවසන් කරන්න
+							</button>
+						</>
+					)}
 				</div>
 			)}
 			{step === "withdrawing" && (
@@ -465,34 +533,27 @@ export function NumberWorldJourney({
 					<p>අලුත් ස්වාධීන ක්‍රියාව සූදානම් කරමු.</p>
 				</div>
 			)}
-			{step === "result" && (
-				<div
-					className={`adventure-result${answeredCorrectly ? " is-success" : ""}`}
-					data-answer-result={answeredCorrectly ? "correct" : "incorrect"}
-				>
-					<AdventureProgress stage={progressStage} />
-					{answeredCorrectly && <SuccessCelebration />}
-					<h2>{message}</h2>
-					<p>
-						{answeredCorrectly
-							? activeGameIndex === NUMBER_WORLD_GAMES.length - 1
-								? "සියලු අභියෝග අවසන්. තරුව ඔබටයි!"
-								: "මෙම ක්‍රීඩාවේ අභියෝග අවසන්. ඊළඟ ක්‍රීඩාවට යමු."
-							: "තවම නිවැරදි නැහැ. වෙනස් උදව්වක් සමඟ නැවත උත්සාහ කරමු."}
-					</p>
-					<button
-						type="button"
-						className="primary-action"
-						onClick={answeredCorrectly ? openNextGame : retryCurrentGame}
-					>
-						{answeredCorrectly
-							? activeGameIndex === NUMBER_WORLD_GAMES.length - 1
-								? "ක්‍රීඩා තේරීමට"
-								: "ඊළඟ ක්‍රීඩාව"
-							: "නැවත උත්සාහ කරන්න"}
-					</button>
-				</div>
-			)}
+			{step === "result" &&
+				(answeredCorrectly && activeGameIndex !== null ? (
+					<GameSuccessScreen
+						gameNumber={activeGameIndex + 1}
+						gameCount={NUMBER_WORLD_GAMES.length}
+						onContinue={openNextGame}
+					/>
+				) : (
+					<div className="adventure-result" data-answer-result="incorrect">
+						<AdventureProgress stage={progressStage} />
+						<h2>{message}</h2>
+						<p>තවම නිවැරදි නැහැ. වෙනස් උදව්වක් සමඟ නැවත උත්සාහ කරමු.</p>
+						<button
+							type="button"
+							className="primary-action"
+							onClick={retryCurrentGame}
+						>
+							නැවත උත්සාහ කරන්න
+						</button>
+					</div>
+				))}
 		</section>
 	);
 }
@@ -519,6 +580,81 @@ function NumberManipulation({
 	if (chapter === "kite_workshop")
 		return <Kite game={game} onChange={onChange} />;
 	return <River game={game} onChange={onChange} />;
+}
+
+function correctNumberWorldAnswer(response: ConstructedResponse): string {
+	switch (response.kind) {
+		case "drag_to_slot":
+			return response.represented_value !== undefined
+				? formatPlaceValue(response.represented_value)
+				: placeLabels[5 - (response.selected_place ?? 0)];
+		case "constructed_number":
+			return formatPlaceValue(response.constructed_number);
+		case "bead_placement":
+			return formatPlaceValue(Number(response.rods.join("")));
+		case "expanded_form":
+			return response.terms.map(formatPlaceValue).join(" + ");
+		case "digit_order":
+			return response.digits.join("");
+		case "number_order":
+			return response.order.map(formatPlaceValue).join(" → ");
+		default:
+			return "නිවැරදි පිළිතුර පෙන්වා ඇත.";
+	}
+}
+
+function NumberWorldSupportReplica({
+	example,
+	actions,
+}: {
+	example: NumberWorldWorkedExample;
+	actions: number;
+}) {
+	const [practiceResponse, setPracticeResponse] =
+		useState<ConstructedResponse | null>(null);
+	return (
+		<div
+			className="exact-worked-example number-world-support-replica"
+			data-worked-example-mode={example.mode}
+		>
+			<p className="worked-same-question">ඔබට වැරදුණු එම ප්‍රශ්නය</p>
+			<h4>{example.prompt_si}</h4>
+			<div className="support-question-replica">
+				<NumberManipulation
+					chapter={example.game.chapter}
+					game={example.game}
+					onChange={setPracticeResponse}
+				/>
+			</div>
+			<ol className="worked-steps" aria-live="polite">
+				{example.steps_si.map((step, index) => (
+					<li
+						className={
+							actions > index
+								? "is-done"
+								: actions === index
+									? "is-current"
+									: ""
+						}
+						key={step}
+					>
+						<span>{index + 1}</span>
+						{step}
+					</li>
+				))}
+			</ol>
+			{actions >= 3 && (
+				<p className="worked-answer support-correct-answer" role="status">
+					නිවැරදි පිළිතුර: {correctNumberWorldAnswer(example.correct_response)}
+				</p>
+			)}
+			{practiceResponse && actions < 3 && (
+				<p className="support-practice-note" aria-live="polite">
+					හොඳයි—දැන් පහත මඟ පෙන්වීමෙන් ඊළඟ පියවර බලන්න.
+				</p>
+			)}
+		</div>
+	);
 }
 
 const placeLabels = ["ලක්ෂ", "දස දහස්", "දහස්", "සිය", "දහය", "එක"];
@@ -559,20 +695,31 @@ export function Harbour({
 				: { kind: "drag_to_slot", selected_place: place },
 		);
 	};
-	if (skill.endsWith("100000-01"))
+	if (skill.endsWith("100000-01")) {
+		// The server sends the number one below the milestone (99 999, or 999 in the simpler
+		// version); the ladder climbs to it.
+		const base = Number(game.milestone_base ?? 99_999);
+		const choices = Array.isArray(game.milestone_choices)
+			? game.milestone_choices.map(Number)
+			: [10_000, 100_000, 1_000_000];
+		const spaced = (n: number) =>
+			n.toLocaleString("en-US").replaceAll(",", " ");
+		const rungs: number[] = [];
+		for (let nine = 9; nine < base; nine = nine * 10 + 9) rungs.push(nine);
 		return (
 			<div className="manipulation-board milestone-builder">
 				<p className="milestone-instruction">එක් එක් පේළියේ 1ක් එකතු වන රටාව බලන්න.</p>
 				<div className="milestone-ladder">
-					<span>9 + 1 = 10</span>
-					<span>99 + 1 = 100</span>
-					<span>999 + 1 = 1 000</span>
-					<span>9 999 + 1 = 10 000</span>
-					<strong>99 999 + 1 = ?</strong>
+					{rungs.map((nine) => (
+						<span key={nine}>
+							{spaced(nine)} + 1 = {spaced(nine + 1)}
+						</span>
+					))}
+					<strong>{spaced(base)} + 1 = ?</strong>
 				</div>
 				<p>නිවැරදි පිළිතුර තෝරන්න.</p>
 				<div className="milestone-options">
-					{[10_000, 100_000, 1_000_000].map((option) => (
+					{choices.map((option) => (
 						<button
 							type="button"
 							key={option}
@@ -586,12 +733,13 @@ export function Harbour({
 								});
 							}}
 						>
-							{option.toLocaleString("en-US").replaceAll(",", " ")}
+							{spaced(option)}
 						</button>
 					))}
 				</div>
 			</div>
 		);
+	}
 	const rawNumber = String(number);
 	const targetDigitIndex = rawNumber.indexOf(String(digit));
 	let digitIndex = -1;
@@ -1025,7 +1173,7 @@ export function Kite({
 					</table>
 				</div>
 			</div>
-			<p role="status">{note}</p>
+			<AdventureNotice message={note} onDismiss={() => setNote("")} />
 		</div>
 	);
 }

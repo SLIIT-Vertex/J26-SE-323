@@ -55,24 +55,7 @@ export function AdventureProgress({
 			</fieldset>
 		);
 	}
-	if (activityCount < 3) {
-		return (
-			<div
-				className="adventure-progress adventure-progress--stars"
-				data-progress-mode="stars"
-				data-progress-stage={stage}
-				role="img"
-				aria-label="තරු තුනක්"
-			>
-				{["star-1", "star-2", "star-3"].map((id) => (
-					<span key={id} aria-hidden="true">
-						★
-					</span>
-				))}
-			</div>
-		);
-	}
-	const labels = ["1", "2", "3", "★"];
+	const labels = ["1", "2", "3"];
 	return (
 		<fieldset className="adventure-progress" data-progress-stage={stage}>
 			<legend className="sr-only">ක්‍රීඩා පියවර</legend>

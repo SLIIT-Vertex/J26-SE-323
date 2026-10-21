@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 AREA_ID = "G5-AREA-MAT-01"
+UNIVERSAL_SKILL_ID = "MAT-NUM"
 PACKAGE_VERSION = "g5-mat-number-world-draft-v1"
 CATALOGUE_VERSION = "g5-mat-number-world-misconceptions-v1"
 FEATURE_VERSION = "g5-mat-number-world-features-v1"
@@ -39,6 +40,7 @@ class AtomicSkill:
     skill_id: str
     chapter: Chapter
     name_si: str
+    difficulty: str
     source_node_id: str
     source_page: str
     outcome_provenance: str
@@ -49,6 +51,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-POSITION-01",
         "place_value_harbour",
         "ඉලක්කමේ ස්ථානය හා ස්ථානීය අගය",
+        "easy",
         "G5-MAT-C01-L01-O01",
         "2",
         "draft_trace_medium_confidence",
@@ -57,6 +60,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-REPRESENTED-01",
         "place_value_harbour",
         "ඉලක්කමෙන් නිරූපිත අගය",
+        "easy",
         "G5-MAT-C01-L01-O03",
         "2",
         "draft_trace_medium_confidence",
@@ -65,6 +69,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-100000-01",
         "place_value_harbour",
         "100 000 තෙක් සංඛ්‍යා",
+        "easy",
         "G5-MAT-C01-L01-O02",
         "2",
         "draft_trace_medium_confidence",
@@ -73,6 +78,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-ABACUS-01",
         "firefly_abacus",
         "ස්ථානීය අගය වගුව හා ගණක රාමුව",
+        "medium",
         "G5-MAT-C01-L01-K02",
         "xiv",
         "draft_content_point_high_confidence",
@@ -81,6 +87,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-EXPAND-01",
         "firefly_abacus",
         "සංඛ්‍යා ගොඩනැගීම හා විහිදුවීම",
+        "medium",
         "G5-MAT-C01-L01-O04",
         "2",
         "draft_trace_medium_confidence",
@@ -89,6 +96,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-EXTREME-01",
         "kite_workshop",
         "දී ඇති ඉලක්කම්වලින් විශාලතම හා කුඩාතම සංඛ්‍යාව",
+        "medium",
         "G5-MAT-C01-L01-O02",
         "2",
         "draft_activity_mapping_requires_educator_review",
@@ -97,6 +105,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-LEADING-ZERO-01",
         "kite_workshop",
         "කුඩාතම සංඛ්‍යාවේ මුල් ශූන්‍ය රීතිය",
+        "medium",
         "G5-MAT-C01-L01-O02",
         "2",
         "draft_activity_mapping_requires_educator_review",
@@ -105,6 +114,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-NUM-ORDER-01",
         "river_route_rally",
         "99 999 තෙක් ආරෝහණ හා අවරෝහණ පිළිවෙළ",
+        "medium",
         "G5-MAT-C01-L02",
         "xiv",
         "draft_trace_high_confidence",
@@ -313,7 +323,19 @@ def validate_constructed_response(
     return bool(correct), "correct" if correct else error, normalized
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> NumberWorldItem:
+    """The same skill and game with a shorter number, fewer digits, or fewer values to order."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> NumberWorldItem:
     if skill_id not in SKILLS:
         raise ValueError("NUMBER_WORLD_SKILL_NOT_FOUND")
     if role not in {"unsupported_before", "unsupported_after"}:
@@ -321,14 +343,16 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
     rng = random.Random(_seed(skill_id, role, seed))
     skill = SKILLS[skill_id]
     family = f"{skill_id}:parallel-v1"
-    item_suffix = "B" if role == "unsupported_before" else "A"
+    item_suffix = ("B" if role == "unsupported_before" else "A") + ("S" if simpler else "")
     prompt = ""
     answer = ""
     distractors: list[tuple[str, str]] = []
     game_data: dict[str, object] = {"chapter": skill.chapter}
 
     if skill_id.endswith("POSITION-01"):
-        number, digit, power = _number_with_unique_target(rng, 1_234, 98_765)
+        number, digit, power = _number_with_unique_target(
+            rng, *((123, 987) if simpler else (1_234, 98_765))
+        )
         answer = str(10**power)
         prompt = f"{number:,} හි {digit} ඉලක්කම තිබෙන්නේ කුමන ස්ථානයේද?"
         distractors = [
@@ -340,8 +364,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
     elif skill_id.endswith("REPRESENTED-01"):
         number, digit, power = _number_with_unique_target(
             rng,
-            10_234,
-            98_765,
+            *((1_234, 9_876) if simpler else (10_234, 98_765)),
             exclude_first=True,
             exclude_zero=True,
         )
@@ -353,6 +376,22 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
             (str(digit * 10 ** (power + 1)), "place_shift_left"),
         ]
         game_data.update(number=number, digit=digit, place=power)
+    elif skill_id.endswith("100000-01") and simpler:
+        # The same milestone pattern, two places shorter: 999 + 1.
+        number = 1_000
+        answer = "1000"
+        prompt = "රටාව බලන්න. 999 ට 1ක් එකතු කළ විට ලැබෙන සංඛ්‍යාව තෝරන්න."
+        distractors = [
+            ("100", "zero_placeholder_omitted"),
+            ("10", "zero_placeholder_omitted"),
+            ("10000", "counts_places_from_wrong_direction"),
+        ]
+        game_data.update(
+            number=number,
+            milestone=True,
+            milestone_steps=(10, 100, 1_000),
+            milestone_choices=(100, 1_000, 10_000),
+        )
     elif skill_id.endswith("100000-01"):
         number = 100_000
         answer = "100000"
@@ -369,7 +408,9 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
             milestone_choices=(10_000, 100_000, 1_000_000),
         )
     elif skill_id.endswith("ABACUS-01"):
-        number = rng.choice((40_205, 50_070, 70_304, 90_010))
+        number = rng.choice(
+            (205, 370, 904, 610) if simpler else (40_205, 50_070, 70_304, 90_010)
+        )
         answer = str(number)
         prompt = f"{number:,} සංඛ්‍යාව දඬු හයේ ගණක රාමුවේ සාදන්න."
         distractors = [
@@ -379,7 +420,9 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
         ]
         game_data.update(number=number, rods=abacus_digits(number))
     elif skill_id.endswith("EXPAND-01"):
-        number = rng.choice((42_305, 70_406, 90_080, 18_204))
+        number = rng.choice(
+            (305, 406, 280, 704) if simpler else (42_305, 70_406, 90_080, 18_204)
+        )
         answer = expanded_form(number)
         prompt = f"{number:,} සංඛ්‍යාව ස්ථානීය අගය වගුවෙන් විහිදුවන්න."
         terms = answer.split(" + ")
@@ -390,7 +433,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
         ]
         game_data.update(number=number, expanded=answer)
     elif skill_id.endswith(("EXTREME-01", "LEADING-ZERO-01")):
-        count = rng.randint(3, 5)
+        count = 3 if simpler else rng.randint(3, 5)
         digits = rng.sample(range(1, 10), count - 1)
         digits.insert(rng.randrange(count), 0)
         greatest = skill_id.endswith("EXTREME-01")
@@ -408,7 +451,9 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> NumberWorldItem:
         game_data.update(digits=digits, greatest=greatest)
     else:
         prefix = rng.randint(1, 8) * 1000
-        values = tuple(prefix + value for value in rng.sample(range(10, 990), 4))
+        values = tuple(
+            prefix + value for value in rng.sample(range(10, 990), 3 if simpler else 4)
+        )
         ascending = rng.choice((True, False))
         ordered = order_numbers(values, ascending=ascending)
         answer = ",".join(map(str, ordered))
@@ -470,6 +515,14 @@ def infer_belief(error_code: str, *, sparse: bool = False) -> dict[str, object]:
     }
 
 
+_SCAFFOLD_BASE_PREDICTION = 0.08
+_SCAFFOLD_INDEX_INCREMENT = 0.01
+_SCAFFOLD_AFFINITY_BONUS = 0.09
+_SCAFFOLD_UNCERTAINTY_ABSTAINED = 0.18
+_SCAFFOLD_UNCERTAINTY_NORMAL = 0.09
+_SCAFFOLD_UNIFORM_PROPENSITY = 1 / 3
+
+
 def scaffold_decision(
     skill_id: str, condition: str, belief: dict[str, object], *, seed: int
 ) -> dict[str, object]:
@@ -494,15 +547,15 @@ def scaffold_decision(
     }
     candidates = []
     for index, scaffold in enumerate(SCAFFOLDS):
-        predicted = 0.08 + index * 0.01 + (0.09 if top in affinity[scaffold] else 0.0)
+        predicted = _SCAFFOLD_BASE_PREDICTION + index * _SCAFFOLD_INDEX_INCREMENT + (_SCAFFOLD_AFFINITY_BONUS if top in affinity[scaffold] else 0.0)
         candidates.append(
             {
                 "scaffold_type": scaffold,
                 "eligible": True,
                 "exclusion_reasons": [],
                 "predicted_raw_ig": round(predicted, 6),
-                "uncertainty": 0.18 if abstained else 0.09,
-                "propensity": 1 / 3,
+                "uncertainty": _SCAFFOLD_UNCERTAINTY_ABSTAINED if abstained else _SCAFFOLD_UNCERTAINTY_NORMAL,
+                "propensity": _SCAFFOLD_UNIFORM_PROPENSITY,
             }
         )
     if condition == "baseline":
@@ -539,6 +592,7 @@ def package_hash() -> str:
                 "skill_id": skill.skill_id,
                 "chapter": skill.chapter,
                 "name_si": skill.name_si,
+                "difficulty": skill.difficulty,
                 "source_node_id": skill.source_node_id,
                 "source_page": skill.source_page,
                 "outcome_provenance": skill.outcome_provenance,

@@ -9,7 +9,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import shown_tokens, simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-17"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-classroom-language-live-draft-v1"
 CATALOGUE_VERSION = "g5-eng-classroom-language-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-classroom-language-features-v1"
@@ -148,7 +151,7 @@ ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-ENG-CLASS-CONTEXT-03",
         "situation_bubble_match",
-        "සමාලෝචිත කල්පිත අවස්ථාවකට වාක්‍ය ඛණ්ඩයක් තේරීම",
+        "අවස්ථාවකට වාක්‍ය ඛණ්ඩයක් තේරීම",
         "easy-to-hard",
         "classroom_context_expression_links",
     ),
@@ -242,7 +245,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomLanguageIt
             "target_action": action,
             "target_state": target_state,
         }
-        prompt = "ලිඛිත විධානය කල්පිත කේත පන්තියේ පෙන්වන්න."
+        prompt = "ලිඛිත විධානය පන්තියේ පෙන්වන්න."
     elif skill.response_kind == "classroom_context_expression_links":
         rows = list(CONTEXTS)
         rng.shuffle(rows)
@@ -264,7 +267,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomLanguageIt
             "expressions": expressions,
             "target_mapping": mapping,
         }
-        prompt = "කල්පිත අවස්ථාවට ගැළපෙන පාඩමේ වාක්‍ය ඛණ්ඩය සම්බන්ධ කරන්න."
+        prompt = "අවස්ථාවට ගැළපෙන පාඩමේ වාක්‍ය ඛණ්ඩය සම්බන්ධ කරන්න."
     else:
         source, chunks, placeholder = rng.choice(QUESTIONS)
         token_rows = [
@@ -299,6 +302,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> ClassroomLanguageIt
         {},
         game,
     )
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> ClassroomLanguageItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
 
 
 def public_game_data(item: ClassroomLanguageItem) -> dict[str, object]:
@@ -428,7 +438,7 @@ def validate_constructed_response(
                 or set(row) != {"sequence", sk, tk}
                 or row["sequence"] != i
                 or row[sk] not in mapping
-                or row[tk] not in set(mapping.values())
+                or row[tk] not in set(mapping.values()) | shown_tokens(game, tk)
             ):
                 raise ValueError("INVALID_CLASSROOM_LANGUAGE_TOKEN_OR_SEQUENCE")
             submitted[str(row[sk])] = str(row[tk])

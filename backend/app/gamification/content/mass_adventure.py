@@ -144,35 +144,52 @@ def _rng(skill_id: str, role: str, seed: int) -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> MassItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> MassItem:
+    """The same mass skill with fewer instruments, fewer weights, whole kilograms, or no regrouping."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> MassItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("MASS_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill.response_kind == "mass_instrument":
         object_id, instrument, placement = rng.choice(INSTRUMENT_ITEMS)
-        game: dict[str, object] = {"object_id": object_id, "correct_instrument_type": instrument, "correct_placement": placement, "instrument_types": list(INSTRUMENTS)}
+        choices = list(INSTRUMENTS)
+        if simpler:
+            # Two instruments to choose between instead of five.
+            other = rng.choice([value for value in INSTRUMENTS if value != instrument])
+            choices = [value for value in INSTRUMENTS if value in {instrument, other}]
+        game: dict[str, object] = {"object_id": object_id, "correct_instrument_type": instrument, "correct_placement": placement, "instrument_types": choices}
         prompt = "වස්තුව බර කිරීමට සුදුසු තරාදිය වෙත ගෙන යන්න."
     elif skill.response_kind == "mass_balance":
-        target = rng.choice((350, 650, 750, 1250, 1500, 2500))
+        target = rng.choice((500, 1000, 2000) if simpler else (350, 650, 750, 1250, 1500, 2500))
         game = {"target_mass_g": target, "available_masses_g": list(STANDARD_MASSES_G)}
         prompt = "වස්තුවේ බර සොයා ගැනීමට අනෙක් තැටිය සම්මත බරවලින් සමබර කරන්න."
     elif skill.response_kind == "mass_conversion":
-        source = rng.choice((2350, 2750, 4300, 5600))
-        source_kg, source_g = (0, source) if rng.choice((True, False)) else split_mass(source)
+        source = rng.choice((1000, 2000, 3000) if simpler else (2350, 2750, 4300, 5600))
+        source_kg, source_g = (0, source) if rng.choice((True, False)) or simpler else split_mass(source)
         game = {"source_kilograms": source_kg, "source_grams": source_g, "source_total_g": source}
         prompt = f"{source_kg} kg {source_g} g කිලෝග්‍රෑම් සහ ඉතිරි ග්‍රෑම් ලෙස මාරු කරන්න."
     elif skill.response_kind == "mass_arithmetic":
         operation = rng.choice(("add", "subtract"))
         pairs = ((8, 250, 7, 750), (3, 650, 2, 700)) if operation == "add" else ((14, 600, 5, 750), (9, 200, 3, 650))
+        if simpler: pairs = ((2, 200, 1, 300),) if operation == "add" else ((5, 500, 2, 200),)
         left_kg, left_g, right_kg, right_g = rng.choice(pairs)
         game = {"operation": operation, "left_kilograms": left_kg, "left_grams": left_g, "right_kilograms": right_kg, "right_grams": right_g}
         prompt = f"{left_kg} kg {left_g:03d} g {('සහ' if operation == 'add' else 'න්')} {right_kg} kg {right_g:03d} g {('එකතු කරන්න.' if operation == 'add' else 'අඩු කරන්න.')}"
     else:
         left_g, right_g, capacity_g = rng.choice(((1250, 750, 5000), (2400, 1600, 6000), (1750, 2250, 7000)))
+        if simpler: left_g, right_g, capacity_g = 1000, 500, 2000
         game = {"mission_id": f"market-{left_g}-{right_g}", "item_ids": ["produce-crate", "delivery-parcel"], "item_masses_g": [left_g, right_g], "available_masses_g": list(STANDARD_MASSES_G), "operation": "add", "cart_capacity_g": capacity_g}
         prompt = "වෙළඳ භාණ්ඩ දෙක බර කර මුළු බර හා රථයේ ඉතිරි ධාරිතාව සොයන්න."
     game["response_kind"] = skill.response_kind
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return MassItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 

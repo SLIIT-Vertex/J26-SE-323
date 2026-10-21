@@ -1,12 +1,13 @@
 // biome-ignore-all lint/a11y/useButtonType: game controls do not submit forms.
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+	ChildEpisodeResponse,
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	adaptiveGameProgressStage,
@@ -14,8 +15,9 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	compassResponse,
 	type CompassPosition,
@@ -39,15 +41,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type DirectionApi = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 
 export function DirectionAdventureJourney({
 	api,
@@ -57,7 +50,7 @@ export function DirectionAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: DirectionApi;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -88,6 +81,15 @@ export function DirectionAdventureJourney({
 		DIRECTION_SKILLS.findIndex((skill) => skill.id === skillId),
 	);
 	const active = DIRECTION_SKILLS[index];
+	const activeGameIndex = Math.max(
+		0,
+		DIRECTION_GAMES.findIndex((game, gameIndex) => {
+			const next = DIRECTION_GAMES[gameIndex + 1];
+			return (
+				index >= game.firstSkillIndex && (!next || index < next.firstSkillIndex)
+			);
+		}),
+	);
 	const run = useCallback(
 		async <T,>(job: () => Promise<T>) => {
 			setBusy(true);
@@ -220,14 +222,14 @@ export function DirectionAdventureJourney({
 		} else setStep("feedback");
 	};
 	const finishSupport = async () => {
+		if (!episodeId || !support) return;
+		const game = support.game_manifest;
+		if (game.schema_version === "half-set-manifest-v1") return;
 		if (
-			!episodeId ||
-			!support ||
-			support.game_manifest.schema_version !== "direction-adventure-support-v1"
+			game.schema_version !== "support-round-v1" &&
+			supportStage < game.required_actions
 		)
 			return;
-		const game = support.game_manifest;
-		if (supportStage < game.required_actions) return;
 		const done = await run(() =>
 			api.completeSupport(
 				episodeId,
@@ -245,15 +247,57 @@ export function DirectionAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!done) return;
-		setPending({
-			episode: episodeId,
-			support: support.revision_id,
-			manifest: game.revision_id,
-		});
-		setSupport(null);
-		setResponse(null);
-		setStep("withdrawing");
+		if (done) advanceSupport(done);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) {
+			setPending({
+				episode: next.episode_id,
+				support: next.support_round.support_revision_id,
+				manifest: next.support_round.manifest_revision_id,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+			return;
+		}
+		if (next.support) {
+			setSupport(next.support);
+			setSupportStage(0);
+			reset();
+		}
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported,
+			game = support?.game_manifest,
+			activity =
+				game?.schema_version === "support-round-v1" ? game.activity : null;
+		if (
+			!submit ||
+			!episodeId ||
+			!response ||
+			!game ||
+			game.schema_version !== "support-round-v1" ||
+			!activity
+		)
+			return;
+		const next = await run(() =>
+			submit(
+				episodeId,
+				{
+					constructed_response: {
+						...response,
+						presentation_id: activity.presentation_id,
+						item_revision_id: activity.revision_id,
+						interaction_version: "constructed-response-v1",
+					},
+					response_time_ms: Date.now() - startedAt,
+					interaction_summary: { move_count: moves },
+				},
+				crypto.randomUUID(),
+			),
+		);
+		if (next) advanceSupport(next);
 	};
 	const advance = () => {
 		if (!skillId || !correct)
@@ -262,9 +306,15 @@ export function DirectionAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 2) void openSkill(DIRECTION_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 3 ? "result" : "games");
+		const nextSkill = DIRECTION_SKILLS[index + 1];
+		if (nextSkill && nextSkill.chapter === active?.chapter)
+			void openSkill(nextSkill.id);
+		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -302,7 +352,7 @@ export function DirectionAdventureJourney({
 					))}
 				</section>
 			) : (
-				<section className="direction-play">
+				<section className="direction-play game-play-surface">
 					<AdventureProgress
 						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
 						activityCount={3}
@@ -329,44 +379,61 @@ export function DirectionAdventureJourney({
 							</button>
 						</>
 					)}
-					{step === "support" && support && (
-						<DirectionSupport
-							support={support}
-							stage={supportStage}
-							onNext={() => setSupportStage((value) => value + 1)}
-							onComplete={finishSupport}
-						/>
-					)}
+					{step === "support" &&
+						support &&
+						(support.game_manifest.schema_version === "support-round-v1" ? (
+							<SupportRoundFrame
+								support={support}
+								busy={busy}
+								onViewComplete={() => void finishSupport()}
+								renderActivity={(activity) => (
+									<DirectionActivity
+										key={activity.revision_id}
+										game={activity.game}
+										onResponse={record}
+									/>
+								)}
+							>
+								{support.game_manifest.stage_kind !== "view" && (
+									<button
+										className="direction-primary"
+										disabled={busy || !response}
+										onClick={() => void answerSupport()}
+									>
+										තහවුරු කරන්න
+									</button>
+								)}
+							</SupportRoundFrame>
+						) : (
+							<DirectionSupport
+								support={support}
+								stage={supportStage}
+								onNext={() => setSupportStage((value) => value + 1)}
+								onComplete={finishSupport}
+							/>
+						))}
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් මාලිමාව සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="direction-feedback">
-							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackLabel(feedback)} නැවත බලමු.`}
-							</h2>
+							<h2>{`${feedbackLabel(feedback)} නැවත බලමු.`}</h2>
 							<button className="direction-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="direction-feedback">
-							<SuccessCelebration />
-							<h2>දිශා ක්‍රියාකාරකම් 3ම සම්පූර්ණයි!</h2>
-							<button
-								className="direction-primary"
-								onClick={() => setStep("games")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={activeGameIndex + 1}
+							gameCount={DIRECTION_GAMES.length}
+							onContinue={() => {
+								const nextGame = DIRECTION_GAMES[activeGameIndex + 1];
+								if (!nextGame) setStep("games");
+								else
+									void openSkill(DIRECTION_SKILLS[nextGame.firstSkillIndex].id);
+							}}
+						/>
 					)}
 				</section>
 			)}

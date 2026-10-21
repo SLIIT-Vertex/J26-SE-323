@@ -1,0 +1,2041 @@
+/* Research dashboard: for researchers and judges, never shown in a child-facing build. */
+
+.rd-fab {
+	display: grid;
+	place-items: center;
+	position: fixed;
+	right: max(1rem, env(safe-area-inset-right));
+	bottom: calc(5.75rem + env(safe-area-inset-bottom));
+	z-index: 60;
+	width: 52px;
+	height: 52px;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: #1f2937;
+	color: #fff;
+	font:
+		800 0.9rem / 1 system-ui,
+		sans-serif;
+	letter-spacing: 0.02em;
+	box-shadow: 0 10px 24px rgb(15 23 42 / 30%);
+}
+
+.rd-fab:focus-visible,
+.rd-overlay button:focus-visible {
+	outline: 3px solid #f59e0b;
+	outline-offset: 2px;
+}
+
+.rd-overlay {
+	--rd-ink: #111827;
+	--rd-muted: #5b6475;
+	--rd-line: #e3e6ee;
+	--rd-panel: #ffffff;
+	--rd-bg: #f4f6fb;
+	--rd-accent: #4f46e5;
+	--rd-accent-soft: #eef0ff;
+	--rd-good: #15803d;
+	--rd-good-soft: #e7f6ec;
+	--rd-bad: #b91c1c;
+	--rd-bad-soft: #fdecec;
+	position: fixed;
+	inset: 0;
+	z-index: 80;
+	display: grid;
+	grid-template-rows: auto auto 1fr;
+	background: var(--rd-bg);
+	color: var(--rd-ink);
+	font:
+		400 0.95rem / 1.45 system-ui,
+		-apple-system,
+		"Segoe UI",
+		sans-serif;
+	font-variant-numeric: tabular-nums;
+	text-align: left;
+}
+
+.rd-overlay h2,
+.rd-overlay h3,
+.rd-overlay h4 {
+	margin: 0;
+	color: var(--rd-ink);
+	font-family: inherit;
+	line-height: 1.25;
+}
+
+.rd-overlay h2 {
+	font-size: 1.25rem;
+}
+
+.rd-overlay h3 {
+	font-size: 1.02rem;
+}
+
+.rd-overlay h4 {
+	font-size: 0.92rem;
+}
+
+.rd-overlay p {
+	margin: 0;
+}
+
+.rd-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.85rem 1rem;
+	border-bottom: 1px solid var(--rd-line);
+	background: var(--rd-panel);
+}
+
+.rd-close {
+	min-width: 44px;
+	min-height: 44px;
+	border: 1px solid var(--rd-line);
+	border-radius: 10px;
+	background: #fff;
+	font-size: 1.1rem;
+}
+
+.rd-quiet {
+	color: var(--rd-muted);
+	font-size: 0.86rem;
+}
+
+.rd-live {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	color: var(--rd-good);
+	font-weight: 700;
+}
+
+.rd-live__dot {
+	display: inline-block;
+	width: 0.55rem;
+	height: 0.55rem;
+	margin-left: 0.35rem;
+	border-radius: 50%;
+	background: #22c55e;
+	box-shadow: 0 0 0 0 rgb(34 197 94 / 60%);
+	animation: rd-pulse 1.6s infinite;
+}
+
+@keyframes rd-pulse {
+	70% {
+		box-shadow: 0 0 0 8px rgb(34 197 94 / 0%);
+	}
+}
+
+.rd-tabs {
+	display: flex;
+	gap: 0.35rem;
+	overflow-x: auto;
+	padding: 0.5rem 1rem;
+	border-bottom: 1px solid var(--rd-line);
+	background: var(--rd-panel);
+	scrollbar-width: thin;
+}
+
+.rd-tabs button {
+	flex: none;
+	min-height: 40px;
+	padding: 0.4rem 0.8rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--rd-ink);
+	font: 600 0.86rem / 1 inherit;
+}
+
+.rd-tabs button.is-active {
+	border-color: var(--rd-accent);
+	background: var(--rd-accent);
+	color: #fff;
+}
+
+.rd-body {
+	overflow: auto;
+	padding: 16px;
+	min-width: 0;
+}
+
+.rd-stack {
+	display: grid;
+	gap: 0.9rem;
+	max-width: 72rem;
+	margin-inline: auto;
+}
+
+.rd-card {
+	display: grid;
+	gap: 0.6rem;
+	min-width: 0;
+	padding: 1rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 14px;
+	background: var(--rd-panel);
+}
+
+.rd-step {
+	border-left: 4px solid var(--rd-accent);
+}
+
+.rd-empty {
+	padding: 3rem 1rem;
+	text-align: center;
+}
+
+.rd-banner {
+	padding: 0.75rem 1rem;
+	border-radius: 12px;
+	background: var(--rd-accent-soft);
+}
+
+.rd-banner.is-pass {
+	background: var(--rd-good-soft);
+	color: var(--rd-good);
+	font-weight: 700;
+}
+
+.rd-banner.is-fail {
+	background: var(--rd-bad-soft);
+	color: var(--rd-bad);
+	font-weight: 700;
+}
+
+.rd-tiles {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	gap: 0.6rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-tiles li {
+	display: grid;
+	gap: 0.2rem;
+	padding: 0.85rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 14px;
+	background: var(--rd-panel);
+}
+
+.rd-tiles strong {
+	font-size: 1.6rem;
+	line-height: 1;
+}
+
+.rd-tiles span {
+	color: var(--rd-muted);
+	font-size: 0.82rem;
+}
+
+.rd-gain,
+.rd-bars {
+	display: grid;
+	gap: 0.45rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-gain li,
+.rd-bars li {
+	display: grid;
+	grid-template-columns: minmax(7rem, 14rem) 1fr auto;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.rd-gain__track,
+.rd-bars__track {
+	height: 0.8rem;
+	overflow: hidden;
+	border-radius: 999px;
+	background: #edf0f6;
+}
+
+.rd-gain__fill,
+.rd-bars__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: #94a3b8;
+}
+
+.rd-gain li[data-condition="proposed"] .rd-gain__fill,
+.rd-bars li.is-top .rd-bars__fill {
+	background: var(--rd-accent);
+}
+
+.rd-bars li.is-top {
+	font-weight: 700;
+}
+
+.rd-bars__label {
+	overflow: hidden;
+	font-size: 0.84rem;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.rd-bars__value,
+.rd-gain__value {
+	min-width: 3.5rem;
+	font-size: 0.84rem;
+	text-align: right;
+}
+
+.rd-split {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-split li {
+	display: grid;
+	flex-basis: 8rem;
+	gap: 0.15rem;
+	padding: 0.6rem 0.75rem;
+	border-radius: 10px;
+	background: var(--rd-accent-soft);
+	font-size: 0.82rem;
+}
+
+.rd-split strong {
+	font-size: 1.2rem;
+}
+
+.rd-table-wrap {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.rd-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: 0.86rem;
+}
+
+.rd-table th,
+.rd-table td {
+	padding: 0.45rem 0.6rem;
+	border-bottom: 1px solid var(--rd-line);
+	text-align: left;
+	vertical-align: top;
+}
+
+.rd-table thead th {
+	color: var(--rd-muted);
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.rd-table tbody th {
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.rd-table tr.is-first {
+	background: var(--rd-accent-soft);
+}
+
+.rd-episodes {
+	display: grid;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-episodes button {
+	display: grid;
+	width: 100%;
+	gap: 0.25rem;
+	min-height: 48px;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	background: #fff;
+	color: var(--rd-ink);
+	font: inherit;
+	text-align: left;
+}
+
+.rd-episodes button:hover {
+	border-color: var(--rd-accent);
+}
+
+.rd-episodes__skill {
+	font-weight: 700;
+}
+
+.rd-episodes__flow {
+	font-size: 0.84rem;
+}
+
+.rd-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.3rem;
+}
+
+.rd-chip {
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	background: #eef1f6;
+	color: var(--rd-muted);
+	font-size: 0.74rem;
+	font-weight: 700;
+	text-transform: lowercase;
+}
+
+.rd-chip--proposed {
+	background: var(--rd-accent-soft);
+	color: var(--rd-accent);
+}
+
+.rd-chip--seeded {
+	background: #fff4d6;
+	color: #92600a;
+}
+
+.rd-chip--live {
+	background: var(--rd-good-soft);
+	color: var(--rd-good);
+}
+
+.rd-mark {
+	font-weight: 800;
+}
+
+.rd-mark.is-yes {
+	color: var(--rd-good);
+}
+
+.rd-mark.is-no {
+	color: var(--rd-bad);
+}
+
+.rd-trace-head {
+	display: grid;
+	gap: 0.75rem;
+	padding: 1rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 14px;
+	background: var(--rd-panel);
+}
+
+.rd-pipeline {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.8rem;
+}
+
+.rd-pipeline li {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.3rem 0.6rem 0.3rem 0.3rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 999px;
+	color: var(--rd-muted);
+}
+
+.rd-pipeline__dot {
+	display: grid;
+	place-items: center;
+	width: 1.4rem;
+	height: 1.4rem;
+	border-radius: 50%;
+	background: #eef1f6;
+	font-size: 0.72rem;
+	font-weight: 800;
+}
+
+.rd-pipeline li.is-done {
+	color: var(--rd-ink);
+}
+
+.rd-pipeline li.is-done .rd-pipeline__dot {
+	background: var(--rd-good);
+	color: #fff;
+}
+
+.rd-pipeline li.is-current {
+	border-color: var(--rd-accent);
+	color: var(--rd-accent);
+	font-weight: 700;
+}
+
+.rd-pipeline li.is-current .rd-pipeline__dot {
+	background: var(--rd-accent);
+	color: #fff;
+}
+
+.rd-decision,
+.rd-rounds,
+.rd-order {
+	display: grid;
+	gap: 0.45rem;
+	margin: 0;
+	padding-left: 1.25rem;
+}
+
+.rd-order {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	padding: 0;
+	list-style: none;
+	counter-reset: rd-order;
+}
+
+.rd-order li {
+	padding: 0.35rem 0.7rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 999px;
+	font-size: 0.86rem;
+	counter-increment: rd-order;
+}
+
+.rd-order li::before {
+	content: counter(rd-order) ". ";
+	color: var(--rd-muted);
+}
+
+.rd-order li.is-first {
+	border-color: var(--rd-accent);
+	background: var(--rd-accent);
+	color: #fff;
+}
+
+.rd-order li.is-first::before {
+	color: #e0e7ff;
+}
+
+.rd-rounds li {
+	display: grid;
+	gap: 0.15rem;
+}
+
+.rd-rounds li[data-outcome="succeeded"] strong {
+	color: var(--rd-good);
+}
+
+.rd-rounds li[data-outcome="failed"] strong {
+	color: var(--rd-bad);
+}
+
+.rd-facts {
+	display: grid;
+	grid-template-columns: minmax(9rem, 14rem) 1fr;
+	gap: 0.35rem 0.9rem;
+	margin: 0;
+	font-size: 0.86rem;
+}
+
+.rd-facts > div {
+	display: contents;
+}
+
+.rd-facts dt {
+	color: var(--rd-muted);
+}
+
+.rd-facts dd {
+	min-width: 0;
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.rd-overlay code {
+	padding: 0.1rem 0.3rem;
+	border-radius: 6px;
+	background: #f1f3f8;
+	font-size: 0.8rem;
+	overflow-wrap: anywhere;
+}
+
+.rd-assumptions summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.rd-checklist,
+.rd-checks {
+	display: grid;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-checks > li:not(.rd-check) {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.6rem;
+	padding: 0.7rem 0.85rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	background: #fff;
+}
+
+.rd-checks li.is-fail {
+	border-color: #f5b5b5;
+	background: var(--rd-bad-soft);
+}
+
+.rd-checks > li:not(.rd-check) > div {
+	display: grid;
+	gap: 0.2rem;
+	min-width: 0;
+}
+
+.rd-gaps li {
+	color: #92600a;
+}
+
+@media (max-width: 640px) {
+	.rd-gain li,
+	.rd-bars li {
+		grid-template-columns: 1fr auto;
+	}
+
+	.rd-gain__track,
+	.rd-bars__track {
+		grid-column: 1 / -1;
+		grid-row: 2;
+	}
+
+	.rd-facts {
+		grid-template-columns: 1fr;
+	}
+
+	.rd-body {
+		padding: 0.75rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rd-live__dot {
+		animation: none;
+	}
+}
+
+.rd-purpose {
+	padding: 1rem 1.2rem;
+	border-left: 4px solid var(--rd-accent);
+	border-radius: 0 12px 12px 0;
+	background: var(--rd-accent-soft);
+}
+.rd-card {
+	display: grid;
+	gap: 0.85rem;
+}
+.rd-card pre {
+	max-width: 100%;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font-size: 0.75rem;
+}
+.rd-card h4 {
+	margin-top: 0.4rem;
+}
+.rd-big-number {
+	font-size: 1.5rem;
+	font-weight: 800;
+	color: var(--rd-accent);
+}
+.rd-history {
+	display: grid;
+	gap: 0.65rem;
+	padding: 0;
+	list-style: none;
+}
+.rd-history li {
+	display: grid;
+	gap: 0.25rem;
+	padding: 0.8rem;
+	border-radius: 12px;
+	background: var(--rd-bg);
+}
+.rd-help-order {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: 0.65rem;
+	padding: 0;
+	list-style: none;
+}
+.rd-help-order li {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	padding: 1rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 14px;
+	background: var(--rd-accent-soft);
+}
+.rd-help-order li > span {
+	display: grid;
+	place-items: center;
+	width: 32px;
+	height: 32px;
+	flex: none;
+	border-radius: 50%;
+	background: #fff;
+	color: var(--rd-accent);
+}
+.rd-story {
+	display: grid;
+	gap: 0.75rem;
+	padding-left: 1.3rem;
+}
+.rd-story li p {
+	margin-top: 0.35rem;
+}
+.rd-before-after {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	gap: 1rem;
+	align-items: center;
+	text-align: center;
+}
+.rd-before-after > :where(div) {
+	display: grid;
+	justify-items: center;
+	gap: 1rem;
+	padding: 1.25rem;
+	border-radius: 16px;
+	background: var(--rd-bg);
+}
+.rd-before-after .rd-mark {
+	font-size: 2rem;
+}
+.rd-group {
+	padding: 0.8rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	margin: 0.7rem 0;
+}
+.rd-group summary {
+	cursor: pointer;
+	font-weight: 700;
+}
+.rd-metric {
+	display: grid;
+	gap: 0.4rem;
+	border-bottom: 1px solid var(--rd-line);
+	padding: 1rem 0;
+}
+.rd-metric-value {
+	font-size: 1.3rem;
+	font-weight: 800;
+	color: var(--rd-accent);
+}
+.rd-condition-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+	gap: 1rem;
+}
+.rd-condition-grid > section {
+	padding: 1rem;
+	border-radius: 14px;
+	background: var(--rd-bg);
+}
+.rd-copy {
+	padding: 0.4rem 0.7rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 8px;
+	background: #fff;
+	color: var(--rd-accent);
+	font: inherit;
+	font-size: 0.8rem;
+}
+.rd-gain-line svg {
+	width: 100%;
+	max-width: 500px;
+	height: 100px;
+}
+.rd-subtitle {
+	color: var(--rd-muted);
+}
+
+/* Shared child account */
+.rd-account {
+	display: grid;
+	grid-template-columns: minmax(8rem, 12rem) 1fr;
+	gap: 0.4rem 1rem;
+	margin: 0;
+}
+
+.rd-account dt {
+	color: var(--rd-muted);
+}
+
+.rd-account dd {
+	min-width: 0;
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+/* A model's record of every game: list on the left, the chosen game on the right. */
+.rd-history-layout {
+	display: grid;
+	grid-template-columns: minmax(16rem, 22rem) 1fr;
+	grid-template-areas:
+		"head head"
+		"list detail";
+	gap: 0.9rem;
+	max-width: 80rem;
+	margin-inline: auto;
+}
+
+.rd-history-head {
+	grid-area: head;
+	display: grid;
+	gap: 0.2rem;
+}
+
+.rd-history-list {
+	grid-area: list;
+	display: grid;
+	align-content: start;
+	gap: 0.4rem;
+	max-height: calc(100vh - 14rem);
+	margin: 0;
+	padding: 0;
+	overflow-y: auto;
+	list-style: none;
+}
+
+.rd-history-list button {
+	display: grid;
+	width: 100%;
+	gap: 0.15rem;
+	min-height: 48px;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	background: #fff;
+	color: var(--rd-ink);
+	font: inherit;
+	text-align: left;
+}
+
+.rd-history-list button.is-selected {
+	border-color: var(--rd-accent);
+	background: var(--rd-accent-soft);
+}
+
+.rd-history-list__game {
+	font-size: 0.8rem;
+	color: var(--rd-muted);
+}
+
+.rd-history-list__headline {
+	font-weight: 700;
+}
+
+.rd-now {
+	color: var(--rd-good);
+}
+
+.rd-history-detail {
+	grid-area: detail;
+	display: grid;
+	align-content: start;
+	gap: 0.9rem;
+	min-width: 0;
+}
+
+.rd-values {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-values li {
+	display: grid;
+	gap: 0.1rem;
+	padding: 0.45rem 0.7rem;
+	border-radius: 10px;
+	background: var(--rd-accent-soft);
+	font-size: 0.85rem;
+}
+
+.rd-change-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	gap: 0.75rem;
+}
+
+.rd-changed,
+.rd-unchanged {
+	padding: 0.75rem 0.9rem;
+	border-radius: 12px;
+}
+
+.rd-changed {
+	border-left: 4px solid var(--rd-accent);
+	background: var(--rd-accent-soft);
+}
+
+.rd-unchanged {
+	border-left: 4px solid #94a3b8;
+	background: #f4f6fa;
+}
+
+.rd-changed ul,
+.rd-unchanged ul {
+	margin: 0.35rem 0 0;
+	padding-left: 1.1rem;
+}
+
+/* Simulated test learners */
+.rd-sim-model {
+	display: grid;
+	gap: 0.4rem;
+	padding-top: 0.6rem;
+	border-top: 1px solid var(--rd-line);
+}
+
+.rd-sim-metrics {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-sim-metrics li {
+	display: grid;
+	grid-template-columns: 4.5rem 1fr;
+	align-items: start;
+	gap: 0.75rem;
+}
+
+.rd-sim-metrics li > span {
+	display: grid;
+	gap: 0.15rem;
+}
+
+@media (max-width: 760px) {
+	.rd-history-layout {
+		grid-template-columns: 1fr;
+		grid-template-areas:
+			"head"
+			"list"
+			"detail";
+	}
+
+	.rd-history-list {
+		max-height: 18rem;
+	}
+
+	.rd-account {
+		grid-template-columns: 1fr;
+	}
+}
+
+.rd-kpis,
+.rd-scorecards,
+.rd-model__small {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	gap: 12px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-kpis > *,
+.rd-scorecards > * {
+	grid-column: span 4;
+	min-width: 0;
+}
+
+.rd-model__small > * {
+	grid-column: span 6;
+	min-width: 0;
+}
+
+.rd-kpi,
+.rd-card,
+.rd-chart,
+.rd-game-card {
+	padding: 16px;
+	border: 1px solid var(--rd-line);
+	border-radius: 14px;
+	background: var(--rd-panel);
+}
+
+.rd-kpi {
+	display: grid;
+	gap: 4px;
+	align-content: start;
+}
+
+.rd-overlay .rd-kpis .rd-kpi strong,
+.rd-overlay .rd-scorecards .rd-big {
+	font-size: 1.6rem;
+	line-height: 1;
+}
+
+.rd-chart {
+	margin: 0;
+}
+
+.rd-chart svg,
+.rd-range {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.rd-chart text {
+	font-size: 12px;
+}
+
+.rd-overlay .rd-chart__empty p,
+.rd-overlay .rd-empty {
+	color: var(--rd-muted);
+	font-size: 0.95rem;
+}
+
+.rd-model,
+.rd-sim,
+.rd-own,
+.rd-own-row {
+	display: grid;
+	gap: 12px;
+}
+
+.rd-overlay .rd-model__head p {
+	color: var(--rd-muted);
+}
+
+.rd-recent ul,
+.rd-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-recent button,
+.rd-chip,
+.rd-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	min-height: 36px;
+	padding: 4px 8px;
+	border: 1px solid var(--rd-line);
+	border-radius: 999px;
+	background: #fff;
+	font: inherit;
+}
+
+.rd-pill {
+	color: var(--rd-accent);
+	font-style: normal;
+	font-size: 0.75rem;
+}
+
+.rd-chip.is-muted,
+.rd-abandoned {
+	color: var(--rd-muted);
+}
+
+.rd-help {
+	display: inline-flex;
+	color: var(--rd-accent);
+}
+
+.rd-glyph {
+	width: 16px;
+	height: 16px;
+}
+
+.rd-help.is-large .rd-glyph {
+	width: 28px;
+	height: 28px;
+}
+
+.rd-mini {
+	display: inline-block;
+	height: 6px;
+	min-width: 8px;
+	border-radius: 99px;
+	background: var(--rd-accent);
+}
+
+.rd-rail {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-rail li {
+	padding: 6px 10px;
+	border-radius: 999px;
+	background: #e2e8f0;
+	color: var(--rd-muted);
+}
+
+.rd-rail li.is-done,
+.rd-rail li.is-current {
+	background: var(--rd-accent);
+	color: #fff;
+}
+
+.rd-rail li.is-current {
+	animation: rd-pulse 1.2s ease infinite;
+}
+
+.rd-mark-in {
+	animation: rd-in 300ms ease;
+}
+
+@keyframes rd-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.rd-mark.is-yes {
+	color: var(--rd-good);
+}
+
+.rd-mark.is-no {
+	color: var(--rd-bad);
+}
+
+.rd-pair,
+.rd-help-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	align-items: center;
+}
+
+.rd-bars {
+	display: grid;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-overlay .rd-bars__track {
+	display: block;
+	height: 8px;
+	border-radius: 99px;
+	background: #e2e8f0;
+}
+
+@media (max-width: 1023px) {
+	.rd-kpis,
+	.rd-scorecards,
+	.rd-model__small {
+		grid-template-columns: 1fr;
+	}
+
+	.rd-kpis > *,
+	.rd-scorecards > *,
+	.rd-model__small > * {
+		grid-column: auto;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rd-mark-in,
+	.rd-rail li.is-current,
+	.rd-live__dot {
+		animation: none;
+	}
+}
+
+/* Parameter validation & accuracy: method first, results second. */
+.rd-method {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.6rem;
+	margin: 0.6rem 0 0.5rem;
+	padding: 0;
+	list-style: none;
+	counter-reset: none;
+}
+
+.rd-method li {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: 0.6rem;
+	align-items: start;
+	padding: 0.75rem 0.9rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	background: var(--rd-panel);
+}
+
+.rd-method li > span:last-child {
+	grid-column: 2;
+	color: var(--rd-muted);
+	font-size: 0.88rem;
+}
+
+.rd-method__n {
+	grid-row: span 2;
+	display: grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: var(--rd-accent);
+	color: #fff;
+	font-weight: 800;
+}
+
+.rd-validate-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.9rem;
+	align-items: start;
+}
+
+.rd-validate {
+	display: grid;
+	gap: 1rem;
+	min-width: 0;
+	padding: 1rem;
+	border: 1px solid var(--rd-line);
+	border-top: 4px solid var(--rd-accent);
+	border-radius: 14px;
+	background: var(--rd-panel);
+}
+
+.rd-validate section {
+	display: grid;
+	gap: 0.55rem;
+}
+
+.rd-eyebrow {
+	margin: 0;
+	color: var(--rd-muted);
+	font-size: 0.72rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.rd-settings,
+.rd-checks {
+	display: grid;
+	gap: 0.55rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-settings > li,
+.rd-check {
+	display: grid;
+	gap: 0.3rem;
+	padding: 0.65rem 0.75rem;
+	border-radius: 10px;
+	background: var(--rd-bg);
+}
+
+.rd-settings__head,
+.rd-check__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.6rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-settings__head strong {
+	padding: 0.15rem 0.55rem;
+	border-radius: 999px;
+	background: var(--rd-accent-soft);
+	color: var(--rd-accent);
+	font-weight: 800;
+	white-space: nowrap;
+}
+
+.rd-tried {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.3rem;
+	color: var(--rd-muted);
+	font-size: 0.8rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-tried span {
+	padding: 0.05rem 0.45rem;
+	border: 1px solid var(--rd-line);
+	border-radius: 6px;
+	background: #fff;
+	color: var(--rd-ink);
+}
+
+.rd-tried span.is-current {
+	border-color: var(--rd-accent);
+	background: var(--rd-accent);
+	color: #fff;
+}
+
+.rd-replay {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: 0.8rem;
+}
+
+.rd-replay li {
+	display: grid;
+	justify-items: center;
+	min-width: 4.2rem;
+	padding: 0.3rem 0.4rem;
+	border-radius: 8px;
+	background: #fff;
+}
+
+.rd-replay li small {
+	color: var(--rd-muted);
+	font-size: 0.68rem;
+}
+
+.rd-replay.is-waiting {
+	display: grid;
+	gap: 0.3rem;
+	color: var(--rd-muted);
+}
+
+.rd-progress {
+	display: block;
+	height: 6px;
+	border-radius: 99px;
+	background: var(--rd-line);
+	overflow: hidden;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-progress span {
+	display: block;
+	height: 100%;
+	background: var(--rd-accent);
+}
+
+.rd-check h5 {
+	flex: 1;
+	margin: 0;
+	font-size: 0.92rem;
+}
+
+.rd-check__icon {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 1.4rem;
+	height: 1.4rem;
+	border-radius: 50%;
+	background: var(--rd-good-soft);
+	color: var(--rd-good);
+	font-weight: 800;
+	font-size: 0.8rem;
+}
+
+.rd-check__value {
+	font-size: 1.15rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-check p {
+	color: var(--rd-muted);
+	font-size: 0.84rem;
+}
+
+.rd-check p b {
+	display: inline-block;
+	min-width: 2.6rem;
+	color: var(--rd-ink);
+	font-size: 0.72rem;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.rd-check__foot {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.rd-check__foot .rd-range {
+	flex: 1 1 8rem;
+}
+
+.rd-sim-mini {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: 1rem;
+	padding: 0.75rem 1rem;
+	border: 1px dashed var(--rd-line);
+	border-radius: 12px;
+	background: var(--rd-panel);
+}
+
+.rd-sim-mini > ul {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1.25rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-sim-mini li {
+	display: flex;
+	align-items: baseline;
+	gap: 0.4rem;
+	font-size: 0.86rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-sim-mini li strong {
+	font-size: 1.05rem;
+}
+
+.rd-sim-mini li small {
+	color: var(--rd-muted);
+}
+
+@media (max-width: 1023px) {
+	.rd-validate-grid,
+	.rd-method,
+	.rd-sim-mini {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Presented on a large screen: use the width and lift the type. */
+@media (min-width: 1280px) {
+	.rd-overlay {
+		font-size: 1.02rem;
+	}
+
+	.rd-stack {
+		max-width: 96rem;
+	}
+
+	.rd-body {
+		padding: 1.5rem 2rem;
+	}
+
+	.rd-top,
+	.rd-tabs {
+		padding-inline: 2rem;
+	}
+
+	.rd-overlay h2 {
+		font-size: 1.5rem;
+	}
+
+	.rd-overlay h3 {
+		font-size: 1.2rem;
+	}
+
+	.rd-tabs button {
+		min-height: 44px;
+		padding-inline: 1rem;
+		font-size: 0.95rem;
+	}
+}
+
+@media (min-width: 1680px) {
+	.rd-overlay {
+		font-size: 1.1rem;
+	}
+}
+
+/* Research cards keep their own text flow at every viewport width. */
+.rd-overlay *,
+.rd-overlay *::before,
+.rd-overlay *::after {
+	box-sizing: border-box;
+}
+.rd-overlay {
+	grid-template-rows: auto auto minmax(0, 1fr);
+}
+.rd-overlay .rd-body {
+	min-height: 0;
+	overflow-x: hidden;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-overlay .rd-top > div,
+.rd-model__large,
+.rd-model__small,
+.rd-confidence {
+	min-width: 0;
+}
+.rd-overlay .rd-close {
+	flex: none;
+}
+.rd-overlay .rd-recent ul {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.rd-overlay .rd-recent li {
+	min-width: 0;
+}
+.rd-overlay .rd-recent .rd-game-row {
+	display: grid;
+	align-content: start;
+	gap: 12px;
+	width: 100%;
+	height: 100%;
+	padding: 14px;
+	border-radius: 14px;
+	background: #fff;
+	color: var(--rd-ink);
+	text-align: left;
+	line-height: 1.5;
+	min-height: 48px;
+}
+.rd-overlay .rd-game-row[aria-pressed="true"] {
+	border-color: var(--rd-accent);
+	box-shadow: inset 0 0 0 1px var(--rd-accent);
+}
+.rd-game-row__head {
+	display: grid;
+	gap: 4px;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-game-row__head strong {
+	font-size: 0.95rem;
+	overflow-wrap: break-word;
+}
+.rd-game-row__head time,
+.rd-first-help__head time {
+	font-size: 0.78rem;
+	color: var(--rd-muted);
+}
+.rd-game-row__facts {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+	font-size: 0.85rem;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-game-row__facts > span {
+	display: grid;
+	gap: 3px;
+	min-width: 0;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-game-row__facts b,
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-first-help-list b {
+	display: block;
+	color: var(--rd-muted);
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+.rd-game-row__wide {
+	grid-column: 1 / -1;
+}
+.rd-game-row__status {
+	color: var(--rd-muted);
+	padding: 8px 10px;
+	border-radius: 8px;
+	background: var(--rd-bg);
+	font-size: 0.8rem;
+}
+.rd-game-row__open {
+	color: var(--rd-accent);
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+.rd-help-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-right: 8px;
+	line-height: 1.6;
+}
+.rd-chart-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 16px;
+	font-size: 0.8rem;
+	color: var(--rd-muted);
+	padding-block: 8px;
+}
+.rd-chart-picker {
+	display: grid;
+	gap: 6px;
+	font-size: 0.85rem;
+}
+.rd-overlay select {
+	width: 100%;
+	min-width: 0;
+	min-height: 44px;
+	border: 1px solid var(--rd-line);
+	border-radius: 10px;
+	background: #fff;
+	color: var(--rd-ink);
+	padding: 10px;
+	font: inherit;
+}
+.rd-chart figcaption,
+.rd-first-help h4 {
+	margin-bottom: 12px;
+	font-weight: 700;
+	line-height: 1.4;
+}
+.rd-memory dl {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-memory dl > div {
+	display: grid;
+	gap: 4px;
+	padding: 12px;
+	border-radius: 10px;
+	background: var(--rd-bg);
+}
+.rd-memory dt {
+	font-size: 0.85rem;
+}
+.rd-memory dd {
+	margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+}
+.rd-memory dd span {
+	color: var(--rd-muted);
+	font-size: 0.8rem;
+}
+.rd-note {
+	padding: 10px 12px;
+	border-left: 3px solid var(--rd-accent);
+	background: var(--rd-accent-soft);
+	font-size: 0.85rem;
+}
+.rd-first-help-list {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 10px;
+	padding: 0;
+	margin: 12px 0 0;
+	list-style: none;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-first-help-list li {
+	min-width: 0;
+}
+.rd-first-help-list button {
+	width: 100%;
+	height: 100%;
+	min-height: 48px;
+	display: grid;
+	align-content: start;
+	gap: 10px;
+	padding: 12px;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	background: var(--rd-bg);
+	color: var(--rd-ink);
+	font: inherit;
+	text-align: left;
+	line-height: 1.5;
+}
+.rd-first-help-list [data-selected="true"] {
+	border-color: var(--rd-accent);
+	background: var(--rd-accent-soft);
+}
+.rd-first-help__head {
+	display: grid;
+	gap: 4px;
+}
+.rd-first-help__outcome {
+	padding-top: 8px;
+	border-top: 1px solid var(--rd-line);
+	font-size: 0.8rem;
+	color: var(--rd-muted);
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-bar-list ul {
+	display: grid;
+	gap: 16px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-bar-list li > div {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	font-size: 0.85rem;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-bar-list li strong {
+	white-space: nowrap;
+}
+.rd-bar-track {
+	display: block;
+	height: 8px;
+	margin-top: 6px;
+	border-radius: 8px;
+	background: var(--rd-line);
+	overflow: hidden;
+}
+.rd-bar-track i {
+	display: block;
+	height: 100%;
+	background: var(--rd-accent);
+	border-radius: inherit;
+}
+.rd-overlay .rd-checks > .rd-check {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-content: start;
+	gap: 12px;
+	padding: 14px;
+	border: 1px solid var(--rd-line);
+	border-radius: 12px;
+	background: #fff;
+}
+.rd-check__head {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: start;
+	gap: 8px;
+}
+.rd-check__value {
+	font-size: 1.5rem;
+	color: var(--rd-accent);
+}
+.rd-overlay .rd-check p {
+	line-height: 1.6;
+	overflow-wrap: break-word;
+}
+.rd-overlay .rd-check p b {
+	display: block;
+	margin-bottom: 3px;
+	font-size: 0.75rem;
+	text-transform: none;
+	letter-spacing: normal;
+}
+.rd-check__foot {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+	font-size: 0.8rem;
+	color: var(--rd-muted);
+}
+.rd-evidence-status {
+	color: var(--rd-muted);
+	font-size: 0.8rem;
+}
+.rd-settings__head {
+	flex-wrap: wrap;
+}
+.rd-mobile-nav {
+	display: none;
+}
+@media (max-width: 760px) {
+	.rd-overlay .rd-recent ul,
+	.rd-first-help-list {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.rd-overlay .rd-validate {
+		padding: 12px;
+	}
+	.rd-overlay .rd-recent .rd-game-row {
+		padding: 12px;
+	}
+}
+@media (max-width: 600px) {
+	.rd-overlay .rd-tabs {
+		display: none;
+	}
+	.rd-mobile-nav {
+		display: grid;
+		gap: 5px;
+		padding: 8px 12px;
+		border-bottom: 1px solid var(--rd-line);
+		background: #fff;
+		font-size: 0.75rem;
+	}
+	.rd-top {
+		gap: 10px;
+		padding: 12px;
+		padding-top: max(12px, env(safe-area-inset-top));
+	}
+	.rd-overlay h2 {
+		font-size: 1.1rem;
+	}
+	.rd-top p {
+		font-size: 0.8rem;
+	}
+	.rd-overlay .rd-body {
+		padding: 12px;
+	}
+	.rd-overlay .rd-chart {
+		padding: 12px;
+	}
+	.rd-before-after {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 10px;
+	}
+	.rd-condition-grid,
+	.rd-change-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.rd-game-row__facts {
+		gap: 8px;
+	}
+}
+.rd-game-row__status:empty {
+	display: none;
+}
+
+/* Help preference ranking (Contextual Support Selection). */
+.rd-rank,
+.rd-flow {
+	display: grid;
+	gap: 0.6rem;
+	padding: 1rem;
+	border: 1px solid var(--rd-line);
+	border-left: 4px solid var(--rd-accent);
+	border-radius: 14px;
+	background: var(--rd-panel);
+}
+
+.rd-rank ol {
+	display: grid;
+	gap: 0.35rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-rank li {
+	display: grid;
+	grid-template-columns: 1.8rem auto minmax(7rem, 11rem) minmax(4rem, 1fr) auto;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.4rem 0.6rem;
+	border-radius: 10px;
+	background: var(--rd-bg);
+}
+
+.rd-rank li:first-child {
+	background: var(--rd-good-soft);
+}
+
+.rd-rank li.is-untried {
+	opacity: 0.55;
+}
+
+.rd-rank__n {
+	display: grid;
+	place-items: center;
+	width: 1.6rem;
+	height: 1.6rem;
+	border-radius: 50%;
+	background: var(--rd-accent);
+	color: #fff;
+	font-weight: 800;
+	font-size: 0.85rem;
+}
+
+.rd-rank li.is-untried .rd-rank__n {
+	background: #94a3b8;
+}
+
+.rd-rank__name {
+	font-weight: 700;
+}
+
+.rd-rank__bar {
+	display: flex;
+	height: 10px;
+	border-radius: 99px;
+	background: #fff;
+	overflow: hidden;
+}
+
+.rd-rank__bar .is-good {
+	background: var(--rd-good);
+}
+
+.rd-rank__bar .is-rest {
+	background: #cbd5e1;
+}
+
+.rd-rank__text {
+	font-size: 0.85rem;
+	white-space: nowrap;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-rank__text small {
+	color: var(--rd-muted);
+}
+
+.rd-rank__ends {
+	display: flex;
+	justify-content: space-between;
+	font-size: 0.78rem;
+}
+
+/* Independence Gain: how one game is measured, and the three outcomes. */
+.rd-flow__steps {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rd-flow__steps li:not(.rd-flow__arrow) {
+	display: grid;
+	flex: 1 1 9rem;
+	gap: 0.15rem;
+	padding: 0.6rem 0.75rem;
+	border-radius: 10px;
+	background: var(--rd-bg);
+	font-weight: 700;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__steps b {
+	color: var(--rd-accent);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__steps small {
+	color: var(--rd-muted);
+	font-weight: 400;
+}
+
+.rd-flow__arrow {
+	align-self: center;
+	color: var(--rd-muted);
+	font-size: 1.3rem;
+}
+
+.rd-flow__outcomes {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__outcomes li {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.7rem 0.85rem;
+	border-radius: 12px;
+	background: var(--rd-bg);
+}
+
+.rd-flow__outcomes li > span {
+	display: grid;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__outcomes small {
+	color: var(--rd-muted);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__outcomes strong {
+	min-width: 2.2rem;
+	font-size: 1.6rem;
+	text-align: center;
+}
+
+.rd-flow__outcomes .is-good {
+	background: var(--rd-good-soft);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__outcomes .is-good strong {
+	color: var(--rd-good);
+}
+
+.rd-flow__outcomes .is-bad {
+	background: var(--rd-bad-soft);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-flow__outcomes .is-bad strong {
+	color: var(--rd-bad);
+}
+
+@media (max-width: 760px) {
+	.rd-rank li {
+		grid-template-columns: 1.8rem auto 1fr;
+	}
+
+	.rd-rank__bar,
+	.rd-rank__text {
+		grid-column: 2 / -1;
+	}
+
+	.rd-flow__outcomes {
+		grid-template-columns: 1fr;
+	}
+
+	.rd-flow__arrow {
+		display: none;
+	}
+}

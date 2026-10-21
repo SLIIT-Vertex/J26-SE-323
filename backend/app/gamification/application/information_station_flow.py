@@ -17,6 +17,7 @@ from app.gamification.content.information_station import (
     InformationItem,
     correct_response,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     public_game_data,
@@ -24,11 +25,6 @@ from app.gamification.content.information_station import (
     validate_constructed_response,
     worked_steps,
 )
-
-SUPPORT_SEQUENCE = {
-    skill_id: ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
-    for skill_id in SKILLS
-}
 
 
 class InformationStationFlow(SriLankaDiscoveryFlow):
@@ -49,6 +45,7 @@ class InformationStationFlow(SriLankaDiscoveryFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -56,21 +53,10 @@ class InformationStationFlow(SriLankaDiscoveryFlow):
     missing_skill_error = "INFORMATION_SKILL_NOT_FOUND"
     episode_type_error = "INFORMATION_EPISODE_REQUIRED"
     operation_prefix = "information_station"
-    support_sequences = SUPPORT_SEQUENCE
 
     @staticmethod
     def _public_game_data(item: InformationItem) -> dict[str, object]:
         return public_game_data(item)
-
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        support = super()._support(state)
-        support["title_si"] = {
-            "visual_guidance": "සංඥා සසඳමු",
-            "worked_parallel_example": "නව සංඥා උදාහරණයක්",
-            "step_by_step_guidance": "පියවරෙන් පියවර සම්බන්ධ කරමු",
-        }[str(support["scaffold_type"])]
-        support["visual_alt_text_si"] = "පිළිතුර හෙළි නොකර වචන සහ කේත වස්තු සසඳන සහාය"
-        return support
 
     @staticmethod
     def _worked_example(

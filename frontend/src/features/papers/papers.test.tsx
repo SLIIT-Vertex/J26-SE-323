@@ -544,10 +544,10 @@ describe("past papers screen", () => {
 
 describe("the shared learner", () => {
   it("is the same learner the game uses, so game answers and paper answers belong together", () => {
-    const gameDefault = /const DEV_LEARNER\s*=\s*"([0-9a-fA-F-]{36})"/.exec(gameSource)?.[1];
-    expect(gameDefault).toBe(DEFAULT_SHARED_LEARNER_ID);
-    // and both read the same setting, so changing it switches both
-    expect(gameSource).toContain("VITE_MOBILE_LEARNING_LEARNER_ID");
+    // The game imports the papers constant, so there is one learner id to change.
+    expect(gameSource).toMatch(/import \{ SHARED_LEARNER_ID \} from "\.\.\/papers\/hooks"/);
+    expect(gameSource).toContain("learnerId = SHARED_LEARNER_ID");
+    expect(gameSource).not.toMatch(/"00000000-0000-4000-8000-000000000721"/);
     expect(SHARED_LEARNER_ID).toBe(import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? DEFAULT_SHARED_LEARNER_ID);
   });
 

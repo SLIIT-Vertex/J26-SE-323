@@ -2,11 +2,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
 	ConstructedResponse,
+	ChildEpisodeResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdventureProgress,
@@ -14,8 +15,9 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	canonicalDistanceArithmetic,
 	formatMetres,
@@ -39,15 +41,7 @@ export function DistanceAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Pick<
-		LearningFlowClient,
-		| "open"
-		| "answerBefore"
-		| "completeSupport"
-		| "withdrawSupport"
-		| "presentAfter"
-		| "answerAfter"
-	>;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -78,6 +72,7 @@ export function DistanceAdventureJourney({
 		DISTANCE_SKILLS.findIndex((s) => s.id === skillId),
 	);
 	const active = DISTANCE_SKILLS[index];
+	const activeGameIndex = DISTANCE_GAMES.findIndex((game) => game.id === active?.chapter);
 	const run = useCallback(
 		async <T,>(job: () => Promise<T>) => {
 			setBusy(true);
@@ -219,7 +214,7 @@ export function DistanceAdventureJourney({
 		)
 			return;
 		const gm = support.game_manifest;
-		if (supportStage < gm.required_actions) return;
+		if (gm.schema_version !== "support-round-v1" && supportStage < gm.required_actions) return;
 		const done = await run(() =>
 			api.completeSupport(
 				episodeId,
@@ -237,15 +232,17 @@ export function DistanceAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!done) return;
-		setPending({
-			episode: episodeId,
-			support: support.revision_id,
-			manifest: gm.revision_id,
-		});
-		setSupport(null);
-		setResponse(null);
-		setStep("withdrawing");
+		if (done) advanceSupport(done);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) { setPending({ episode: next.episode_id, support: next.support_round.support_revision_id, manifest: next.support_round.manifest_revision_id }); setSupport(null); setResponse(null); setStep("withdrawing"); return; }
+		if (next.support) { setSupport(next.support); setSupportStage(0); reset(); }
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported; const gm = support?.game_manifest;
+		if (!submit || !episodeId || !response || !gm || gm.schema_version !== "support-round-v1" || !gm.activity) return; const activity = gm.activity;
+		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Math.max(0, Date.now() - startedAt), interaction_summary: { move_count: moves } }, crypto.randomUUID()));
+		if (next) advanceSupport(next);
 	};
 	const advance = () => {
 		if (!skillId) return;
@@ -257,9 +254,14 @@ export function DistanceAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(nextDone);
-		if (index < 4) void openSkill(DISTANCE_SKILLS[index + 1].id);
-		else setStep(nextDone.length === 5 ? "result" : "chapters");
+		const nextSkill = DISTANCE_SKILLS[index + 1];
+		if (nextSkill?.chapter === active?.chapter) void openSkill(nextSkill.id);
+		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 	return (
 		<main
 			className="distance-adventure"
@@ -295,7 +297,7 @@ export function DistanceAdventureJourney({
 					))}
 				</section>
 			) : (
-				<section className="distance-play">
+				<section className="distance-play game-play-surface">
 					<AdventureProgress
 						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
 						activityCount={5}
@@ -323,7 +325,9 @@ export function DistanceAdventureJourney({
 						</>
 					)}
 					{step === "support" && support && (
-						<DistanceSupport
+						support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <DistanceActivity key={activity.revision_id} game={activity.game} onResponse={record} />}>
+							{support.game_manifest.stage_kind !== "view" && <button type="button" className="distance-primary" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
+						</SupportRoundFrame> : <DistanceSupport
 							support={support}
 							stage={supportStage}
 							onNext={() => setSupportStage((v) => v + 1)}
@@ -333,33 +337,27 @@ export function DistanceAdventureJourney({
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="distance-feedback">
 							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackColumn === "kilometres" ? "km" : feedbackColumn === "conversion" ? "ඒකක මාරුව" : "m තීරුව"} නැවත බලමු.`}
+								{`${feedbackColumn === "kilometres" ? "km" : feedbackColumn === "conversion" ? "ඒකක මාරුව" : "m තීරුව"} නැවත බලමු.`}
 							</h2>
 							<button className="distance-primary" onClick={advance}>
-								{correct
-									? index === 4
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "සහාය සමඟ නැවත උත්සාහ කරන්න"}
+								සහාය සමඟ නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="distance-feedback">
-							<SuccessCelebration />
-							<h2>දුර අභියෝග 5ම සම්පූර්ණයි!</h2>
-							<button
-								className="distance-primary"
-								onClick={() => setStep("chapters")}
-							>
-								ක්‍රීඩා බලන්න
-							</button>
-						</section>
+						<GameSuccessScreen
+							gameNumber={activeGameIndex + 1}
+							gameCount={DISTANCE_GAMES.length}
+							onContinue={() => {
+								const nextGame = DISTANCE_GAMES[activeGameIndex + 1];
+								const nextSkill = nextGame && DISTANCE_SKILLS.find((item) => item.chapter === nextGame.id);
+								if (nextSkill) void openSkill(nextSkill.id);
+								else setStep("chapters");
+							}}
+						/>
 					)}
 				</section>
 			)}
@@ -817,7 +815,10 @@ function DistanceSupport({
 	onNext(): void;
 	onComplete(): void;
 }) {
-	if (support.game_manifest.schema_version === "half-set-manifest-v1")
+	if (
+		support.game_manifest.schema_version === "half-set-manifest-v1" ||
+		support.game_manifest.schema_version === "support-round-v1"
+	)
 		return null;
 	const gm = support.game_manifest;
 	const example = gm.worked_example;

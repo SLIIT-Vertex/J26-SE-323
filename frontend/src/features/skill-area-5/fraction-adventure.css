@@ -111,6 +111,11 @@
 .fraction-shape.strip {
 	grid-template-columns: repeat(var(--parts, 2), 1fr);
 }
+/* A whole big enough to read as one shape and to tap each part. */
+.fraction-shape.rectangle {
+	margin-inline: auto;
+}
+
 .fraction-shape[data-parts="2"] {
 	--parts: 2;
 }
@@ -147,6 +152,10 @@
 	height: 4.5rem;
 	min-height: 4.5rem;
 	border-radius: 50%;
+}
+/* Height, not min-height: the part's inline 48px minimum would win over a stylesheet minimum. */
+.fraction-shape.rectangle > .region {
+	height: clamp(6rem, 30vw, 9rem);
 }
 .region.shaded {
 	background: #ffc94e;
@@ -233,10 +242,17 @@
 	padding: 0.35rem;
 	text-align: center;
 }
-.quarter-table-wrap td:not(:first-child) {
-	display: grid;
-	justify-items: center;
-	gap: 0.25rem;
+/* Cells stay table cells (a grid cell leaves the table); their controls stack inside. */
+.quarter-table-wrap td:not(:first-child) > * {
+	display: block;
+	margin: 0.2rem auto;
+}
+.quarter-table-wrap td:first-child {
+	font-size: 1.4rem;
+	font-weight: 900;
+}
+.quarter-table-wrap strong {
+	font-size: 1.35rem;
 }
 .quarter-table-wrap button,
 .numerator-stepper button {

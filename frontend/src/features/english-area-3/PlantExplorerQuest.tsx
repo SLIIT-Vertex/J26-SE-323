@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -15,15 +15,21 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
-import { PLANT_ASSET_ROOT, PLANT_SKILLS } from "./manifest";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
-	type Link,
-	numberPairResponse,
-	plantMappingResponse,
-} from "./plantExplorerLogic";
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
+import "../mobile-learning-flow/english-game-shared.css";
+import {
+	WordDropBoard,
+	WordDropMotionContext,
+	type WordDropState,
+} from "../mobile-learning-flow/word-drop/WordDropBoard";
+import { PLANT_ASSET_ROOT, PLANT_SKILLS } from "./manifest";
+import { numberPairResponse, plantMappingResponse } from "./plantExplorerLogic";
 import "./plant-explorer.css";
 
 type Step =
@@ -33,15 +39,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 
 export function PlantExplorerQuest({
 	api,
@@ -51,7 +48,7 @@ export function PlantExplorerQuest({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -135,6 +132,25 @@ export function PlantExplorerQuest({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 
 	const openSkill = async (id: string) => {
 		if (lock.current) return;
@@ -165,7 +181,7 @@ export function PlantExplorerQuest({
 		reset();
 		setStep("question");
 	};
-	const record = (value: ConstructedResponse) => {
+	const record = (value: ConstructedResponse | null) => {
 		setResponse(value);
 		setMoves((current) => current + 1);
 	};
@@ -262,110 +278,142 @@ export function PlantExplorerQuest({
 	};
 
 	return (
-		<main
-			className="classroom-action-quest plant-explorer"
-			data-reduced-motion={reducedMotion || undefined}
-		>
-			<header className="caq-header">
-				<AdventureBackButton
-					onClick={step === "games" ? onBack : () => setStep("games")}
-				/>
-				<div>
-					<p>Theme 3</p>
-					<h1>Plants, Trees and Creepers</h1>
-				</div>
-			</header>
-			{step === "games" ? (
-				<section
-					className="caq-game-list"
-					aria-label="Plants, Trees and Creepers games"
-				>
-					{PLANT_SKILLS.map((skill, position) => (
-						<button
-							className="caq-game-card"
-							key={skill.id}
-							onClick={() => void openSkill(skill.id)}
-						>
-							<img src={`${PLANT_ASSET_ROOT}/${skill.asset}`} alt="" />
-							<span>
-								<strong>{skill.name}</strong>
-								<small>{skill.description}</small>
-								<em>{position + 1}/3 · Easy to challenging</em>
-							</span>
-						</button>
-					))}
-				</section>
-			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={3}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
+		<WordDropMotionContext.Provider value={reducedMotion}>
+			<main
+				className="classroom-action-quest plant-explorer"
+				data-reduced-motion={reducedMotion || undefined}
+			>
+				<header className="caq-header">
+					<AdventureBackButton
+						onClick={step === "games" ? onBack : () => setStep("games")}
 					/>
-					<p className="caq-position">
-						Activity {index + 1}/3 · {active.name}
-					</p>
-					{step === "question" &&
-						manifest?.game?.schema_version === "plant-explorer-item-v1" && (
-							<>
-								<div className="caq-command">
-									<span>Explore and connect</span>
-									<strong>{manifest.prompt_si}</strong>
-								</div>
-								<PlantActivity
-									key={manifest.revision_id}
-									game={manifest.game as Record<string, unknown>}
-									onResponse={record}
-								/>
-								<button
-									className="caq-primary"
-									disabled={busy || !response}
-									onClick={confirm}
-								>
-									Check my garden
-								</button>
-							</>
-						)}
-					{step === "support" && support && (
-						<PlantSupport
-							support={support}
-							stage={supportStage}
-							onNext={() => setSupportStage((value) => value + 1)}
-							onComplete={finishSupport}
-						/>
-					)}
-					{step === "withdrawing" && (
-						<p className="caq-status" role="status">
-							The help is going away. Now explore a fresh plant on your own.
-						</p>
-					)}
-					{step === "feedback" && (
-						<section className="caq-feedback">
-							<h2>{correct ? "Great growing!" : friendlyFeedback(feedback)}</h2>
-							<button className="caq-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "Finish quest"
-										: "Next activity"
-									: "Try another one"}
+					<div>
+						<h1>Plants, Trees and Creepers</h1>
+					</div>
+				</header>
+				{step === "games" ? (
+					<section
+						className="caq-game-list"
+						aria-label="Plants, Trees and Creepers games"
+					>
+						{PLANT_SKILLS.map((skill, position) => (
+							<button
+								className="caq-game-card"
+								key={skill.id}
+								onClick={() => void openSkill(skill.id)}
+							>
+								<img src={`${PLANT_ASSET_ROOT}/${skill.asset}`} alt="" />
+								<span>
+									<strong>{skill.name}</strong>
+									<small>{skill.description}</small>
+									<em>{position + 1}/3 · Easy to challenging</em>
+								</span>
 							</button>
-						</section>
-					)}
-					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<img
-								src={`${PLANT_ASSET_ROOT}/plant-explorer-badge.png`}
-								alt=""
+						))}
+					</section>
+				) : (
+					<section className="caq-play game-play-surface">
+						{step !== "result" && (
+							<AdventureProgress
+								stage={adaptiveGameProgressStage(
+									step,
+									manifest?.measurement_role,
+								)}
+								activityCount={3}
+								currentActivity={index + 1}
+								completedActivities={completed.length}
 							/>
-							<SuccessCelebration />
-							<h2>Plant Explorer Quest complete!</h2>
-							<p>You connected plant words independently.</p>
-						</section>
-					)}
-				</section>
-			)}
-		</main>
+						)}
+						<p className="caq-position">
+							Activity {index + 1}/3 · {active.name}
+						</p>
+						{step === "question" &&
+							manifest?.game?.schema_version === "plant-explorer-item-v1" && (
+								<>
+									<div className="caq-command">
+										<span>Explore and connect</span>
+										<strong>{manifest.prompt_si}</strong>
+									</div>
+									<PlantActivity
+										key={manifest.revision_id}
+										game={manifest.game as Record<string, unknown>}
+										onResponse={record}
+									/>
+									<button
+										className="caq-primary"
+										disabled={busy || !response}
+										onClick={confirm}
+									>
+										Check my garden
+									</button>
+								</>
+							)}
+						{step === "support" && isSupportRound(support) && (
+							<SupportRoundPlay
+								support={support}
+								busy={busy}
+								ready={response !== null}
+								checkLabel="Check my garden"
+								checkClassName="caq-primary"
+								onCheck={() => {
+									if (response)
+										void round.answer(
+											support,
+											response,
+											Date.now() - startedAt,
+											moves,
+										);
+								}}
+								onViewComplete={() =>
+									void round.viewComplete(support, Date.now() - startedAt)
+								}
+								renderActivity={(activity) => (
+									<PlantActivity
+										key={activity.revision_id}
+										game={activity.game as Record<string, unknown>}
+										onResponse={record}
+									/>
+								)}
+							/>
+						)}
+						{step === "support" && support && !isSupportRound(support) && (
+							<PlantSupport
+								support={support}
+								stage={supportStage}
+								onNext={() => setSupportStage((value) => value + 1)}
+								onComplete={finishSupport}
+							/>
+						)}
+						{step === "withdrawing" && (
+							<p className="caq-status" role="status">
+								The help is going away. Now explore a fresh plant on your own.
+							</p>
+						)}
+						{step === "feedback" && (
+							<section className="caq-feedback">
+								<h2>
+									{correct ? "Great growing!" : friendlyFeedback(feedback)}
+								</h2>
+								<button className="caq-primary" onClick={advance}>
+									{correct
+										? index === 2
+											? "Finish quest"
+											: "Next activity"
+										: "Try another one"}
+								</button>
+							</section>
+						)}
+						{step === "result" && (
+							<GameSuccessScreen
+								gameNumber={3}
+								gameCount={3}
+								onContinue={() => setStep("games")}
+							/>
+						)}
+					</section>
+				)}
+			</main>
+		</WordDropMotionContext.Provider>
 	);
 }
 
@@ -375,7 +423,7 @@ export function PlantActivity({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	return game.response_kind === "singular_plural_pairing" ? (
 		<PairBoard game={game} onResponse={onResponse} />
@@ -389,190 +437,139 @@ function MappingBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const vocabulary = game.response_kind === "plant_vocabulary_mapping";
-	const sources = (vocabulary ? game.words : game.labels) as Row[];
-	const targets = (vocabulary ? game.targets : game.parts) as Row[];
-	const sourceKey = vocabulary ? "word_token" : "label_token";
-	const targetKey = vocabulary ? "target_token" : "part_token";
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<Link[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
+	const sources = (vocabulary ? game.words : game.labels) as Row[],
+		targets = (vocabulary ? game.targets : game.parts) as Row[];
+	const sourceKey = vocabulary ? "word_token" : "label_token",
+		targetKey = vocabulary ? "target_token" : "part_token";
+	const emit = (state: WordDropState) =>
+		onResponse(
+			state.links.length === sources.length
+				? {
+						...plantMappingResponse(
+							game.response_kind as
+								| "plant_vocabulary_mapping"
+								| "plant_part_labeling",
+							String(game.command_token),
+							state.links,
+							sources.map((row) => String(row[sourceKey])),
+							state.trace,
+						),
+						tap_alternative_used: state.usedTap,
+						invalid_drop_count: state.invalidDrops,
+					}
+				: null,
 		);
-		const next = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
-				plantMappingResponse(
-					game.response_kind as
-						| "plant_vocabulary_mapping"
-						| "plant_part_labeling",
-					String(game.command_token),
-					next,
-					sources.map((row) => String(row[sourceKey])),
-					nextTrace,
-				),
-			);
-	};
 	return (
 		<section className="plant-board">
-			<div className="plant-scene">
-				<img
-					src={`${PLANT_ASSET_ROOT}/${String(game.scene_asset)}`}
-					alt="Illustrated plant scene"
-				/>
-			</div>
-			<div className="plant-word-rail">
-				{sources.map((row) => {
-					const id = String(row[sourceKey]);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="plant-targets">
-				{targets.map((row) => {
-					const id = String(row[targetKey]);
-					const link = links.find((entry) => entry.target === id);
-					const source = sources.find(
-						(entry) => String(entry[sourceKey]) === link?.source,
-					);
-					return (
-						<button
-							className="plant-target"
-							key={id}
-							disabled={!selected}
-							onClick={() => place(id)}
-						>
-							{visualName(String(row.visual_key))}
-							<span>{source ? String(source.text_en) : "Choose a word"}</span>
-						</button>
-					);
-				})}
-			</div>
+			<WordDropBoard
+				diagram={
+					!vocabulary
+						? String(game.scene_asset).includes("tree")
+							? "tree"
+							: true
+						: false
+				}
+				instruction={
+					vocabulary
+						? "Drag each word to the matching plant-part picture."
+						: "Follow each purple line to a plant part. Drag its name into the empty label."
+				}
+				cards={sources.map((row) => ({
+					id: String(row[sourceKey]),
+					label: String(row.text_en),
+				}))}
+				targets={targets.map((row, index) => ({
+					id: String(row[targetKey]),
+					label: `Picture ${index + 1}`,
+					visual: String(row.visual_key),
+					count: vocabulary ? 2 : 1,
+					emoji: plantEmoji(String(row.visual_key)),
+					hint: "Drop a word",
+				}))}
+				onChange={emit}
+			/>
 		</section>
 	);
 }
-
+function plantEmoji(key: string) {
+	return /root/.test(key)
+		? "🌱"
+		: /petal/.test(key)
+			? "🌸"
+			: /bud/.test(key)
+				? "🌷"
+				: /flower/.test(key)
+					? "🌸"
+					: /fruit/.test(key)
+						? "🥭"
+						: /branch|trunk/.test(key)
+							? "🪵"
+							: /stem/.test(key)
+								? "🌱"
+								: "🍃";
+}
 function PairBoard({
 	game,
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const concepts = game.concepts as Row[];
-	const forms = game.forms as Row[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [pairs, setPairs] = useState<
-		Record<string, { singular?: string; plural?: string }>
-	>({});
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (concept: string, slot: "singular" | "plural") => {
-		if (!selected) return;
-		const next = {
-			...pairs,
-			[concept]: { ...pairs[concept], [slot]: selected },
-		};
-		const nextTrace = [...trace, `${slot}:${selected}:${concept}`];
-		setPairs(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (
-			concepts.every(
-				(row) =>
-					next[String(row.concept_token)]?.singular &&
-					next[String(row.concept_token)]?.plural,
-			)
-		)
-			onResponse(
-				numberPairResponse(
-					String(game.command_token),
-					concepts.map((row) => ({
-						concept_token: String(row.concept_token),
-						singular_form_token: String(
-							next[String(row.concept_token)].singular,
-						),
-						plural_form_token: String(next[String(row.concept_token)].plural),
-					})),
-					nextTrace,
-				),
-			);
-	};
-	const used = Object.values(pairs).flatMap((pair) => [
-		pair.singular,
-		pair.plural,
-	]);
+	const concepts = game.concepts as Row[],
+		forms = game.forms as Row[];
+	const targets = concepts.flatMap((row, index) =>
+		(["singular", "plural"] as const).map((slot) => ({
+			id: `${String(row.concept_token)}:${slot}`,
+			label: slot === "singular" ? "One" : "Many",
+			visual: String(row.concept_key),
+			emoji:
+				slot === "singular"
+					? plantEmoji(String(row.concept_key))
+					: plantEmoji(String(row.concept_key)).repeat(3),
+			count: slot === "singular" ? 1 : 3,
+			hint: `Row ${index + 1} · ${slot === "singular" ? "one item" : "three items"}`,
+		})),
+	);
 	return (
 		<section className="plant-board">
-			<div className="plant-form-rail">
-				{forms.map((row) => {
-					const id = String(row.form_token);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={used.includes(id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="pair-grid">
-				{concepts.map((row) => {
-					const id = String(row.concept_token);
-					const pair = pairs[id] ?? {};
-					return (
-						<div className="pair-card" key={id}>
-							<img
-								src={`${PLANT_ASSET_ROOT}/${String(row.single_asset)}`}
-								alt="One plant part"
-							/>
-							<button
-								className="pair-slot"
-								disabled={!selected}
-								onClick={() => place(id, "singular")}
-							>
-								{formText(forms, pair.singular) || "One"}
-							</button>
-							<button
-								className="pair-slot"
-								disabled={!selected}
-								onClick={() => place(id, "plural")}
-							>
-								{formText(forms, pair.plural) || "Many"}
-							</button>
-						</div>
-					);
-				})}
-			</div>
+			<WordDropBoard
+				instruction="Look at each picture. Drag the word for one item or for many of the same item."
+				cards={forms.map((row) => ({
+					id: String(row.form_token),
+					label: String(row.text_en),
+				}))}
+				targets={targets}
+				onChange={(state) => {
+					if (state.links.length !== forms.length) return onResponse(null);
+					onResponse({
+						...numberPairResponse(
+							String(game.command_token),
+							concepts.map((row) => ({
+								concept_token: String(row.concept_token),
+								singular_form_token:
+									state.links.find(
+										(link) =>
+											link.target === `${String(row.concept_token)}:singular`,
+									)?.source ?? "",
+								plural_form_token:
+									state.links.find(
+										(link) =>
+											link.target === `${String(row.concept_token)}:plural`,
+									)?.source ?? "",
+							})),
+							state.trace,
+						),
+						tap_alternative_used: state.usedTap,
+						invalid_drop_count: state.invalidDrops,
+					});
+				}}
+			/>
 		</section>
 	);
 }
-
 function PlantSupport({
 	support,
 	stage,
@@ -637,17 +634,6 @@ function PlantWorkedExample({
 			</span>
 		</div>
 	);
-}
-function visualName(value: string) {
-	return value
-		.replace(/-slot/g, "")
-		.replace(/-/g, " ")
-		.replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-function formText(forms: Row[], token?: string) {
-	return token
-		? String(forms.find((row) => row.form_token === token)?.text_en ?? "")
-		: "";
 }
 function friendlyFeedback(code: string | null) {
 	if (code?.includes("number") || code?.includes("plural"))

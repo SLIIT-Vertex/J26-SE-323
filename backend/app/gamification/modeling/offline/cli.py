@@ -19,6 +19,13 @@ from app.gamification.modeling.synthetic.datasets import load_dataset_rows
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Offline gamification model tooling")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    accuracy = subparsers.add_parser("accuracy-report")
+    accuracy.add_argument("--learner", default="00000000-0000-4000-8000-000000000721")
+    accuracy.add_argument(
+        "--output",
+        type=Path,
+        default=Path(__file__).resolve().parents[4] / "reports/research-accuracy.json",
+    )
     manifest_parser = subparsers.add_parser("manifest")
     manifest_parser.add_argument("dataset", type=Path)
     manifest_parser.add_argument("output", type=Path)
@@ -62,6 +69,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Parse offline commands and delegate all model behavior to its owning package."""
 
     args = build_parser().parse_args(argv)
+    if args.command == "accuracy-report":
+        from uuid import UUID
+
+        from app.gamification.infrastructure.db.research_dashboard_reader import (
+            SqlAlchemyResearchDashboardReader,
+        )
+        from app.gamification.modeling.offline.research_accuracy_report import replay_report
+        from app.shared.database.session import SessionLocal
+
+        with SessionLocal() as session:
+            report = replay_report(
+                SqlAlchemyResearchDashboardReader(session).runs(UUID(args.learner)), args.learner
+            )
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(report, indent=2) + "\n")
+        return 0
     if args.command == "manifest":
         manifest = DatasetManifest.build(
             load_dataset_rows(args.dataset),

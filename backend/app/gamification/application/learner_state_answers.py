@@ -21,9 +21,7 @@ LEARNER_STATE_CAMERA_CONSENT_VERSION = "learner-state-camera-v1"
 logger = logging.getLogger(__name__)
 
 
-def camera_consent_granted(
-    consent: ConsentStore | None, *, learner_id: UUID, at: datetime
-) -> bool:
+def camera_consent_granted(consent: ConsentStore | None, *, learner_id: UUID, at: datetime) -> bool:
     if consent is None:
         return False
     try:

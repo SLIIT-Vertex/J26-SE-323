@@ -1,28 +1,241 @@
-.bloom-builder-garden { --caq-accent: #16a34a; --caq-deep: #14532d; background: linear-gradient(165deg,#f0fdf4 0%,#fefce8 52%,#fff7ed 100%); }
-.bloom-stage-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:.4rem; margin:.55rem 0 1rem; }
-.bloom-stage-chip { min-width:0; padding:.55rem .2rem; border-radius:1rem; text-align:center; background:#fff; box-shadow:0 3px 0 #bbf7d0; color:#166534; font-size:.69rem; }
-.bloom-stage-chip strong { display:block; font-size:.72rem; overflow-wrap:anywhere; }
-.bloom-stage-chip[data-active="true"] { color:#fff; background:linear-gradient(135deg,#16a34a,#0f766e); box-shadow:0 4px 0 #14532d; }
-.seed-packet-tray { display:flex; flex-wrap:wrap; justify-content:center; gap:.55rem; padding:.75rem; border-radius:1.2rem; background:linear-gradient(#fde68a,#fbbf24); border:2px solid #92400e; }
-.seed-packet { min-height:3rem; border:2px solid #a16207; border-radius:.55rem; padding:.6rem .8rem; background:#fffbeb; color:#713f12; font:inherit; font-weight:850; box-shadow:0 3px 0 #a16207; }
-.seed-packet[aria-pressed="true"] { outline:4px solid #0f766e; transform:translateY(2px); box-shadow:0 1px 0 #a16207; }
-.seed-packet:disabled { opacity:.48; box-shadow:none; }
-.garden-bed { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.7rem; margin:1rem 0; padding:1rem .5rem .6rem; border-radius:1.3rem; background:linear-gradient(#dcfce7 0 44%,#a16207 45% 100%); }
-.flower-target { min-height:9.4rem; position:relative; border:2px dashed #15803d; border-radius:1.1rem; background:rgba(255,255,255,.94); display:grid; place-items:center; align-content:center; gap:.25rem; padding:.5rem; color:#14532d; }
-.flower-target[data-selected="true"] { border-style:solid; box-shadow:0 0 0 4px #bbf7d0; }
-.flower-target-hit { min-width:5.8rem; min-height:6.8rem; border:0; background:transparent; color:inherit; display:grid; place-items:center; font:inherit; }
-.flower-glyph { --petal:#fb7185; --centre:#78350f; position:relative; display:block; width:5.2rem; height:5.9rem; }
-.flower-glyph::before { content:""; position:absolute; width:3.1rem; height:3.1rem; left:1.05rem; top:.1rem; border-radius:50%; background:radial-gradient(circle at center,var(--centre) 0 22%,transparent 23%),repeating-conic-gradient(var(--petal) 0 20deg,transparent 21deg 40deg); filter:drop-shadow(0 2px 1px #64748b); }
-.flower-glyph::after { content:""; position:absolute; width:.35rem; height:3.1rem; left:2.42rem; top:2.7rem; border-radius:1rem; background:#15803d; box-shadow:-.65rem 1.15rem 0 -.05rem #22c55e,.65rem 1.75rem 0 -.05rem #16a34a; }
-.flower-glyph[data-variant="0"]::before { --petal:#f59e0b; background:radial-gradient(circle,#92400e 0 14%,transparent 15%),repeating-conic-gradient(var(--petal) 0 12deg,#fbbf24 13deg 22deg); }
-.flower-glyph[data-variant="1"]::before { --petal:#ef4444; border-radius:48% 52% 44% 56%; background:radial-gradient(ellipse at 52% 48%,#fef3c7 0 8%,#7f1d1d 9% 12%,transparent 13%),repeating-conic-gradient(var(--petal) 0 31deg,transparent 32deg 68deg); transform:scale(1.1,.88); }
-.flower-glyph[data-variant="1"] span { position:absolute; z-index:2; width:.2rem; height:1.8rem; left:2.55rem; top:1.25rem; background:#f59e0b; border-radius:1rem; }
-.flower-glyph[data-variant="2"]::before { --petal:#e11d48; background:radial-gradient(circle,#881337 0 12%,#fb7185 13% 27%,#be123c 28% 39%,#fda4af 40% 53%,transparent 54%); }
-.flower-glyph[data-variant="3"]::before { width:3.8rem; height:3.8rem; left:.7rem; --petal:#facc15; --centre:#422006; background:radial-gradient(circle,var(--centre) 0 28%,#a16207 29% 34%,transparent 35%),repeating-conic-gradient(var(--petal) 0 15deg,transparent 16deg 30deg); }
-.flower-glyph[data-variant="4"]::before { --petal:#f8fafc; --centre:#fbbf24; width:1.8rem; height:1.8rem; left:.6rem; top:.4rem; background:radial-gradient(circle,var(--centre) 0 16%,transparent 17%),repeating-conic-gradient(var(--petal) 0 28deg,transparent 29deg 70deg); box-shadow:1.9rem .1rem 0 -.05rem #f8fafc,1rem 1.45rem 0 -.05rem #f8fafc; }
-.flower-detail-button { min-width:3rem; min-height:3rem; border:0; border-radius:999px; background:#ecfccb; color:#365314; font-weight:900; }
-.flower-detail { position:fixed; inset:0; z-index:50; display:grid; place-items:center; padding:1rem; background:rgba(20,83,45,.72); }
-.flower-detail-card { width:min(20rem,100%); border-radius:1.4rem; background:#fff; padding:1rem; text-align:center; box-shadow:0 18px 50px #052e16; }
-.flower-detail-card .flower-glyph { transform:scale(1.55); margin:1.6rem auto; }
-.bloom-hint { text-align:center; color:#166534; font-weight:750; font-size:.83rem; }
-@media (min-width:500px) { .garden-bed { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+.bloom-builder-garden {
+	--caq-accent: #16a34a;
+	--caq-deep: #14532d;
+	background: linear-gradient(165deg, #f0fdf4 0%, #fefce8 52%, #fff7ed 100%);
+}
+.bloom-stage-strip {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.4rem;
+	margin: 0.55rem 0 1rem;
+}
+.bloom-stage-chip {
+	min-width: 0;
+	padding: 0.55rem 0.2rem;
+	border-radius: 1rem;
+	text-align: center;
+	background: #fff;
+	box-shadow: 0 3px 0 #bbf7d0;
+	color: #166534;
+	font-size: 0.69rem;
+}
+.bloom-stage-chip strong {
+	display: block;
+	font-size: 0.72rem;
+	overflow-wrap: anywhere;
+}
+.bloom-stage-chip[data-active="true"] {
+	color: #fff;
+	background: linear-gradient(135deg, #16a34a, #0f766e);
+	box-shadow: 0 4px 0 #14532d;
+}
+.seed-packet-tray {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.55rem;
+	padding: 0.75rem;
+	border-radius: 1.2rem;
+	background: linear-gradient(#fde68a, #fbbf24);
+	border: 2px solid #92400e;
+}
+.seed-packet {
+	min-height: 3rem;
+	border: 2px solid #a16207;
+	border-radius: 0.55rem;
+	padding: 0.6rem 0.8rem;
+	background: #fffbeb;
+	color: #713f12;
+	font: inherit;
+	font-weight: 850;
+	box-shadow: 0 3px 0 #a16207;
+}
+.seed-packet[aria-pressed="true"] {
+	outline: 4px solid #0f766e;
+	transform: translateY(2px);
+	box-shadow: 0 1px 0 #a16207;
+}
+.seed-packet:disabled {
+	opacity: 0.48;
+	box-shadow: none;
+}
+.garden-bed {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.7rem;
+	margin: 1rem 0;
+	padding: 1rem 0.5rem 0.6rem;
+	border-radius: 1.3rem;
+	background: linear-gradient(#dcfce7 0 44%, #a16207 45% 100%);
+}
+.flower-target {
+	min-height: 9.4rem;
+	position: relative;
+	border: 2px dashed #15803d;
+	border-radius: 1.1rem;
+	background: rgba(255, 255, 255, 0.94);
+	display: grid;
+	place-items: center;
+	align-content: center;
+	gap: 0.25rem;
+	padding: 0.5rem;
+	color: #14532d;
+}
+.flower-target[data-selected="true"] {
+	border-style: solid;
+	box-shadow: 0 0 0 4px #bbf7d0;
+}
+.flower-target-hit {
+	min-width: 5.8rem;
+	min-height: 6.8rem;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	display: grid;
+	place-items: center;
+	font: inherit;
+}
+.flower-glyph {
+	--petal: #fb7185;
+	--centre: #78350f;
+	position: relative;
+	display: block;
+	width: 5.2rem;
+	height: 5.9rem;
+}
+.flower-glyph::before {
+	content: "";
+	position: absolute;
+	width: 3.1rem;
+	height: 3.1rem;
+	left: 1.05rem;
+	top: 0.1rem;
+	border-radius: 50%;
+	background:
+		radial-gradient(circle at center, var(--centre) 0 22%, transparent 23%),
+		repeating-conic-gradient(var(--petal) 0 20deg, transparent 21deg 40deg);
+	filter: drop-shadow(0 2px 1px #64748b);
+}
+.flower-glyph::after {
+	content: "";
+	position: absolute;
+	width: 0.35rem;
+	height: 3.1rem;
+	left: 2.42rem;
+	top: 2.7rem;
+	border-radius: 1rem;
+	background: #15803d;
+	box-shadow:
+		-0.65rem 1.15rem 0 -0.05rem #22c55e,
+		0.65rem 1.75rem 0 -0.05rem #16a34a;
+}
+.flower-glyph[data-variant="0"]::before {
+	--petal: #f59e0b;
+	background:
+		radial-gradient(circle, #92400e 0 14%, transparent 15%),
+		repeating-conic-gradient(var(--petal) 0 12deg, #fbbf24 13deg 22deg);
+}
+.flower-glyph[data-variant="1"]::before {
+	--petal: #ef4444;
+	border-radius: 48% 52% 44% 56%;
+	background:
+		radial-gradient(
+			ellipse at 52% 48%,
+			#fef3c7 0 8%,
+			#7f1d1d 9% 12%,
+			transparent 13%
+		),
+		repeating-conic-gradient(var(--petal) 0 31deg, transparent 32deg 68deg);
+	transform: scale(1.1, 0.88);
+}
+.flower-glyph[data-variant="1"] span {
+	position: absolute;
+	z-index: 2;
+	width: 0.2rem;
+	height: 1.8rem;
+	left: 2.55rem;
+	top: 1.25rem;
+	background: #f59e0b;
+	border-radius: 1rem;
+}
+.flower-glyph[data-variant="2"]::before {
+	--petal: #e11d48;
+	background: radial-gradient(
+		circle,
+		#881337 0 12%,
+		#fb7185 13% 27%,
+		#be123c 28% 39%,
+		#fda4af 40% 53%,
+		transparent 54%
+	);
+}
+.flower-glyph[data-variant="3"]::before {
+	width: 3.8rem;
+	height: 3.8rem;
+	left: 0.7rem;
+	--petal: #facc15;
+	--centre: #422006;
+	background:
+		radial-gradient(
+			circle,
+			var(--centre) 0 28%,
+			#a16207 29% 34%,
+			transparent 35%
+		),
+		repeating-conic-gradient(var(--petal) 0 15deg, transparent 16deg 30deg);
+}
+.flower-glyph[data-variant="4"]::before {
+	--petal: #f8fafc;
+	--centre: #fbbf24;
+	width: 1.8rem;
+	height: 1.8rem;
+	left: 0.6rem;
+	top: 0.4rem;
+	background:
+		radial-gradient(circle, var(--centre) 0 16%, transparent 17%),
+		repeating-conic-gradient(var(--petal) 0 28deg, transparent 29deg 70deg);
+	box-shadow:
+		1.9rem 0.1rem 0 -0.05rem #f8fafc,
+		1rem 1.45rem 0 -0.05rem #f8fafc;
+}
+.flower-detail-button {
+	min-width: 3rem;
+	min-height: 3rem;
+	border: 0;
+	border-radius: 999px;
+	background: #ecfccb;
+	color: #365314;
+	font-weight: 900;
+}
+.flower-detail {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: grid;
+	place-items: center;
+	padding: 1rem;
+	background: rgba(20, 83, 45, 0.72);
+}
+.flower-detail-card {
+	width: min(20rem, 100%);
+	border-radius: 1.4rem;
+	background: #fff;
+	padding: 1rem;
+	text-align: center;
+	box-shadow: 0 18px 50px #052e16;
+}
+.flower-detail-card .flower-glyph {
+	transform: scale(1.55);
+	margin: 1.6rem auto;
+}
+.bloom-hint {
+	text-align: center;
+	color: #166534;
+	font-weight: 750;
+	font-size: 0.83rem;
+}
+@media (min-width: 500px) {
+	.garden-bed {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}

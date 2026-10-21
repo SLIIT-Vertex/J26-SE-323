@@ -13,6 +13,7 @@ from app.gamification.content.direction_adventure import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000764")
 
@@ -36,11 +37,10 @@ def test_direction_episode_reuse_exact_failed_scene_support_and_independent_prob
     wrong.update(presentation_id=before["presentation_id"], item_revision_id=before["revision_id"], interaction_version="constructed-response-v1")
     summary = {"move_count": 8, "correction_count": 0, "first_action_ms": 20, "active_time_ms": 500, "attempt_count": 1, "working_cell_count": 8}
     supported = flow.submit_before(episode, option_id=None, constructed_response=wrong, response_time_ms=700, interaction_summary=summary, idempotency_key="wrong-direction")
-    support, manifest = supported["support"], supported["support"]["game_manifest"]
-    assert manifest["worked_example"]["game"]["scene_id"] == before["game_data"]["scene_id"]
-    assert manifest["worked_example"]["correct_response"]["kind"] == "place_direction_scene"
-    flow.complete_support(episode, duration_ms=800, steps_viewed=manifest["required_actions"], manifest_revision_id=manifest["revision_id"], grouped_count=0, group_sizes=(), interaction_summary={"completed": True, "renderer_id": manifest["renderer_id"], "parallel_example_id": manifest["parallel_example_id"], "support_actions": manifest["required_actions"]}, idempotency_key="complete-direction")
-    flow.withdraw_support(episode, request_id=uuid4(), support_revision_id=support["revision_id"], manifest_revision_id=manifest["revision_id"], all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key="withdraw-direction")
+    assert flow._adaptive_flow(episode).support_solution(before)["game"]["scene_id"] == before["game_data"]["scene_id"]
+    assert flow._adaptive_flow(episode).support_solution(before)["correct_response"]["kind"] == "place_direction_scene"
+    help_done = finish_help(flow, episode, supported)
+    flow.withdraw_support(episode, **help_done, request_id=uuid4(), all_support_removed=True, answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key="withdraw-direction")
     after = flow.present_after(episode, idempotency_key="after-direction")
     assert after["manifest"]["measurement_role"] == "unsupported_after"
     assert after["manifest"]["game"]["scene_id"] != before["game_data"]["scene_id"]

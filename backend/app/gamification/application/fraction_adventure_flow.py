@@ -16,8 +16,10 @@ from app.gamification.content.fraction_adventure import (
     POLICY_VERSION,
     SCORING_VERSION,
     SKILLS,
+    UNIVERSAL_SKILL_ID,
     FractionItem,
     generate_item,
+    generate_simpler_item,
     infer_belief,
     package_hash,
     scaffold_decision,
@@ -27,20 +29,12 @@ from app.gamification.content.fraction_adventure import (
 
 _VISUAL_FIRST = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 _WORKED_FIRST = ("worked_parallel_example", "visual_guidance", "step_by_step_guidance")
-FRACTION_SUPPORT_SEQUENCE = {
-    skill_id: (
-        _WORKED_FIRST
-        if skill_id in {"G5-MAT-C03-L01-O02", "G5-MAT-FRC-QUARTER-TABLE-01"}
-        else _VISUAL_FIRST
-    )
-    for skill_id in SKILLS
-}
 
 
 class FractionAdventureFlow(NumberWorldFlow):
     area_id = AREA_ID
     experience_id = "fraction_adventure"
-    universal_skill_id = "MAT-FRC"
+    universal_skill_id = UNIVERSAL_SKILL_ID
     contract_version = "fraction-adventure-learning-flow-v1"
     context_version = "g5-mat-fraction-context-v1"
     measurement_version = "fraction-independence-measurement-v1"
@@ -56,6 +50,7 @@ class FractionAdventureFlow(NumberWorldFlow):
     equivalence_version = EQUIVALENCE_VERSION
     skills = SKILLS
     generate_item = staticmethod(generate_item)
+    generate_simpler_item = staticmethod(generate_simpler_item)
     infer_belief = staticmethod(infer_belief)
     scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
@@ -63,9 +58,6 @@ class FractionAdventureFlow(NumberWorldFlow):
     missing_skill_error = "FRACTION_SKILL_NOT_FOUND"
     episode_type_error = "FRACTION_EPISODE_REQUIRED"
     operation_prefix = "fraction_adventure"
-    support_sequences = FRACTION_SUPPORT_SEQUENCE
-    activity_support_memory = True
-    answer_revealing_support = True
 
     @staticmethod
     def _public_game_data(item: FractionItem) -> dict[str, object]:
@@ -144,39 +136,6 @@ class FractionAdventureFlow(NumberWorldFlow):
             exclusions.append("AFTER_ITEM_REEXPOSED")
         return exclusions
 
-    def _support(self, state: dict[str, object]) -> dict[str, object]:
-        exposure = state["scaffold_exposure"]
-        kind = str(exposure["scaffold_type"])
-        failed_item = self._stored_item(state, "unsupported_before")
-        titles = {
-            "visual_guidance": "දෘශ්‍ය මඟ පෙන්වීම",
-            "worked_parallel_example": "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
-            "step_by_step_guidance": "පියවරෙන් පියවර මඟ පෙන්වීම",
-        }
-        return {
-            "scaffold_id": f"{state['skill_id']}:{kind}",
-            "revision_id": exposure["revision_id"],
-            "scaffold_type": kind,
-            "title_si": titles[kind],
-            "body_si": worked_steps(failed_item["game_data"], kind),
-            "visual_alt_text_si": "එම භාග ක්‍රියාකාරකම සමාන කොටස් සමඟ පෙන්වන සහාය",
-            "maximum_steps": 6,
-            "game_manifest": {
-                "schema_version": self.support_schema_version,
-                "activity_id": state["chapter"],
-                "revision_id": exposure["manifest_revision_id"],
-                "deterministic_seed": state["seed"],
-                "skill_id": state["skill_id"],
-                "scaffold_type": kind,
-                "renderer_id": f"{state['chapter']}:{kind}",
-                "parallel_example_id": f"{state['skill_id']}:parallel-support-v1",
-                "parallel_example_version": "v1",
-                "parallel_values": [],
-                "required_actions": 3 if kind == "visual_guidance" else 6,
-                "worked_example": self._worked_example(failed_item, scaffold_type=kind),
-            },
-        }
-
     @staticmethod
     def _worked_example(
         item: dict[str, object], *, scaffold_type: str = "worked_parallel_example"
@@ -216,7 +175,8 @@ class FractionAdventureFlow(NumberWorldFlow):
                     "representation": game["representation"],
                     "numerator": target,
                     "denominator": 10,
-                    "shaded_indices": list(game.get("stimulus_shaded_indices", range(target))),
+                    # A build item starts unshaded, so its solution shades the first target parts.
+                    "shaded_indices": list(game.get("stimulus_shaded_indices") or range(target)),
                 }
         public_item = FractionItem(
             str(item["item_id"]),

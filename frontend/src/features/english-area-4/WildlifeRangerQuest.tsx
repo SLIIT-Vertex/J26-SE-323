@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -15,9 +15,14 @@ import type {
 	SupportView,
 	WildlifeRangerWorkedExample,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 import { WILDLIFE_ASSET_ROOT, WILDLIFE_SKILLS } from "./manifest";
 import "./wildlife-ranger.css";
 import {
@@ -32,15 +37,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 
 export function WildlifeRangerQuest({
 	api,
@@ -50,7 +46,7 @@ export function WildlifeRangerQuest({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -133,6 +129,25 @@ export function WildlifeRangerQuest({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 
 	const openSkill = async (id: string) => {
 		if (lock.current) return;
@@ -268,7 +283,6 @@ export function WildlifeRangerQuest({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 4</p>
 					<h1>Animals around us</h1>
 				</div>
 			</header>
@@ -290,13 +304,15 @@ export function WildlifeRangerQuest({
 					))}
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={3}
-						currentActivity={index + 1}
-						completedActivities={completed.length}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={3}
+							currentActivity={index + 1}
+							completedActivities={completed.length}
+						/>
+					)}
 					<p className="caq-position">
 						Activity {index + 1}/3 · {active.name}
 					</p>
@@ -321,7 +337,35 @@ export function WildlifeRangerQuest({
 								</button>
 							</>
 						)}
-					{step === "support" && support && (
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null}
+							checkLabel="Check my trail"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<WildlifeBoard
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={record}
+								/>
+							)}
+						/>
+					)}
+					{step === "support" && support && !isSupportRound(support) && (
 						<WildlifeSupport
 							support={support}
 							stage={supportStage}
@@ -351,15 +395,11 @@ export function WildlifeRangerQuest({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<img
-								src={`${WILDLIFE_ASSET_ROOT}/wildlife-ranger-badge.png`}
-								alt=""
-							/>
-							<SuccessCelebration />
-							<h2>Wildlife Ranger Quest complete!</h2>
-							<p>You connected animal words independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={3}
+							gameCount={3}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}

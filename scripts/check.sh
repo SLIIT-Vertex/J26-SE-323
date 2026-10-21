@@ -29,6 +29,9 @@ case "${1:-push}" in
     ;;
   push)
     (cd backend && "$python" -m pytest -q)
+    npm --prefix frontend run check:mobile-learning-types
+    npm --prefix frontend run check:mobile-learning-types:drift
+    npm --prefix frontend test
     npm --prefix frontend run build:web
     "$root/scripts/test-branch-policy.sh"
     ;;

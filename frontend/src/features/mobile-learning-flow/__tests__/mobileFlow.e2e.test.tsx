@@ -28,37 +28,6 @@ const before: PresentationManifest = {
 	],
 	content_version: "g5-mat-half-items-v1",
 };
-const after: PresentationManifest = {
-	...before,
-	presentation_id: "after",
-	revision_id: "G5-MAT-HALF-I03@v1",
-	measurement_role: "unsupported_after",
-	prompt_si: "බොත්තම් 36කින් බාගයක ඇති බොත්තම් ගණන කීය ද?",
-	options: [
-		{ option_id: "A", text_si: "36" },
-		{ option_id: "B", text_si: "34" },
-		{ option_id: "C", text_si: "18" },
-	],
-};
-const support: SupportView = {
-	scaffold_id: "vis",
-	revision_id: "G5-MAT-HALF-SC-VIS@v1",
-	scaffold_type: "visual_guidance",
-	title_si: "සමාන කාණ්ඩ දෙකක්",
-	body_si: ["බෝල සමාන කාණ්ඩ දෙකකට වෙන් කරන්න."],
-	visual_alt_text_si: "සමාන කාණ්ඩ දෙකක්",
-	maximum_steps: 1,
-	game_manifest: {
-		schema_version: "half-set-manifest-v1",
-		activity_id: "half-even-set-support",
-		revision_id: "G5-MAT-HALF-SC-VIS@v1",
-		deterministic_seed: 31,
-		total_objects: 6,
-		group_count: 2,
-		object_label_si: "ද්‍රව්‍යය",
-		instruction_si: "ද්‍රව්‍ය සමාන කාණ්ඩ දෙකකට බෙදන්න.",
-	},
-};
 const response = (
 	status: string,
 	manifest: PresentationManifest | null = null,
@@ -75,10 +44,10 @@ const response = (
 function fakeService(): MobileLearningService {
 	return {
 		open: vi.fn(async () => response("before_presented", before)),
-		answerBefore: vi.fn(async () => response("support_active", null, support)),
+		answerBefore: vi.fn(async () => response("completed")),
 		completeSupport: vi.fn(async () => response("support_complete")),
 		withdrawSupport: vi.fn(async () => response("support_withdrawn")),
-		presentAfter: vi.fn(async () => response("after_presented", after)),
+		presentAfter: vi.fn(async () => response("after_presented", before)),
 		answerAfter: vi.fn(async () => response("completed")),
 		telemetry: vi.fn(async (_episode, batch) => ({
 			accepted: batch.events.length,
@@ -102,10 +71,12 @@ async function click(container: HTMLElement, label: string) {
 }
 
 async function waitForSelector(container: HTMLElement, selector: string) {
-	for (let attempt = 0; attempt < 20; attempt += 1) {
+	// Lazy game chunks can take longer than 100 ms during the parallel CI test run.
+	const deadline = Date.now() + 3_000;
+	while (Date.now() < deadline) {
 		if (container.querySelector(selector)) return;
 		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 5));
+			await new Promise((resolve) => setTimeout(resolve, 20));
 		});
 	}
 	expect(
@@ -125,6 +96,49 @@ describe("baseline mobile flow", () => {
 		expect(container.textContent).toContain("ඉගෙන ගමු. ක්‍රීඩා කරමු. දියුණු වෙමු.");
 		expect(container.textContent).not.toContain("අන්තර්ගතය තවම නිකුත් කර නොමැත");
 		await act(async () => root.unmount());
+	});
+
+	it("does not show the removed current-game promotion", async () => {
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		await act(async () =>
+			root.render(<MobileLearningApp service={fakeService()} />),
+		);
+		await click(container, "මගේ පැතිකඩට");
+		await click(container, "ක්‍රීඩා");
+		expect(container.querySelector(".current-game-card")).toBeNull();
+		expect(container.querySelector(".games-hero .learner-avatar")).toBeNull();
+		expect(container.querySelector(".games-title em")).toBeNull();
+		expect(container.textContent).not.toContain("දැනට ඇති ක්‍රීඩාව");
+		expect(container.textContent).not.toContain("සමාන කාණ්ඩ දෙකක්");
+		await act(async () => root.unmount());
+	});
+
+	it.each([
+		{ random: 0, areaId: "G5-AREA-MAT-01", title: "සංඛ්‍යා", screen: "number-world" },
+		{ random: 0.999, areaId: "G5-AREA-ENG-18", title: "Useful Expressions & Conversation Language", screen: "conversation-street" },
+	])("opens the featured $areaId game without fabricated progress", async ({ random, areaId, title, screen }) => {
+		const choose = vi.spyOn(Math, "random").mockReturnValue(random);
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		try {
+			await act(async () => root.render(<MobileLearningApp service={fakeService()} initialScreen="home" />));
+			const card = container.querySelector(".home-mission-card");
+			expect(card?.querySelector("h2")?.textContent).toBe(title);
+			expect(card?.querySelector('[role="progressbar"]')).toBeNull();
+			expect(card?.textContent).not.toMatch(/\d\s*\/\s*3/);
+			expect(card?.querySelector("button")?.getAttribute("data-area-id")).toBe(areaId);
+			await click(container, "නව දැනුම්දීම් 1ක්");
+			expect(card?.querySelector("h2")?.textContent).toBe(title);
+			await click(container, "අභියෝගය අරඹමු");
+			await waitForSelector(container, `main[data-screen="${screen}"]`);
+			expect(container.textContent).not.toContain("මෙහෙයුම බලන්න");
+		} finally {
+			await act(async () => root.unmount());
+			choose.mockRestore();
+		}
 	});
 
 	it("does not report a lost connection in settings when no game is open", async () => {
@@ -258,119 +272,6 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("completes baseline, support withdrawal, fresh after check, reward and summary", async () => {
-		const service = fakeService();
-		const container = document.createElement("div");
-		document.body.append(container);
-		const root = createRoot(container);
-		await act(async () => root.render(<MobileLearningApp service={service} />));
-		await click(container, "මගේ පැතිකඩට");
-		await click(container, "ක්‍රීඩා");
-		await click(container, "ක්‍රීඩා කරන්න");
-		await click(container, "මෙහෙයුම බලන්න");
-		await click(container, "ආරම්භ කරන්න");
-		expect(container.textContent).toContain("ඔබම උත්සාහ කරන්න");
-		await click(container, "14");
-		await click(container, "පිළිතුර යවන්න");
-		await click(container, "ඉදිරියට");
-		expect(container.textContent).toContain("තාවකාලික උදව්");
-		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 30));
-		});
-		const semanticObjects = [...container.querySelectorAll(".semantic-object")];
-		expect(semanticObjects).toHaveLength(6);
-		await act(async () => {
-			semanticObjects.forEach((object, index) => {
-				const buttons = object.querySelectorAll("button");
-				buttons[index < semanticObjects.length / 2 ? 0 : 1]?.dispatchEvent(
-					new MouseEvent("click", { bubbles: true }),
-				);
-			});
-		});
-		await click(container, "සමූහ කිරීම අවසන්");
-		expect(
-			(
-				container.querySelector(
-					"button.primary-action",
-				) as HTMLButtonElement | null
-			)?.disabled,
-		).toBe(false);
-		await click(container, "උදව් අවසන් කරන්න");
-		expect(service.completeSupport).toHaveBeenCalledTimes(1);
-		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 20));
-		});
-		expect(container.textContent).not.toContain("බෝල සමාන කාණ්ඩ දෙකකට වෙන් කරන්න");
-		expect(service.withdrawSupport).toHaveBeenCalledTimes(1);
-		expect(service.withdrawSupport).toHaveBeenCalledWith(
-			"episode",
-			expect.objectContaining({
-				support_revision_id: support.revision_id,
-				manifest_revision_id: support.game_manifest.revision_id,
-				all_support_removed: true,
-				input_handlers_cleared: true,
-			}),
-			expect.any(String),
-		);
-		await click(container, "ඉදිරියට");
-		expect(container.textContent).toContain("අලුත් එක ඔබම උත්සාහ කරන්න");
-		await click(container, "18");
-		await click(container, "පිළිතුර යවන්න");
-		expect(container.textContent).not.toMatch(
-			/independence|policy|misconception|probabilit/i,
-		);
-		await click(container, "ත්‍යාගය බලන්න");
-		await click(container, "සාරාංශය");
-		expect(container.textContent).toContain("අද සාරාංශය");
-		await act(async () => root.unmount());
-	});
-
-	it("completes proposed composition with baseline delivery and no child-facing shadow fields", async () => {
-		const service = fakeService();
-		const container = document.createElement("div");
-		document.body.append(container);
-		const root = createRoot(container);
-		await act(async () =>
-			root.render(
-				<MobileLearningApp service={service} engineeringCondition="proposed" />,
-			),
-		);
-		await click(container, "මගේ පැතිකඩට");
-		await click(container, "ක්‍රීඩා");
-		await click(container, "ක්‍රීඩා කරන්න");
-		await click(container, "මෙහෙයුම බලන්න");
-		await click(container, "ආරම්භ කරන්න");
-		expect(service.open).toHaveBeenCalledWith(
-			expect.objectContaining({ condition: "proposed" }),
-			expect.any(String),
-		);
-		await click(container, "14");
-		await click(container, "පිළිතුර යවන්න");
-		await click(container, "ඉදිරියට");
-		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 30));
-		});
-		const objects = [...container.querySelectorAll(".semantic-object")];
-		await act(async () => {
-			objects.forEach((object, index) => {
-				const buttons = object.querySelectorAll("button");
-				buttons[index < objects.length / 2 ? 0 : 1]?.dispatchEvent(
-					new MouseEvent("click", { bubbles: true }),
-				);
-			});
-		});
-		await click(container, "සමූහ කිරීම අවසන්");
-		await click(container, "උදව් අවසන් කරන්න");
-		await click(container, "ඉදිරියට");
-		await click(container, "18");
-		await click(container, "පිළිතුර යවන්න");
-		expect(service.answerAfter).toHaveBeenCalledTimes(1);
-		expect(container.textContent).not.toMatch(
-			/shadow|policy|propensity|misconception|raw IG/i,
-		);
-		await act(async () => root.unmount());
-	});
-
 	it("lists 55 mapped missions plus two playable no-source placeholders", async () => {
 		const areaIds = [
 			...Array.from(
@@ -491,7 +392,6 @@ describe("baseline mobile flow", () => {
 				?.textContent,
 		).toBe("");
 		expect(container.textContent).not.toContain("G5-AREA-MAT-01");
-		expect(container.querySelector(".semantic-object")).toBeNull();
 		expect(service.open).not.toHaveBeenCalled();
 
 		await click(container, "ආපසු");
@@ -708,7 +608,6 @@ describe("baseline mobile flow", () => {
 					.querySelector("[data-template-id]")
 					?.getAttribute("data-template-id"),
 			).toBe(templateId);
-			expect(container.querySelector(".semantic-object")).toBeNull();
 			if (fixtureAreas.has(areaId)) {
 				expect(
 					container
@@ -891,27 +790,4 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("automatically retries queued telemetry until the backend acknowledges it", async () => {
-		const service = fakeService();
-		const telemetry = vi.mocked(service.telemetry);
-		telemetry
-			.mockRejectedValueOnce(new Error("temporary outage"))
-			.mockRejectedValueOnce(new Error("temporary outage"));
-		const container = document.createElement("div");
-		document.body.append(container);
-		const root = createRoot(container);
-		await act(async () => root.render(<MobileLearningApp service={service} />));
-		await click(container, "මගේ පැතිකඩට");
-		await click(container, "ක්‍රීඩා");
-		await click(container, "ක්‍රීඩා කරන්න");
-		await click(container, "මෙහෙයුම බලන්න");
-		await click(container, "ආරම්භ කරන්න");
-		await click(container, "14");
-		await click(container, "පිළිතුර යවන්න");
-		await act(async () => {
-			await new Promise((resolve) => setTimeout(resolve, 1_800));
-		});
-		expect(telemetry).toHaveBeenCalledTimes(3);
-		await act(async () => root.unmount());
-	});
 });

@@ -14,7 +14,7 @@ describe("adaptive game progress", () => {
 		expect(adaptiveGameProgressStage("result", "unsupported_after")).toBe(4);
 	});
 
-	it("moves the current marker and completes earlier numbers", async () => {
+	it("moves the current marker and completes earlier numbers without a star", async () => {
 		const host = document.createElement("div");
 		document.body.append(host);
 		const root = createRoot(host);
@@ -27,7 +27,6 @@ describe("adaptive game progress", () => {
 			"is-done",
 			"is-done",
 			"is-current",
-			"",
 		]);
 		expect(host.querySelector("[aria-current='step']")?.childNodes[0]?.textContent).toBe("3");
 
@@ -35,7 +34,7 @@ describe("adaptive game progress", () => {
 		host.remove();
 	});
 
-	it("shows exactly three stars when a game has fewer than three activities", async () => {
+	it("keeps the numbered three-step progress when a game has fewer activities", async () => {
 		const host = document.createElement("div");
 		document.body.append(host);
 		const root = createRoot(host);
@@ -44,10 +43,9 @@ describe("adaptive game progress", () => {
 			root.render(<AdventureProgress stage={1} activityCount={1} />),
 		);
 
-		expect(host.querySelector("[data-progress-mode='stars']")).not.toBeNull();
 		expect(
 			[...host.querySelectorAll("span")].map((item) => item.textContent),
-		).toEqual(["★", "★", "★"]);
+		).toEqual(["1", "2", "3"]);
 
 		await act(async () => root.unmount());
 		host.remove();

@@ -1,1 +1,124 @@
-.blueprint-quest{background:#edf8fb;color:#17384d}.blueprint-quest .caq-header{background:linear-gradient(135deg,#176b85,#315ca4)}.bp-hero{padding:28px;text-align:center;font-size:2rem;border:2px dashed #67a7be;border-radius:24px;background-color:#e4f6fb;background-image:linear-gradient(#72b3c422 1px,transparent 1px),linear-gradient(90deg,#72b3c422 1px,transparent 1px);background-size:18px 18px}.bp-board{display:grid;gap:12px}.bp-tray,.bp-zones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.bp-tray button,.bp-zones button{min-height:52px;border:2px solid #83b7ca;border-radius:14px;background:#fff;color:#17384d;font-weight:800;padding:9px}.bp-tray button[aria-pressed=true]{outline:3px solid #ffc95f}.bp-zones button{min-height:108px}.bp-zones strong,.bp-zones small{display:block}.bp-glyph{display:block;position:relative;width:100%;height:74px;border-radius:10px;background:linear-gradient(#a9d8e8 55%,#c9b58f 55%);overflow:hidden}.bp-glyph i{position:absolute;left:15%;bottom:10%;width:24%;height:50%;border:5px solid #31566a}.bp-glyph i:nth-child(2){left:auto;right:15%;width:28%;height:28%;border-width:4px}.bp-glyph b{position:absolute;left:6%;right:6%;top:12%;height:8px;background:#fff8c8;box-shadow:0 16px #fff8c8}.bp-glyph[data-v="2"] b{height:46px;background:repeating-linear-gradient(#7e6045 0 6px,#f0d79d 7px 12px)}.bp-glyph[data-v="7"]{background:linear-gradient(#9ddcff 60%,#72ad69 60%)}.bp-glyph[data-v="8"] i{left:35%;width:30%;height:72%;background:#8d6644}.bp-glyph[data-v="10"] i{left:18%;width:64%;height:38%;transform:rotate(20deg);background:#a95c48}.bp-slots{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.bp-slots span{min-height:52px;display:grid;place-items:center;border:2px dashed #397d99;border-radius:12px;background:#fff;font-weight:850}@media(max-width:360px){.bp-zones{grid-template-columns:1fr}.bp-tray{grid-template-columns:1fr 1fr}}
+.blueprint-quest {
+	background: #edf8fb;
+	color: #17384d;
+}
+.blueprint-quest .caq-header {
+	background: linear-gradient(135deg, #176b85, #315ca4);
+}
+.bp-hero {
+	padding: 28px;
+	text-align: center;
+	font-size: 2rem;
+	border: 2px dashed #67a7be;
+	border-radius: 24px;
+	background-color: #e4f6fb;
+	background-image:
+		linear-gradient(#72b3c422 1px, transparent 1px),
+		linear-gradient(90deg, #72b3c422 1px, transparent 1px);
+	background-size: 18px 18px;
+}
+.bp-board {
+	display: grid;
+	gap: 12px;
+}
+.bp-tray,
+.bp-zones {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 9px;
+}
+.bp-tray button,
+.bp-zones button {
+	min-height: 52px;
+	border: 2px solid #83b7ca;
+	border-radius: 14px;
+	background: #fff;
+	color: #17384d;
+	font-weight: 800;
+	padding: 9px;
+}
+.bp-tray button[aria-pressed="true"] {
+	outline: 3px solid #ffc95f;
+}
+.bp-zones button {
+	min-height: 108px;
+}
+.bp-zones strong,
+.bp-zones small {
+	display: block;
+}
+.bp-glyph {
+	display: block;
+	position: relative;
+	width: 100%;
+	height: 74px;
+	border-radius: 10px;
+	background: linear-gradient(#a9d8e8 55%, #c9b58f 55%);
+	overflow: hidden;
+}
+.bp-glyph i {
+	position: absolute;
+	left: 15%;
+	bottom: 10%;
+	width: 24%;
+	height: 50%;
+	border: 5px solid #31566a;
+}
+.bp-glyph i:nth-child(2) {
+	left: auto;
+	right: 15%;
+	width: 28%;
+	height: 28%;
+	border-width: 4px;
+}
+.bp-glyph b {
+	position: absolute;
+	left: 6%;
+	right: 6%;
+	top: 12%;
+	height: 8px;
+	background: #fff8c8;
+	box-shadow: 0 16px #fff8c8;
+}
+.bp-glyph[data-v="2"] b {
+	height: 46px;
+	background: repeating-linear-gradient(#7e6045 0 6px, #f0d79d 7px 12px);
+}
+.bp-glyph[data-v="7"] {
+	background: linear-gradient(#9ddcff 60%, #72ad69 60%);
+}
+.bp-glyph[data-v="8"] i {
+	left: 35%;
+	width: 30%;
+	height: 72%;
+	background: #8d6644;
+}
+.bp-glyph[data-v="10"] i {
+	left: 18%;
+	width: 64%;
+	height: 38%;
+	transform: rotate(20deg);
+	background: #a95c48;
+}
+.bp-slots {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 8px;
+}
+.bp-slots span {
+	min-height: 52px;
+	display: grid;
+	place-items: center;
+	border: 2px dashed #397d99;
+	border-radius: 12px;
+	background: #fff;
+	font-weight: 850;
+}
+@media (max-width: 360px) {
+	.bp-zones {
+		grid-template-columns: 1fr;
+	}
+	.bp-tray {
+		grid-template-columns: 1fr 1fr;
+	}
+}

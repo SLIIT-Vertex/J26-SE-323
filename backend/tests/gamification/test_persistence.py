@@ -644,6 +644,9 @@ def test_independence_gain_migration_upgrades_shared_learner_head_downgrades_and
     Base.metadata.create_all(
         engine, tables=[Base.metadata.tables[name] for name in previous_table_names]
     )
+    # The stamped historical database predates display_name; current ORM metadata includes it.
+    with engine.begin() as connection:
+        connection.execute(text("ALTER TABLE learners DROP COLUMN display_name"))
     engine.dispose()
 
     monkeypatch.setenv("DATABASE_URL", database_url)
@@ -688,8 +691,8 @@ def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (gamification_head,) = script.get_revisions("gamification@head")
-    assert gamification_head.revision == "gam_20261021_01"
-    assert gamification_head.down_revision == "gam_20261020_01"
+    assert gamification_head.revision == "gam_20261021_03"
+    assert gamification_head.down_revision == "gam_20261021_02"
     assert gamification_head.revision in script.get_heads()
     for head in set(script.get_heads()) - {gamification_head.revision}:
         ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}

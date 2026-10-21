@@ -1,0 +1,66 @@
+# Demo history for the shared development learner.
+#
+# This file scripts only the child: whether each answer is right. Which help comes first, the
+# order of the rest, the misconception estimate and the independence gain are all produced by the
+# real models when the seed is played (python -m app.gamification.demo_seed seed).
+#
+# Every Mathematics and English skill that runs the multi-help loop is seeded. An area's skills take
+# the patterns below in rotation, starting from the pattern named for the area; a skill can be
+# given its own pattern under `overrides`. The first skill of every area also gets one baseline
+# episode. Every seeded episode is tagged `seed_source: demo-seed-v1` and can be removed again
+# (python -m app.gamification.demo_seed cleanup).
+#
+# Patterns (see app/gamification/demo_seed/plan.py):
+#   responds_to_round_1/2/3      help works on round 1/2/3, then a second episode uses what was learned
+#   needs_two_tries              after-question missed once (gain 0), then success
+#   helped_but_not_independent   right while helped, wrong alone: must not become a preference
+#   all_rounds_fail              every help type missed, help withdrawn by rule W
+#   low_evidence                 no timing or interaction data: Model 1 falls back to a flat estimate
+#   exits_after_help             child leaves after help: an invalid episode Model 2 must ignore
+#   already_secure               right first time: no help, no update
+
+version: demo-seed-v1
+learner_id: 00000000-0000-4000-8000-000000000721
+
+areas:
+  G5-AREA-MAT-01: responds_to_round_1
+  G5-AREA-MAT-02: responds_to_round_2
+  G5-AREA-MAT-03: responds_to_round_2
+  G5-AREA-MAT-04: needs_two_tries
+  G5-AREA-MAT-05: responds_to_round_3
+  G5-AREA-MAT-06: responds_to_round_1
+  G5-AREA-MAT-07: helped_but_not_independent
+  G5-AREA-MAT-08: low_evidence
+  G5-AREA-MAT-09: all_rounds_fail
+  G5-AREA-MAT-10: exits_after_help
+  G5-AREA-MAT-11: responds_to_round_2
+  G5-AREA-MAT-12: needs_two_tries
+  G5-AREA-MAT-13: responds_to_round_3
+  G5-AREA-MAT-14: already_secure
+  G5-AREA-MAT-15: responds_to_round_1
+  G5-AREA-MAT-16: low_evidence
+  G5-AREA-ENG-01: responds_to_round_2
+  G5-AREA-ENG-02: responds_to_round_1
+  G5-AREA-ENG-03: needs_two_tries
+  G5-AREA-ENG-04: responds_to_round_3
+  G5-AREA-ENG-05: helped_but_not_independent
+  G5-AREA-ENG-06: low_evidence
+  G5-AREA-ENG-07: responds_to_round_2
+  G5-AREA-ENG-08: all_rounds_fail
+  G5-AREA-ENG-09: responds_to_round_1
+  G5-AREA-ENG-10: exits_after_help
+  G5-AREA-ENG-11: needs_two_tries
+  G5-AREA-ENG-12: responds_to_round_2
+  G5-AREA-ENG-13: responds_to_round_3
+  G5-AREA-ENG-14: already_secure
+  G5-AREA-ENG-15: responds_to_round_1
+  G5-AREA-ENG-16: responds_to_round_2
+  G5-AREA-ENG-17: helped_but_not_independent
+  G5-AREA-ENG-18: needs_two_tries
+
+# Skills shown live in the demo script start from a clear single learned type.
+overrides:
+  G5-MAT-PAT-DIFF-ASC-01: responds_to_round_2
+
+# Small scripted history for rehearsal databases only (34 skills, 51 sessions).
+small_rehearsal: true

@@ -30,6 +30,9 @@ SCAFFOLD_VERSION = "g5-mat-addition-scaffolds-v1"
 # Source-page examples are kept as auditable content fixtures. Runtime items use
 # deterministic parallel variants so the unsupported-after probe is fresh.
 TEXTBOOK_FACTS = ((8, 3), (11, 5), (17, 5), (3, 6), (2, 3), (4, 3))
+# Simpler-version facts: smaller than every textbook fact and within ten, so no bridge is needed.
+SIMPLER_FACTS = ((2, 1), (1, 3), (2, 2))
+SIMPLER_RUNNING_STOPS = 4
 TEXTBOOK_TRAIL_START = 82
 TEXTBOOK_TRAIL_ADDENDS = (27, 12, 20, 257, 572, 1_232, 1_830)
 TEXTBOOK_COLUMN_EXAMPLES = ((4_597, 3_023), (6_237, 3_458), (5_321, 3_789))
@@ -60,6 +63,7 @@ class AtomicSkill:
     skill_id: str
     chapter: Chapter
     name_si: str
+    difficulty: str
     source_node_id: str
     source_page: str
     outcome_provenance: str
@@ -70,6 +74,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-ADD-MENTAL-01",
         "fruit_catch",
         "මානසික එකතු කිරීම හා කොටස් කිරීම",
+        "easy",
         "G5-MAT-U103-A001",
         "8",
         "draft_activity_mapping_requires_educator_review",
@@ -78,6 +83,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C06-L01-O01",
         "carrying_crane",
         "ගෙනයාම අවස්ථා දෙකක් සහිත සංඛ්‍යා දෙකක් එකතු කිරීම",
+        "medium",
         "G5-MAT-C06-L01-O01",
         "12",
         "draft_trace_medium_confidence",
@@ -86,6 +92,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C06-L01-O02",
         "carrying_crane",
         "ගෙනයාම අවස්ථා දෙකකට වැඩි සංඛ්‍යා දෙකක් එකතු කිරීම",
+        "medium",
         "G5-MAT-C06-L01-O02",
         "12",
         "draft_trace_medium_confidence",
@@ -94,6 +101,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-C06-L01-O03",
         "carrying_crane",
         "ගෙනයාම සහිත සංඛ්‍යා තුනක් එකතු කිරීම",
+        "medium_hard",
         "G5-MAT-C06-L01-O03",
         "12",
         "draft_trace_medium_confidence",
@@ -102,6 +110,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-ADD-RUNNING-TOTAL-01",
         "tuk_tuk_journey",
         "පියවරෙන් පියවර සමුච්චිත එකතුව තබා ගැනීම",
+        "medium",
         "G5-MAT-U103-A004",
         "11",
         "draft_activity_mapping_requires_educator_review",
@@ -110,6 +119,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-ADD-CONTEXT-01",
         "market_delivery_planner",
         "එකතු කිරීමේ වාක්‍ය ගැටලු විසඳීම",
+        "medium",
         "G5-MAT-U103-A006",
         "13",
         "draft_activity_mapping_requires_educator_review",
@@ -118,6 +128,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-ADD-TABLE-TOTAL-01",
         "festival_data_detective",
         "වගුවක අදාළ අගයන් තෝරා එකතුව සෙවීම",
+        "medium",
         "G5-MAT-U103-A002",
         "9",
         "draft_activity_mapping_requires_educator_review",
@@ -126,6 +137,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-ADD-TABLE-DIFFERENCE-01",
         "festival_data_detective",
         "වගු එකතු දෙකක් සසඳා වෙනස සෙවීම",
+        "hard",
         "G5-MAT-U103-A002",
         "9",
         "draft_activity_mapping_requires_educator_review",
@@ -134,6 +146,7 @@ ATOMIC_SKILLS = (
         "G5-MAT-ADD-TABLE-MAX-01",
         "festival_data_detective",
         "වගුවක පේළි එකතු සසඳා විශාලතම එකතුව හඳුනා ගැනීම",
+        "hard",
         "G5-MAT-U103-A002",
         "65",
         "draft_activity_mapping_requires_educator_review",
@@ -385,7 +398,19 @@ def _options(
     return rendered, correct, codes
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> AdditionItem:
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> AdditionItem:
+    """The same skill and game with smaller facts, fewer carries, fewer stops, or smaller values."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(
+    skill_id: str, *, role: str, seed: int, simpler: bool = False
+) -> AdditionItem:
     if skill_id not in SKILLS:
         raise ValueError("ADDITION_SKILL_NOT_FOUND")
     if role not in {"unsupported_before", "unsupported_after"}:
@@ -393,11 +418,12 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> AdditionItem:
     rng = random.Random(_seed(skill_id, role, seed))
     family_rng = _family_seed(skill_id, seed)
     skill = SKILLS[skill_id]
-    suffix = "B" if role == "unsupported_before" else "A"
+    suffix = ("B" if role == "unsupported_before" else "A") + ("S" if simpler else "")
     game: dict[str, object] = {"chapter": skill.chapter}
 
     if skill_id == "G5-MAT-ADD-MENTAL-01":
-        first, second = TEXTBOOK_FACTS[rng.randrange(len(TEXTBOOK_FACTS))]
+        facts = SIMPLER_FACTS if simpler else TEXTBOOK_FACTS
+        first, second = facts[rng.randrange(len(facts))]
         bridge = min(second, 10 - (first % 10) if first % 10 else min(5, second))
         addends = (first, second)
         answer = sum(addends)
@@ -421,7 +447,10 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> AdditionItem:
             addend_count, low, high = 3, target_carries, target_carries
             signature = f"three-addends-{target_carries}-carries"
         source_pair = TEXTBOOK_COLUMN_EXAMPLES[0]
-        if skill_id.endswith("O01") and role == "unsupported_before" and seed % 3 == 0:
+        if simpler:
+            # The same column game and addend count with a single carry.
+            low = high = 1
+        if skill_id.endswith("O01") and role == "unsupported_before" and seed % 3 == 0 and not simpler:
             addends = source_pair
         else:
             addends = _addends_with_carries(
@@ -454,6 +483,8 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> AdditionItem:
             value + variant + (1 if role == "unsupported_after" else 0)
             for value in TEXTBOOK_TRAIL_ADDENDS
         )
+        if simpler:
+            values = values[:SIMPLER_RUNNING_STOPS]
         stop_count = len(values)
         totals = cumulative_totals(values, start=start)
         answer = totals[-1]
@@ -470,6 +501,10 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> AdditionItem:
         base = TEXTBOOK_CONTEXT_EXAMPLES[family_rng.randrange(len(TEXTBOOK_CONTEXT_EXAMPLES))]
         shift = family_rng.randrange(0, 4) * 10 + (7 if role == "unsupported_after" else 0)
         values = tuple(value + shift for value in base)
+        if simpler:
+            # Three two-digit groups instead of three- or four-digit ones.
+            base = min(TEXTBOOK_CONTEXT_EXAMPLES, key=max)
+            values = tuple(value // 10 + shift // 10 for value in base)
         answer = sum(values)
         context = "sports_houses" if max(base) < 1_000 else "three_sources"
         prompt = f"කාණ්ඩ තුනේ {', '.join(map(str, values))} එකතු කර මුළු ගණන සොයන්න."
@@ -491,6 +526,9 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> AdditionItem:
             )
             for row, values in enumerate(source_table)
         )
+        if simpler:
+            # The same table with two-digit counts.
+            table = tuple(tuple(max(10, value // 10) for value in row) for row in table)
         if is_seedling:
             row_labels = ("ජනවාරි", "පෙබරවාරි", "මාර්තු")
             column_labels = ("වම්බටු", "බණ්ඩක්කා", "මිරිස්")
@@ -680,6 +718,7 @@ def package_hash() -> str:
                 "skill_id": row.skill_id,
                 "chapter": row.chapter,
                 "name_si": row.name_si,
+                "difficulty": row.difficulty,
                 "source_node_id": row.source_node_id,
                 "source_page": row.source_page,
                 "outcome_provenance": row.outcome_provenance,

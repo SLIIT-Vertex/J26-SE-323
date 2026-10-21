@@ -59,6 +59,9 @@ export const SUPPORT_TYPE_LABELS: Record<SupportView["scaffold_type"], string> =
 		visual_guidance: "දෘශ්‍ය මඟ පෙන්වීම",
 		worked_parallel_example: "පියවරෙන් පියවර දෘශ්‍ය උදාහරණය",
 		step_by_step_guidance: "පියවරෙන් පියවර මඟ පෙන්වීම",
+		simpler_same_game: "එකම ක්‍රීඩාවේ පහසු අනුවාදය",
+		prerequisite_repair: "පෙර කුසලතාව නැවත පුහුණු කිරීම",
+		conceptual_reexplanation: "අදහස වෙනත් ආකාරයකින්",
 	};
 
 const PLACE_LABELS = ["ලක්ෂ", "දස දහස්", "දහස්", "සිය", "දහය", "එක"];
@@ -844,9 +847,15 @@ function MultiplicationSupport({
 export function AdaptiveSupportActivity({
 	manifest,
 	onProgress,
+	renderNumberWorldExample,
 }: {
 	manifest: AdaptiveManifest;
 	onProgress(actions: number, complete: boolean): void;
+	renderNumberWorldExample?(
+		example: NumberWorldWorkedExample,
+		actions: number,
+		scaffoldType: SupportView["scaffold_type"],
+	): React.ReactNode;
 }) {
 	const [actions, setActions] = useState(0);
 	const heading = useRef<HTMLHeadingElement>(null);
@@ -891,11 +900,19 @@ export function AdaptiveSupportActivity({
 				{headingText}
 			</h3>
 			{isNumberWorld ? (
-				<ExactNumberWorldExample
-					example={(manifest as NumberWorldSupportManifest).worked_example}
-					actions={actions}
-					scaffoldType={manifest.scaffold_type}
-				/>
+				renderNumberWorldExample ? (
+					renderNumberWorldExample(
+						(manifest as NumberWorldSupportManifest).worked_example,
+						actions,
+						manifest.scaffold_type,
+					)
+				) : (
+					<ExactNumberWorldExample
+						example={(manifest as NumberWorldSupportManifest).worked_example}
+						actions={actions}
+						scaffoldType={manifest.scaffold_type}
+					/>
+				)
 			) : isNumberPattern ? (
 				<ExactNumberPatternExample
 					example={(manifest as NumberPatternSupportManifest).worked_example}

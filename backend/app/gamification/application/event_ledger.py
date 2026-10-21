@@ -72,9 +72,7 @@ class InMemoryEventLedger:
         self._next_by_session[event.session_id] = expected + 1
         return EventAcceptance(event.event_id, event.sequence, duplicate=False)
 
-    def ingest_batch(
-        self, events: Iterable[EventEnvelope]
-    ) -> tuple[EventAcceptance, ...]:
+    def ingest_batch(self, events: Iterable[EventEnvelope]) -> tuple[EventAcceptance, ...]:
         return tuple(self.ingest(event) for event in events)
 
     def events(self, session_id: UUID) -> tuple[EventEnvelope, ...]:

@@ -216,7 +216,13 @@ class PlayableAreaRow(FrozenModel):
             return
         if self.template_id != assigned_template(self.area_id):
             raise ValueError(f"{self.area_id} template does not match the draft mission")
-        expected = assignment(self.area_id).eligible_support_types
+        # This package holds one fixed scaffold per area, so it lists only the original game
+        # types; the multi-help types are delivered by the game flows, not by this package.
+        expected = tuple(
+            support
+            for support in assignment(self.area_id).eligible_support_types
+            if support in GAME_SUPPORT_TYPES
+        )
         if self.eligible_support_types != expected:
             raise ValueError(f"{self.area_id} support types do not match the area rule")
 

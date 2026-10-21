@@ -19,6 +19,7 @@ from app.gamification.infrastructure.db.models import (
     LearningFlowEpisodeEventModel,
     LearningFlowEpisodeRunModel,
     LearningFlowIdempotencyReceiptModel,
+    LearningFlowSupportRoundModel,
     LearningRewardEntryModel,
 )
 
@@ -117,6 +118,7 @@ class SqlAlchemyLearningFlowStore:
         request_sha256: str,
         response: dict[str, object],
         now: datetime,
+        support_rounds: tuple[dict[str, object], ...] = (),
     ) -> None:
         self._validate_key(idempotency_key)
         row = self._row(episode_id, for_update=True)
@@ -129,6 +131,8 @@ class SqlAlchemyLearningFlowStore:
         row.updated_at = now
         for event in new_events:
             self._append_event(row.episode_id, event, now)
+        for support_round in support_rounds:
+            self._save_support_round(row.episode_id, support_round)
         reward = state.get("reward")
         if isinstance(reward, dict) and int(reward.get("points", 0)) > 0:
             existing_reward = self.session.scalar(
@@ -213,6 +217,46 @@ class SqlAlchemyLearningFlowStore:
             .order_by(LearningFlowEpisodeRunModel.updated_at, LearningFlowEpisodeRunModel.episode_id)
         ).all()
         return tuple(dict(row.state_json) for row in rows)
+
+    def support_rounds(self, episode_id: UUID) -> tuple[dict[str, object], ...]:
+        rows = self.session.scalars(
+            select(LearningFlowSupportRoundModel)
+            .where(LearningFlowSupportRoundModel.episode_id == episode_id)
+            .order_by(LearningFlowSupportRoundModel.round_number)
+        ).all()
+        return tuple(
+            {
+                "round_id": str(row.round_id),
+                "round_number": row.round_number,
+                "scaffold_type": row.scaffold_type,
+                "english_tag_key": row.english_tag_key,
+                "order_position": row.order_position,
+                "outcome": row.outcome,
+                "supported_correct": row.supported_correct,
+            }
+            for row in rows
+        )
+
+    def _save_support_round(self, episode_id: UUID, values: dict[str, object]) -> None:
+        round_id = UUID(str(values["round_id"]))
+        row = self.session.get(LearningFlowSupportRoundModel, round_id)
+        if row is None:
+            row = LearningFlowSupportRoundModel(
+                round_id=round_id,
+                episode_id=episode_id,
+                round_number=int(values["round_number"]),
+                scaffold_type=str(values["scaffold_type"]),
+                english_tag_key=str(values["english_tag_key"]),
+                order_position=int(values["order_position"]),
+                opened_at=datetime.fromisoformat(str(values["opened_at"])),
+            )
+            self.session.add(row)
+        elif row.episode_id != episode_id or row.scaffold_type != values["scaffold_type"]:
+            raise LearningFlowPersistenceError("SUPPORT_ROUND_CONFLICT")
+        row.outcome = None if values["outcome"] is None else str(values["outcome"])
+        row.supported_correct = values["supported_correct"]  # type: ignore[assignment]
+        closed = values["closed_at"]
+        row.closed_at = None if closed is None else datetime.fromisoformat(str(closed))
 
     def _append_event(self, episode_id: UUID, event: object, now: datetime) -> None:
         if not isinstance(event, dict):

@@ -32,6 +32,7 @@ from app.gamification.infrastructure.db.consent_store import (
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000771")
 AREA = "G5-AREA-MAT-08"  # division
@@ -101,19 +102,9 @@ def play_division(
         episode, option_id=None, constructed_response=before, response_time_ms=800,
         interaction_summary=SUMMARY, idempotency_key=f"b-{uuid4()}",
     )
-    manifest = supported["support"]["game_manifest"]
-    flow.complete_support(
-        episode, duration_ms=1200, steps_viewed=3, manifest_revision_id=manifest["revision_id"],
-        grouped_count=0, group_sizes=(),
-        interaction_summary={
-            "completed": True, "renderer_id": manifest["renderer_id"],
-            "parallel_example_id": manifest["parallel_example_id"], "support_actions": 3,
-        },
-        idempotency_key=f"c-{uuid4()}",
-    )
+    help_done = finish_help(flow, episode, supported)
     flow.withdraw_support(
-        episode, request_id=uuid4(), support_revision_id=supported["support"]["revision_id"],
-        manifest_revision_id=manifest["revision_id"], all_support_removed=True,
+        episode, request_id=uuid4(), **help_done, all_support_removed=True,
         answer_revealing_state_cleared=True, input_handlers_cleared=True, idempotency_key=f"w-{uuid4()}",
     )
     flow.present_after(episode, idempotency_key=f"p-{uuid4()}")

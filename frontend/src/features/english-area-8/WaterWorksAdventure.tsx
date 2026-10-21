@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -15,9 +15,14 @@ import type {
 	SupportView,
 	WaterWorksWorkedExample,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./water-works-adventure.css";
 import { WATER_STAGES } from "./manifest";
 import {
@@ -33,15 +38,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 const STAGE_LABELS: Record<string, string> = {
 	droplet_match: "Droplet Match",
 	pipe_route: "Pipe Route Relay",
@@ -56,7 +52,7 @@ export function WaterWorksAdventure({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -133,6 +129,25 @@ export function WaterWorksAdventure({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const openSkill = async () => {
 		if (lock.current) return;
 		lock.current = true;
@@ -212,7 +227,8 @@ export function WaterWorksAdventure({
 		if (
 			!episodeId ||
 			!support ||
-			support.game_manifest.schema_version !== "water-works-adventure-support-v1"
+			support.game_manifest.schema_version !==
+				"water-works-adventure-support-v1"
 		)
 			return;
 		const game = support.game_manifest;
@@ -258,7 +274,6 @@ export function WaterWorksAdventure({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 8</p>
 					<h1>Water</h1>
 				</div>
 			</header>
@@ -276,13 +291,15 @@ export function WaterWorksAdventure({
 					</button>
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={1}
-						currentActivity={1}
-						completedActivities={completed ? 1 : 0}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={1}
+							currentActivity={1}
+							completedActivities={completed ? 1 : 0}
+						/>
+					)}
 					<p className="caq-position">{STAGE_LABELS[chapter] ?? "Water"}</p>
 					{step === "question" &&
 						manifest?.game?.schema_version ===
@@ -308,7 +325,35 @@ export function WaterWorksAdventure({
 								</button>
 							</>
 						)}
-					{step === "support" && support && (
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null}
+							checkLabel="Check my water actions"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<WaterBoard
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={record}
+								/>
+							)}
+						/>
+					)}
+					{step === "support" && support && !isSupportRound(support) && (
 						<WaterSupport
 							support={support}
 							stage={supportStage}
@@ -342,14 +387,11 @@ export function WaterWorksAdventure({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<div className="water-badge" aria-hidden="true">
-								⭐
-							</div>
-							<SuccessCelebration />
-							<h2>Water Works Adventure complete!</h2>
-							<p>You matched water actions independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={1}
+							gameCount={1}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}
@@ -453,7 +495,9 @@ function WaterSupport({
 	onNext(): void;
 	onComplete(): void;
 }) {
-	if (support.game_manifest.schema_version !== "water-works-adventure-support-v1")
+	if (
+		support.game_manifest.schema_version !== "water-works-adventure-support-v1"
+	)
 		return null;
 	const game = support.game_manifest;
 	return (

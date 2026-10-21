@@ -9,7 +9,10 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import shown_tokens, simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-11"
+UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-workplace-link-city-draft-v1"
 CATALOGUE_VERSION = "g5-eng-work-misconceptions-v1"
 FEATURE_VERSION = "g5-eng-work-features-v1"
@@ -107,6 +110,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> WorkplaceLinkItem:
     revision = f"{skill_id}:{role}:{seed % 100000}@v1"
     return WorkplaceLinkItem(f"{skill_id}:{role}", revision, f"{skill_id}:{chapter}:parallel-v1", skill_id, chapter, role, prompt, (), "constructed-response", {}, game)  # type: ignore[arg-type]
 
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> WorkplaceLinkItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
+
 
 def public_game_data(item: WorkplaceLinkItem) -> dict[str, object]:
     return {"chapter": item.chapter, **{key: value for key, value in item.game_data.items() if key not in {"target_mapping", "target_links"}}}
@@ -135,7 +145,7 @@ def validate_constructed_response(item: Mapping[str, object] | WorkplaceLinkItem
     empty_key = "unplaced_word_tokens" if vocabulary else "unlinked_occupation_tokens"; invalid_key = "invalid_drop_count" if vocabulary else "invalid_link_count"
     answer = game[answer_key]; rows = response[rows_key]; assert isinstance(answer, Mapping)
     if not isinstance(rows, list) or response[empty_key] != [] or len(rows) != len(answer): raise ValueError("INCOMPLETE_WORKPLACE_LINK_RESPONSE")
-    allowed_targets = set(answer.values())
+    allowed_targets = set(answer.values()) | shown_tokens(game, target_key)
     submitted: dict[str, str] = {}
     for index, row in enumerate(rows, 1):
         if not isinstance(row, Mapping) or set(row) != {"sequence", source_key, target_key} or row["sequence"] != index or row[source_key] not in answer or row[target_key] not in allowed_targets: raise ValueError("INVALID_WORKPLACE_LINK_TOKEN_OR_SEQUENCE")

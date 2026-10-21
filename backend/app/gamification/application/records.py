@@ -196,7 +196,9 @@ class LearnerEvidenceEvent:
     contract_version: str = "gamification-learner-evidence-v1"
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "evidence_reference", MappingProxyType(dict(self.evidence_reference)))
+        object.__setattr__(
+            self, "evidence_reference", MappingProxyType(dict(self.evidence_reference))
+        )
         object.__setattr__(self, "payload", MappingProxyType(dict(self.payload)))
 
     @property
@@ -306,4 +308,3 @@ class EpisodeEvidenceBundle:
     support_exposures: tuple[SupportExposureEvidence, ...]
     verification_pair: VerificationPairEvidence | None
     outcome: IndependenceOutcomeEvidence | None
-

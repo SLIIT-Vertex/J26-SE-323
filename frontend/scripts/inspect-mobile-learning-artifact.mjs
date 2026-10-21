@@ -13,19 +13,20 @@ const required = [
 	"සමාන බෙදීමේ මැදිරිය",
 	"කාල පලතුරු වත්ත",
 	"දහයෙන් මෝසෙයික්",
-	"ඔබම උත්සාහ කරන්න",
-	"තාවකාලික උදව්",
-	"දැන් අලුත් එකක් ඔබම උත්සාහ කරන්න",
+	"games-title-last",
+	"අභියෝගය අරඹමු",
 ];
 const forbidden = [
+	"semantic-object",
+	"මෙහෙයුම බලන්න",
+	"බාගය සොයමු",
 	"Shared foundation",
 	"Grade 4–5",
 	"#/inspector",
 	"EpisodeInspector",
 	"#/build",
 	"4 ශ්‍රේණිය",
-	"தமிழ்",
-	"width:min(100%,430px)",
+	".mobile-shell{width:min(100%,430px)",
 	"0 0 0 9px #211e35",
 ];
 for (const token of required) {

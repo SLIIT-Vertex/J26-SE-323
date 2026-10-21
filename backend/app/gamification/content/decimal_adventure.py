@@ -98,27 +98,44 @@ def generate_reading_matches(*, seed: int, role: str, count: int = 4) -> tuple[l
     return digits, readings
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> DecimalItem:
+SIMPLER_READING_COUNT = 2
+SIMPLER_MAX_TENTHS = 2
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> DecimalItem:
+    """The same decimal skill with two readings to match, or one or two tenths."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> DecimalItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("DECIMAL_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
+    highest = SIMPLER_MAX_TENTHS if simpler else 9
     if skill.response_kind == "decimal_reading_match":
-        digits, readings = generate_reading_matches(seed=seed, role=role)
+        digits, readings = generate_reading_matches(
+            seed=seed, role=role, count=SIMPLER_READING_COUNT if simpler else 4
+        )
         game: dict[str, object] = {"response_kind": skill.response_kind, "decimal_tenths": digits, "reading_tiles": readings}
         prompt = "එක් එක් දශමය එහි නිවැරදි සිංහල කියවීමට ගළපන්න."
     elif skill.response_kind == "decimal_tenths_shading":
-        tenths = rng.randint(1, 9)
+        tenths = rng.randint(1, highest)
         game = {"response_kind": skill.response_kind, "decimal_tenths": tenths, "representation": rng.choice(("rectangle", "circle")), "total_parts": 10, "accept_any_equal_parts": True}
         prompt = f"0.{tenths} රූපයෙන් පෙන්වීමට සමාන කොටස් පාට කරන්න."
     elif skill.response_kind == "tenths_fraction_to_decimal":
-        numerator = rng.randint(1, 9)
+        numerator = rng.randint(1, highest)
         game = {"response_kind": skill.response_kind, "numerator": numerator, "denominator": 10, "fixed_whole_digit": 0}
         prompt = "දහයෙන් කොටසට සමාන දශමය සම්පූර්ණ කරන්න."
     else:
-        tenths = rng.randint(1, 9)
+        tenths = rng.randint(1, highest)
         game = {"response_kind": skill.response_kind, "decimal_tenths": tenths, "decimal_value": f"0.{tenths}", "fraction_bar_present": True}
         prompt = "දශමයට සමාන දහයෙන් කොටස සම්පූර්ණ කරන්න."
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return DecimalItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 
 

@@ -45,3 +45,20 @@ def test_food_belief_normalizes_with_unknown() -> None:
     sparse = infer_belief("not-a-label", sparse=True)
     assert sparse["predicted_label"] == "unknown_or_other"
     assert sparse["fallback_used"] is True
+
+
+def test_basket_sort_uses_concrete_foods_and_places_coconut_with_fruit() -> None:
+    from app.gamification.content.island_food_festival import FOODS
+
+    assert next(row[3] for row in FOODS if row[0] == "coconut") == "fruits"
+    concrete = {row[1] for row in FOODS if row[4]}
+    for seed in range(40):
+        item = generate_item("G5-ENG-FOOD-GROUP-02", role="unsupported_before", seed=seed)
+        assert all(row["text_en"] in concrete for row in item.game_data["entries"])
+        assert len(item.game_data["entries"]) == len(item.game_data["stalls"]) == 5
+
+
+def test_name_puzzles_require_a_distinct_food_visual() -> None:
+    for seed in range(24):
+        item = generate_item("G5-ENG-FOOD-NAME-03", role="unsupported_before", seed=seed)
+        assert item.game_data["renderer_variant"] in {11, 15, 26, 27, 31}

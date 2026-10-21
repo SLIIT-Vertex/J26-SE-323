@@ -154,12 +154,26 @@ def evaluate_roman(left: str, operation: str, right: str) -> int:
     return result
 
 
-def generate_item(skill_id: str, *, role: str, seed: int) -> RomanItem:
+# Simpler-version sums: totals no larger than III, written only by repeating I.
+SIMPLER_ARITHMETIC = ((1, "add", 1), (1, "add", 2), (2, "add", 1))
+
+
+def generate_simpler_item(
+    skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
+) -> RomanItem:
+    """The same Roman-numeral skill with fewer, smaller values to match, count or add."""
+    # The easiest settings of the skill, so the failed game is not needed to make it easier.
+    del than
+
+    return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
+
+
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> RomanItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("ROMAN_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill.response_kind == "roman_numeral_match":
-        values = rng.sample(range(1, 21), 5)
+        values = rng.sample(range(1, 6), 3) if simpler else rng.sample(range(1, 21), 5)
         romans = [ROMANS[v] for v in values]
         rng.shuffle(romans)
         game = {
@@ -170,7 +184,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> RomanItem:
         }
         prompt = "අංකය එහි නිවැරදි රෝම සංඛ්‍යාවට ගළපන්න."
     elif skill.response_kind == "emoji_quantity_to_roman":
-        quantity = rng.randint(2, 10)
+        quantity = rng.randint(2, 4) if simpler else rng.randint(2, 10)
         emoji_id, symbol = rng.choice(EMOJIS)
         game = {
             "response_kind": skill.response_kind,
@@ -193,7 +207,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> RomanItem:
             (6, "subtract", 5),
             (14, "add", 5),
         )
-        left, operation, right = rng.choice(examples)
+        left, operation, right = rng.choice(SIMPLER_ARITHMETIC if simpler else examples)
         game = {
             "response_kind": skill.response_kind,
             "problem_id": f"calc-{left}-{operation}-{right}-{role}",
@@ -202,7 +216,7 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> RomanItem:
             "right_roman": ROMANS[right],
         }
         prompt = "රෝම සංඛ්‍යා ගැටලුව විසඳා පිළිතුර ගොඩනඟන්න."
-    revision = f"{skill_id}:{role}:{seed % 100000}@v1"
+    revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return RomanItem(
         f"{skill_id}:{role}",
         revision,

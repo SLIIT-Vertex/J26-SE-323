@@ -6,16 +6,18 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import type {
+	ChildEpisodeResponse,
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	RomanAdventureWorkedExample,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	EMOJI_LABELS,
@@ -33,15 +35,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 export function RomanAdventureJourney({
 	api,
 	learnerId,
@@ -50,7 +43,7 @@ export function RomanAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -211,14 +204,14 @@ export function RomanAdventureJourney({
 		} else setStep("feedback");
 	};
 	const finishSupport = async () => {
+		if (!episodeId || !support) return;
+		const game = support.game_manifest;
+		if (game.schema_version === "half-set-manifest-v1") return;
 		if (
-			!episodeId ||
-			!support ||
-			support.game_manifest.schema_version !== "roman-adventure-support-v1"
+			game.schema_version !== "support-round-v1" &&
+			supportStage < game.required_actions
 		)
 			return;
-		const game = support.game_manifest;
-		if (supportStage < game.required_actions) return;
 		const done = await run(() =>
 			api.completeSupport(
 				episodeId,
@@ -236,15 +229,57 @@ export function RomanAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!done) return;
-		setPending({
-			episode: episodeId,
-			support: support.revision_id,
-			manifest: game.revision_id,
-		});
-		setSupport(null);
-		setResponse(null);
-		setStep("withdrawing");
+		if (done) advanceSupport(done);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) {
+			setPending({
+				episode: next.episode_id,
+				support: next.support_round.support_revision_id,
+				manifest: next.support_round.manifest_revision_id,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+			return;
+		}
+		if (next.support) {
+			setSupport(next.support);
+			setSupportStage(0);
+			reset();
+		}
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported,
+			game = support?.game_manifest,
+			activity =
+				game?.schema_version === "support-round-v1" ? game.activity : null;
+		if (
+			!submit ||
+			!episodeId ||
+			!response ||
+			!game ||
+			game.schema_version !== "support-round-v1" ||
+			!activity
+		)
+			return;
+		const next = await run(() =>
+			submit(
+				episodeId,
+				{
+					constructed_response: {
+						...response,
+						presentation_id: activity.presentation_id,
+						item_revision_id: activity.revision_id,
+						interaction_version: "constructed-response-v1",
+					},
+					response_time_ms: Date.now() - startedAt,
+					interaction_summary: { move_count: moves },
+				},
+				crypto.randomUUID(),
+			),
+		);
+		if (next) advanceSupport(next);
 	};
 	const advance = () => {
 		if (!skillId || !correct)
@@ -253,9 +288,12 @@ export function RomanAdventureJourney({
 			? completed
 			: [...completed, skillId];
 		setCompleted(done);
-		if (index < 2) void openSkill(ROMAN_SKILLS[index + 1].id);
-		else setStep(done.length === 3 ? "result" : "games");
+		setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) advance();
+	}, [step, correct]);
 	return (
 		<main
 			className="roman-adventure"
@@ -286,7 +324,7 @@ export function RomanAdventureJourney({
 					))}
 				</section>
 			) : (
-				<section className="roman-play">
+				<section className="roman-play game-play-surface">
 					<AdventureProgress
 						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
 						activityCount={3}
@@ -313,42 +351,60 @@ export function RomanAdventureJourney({
 							</button>
 						</>
 					)}
-					{step === "support" && support && (
-						<RomanSupport
-							support={support}
-							stage={supportStage}
-							onNext={() => setSupportStage((v) => v + 1)}
-							onComplete={finishSupport}
-						/>
-					)}{" "}
+					{step === "support" &&
+						support &&
+						(support.game_manifest.schema_version === "support-round-v1" ? (
+							<SupportRoundFrame
+								support={support}
+								busy={busy}
+								onViewComplete={() => void finishSupport()}
+								renderActivity={(activity) => (
+									<RomanActivity
+										key={activity.revision_id}
+										game={activity.game}
+										onResponse={record}
+									/>
+								)}
+							>
+								{support.game_manifest.stage_kind !== "view" && (
+									<button
+										className="roman-primary"
+										disabled={busy || !response}
+										onClick={() => void answerSupport()}
+									>
+										තහවුරු කරන්න
+									</button>
+								)}
+							</SupportRoundFrame>
+						) : (
+							<RomanSupport
+								support={support}
+								stage={supportStage}
+								onNext={() => setSupportStage((v) => v + 1)}
+								onComplete={finishSupport}
+							/>
+						))}{" "}
 					{step === "withdrawing" && (
 						<p role="status">පිළිතුරු සහිත සහාය ඉවත් කර අලුත් ප්‍රශ්නය සූදානම් කරමින්…</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<section className="roman-feedback">
-							<h2>
-								{correct
-									? "ක්‍රියාකාරකම සම්පූර්ණයි!"
-									: `${feedbackLabel(feedback)} නැවත බලමු.`}
-							</h2>
+							<h2>{`${feedbackLabel(feedback)} නැවත බලමු.`}</h2>
 							<button className="roman-primary" onClick={advance}>
-								{correct
-									? index === 2
-										? "අවසන් කරන්න"
-										: "ඊළඟ ක්‍රියාකාරකම"
-									: "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</section>
 					)}
 					{step === "result" && (
-						<section className="roman-feedback result">
-							<img
-								src={`${ROMAN_ASSET_ROOT}/roman-laurel-decoration.png`}
-								alt=""
-							/>
-							<SuccessCelebration />
-							<h2>රෝම සංඛ්‍යාංක ක්‍රීඩා 3ම සම්පූර්ණයි!</h2>
-						</section>
+						<GameSuccessScreen
+							gameNumber={index + 1}
+							gameCount={ROMAN_GAMES.length}
+							onContinue={() =>
+								index < ROMAN_SKILLS.length - 1
+									? void openSkill(ROMAN_SKILLS[index + 1].id)
+									: setStep("games")
+							}
+						/>
 					)}
 				</section>
 			)}

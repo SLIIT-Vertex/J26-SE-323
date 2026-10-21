@@ -14,10 +14,8 @@ class LearnerModel(Base):
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     grade: Mapped[int] = mapped_column(SmallInteger)
     preferred_language: Mapped[str] = mapped_column(String(10))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    display_name: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
-

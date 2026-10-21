@@ -99,10 +99,14 @@ def test_area_support_types_follow_the_provisional_catalog() -> None:
     )
 
     assert fractions.status_code == 200, fractions.text
+    # Mathematics runs the multi-help loop over every type in the shared contract.
     assert fractions.json()["eligible_support_types"] == [
         "visual_guidance",
         "worked_parallel_example",
         "step_by_step_guidance",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "conceptual_reexplanation",
     ]
     assert fractions.json()["authoring_basis"] == "provisional_development_assumption"
     assert riddle.status_code == 200, riddle.text

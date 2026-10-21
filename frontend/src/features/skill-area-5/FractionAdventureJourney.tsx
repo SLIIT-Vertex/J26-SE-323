@@ -2,20 +2,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
 	ConstructedResponse,
+	ChildEpisodeResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
 } from "../mobile-learning-flow/AdventureProgress";
+import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	FRACTION_GAMES,
 	FRACTION_SKILLS,
@@ -50,15 +52,7 @@ export function FractionAdventureJourney({
 	onBack,
 	onFailure,
 }: {
-	api: Pick<
-		LearningFlowClient,
-		| "open"
-		| "answerBefore"
-		| "completeSupport"
-		| "withdrawSupport"
-		| "presentAfter"
-		| "answerAfter"
-	>;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -248,11 +242,11 @@ export function FractionAdventureJourney({
 			!episodeId ||
 			!manifest ||
 			!support ||
-			supportActions <
+			(support.game_manifest.schema_version !== "support-round-v1" && supportActions <
 				Number(
 					(support.game_manifest as { required_actions?: number })
 						.required_actions ?? 1,
-				)
+				))
 		)
 			return;
 		const completed = await run(() =>
@@ -261,7 +255,7 @@ export function FractionAdventureJourney({
 				{
 					duration_ms: Date.now() - startedAt,
 					steps_viewed: Math.min(8, Math.max(1, supportActions)),
-					manifest_revision_id: manifest.revision_id,
+					manifest_revision_id: support.game_manifest.revision_id,
 					interaction_summary: {
 						action_count: supportActions,
 						exact_failed_activity: true,
@@ -270,16 +264,17 @@ export function FractionAdventureJourney({
 				crypto.randomUUID(),
 			),
 		);
-		if (!completed) return;
-		setPendingWithdrawal({
-			episodeId,
-			requestId: crypto.randomUUID(),
-			supportRevisionId: support.revision_id,
-			manifestRevisionId: manifest.revision_id,
-		});
-		setResponse(null);
-		setSupport(null);
-		setStep("withdrawing");
+		if (completed) advanceSupport(completed);
+	};
+	const advanceSupport = (next: ChildEpisodeResponse) => {
+		if (next.support_round?.withdrawal_allowed) { setPendingWithdrawal({ episodeId: next.episode_id, requestId: crypto.randomUUID(), supportRevisionId: next.support_round.support_revision_id, manifestRevisionId: next.support_round.manifest_revision_id }); setResponse(null); setSupport(null); setStep("withdrawing"); return; }
+		if (next.support) { setSupport(next.support); reset(); setStep("support"); }
+	};
+	const answerSupport = async () => {
+		const submit = api.answerSupported; const game = support?.game_manifest;
+		if (!submit || !episodeId || !response || !game || game.schema_version !== "support-round-v1" || !game.activity) return; const activity = game.activity;
+		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Math.max(0, Date.now() - startedAt), interaction_summary: { move_count: evidence.moves } }, crypto.randomUUID()));
+		if (next) advanceSupport(next);
 	};
 
 	const continueAfterFeedback = () => {
@@ -292,6 +287,10 @@ export function FractionAdventureJourney({
 			void openSkill(skills[challengeIndex + 1].id, chapter);
 		else setStep("result");
 	};
+	// biome-ignore lint/correctness/useExhaustiveDependencies: transition exactly once when feedback becomes correct
+	useEffect(() => {
+		if (step === "feedback" && correct) continueAfterFeedback();
+	}, [step, correct]);
 
 	return (
 		<main
@@ -329,7 +328,7 @@ export function FractionAdventureJourney({
 					))}
 				</section>
 			) : (
-				<section className="fraction-play-shell">
+				<section className="fraction-play-shell game-play-surface">
 					<AdventureProgress
 						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
 					/>
@@ -358,7 +357,9 @@ export function FractionAdventureJourney({
 						</>
 					)}
 					{step === "support" && support && (
-						<FractionSupport
+						support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <FractionActivity key={activity.revision_id} game={activity.game} onResponse={record} />}>
+							{support.game_manifest.stage_kind !== "view" && <button type="button" className="fraction-primary" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
+						</SupportRoundFrame> : <FractionSupport
 							support={support}
 							actions={supportActions}
 							onAction={() => setSupportActions((value) => value + 1)}
@@ -370,26 +371,23 @@ export function FractionAdventureJourney({
 							සහාය ඉවත් කර නව ප්‍රශ්නය සූදානම් කරමින්…
 						</p>
 					)}
-					{step === "feedback" && (
+					{step === "feedback" && !correct && (
 						<div className="fraction-feedback">
-							<h2>{correct ? "නිවැරදියි!" : "නැවත බලමු."}</h2>
+							<h2>නැවත බලමු.</h2>
 							<button
 								type="button"
 								className="fraction-primary"
 								onClick={continueAfterFeedback}
 							>
-								{correct ? "ඊළඟ අභියෝගය" : "නැවත උත්සාහ කරන්න"}
+								නැවත උත්සාහ කරන්න
 							</button>
 						</div>
 					)}
 					{step === "result" && chapter && (
-						<div className="fraction-feedback">
-							<SuccessCelebration />
-							<h2>ක්‍රීඩාව සම්පූර්ණයි!</h2>
-							<button
-								type="button"
-								className="fraction-primary"
-								onClick={() => {
+						<GameSuccessScreen
+							gameNumber={chapterIndex + 1}
+							gameCount={FRACTION_GAMES.length}
+							onContinue={() => {
 									const next = FRACTION_GAMES[chapterIndex + 1];
 									if (next) {
 										const first = FRACTION_SKILLS.find(
@@ -398,10 +396,7 @@ export function FractionAdventureJourney({
 										if (first) void openSkill(first.id, next.id);
 									} else setStep("chapters");
 								}}
-							>
-								ඊළඟ ක්‍රීඩාව
-							</button>
-						</div>
+						/>
 					)}
 				</section>
 			)}

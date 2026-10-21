@@ -112,3 +112,12 @@
 		height: 56px;
 	}
 }
+.plant-explorer .plant-board {
+	padding: 0;
+	border: 0;
+	background: transparent;
+}
+.plant-explorer .caq-command strong {
+	font-size: clamp(1.05rem, 4.5vw, 1.4rem);
+	line-height: 1.6;
+}

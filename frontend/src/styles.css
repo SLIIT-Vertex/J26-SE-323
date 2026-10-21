@@ -21,6 +21,7 @@
 	--sky: #3fa9f5;
 	--sky-soft: #e8f5fe;
 	--gold: #ffc542;
+	--bottom-nav-space: calc(6.5rem + env(safe-area-inset-bottom));
 	--shadow:
 		0 12px 30px rgba(46, 42, 69, 0.08), 0 2px 7px rgba(46, 42, 69, 0.05);
 }
@@ -113,7 +114,7 @@ p {
 	padding: 1rem 0 2rem;
 }
 .mobile-shell > .tab-screen {
-	padding-bottom: calc(6.4rem + env(safe-area-inset-bottom));
+	padding-bottom: var(--bottom-nav-space);
 }
 .development-ribbon {
 	position: relative;
@@ -285,19 +286,16 @@ p {
 	height: auto;
 	flex: 0 0 auto;
 	object-fit: contain;
-	border-radius: 10px;
-	background: #000;
+	background: transparent;
 }
 .brand-mark--primary {
 	width: min(100%, 280px);
 }
 .brand-mark--hero {
-	width: min(78vw, 280px);
+	width: min(92vw, 420px);
 	height: auto;
 	padding: 0;
-	border-radius: 22px;
-	background: #000;
-	box-shadow: 0 22px 48px rgba(36, 22, 118, 0.25);
+	background: transparent;
 }
 .brand-name {
 	margin: 0.95rem 0 0;
@@ -350,7 +348,6 @@ p {
 .onboarding-brand .brand-mark {
 	width: 36px;
 	height: auto;
-	border-radius: 8px;
 }
 .setup-back {
 	display: grid;
@@ -877,7 +874,6 @@ p {
 .info-card,
 .warning-card,
 .support-panel,
-.game-card,
 .progress-row {
 	margin: 1rem 0;
 	padding: 1rem;
@@ -1024,16 +1020,42 @@ p {
 .bottom-navigation {
 	position: fixed;
 	z-index: 20;
-	left: 0;
-	bottom: 0;
+	left: 50%;
+	bottom: max(0.75rem, env(safe-area-inset-bottom));
 	display: grid;
-	grid-template-columns: repeat(5, 1fr);
-	width: 100%;
-	padding: 0.45rem 0.35rem calc(0.42rem + env(safe-area-inset-bottom));
-	border-top: 1px solid rgba(46, 42, 69, 0.06);
-	background: rgba(255, 255, 255, 0.96);
-	box-shadow: 0 -10px 30px rgba(46, 42, 69, 0.07);
-	backdrop-filter: blur(16px);
+	grid-template-columns: repeat(5, minmax(0, 1fr));
+	width: min(
+		560px,
+		calc(
+			100% -
+			2 *
+			max(0.75rem, env(safe-area-inset-left), env(safe-area-inset-right))
+		)
+	);
+	padding: 6px;
+	border: 1px solid rgb(255 255 255 / 90%);
+	border-radius: 28px;
+	background: rgb(255 255 255 / 94%);
+	box-shadow:
+		0 8px 32px rgb(46 34 88 / 12%),
+		0 2px 8px rgb(46 34 88 / 5%);
+	-webkit-backdrop-filter: blur(20px) saturate(150%);
+	backdrop-filter: blur(20px) saturate(150%);
+	transform: translateX(-50%);
+	isolation: isolate;
+}
+.nav-selection {
+	position: absolute;
+	z-index: -1;
+	inset: 6px auto 6px 6px;
+	width: calc((100% - 12px) / 5);
+	border: 1px solid rgb(108 92 231 / 9%);
+	border-radius: 22px;
+	background: linear-gradient(160deg, #f0ebff, #e9e7ff);
+	box-shadow: 0 2px 6px rgb(108 92 231 / 7%);
+	pointer-events: none;
+	transform: translateX(calc(var(--active-tab, 0) * 100%));
+	transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .nav-item {
 	position: relative;
@@ -1041,40 +1063,100 @@ p {
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 0.16rem;
+	gap: 3px;
 	min-width: 0;
-	min-height: 52px;
-	padding: 0.25rem 0.1rem;
+	min-height: 62px;
+	padding: 6px 2px;
 	border: 0;
-	color: var(--faint);
+	border-radius: 22px;
+	color: #79728d;
 	background: transparent;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	transition:
+		color 180ms ease,
+		background-color 180ms ease,
+		transform 180ms ease;
+}
+.nav-item:active {
+	transform: scale(0.94);
+}
+.nav-item:focus-visible {
+	outline: 3px solid var(--purple);
+	outline-offset: -3px;
 }
 .nav-item > span {
 	display: grid;
 	place-items: center;
-	width: 38px;
-	height: 29px;
-	border-radius: 11px;
+	width: 40px;
+	height: 30px;
+	border-radius: 16px;
+}
+.nav-item .nav-icon {
+	transition:
+		transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+		stroke-width 180ms ease;
 }
 .nav-item small {
-	font-size: 0.55rem;
-	font-weight: 850;
+	font-size: clamp(0.66rem, 2.7vw, 0.75rem);
+	font-weight: 750;
+	line-height: 1.6;
 	white-space: nowrap;
 }
 .nav-item--active {
-	color: var(--purple);
+	color: #6043ce;
 }
-.nav-item--active > span {
-	background: var(--purple-soft);
+.nav-item--active .nav-icon {
+	stroke-width: 2.1;
+	transform: translateY(-1px) scale(1.05);
 }
-.nav-item--active:before {
-	content: "";
-	position: absolute;
-	top: -0.46rem;
-	width: 28px;
-	height: 3px;
-	border-radius: 9px;
-	background: var(--purple);
+.nav-item--active small {
+	font-weight: 900;
+}
+@media (hover: hover) {
+	.nav-item:hover {
+		color: #6043ce;
+		background: rgb(108 92 231 / 5%);
+	}
+}
+@media (max-height: 500px) and (orientation: landscape) {
+	.bottom-navigation {
+		border-radius: 24px;
+	}
+	.nav-item {
+		min-height: 52px;
+		gap: 1px;
+		padding-block: 3px;
+	}
+	.nav-item > span {
+		height: 26px;
+	}
+}
+@keyframes mobile-tab-arrive {
+	from {
+		opacity: 0;
+		transform: translateY(5px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+.mobile-shell > :is(.tab-screen, .papers-tab, .tutor-workspace) {
+	animation: mobile-tab-arrive 180ms ease-out;
+}
+.mobile-shell[data-reduced-motion="true"]
+	> :is(.tab-screen, .papers-tab, .tutor-workspace),
+.mobile-shell[data-reduced-motion="true"] .bottom-navigation * {
+	animation: none;
+	transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+	.bottom-navigation *,
+	.mobile-shell > :is(.tab-screen, .papers-tab, .tutor-workspace) {
+		animation: none;
+		transition: none;
+	}
 }
 .page-title-row {
 	display: flex;
@@ -1380,15 +1462,6 @@ p {
 .info-card p:last-child {
 	border-bottom: 0;
 }
-.illustration {
-	margin: 1rem 0;
-	padding: 2.4rem 1rem;
-	border-radius: 24px;
-	color: #167da8;
-	background: var(--sky-soft);
-	font-size: clamp(1.2rem, 7vw, 2rem);
-	text-align: center;
-}
 .independent-badge,
 .support-badge {
 	display: inline-block;
@@ -1449,71 +1522,6 @@ p {
 	color: #a87200;
 	background: #fff5cf;
 }
-.game-card {
-	padding: 0.75rem;
-	overflow: hidden;
-}
-.game-instruction {
-	font-weight: 800;
-}
-.phaser-host {
-	width: 100%;
-	min-height: 320px;
-	border-radius: 1rem;
-	overflow: hidden;
-}
-.semantic-game {
-	margin-top: 0.75rem;
-	padding-top: 0.75rem;
-	border-top: 2px dashed #b6a3df;
-}
-.semantic-game--primary {
-	border: 0;
-}
-.semantic-object-grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 0.5rem;
-}
-.semantic-object {
-	min-width: 0;
-	margin: 0;
-	padding: 0.5rem;
-	border: 1px solid #b6a3df;
-	border-radius: 0.8rem;
-}
-.semantic-object button {
-	width: 100%;
-	margin-top: 0.35rem;
-	border: 1px solid var(--purple);
-	border-radius: 0.7rem;
-	color: var(--ink);
-	background: #fff;
-}
-.summary-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 0.55rem;
-}
-.mobile-shell .summary-grid div {
-	display: grid;
-	gap: 0.3rem;
-	padding: 0.8rem 0.35rem;
-	border-radius: 17px;
-	background: #fff;
-	box-shadow: var(--shadow);
-	text-align: center;
-}
-.summary-grid strong,
-.reward-value {
-	color: var(--purple);
-	font-size: 1.45rem;
-	font-weight: 900;
-}
-.summary-grid span {
-	color: var(--muted);
-	font-size: 0.72rem;
-}
 .progress-row {
 	display: flex;
 	align-items: flex-start;
@@ -1560,9 +1568,6 @@ p {
 	.mobile-shell > .splash-screen {
 		max-width: none;
 	}
-	.bottom-navigation {
-		padding-inline: max(1rem, env(safe-area-inset-left));
-	}
 }
 @media (max-width: 360px) {
 	.mobile-shell {
@@ -1571,12 +1576,8 @@ p {
 	.achievement-grid {
 		gap: 0.5rem;
 	}
-	.stats small,
-	.nav-item small {
+	.stats small {
 		font-size: 0.5rem;
-	}
-	.semantic-object-grid {
-		grid-template-columns: 1fr;
 	}
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1685,9 +1686,6 @@ p {
 	background: none;
 	font-weight: 800;
 }
-[data-progress-mode="stars"] {
-	display: none;
-}
 .adventure-skills > button {
 	min-height: 88px;
 	font-weight: 850;
@@ -1712,6 +1710,37 @@ p {
 	max-height: 300px;
 	margin: 0.25rem auto 0.5rem;
 	object-fit: contain;
+}
+.game-success-screen {
+	display: grid;
+	justify-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	gap: 0;
+	margin-top: 1rem;
+	padding: 1rem;
+	border-radius: 24px;
+	background: rgba(255, 255, 255, 0.97);
+	box-shadow: 0 12px 28px rgba(72, 42, 116, 0.14);
+	text-align: center;
+}
+.game-success-screen.game-success-screen .success-celebration-image {
+	display: block;
+	width: min(210px, 66vw);
+	height: auto;
+	max-width: 210px;
+	max-height: 300px;
+	margin: 0.25rem auto 0.5rem;
+	object-fit: contain;
+}
+.game-success-screen h2 {
+	margin: 0.35rem 0;
+}
+.game-success-screen p {
+	margin: 0.35rem 0 0.75rem;
+}
+.game-success-screen .primary-action {
+	width: 100%;
 }
 .adventure-progress {
 	display: flex;
@@ -1742,11 +1771,39 @@ p {
 	border-color: #57558f;
 	background: #eeeafe;
 }
-.adventure-progress--stars span {
-	color: #fff;
-	border-color: #e9a915;
-	background: linear-gradient(180deg, #ffd95a, #ffad1f);
-	box-shadow: 0 3px 0 #d98712;
+.adventure-notice {
+	position: fixed;
+	right: 0.75rem;
+	bottom: max(1rem, env(safe-area-inset-bottom));
+	left: 0.75rem;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.65rem;
+	width: min(25rem, calc(100% - 1.5rem));
+	margin-inline: auto;
+	padding: 0.7rem 0.8rem;
+	border: 2px solid #efb72f;
+	border-radius: 14px;
+	color: #35264f;
+	background: #fff7d6;
+	box-shadow: 0 8px 24px rgb(53 38 79 / 20%);
+	font-size: 0.78rem;
+	font-weight: 850;
+}
+.adventure-notice button {
+	display: grid;
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
+	min-height: 32px;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgb(53 38 79 / 9%);
+	font-size: 1.25rem;
 }
 .game-round-label {
 	margin: 0 0 0.6rem;
@@ -1897,7 +1954,7 @@ p {
 	position: relative;
 	z-index: 1;
 	width: 100%;
-	min-width: 312px;
+	min-width: 0;
 	border: 2px solid #6d4b8f;
 	border-collapse: collapse;
 	border-radius: 12px;
@@ -1942,7 +1999,7 @@ p {
 	display: grid;
 	width: 100%;
 	height: 100%;
-	min-width: 48px;
+	min-width: 0;
 	min-height: 56px;
 	place-items: center;
 	padding: 0;
@@ -2194,8 +2251,10 @@ p {
 	font-size: 1.2rem;
 }
 .expanded-step-button {
-	width: 48px;
-	height: 48px;
+	width: min(40px, 90%);
+	height: 40px;
+	min-width: 0;
+	min-height: 40px;
 	border: 2px solid #0c8f86;
 	border-radius: 12px;
 	background: #fff;
@@ -2280,14 +2339,14 @@ p {
 }
 .abacus-grid {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.55rem;
 }
 .abacus-rod-control {
 	display: grid;
 	gap: 0.32rem;
 	min-width: 0;
-	padding: 0.55rem;
+	padding: 0.45rem 0.3rem;
 	border: 2px solid #ddd3f4;
 	border-radius: 16px;
 	background: #f9f7ff;
@@ -2299,7 +2358,7 @@ p {
 }
 .abacus-stepper {
 	display: grid;
-	grid-template-columns: 48px minmax(2rem, 1fr) 48px;
+	grid-template-columns: 40px minmax(1.5rem, 1fr) 40px;
 	align-items: center;
 	justify-items: center;
 	gap: 0.35rem;
@@ -2310,10 +2369,10 @@ p {
 }
 .abacus-step-button {
 	display: grid;
-	width: 48px;
-	height: 48px;
-	min-width: 48px;
-	min-height: 48px;
+	width: 40px;
+	height: 40px;
+	min-width: 40px;
+	min-height: 40px;
 	place-items: center;
 	padding: 0;
 	border: 3px solid #57558f;
@@ -3329,6 +3388,26 @@ p {
 	background: #1eb69f;
 	color: #fff;
 }
+.number-world-support-replica {
+	display: grid;
+	gap: 0.75rem;
+}
+.support-question-replica {
+	min-width: 0;
+}
+.support-question-replica .manipulation-board {
+	margin: 0;
+}
+.support-correct-answer,
+.support-practice-note {
+	margin: 0;
+	padding: 0.7rem;
+	border: 2px solid #1eb69f;
+	border-radius: 12px;
+	background: #e2fff8;
+	font-weight: 900;
+	text-align: center;
+}
 @keyframes worked-pop {
 	from {
 		opacity: 0;
@@ -3444,26 +3523,28 @@ p {
 
 /* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards > button {
-	min-height: 15rem;
+	min-height: 9.5rem;
 }
 
 /* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards img {
-	max-width: min(48%, 12rem);
-	max-height: 9rem;
+	width: clamp(5rem, 30vw, 8rem);
+	height: clamp(5rem, 30vw, 8rem);
 	object-fit: contain;
 }
 
+/* The title sits beside the picture, inside its own card. */
 /* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards span {
-	position: absolute;
-	top: 1rem;
-	right: 1rem;
-	padding: 0.35rem 0.75rem;
+	flex: 1;
+	color: #35275a;
+}
+
+.pattern-chapter-cards small {
+	justify-self: start;
+	padding: 0.25rem 0.65rem;
 	border-radius: 999px;
 	background: color-mix(in srgb, var(--card-tone) 18%, white);
-	color: #35275a;
-	font-weight: 800;
 }
 
 .pattern-board {
@@ -3478,7 +3559,7 @@ p {
 
 .pattern-machine {
 	width: min(100%, 32rem);
-	max-height: 13rem;
+	max-height: clamp(6rem, 24vw, 13rem);
 	margin-inline: auto;
 	object-fit: contain;
 }
@@ -3542,7 +3623,7 @@ p {
 .worked-pattern-route {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0.9rem 0.35rem;
+	gap: 2.25rem 0.35rem;
 	margin: 0;
 	padding: 0;
 	list-style: none;
@@ -3592,23 +3673,26 @@ p {
 
 .pattern-sequence li:nth-child(3) .pattern-arrow,
 .worked-pattern-route li:nth-child(3) > span {
-	transform: rotate(90deg);
-	top: calc(100% + 0.1rem);
+	transform: translateX(50%) rotate(90deg);
+	top: calc(100% + 0.35rem);
 	right: 50%;
 }
 
 .pattern-sequence li:nth-child(4),
 .worked-pattern-route li:nth-child(4) {
+	grid-row: 2;
 	grid-column: 3;
 }
 
 .pattern-sequence li:nth-child(5),
 .worked-pattern-route li:nth-child(5) {
+	grid-row: 2;
 	grid-column: 2;
 }
 
 .pattern-sequence li:nth-child(6),
 .worked-pattern-route li:nth-child(6) {
+	grid-row: 2;
 	grid-column: 1;
 }
 
@@ -3693,10 +3777,9 @@ p {
 @media (max-width: 360px) {
 	.harbour-board {
 		box-sizing: border-box;
-		width: calc(100vw - 2px);
-		margin-right: calc((100% - (100vw - 2px)) / 2);
-		margin-left: calc((100% - (100vw - 2px)) / 2);
-		padding: 0;
+		width: 100%;
+		margin-inline: 0;
+		padding: 0.35rem;
 	}
 	.place-value-table-frame {
 		padding: 0;
@@ -3706,17 +3789,10 @@ p {
 	}
 }
 @media (min-width: 480px) {
-	.abacus-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
 	.river-bank,
 	.river-route {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
-}
-.mobile-shell[data-game="true"] .game-card {
-	background: transparent;
-	box-shadow: none;
 }
 
 .subtraction-adventure {
@@ -3838,48 +3914,222 @@ p {
 	margin-inline: auto;
 	overflow-x: clip;
 }
+/* Same progress dots as the other math adventures. */
 .multiplication-progress {
 	display: flex;
-	gap: 0.4rem;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0 0 0.65rem;
 	padding: 0;
 	list-style: none;
 }
-.multiplication-progress li,
+.multiplication-progress li {
+	display: grid;
+	width: 38px;
+	height: 38px;
+	place-items: center;
+	border: 2px solid #bdb5d1;
+	border-radius: 50%;
+	background: #fff;
+	font-weight: 900;
+}
+.multiplication-progress li.is-done {
+	color: #fff;
+	border-color: #54cbab;
+	background: #54cbab;
+}
+.multiplication-progress li.is-current {
+	border-color: #57558f;
+	background: #eeeafe;
+}
 .multiplication-adventure .touch-target,
 .multiplication-adventure .primary-action {
 	min-width: 48px;
 	min-height: 48px;
 }
-.multiplication-columns,
-.multiplication-table-board table {
-	width: 100%;
-	table-layout: fixed;
-	border-collapse: collapse;
-	text-align: center;
+
+/* Every board is one card, like the pattern board. */
+.multiplication-table-board,
+.written-multiplication,
+.multiplication-story {
+	display: grid;
+	gap: 0.85rem;
+	min-width: 0;
+	padding: clamp(0.6rem, 3vw, 1.25rem);
+	border: 3px solid #d8c9ff;
+	border-radius: 1.75rem;
+	background: rgba(255, 252, 241, 0.96);
+	color: #35275a;
 }
-.multiplication-adventure .multiplication-columns input,
-.multiplication-adventure .product-input {
-	width: 100%;
-	min-width: 48px;
-	min-height: 48px;
-	font-size: 1.2rem;
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board > p {
+	justify-self: center;
+	margin: 0;
+	padding: 0.35rem 1rem;
+	border-radius: 999px;
+	background: #fff2bd;
+	font-size: 1.4rem;
+	font-weight: 900;
 }
+
+/* The 13-column table fits a phone without sideways scrolling. */
 .table-scroll {
 	max-width: 100%;
 	overflow-x: auto;
+}
+.multiplication-table-board table {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 1px;
+	font-size: clamp(0.56rem, 2.55vw, 1rem);
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board th,
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board td {
+	padding: 0.28em 0;
+	border-radius: 4px;
+	line-height: 1.2;
+	white-space: nowrap;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-table-board th {
+	color: #6553a4;
+	font-weight: 900;
 }
 .multiplication-table-board tr.is-active,
 .multiplication-table-board th.is-active {
 	background: #efe6ff;
 }
-.story-expression {
+.multiplication-table-board tr.is-active td:empty {
+	background: #ffd84d;
+	box-shadow: inset 0 0 0 2px #e0a100;
+}
+.multiplication-adventure .product-input,
+.multiplication-adventure .result-digit,
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.story-expression input {
+	width: 100%;
+	min-width: 48px;
+	min-height: 52px;
+	border: 3px solid #6556a0;
+	border-radius: 1rem;
+	background: #fff;
+	color: #35275a;
+	font: inherit;
+	font-size: 1.4rem;
+	font-weight: 900;
+	text-align: center;
+}
+.multiplication-table-board label {
+	justify-self: center;
+	width: min(100%, 10rem);
+}
+
+/* Written multiplication: one column per place, digits large. */
+.multiplication-columns {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0.4rem 0.3rem;
+	text-align: center;
+}
+.multiplication-columns caption {
+	margin-bottom: 0.25rem;
+	font-weight: 900;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-columns th {
+	color: #6553a4;
+	font-size: 0.85rem;
+	font-weight: 800;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-columns tbody td {
+	font-size: clamp(1.35rem, 7vw, 2rem);
+	font-weight: 900;
+	font-variant-numeric: tabular-nums;
+}
+.multiplication-columns tr.result-digits td {
+	padding-top: 0.45rem;
+	border-top: 3px solid #35275a;
+}
+.multiplication-adventure .result-digit {
+	padding: 0;
+}
+
+.multiplication-columns tbody tr:nth-child(2) td {
+	color: #0ba68f;
+	white-space: nowrap;
+}
+
+/* Story: a small picture, then the groups as rows of counters. */
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-story > img {
+	justify-self: center;
+	width: auto;
+	max-width: 60%;
+	max-height: clamp(6rem, 28vw, 9rem);
+	object-fit: contain;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.multiplication-story > p {
+	margin: 0;
+	font-weight: 900;
+	text-align: center;
+}
+.equal-groups {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 0.35rem;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.equal-groups li {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.25rem;
+	max-width: 6.5rem;
+	padding: 0.45rem;
+	border: 2px dashed #7b61e8;
+	border-radius: 0.9rem;
+	background: #f5f0ff;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.equal-groups span {
+	width: 0.85rem;
+	height: 0.85rem;
+	border-radius: 50%;
+	background: #ff9f1c;
+	box-shadow: inset 0 -2px 0 rgb(0 0 0 / 15%);
+}
+.story-expression {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.3fr);
+	gap: 0.4rem;
 	align-items: center;
 	border: 0;
 	margin: 0;
 	padding: 0;
+}
+.story-expression legend {
+	margin-bottom: 0.5rem;
+	font-weight: 900;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.story-expression > span {
+	font-size: 1.5rem;
+	font-weight: 900;
+}
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.story-expression input {
+	min-width: 0;
 }
 .multiplication-adventure button:focus-visible,
 .multiplication-adventure input:focus-visible {
@@ -3908,7 +4158,7 @@ p {
 	flex-direction: column;
 	height: 100dvh;
 	min-height: 0;
-	padding: env(safe-area-inset-top) 0 calc(4.25rem + env(safe-area-inset-bottom));
+	padding: env(safe-area-inset-top) 0 var(--bottom-nav-space);
 	overflow: hidden;
 }
 

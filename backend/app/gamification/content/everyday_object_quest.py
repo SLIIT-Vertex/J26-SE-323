@@ -9,6 +9,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Literal
 
+from app.gamification.content.simpler_items import simpler_matching_item
+
 AREA_ID = "G5-AREA-ENG-05"
 UNIVERSAL_SKILL_ID = "LAN-BIL"
 PACKAGE_VERSION = "g5-eng-everyday-object-quest-draft-v1"
@@ -138,6 +140,13 @@ def generate_item(skill_id: str, *, role: str, seed: int) -> EverydayObjectItem:
         prompt = "දේවල ඉංග්‍රීසි නම නිවැරදි පිළිවෙළට ගොඩනගන්න."
     revision = f"{skill_id}:{role}:{seed % 100000}@v1"
     return EverydayObjectItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)  # type: ignore[arg-type]
+
+def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object]) -> EverydayObjectItem | None:
+    """The same game and skill with fewer pairs to link than the failed game, from a fresh item."""
+
+    item = generate_item(skill_id, role="unsupported_before", seed=seed)
+    return simpler_matching_item(item, than=than)
+
 
 
 def public_game_data(item: EverydayObjectItem) -> dict[str, object]:

@@ -6,7 +6,7 @@ import {
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
-	SuccessCelebration,
+	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
@@ -15,9 +15,14 @@ import type {
 	SupportView,
 	TransitTerminalWorkedExample,
 } from "../mobile-learning-flow/api/generated";
-import type { LearningFlowClient } from "../mobile-learning-flow/api/learningFlowClient";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+import {
+	isSupportRound,
+	useSupportRound,
+} from "../mobile-learning-flow/useSupportRound";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
-import "../english-area-1/classroom-action-quest.css";
+import "../mobile-learning-flow/english-game-shared.css";
 import "./transit-terminal-quest.css";
 import { TRANSPORT_SKILL } from "./manifest";
 import {
@@ -33,15 +38,6 @@ type Step =
 	| "withdrawing"
 	| "feedback"
 	| "result";
-type Api = Pick<
-	LearningFlowClient,
-	| "open"
-	| "answerBefore"
-	| "completeSupport"
-	| "withdrawSupport"
-	| "presentAfter"
-	| "answerAfter"
->;
 const STAGE_LABELS: Record<string, string> = {
 	ticket_match: "Ticket-to-Ride Match",
 	departure_board: "Departure Board Relay",
@@ -56,7 +52,7 @@ export function TransitTerminalQuest({
 	onBack,
 	onFailure,
 }: {
-	api: Api;
+	api: GameApi;
 	learnerId: string;
 	condition: ExperimentCondition;
 	reducedMotion: boolean;
@@ -133,6 +129,25 @@ export function TransitTerminalQuest({
 			cancelled = true;
 		};
 	}, [api, pending, reset, run, step]);
+	const round = useSupportRound({
+		api,
+		episodeId,
+		run,
+		onSupport: (next) => {
+			setSupport(next);
+			reset();
+		},
+		onWithdraw: (withdrawal) => {
+			setPending({
+				episode: withdrawal.episodeId,
+				support: withdrawal.supportRevisionId,
+				manifest: withdrawal.manifestRevisionId,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+		},
+	});
 	const openSkill = async () => {
 		if (lock.current) return;
 		lock.current = true;
@@ -259,7 +274,6 @@ export function TransitTerminalQuest({
 					onClick={step === "games" ? onBack : () => setStep("games")}
 				/>
 				<div>
-					<p>Theme 9</p>
 					<h1>Transport</h1>
 				</div>
 			</header>
@@ -277,13 +291,15 @@ export function TransitTerminalQuest({
 					</button>
 				</section>
 			) : (
-				<section className="caq-play">
-					<AdventureProgress
-						stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
-						activityCount={1}
-						currentActivity={1}
-						completedActivities={completed ? 1 : 0}
-					/>
+				<section className="caq-play game-play-surface">
+					{step !== "result" && (
+						<AdventureProgress
+							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							activityCount={1}
+							currentActivity={1}
+							completedActivities={completed ? 1 : 0}
+						/>
+					)}
 					<p className="caq-position">{STAGE_LABELS[chapter] ?? "Transport"}</p>
 					{step === "question" &&
 						manifest?.game?.schema_version ===
@@ -309,7 +325,35 @@ export function TransitTerminalQuest({
 								</button>
 							</>
 						)}
-					{step === "support" && support && (
+					{step === "support" && isSupportRound(support) && (
+						<SupportRoundPlay
+							support={support}
+							busy={busy}
+							ready={response !== null}
+							checkLabel="Check my tickets"
+							checkClassName="caq-primary"
+							onCheck={() => {
+								if (response)
+									void round.answer(
+										support,
+										response,
+										Date.now() - startedAt,
+										moves,
+									);
+							}}
+							onViewComplete={() =>
+								void round.viewComplete(support, Date.now() - startedAt)
+							}
+							renderActivity={(activity) => (
+								<TicketBoard
+									key={activity.revision_id}
+									game={activity.game as Record<string, unknown>}
+									onResponse={record}
+								/>
+							)}
+						/>
+					)}
+					{step === "support" && support && !isSupportRound(support) && (
 						<TransportSupport
 							support={support}
 							stage={supportStage}
@@ -319,7 +363,8 @@ export function TransitTerminalQuest({
 					)}
 					{step === "withdrawing" && (
 						<p className="caq-status" role="status">
-							The help is going away. Now match a fresh set of tickets on your own.
+							The help is going away. Now match a fresh set of tickets on your
+							own.
 						</p>
 					)}
 					{step === "feedback" && (
@@ -343,14 +388,11 @@ export function TransitTerminalQuest({
 						</section>
 					)}
 					{step === "result" && (
-						<section className="caq-feedback caq-result">
-							<div className="terminal-stamp" aria-hidden="true">
-								⭐
-							</div>
-							<SuccessCelebration />
-							<h2>Transit Terminal Quest complete!</h2>
-							<p>You matched transport words independently.</p>
-						</section>
+						<GameSuccessScreen
+							gameNumber={1}
+							gameCount={1}
+							onContinue={() => setStep("games")}
+						/>
 					)}
 				</section>
 			)}

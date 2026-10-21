@@ -99,6 +99,10 @@ class Settings(BaseSettings):
     tutor_semantic_verifier_timeout_seconds: float = 30.0
     tutor_semantic_verifier_independent: bool = False
 
+    # The research dashboard shows model internals and answers. It also needs the
+    # development-only researcher principal; set false to remove its routes entirely.
+    research_dashboard_enabled: bool = True
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
