@@ -20,6 +20,7 @@ dependencies = [
   "pydantic-settings>=2.7,<3",
   "pypdfium2>=4.30,<6",
   "python-multipart>=0.0.12",
+  "pyyaml>=6,<7",
   "qrcode>=7.4,<9",
   "reportlab>=4.2,<5",
   "sqlalchemy>=2.0,<3",

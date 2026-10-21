@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.shared.database.session import get_db
 from app.shared.learner.repository import SqlAlchemyLearnerRepository
-from app.shared.learner.schemas import LearnerCreate, LearnerRead
+from app.shared.learner.schemas import LearnerCreate, LearnerRead, LearnerUpdate
 from app.shared.learner.service import LearnerNotFoundError, LearnerService
 
 router = APIRouter(prefix="/learners", tags=["learners"])
@@ -20,7 +20,12 @@ def get_service(session: Annotated[Session, Depends(get_db)]) -> LearnerService:
 def create_learner(
     learner: LearnerCreate, service: Annotated[LearnerService, Depends(get_service)]
 ) -> LearnerRead:
-    return LearnerRead.model_validate(service.create(learner.grade, learner.preferred_language))
+    try:
+        return LearnerRead.model_validate(
+            service.create(learner.grade, learner.preferred_language, learner.display_name)
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 
 
 @router.get("", response_model=list[LearnerRead])
@@ -35,5 +40,20 @@ def get_learner(
     try:
         return LearnerRead.model_validate(service.get(learner_id))
     except LearnerNotFoundError as error:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Learner not found") from error
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Learner not found"
+        ) from error
 
+
+@router.patch("/{learner_id}", response_model=LearnerRead)
+def update_learner(
+    learner_id: UUID,
+    body: LearnerUpdate,
+    service: Annotated[LearnerService, Depends(get_service)],
+) -> LearnerRead:
+    try:
+        return LearnerRead.model_validate(service.set_name(learner_id, body.display_name))
+    except LearnerNotFoundError as error:
+        raise HTTPException(status_code=404, detail="Learner not found") from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error

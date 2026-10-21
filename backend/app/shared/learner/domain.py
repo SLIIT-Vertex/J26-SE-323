@@ -11,3 +11,4 @@ class Learner:
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
+    display_name: str | None = None

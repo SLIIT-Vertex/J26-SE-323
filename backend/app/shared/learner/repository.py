@@ -15,12 +15,15 @@ class LearnerRepository(Protocol):
 
     def list(self) -> list[Learner]: ...
 
+    def set_name(self, learner_id: UUID, display_name: str | None) -> Learner | None: ...
+
 
 def _to_domain(model: LearnerModel) -> Learner:
     return Learner(
         id=model.id,
         grade=model.grade,
         preferred_language=model.preferred_language,
+        display_name=model.display_name,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
@@ -35,6 +38,7 @@ class SqlAlchemyLearnerRepository:
             id=learner.id,
             grade=learner.grade,
             preferred_language=learner.preferred_language,
+            display_name=learner.display_name,
         )
         self.session.add(model)
         self.session.commit()
@@ -49,3 +53,11 @@ class SqlAlchemyLearnerRepository:
         models = self.session.scalars(select(LearnerModel).order_by(LearnerModel.created_at)).all()
         return [_to_domain(model) for model in models]
 
+    def set_name(self, learner_id: UUID, display_name: str | None) -> Learner | None:
+        model = self.session.get(LearnerModel, learner_id)
+        if model is None:
+            return None
+        model.display_name = display_name
+        self.session.commit()
+        self.session.refresh(model)
+        return _to_domain(model)
