@@ -1,6 +1,6 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ResearchInteraction } from "./ResearchInteraction";
 import type {
@@ -11,11 +11,18 @@ import type {
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+// The component reads this setting at import time; tests must not depend on a local .env file.
+const LEARNER_ID = vi.hoisted(() => {
+  const id = "22222222-2222-4222-8222-222222222222";
+  vi.stubEnv("VITE_MOBILE_LEARNING_LEARNER_ID", id);
+  return id;
+});
+
 const NOTICE = "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS";
 const session: ResearchSession = {
   session_id: "11111111-1111-4111-8111-111111111111",
   session_token: "research-session-token",
-  learner_id: "22222222-2222-4222-8222-222222222222",
+  learner_id: LEARNER_ID,
   expires_at: "2026-10-19T12:00:00Z",
   researcher_authorized: true,
 };
@@ -68,6 +75,8 @@ afterEach(async () => {
   host.remove();
   vi.restoreAllMocks();
 });
+
+afterAll(() => vi.unstubAllEnvs());
 
 function api(overrides: Partial<ResearchTutorApi> = {}): ResearchTutorApi {
   return {
@@ -123,7 +132,7 @@ describe("Mindy research chat", () => {
     await render(client);
 
     expect(client.authorize).toHaveBeenCalledOnce();
-    expect(client.start).toHaveBeenCalledWith(import.meta.env.VITE_MOBILE_LEARNING_LEARNER_ID ?? "");
+    expect(client.start).toHaveBeenCalledWith(LEARNER_ID);
     expect(host.querySelector(".mindy-topbar")?.textContent).toContain("Maths helper");
     expect(host.querySelector<HTMLTextAreaElement>("#mindy-question")?.disabled).toBe(false);
     expect(host.textContent).not.toContain("Learner UUID");

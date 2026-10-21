@@ -16,11 +16,25 @@ export function ResearchButton({ learnerId }: { learnerId: string }) {
 				type="button"
 				className="rd-fab"
 				lang="en"
+				aria-label="Open learning research dashboard"
+				title="Learning research dashboard"
 				aria-haspopup="dialog"
 				aria-expanded={open}
 				onClick={() => setOpen(true)}
 			>
-				Research
+				<svg
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden="true"
+				>
+					<path d="M4 3v17h17M8 16v-4m5 4V8m5 8V5" />
+				</svg>
 			</button>
 			{open && (
 				<Suspense fallback={null}>

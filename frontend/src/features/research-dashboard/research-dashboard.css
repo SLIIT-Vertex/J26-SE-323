@@ -1,13 +1,15 @@
 /* Research dashboard: for researchers and judges, never shown in a child-facing build. */
 
 .rd-fab {
+	display: grid;
+	place-items: center;
 	position: fixed;
 	right: max(1rem, env(safe-area-inset-right));
 	bottom: calc(5.75rem + env(safe-area-inset-bottom));
 	z-index: 60;
-	min-width: 48px;
-	min-height: 48px;
-	padding: 0.65rem 1.1rem;
+	width: 52px;
+	height: 52px;
+	padding: 0;
 	border: 0;
 	border-radius: 999px;
 	background: #1f2937;

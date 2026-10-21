@@ -877,7 +877,6 @@ p {
 .info-card,
 .warning-card,
 .support-panel,
-.game-card,
 .progress-row {
 	margin: 1rem 0;
 	padding: 1rem;
@@ -1380,15 +1379,6 @@ p {
 .info-card p:last-child {
 	border-bottom: 0;
 }
-.illustration {
-	margin: 1rem 0;
-	padding: 2.4rem 1rem;
-	border-radius: 24px;
-	color: #167da8;
-	background: var(--sky-soft);
-	font-size: clamp(1.2rem, 7vw, 2rem);
-	text-align: center;
-}
 .independent-badge,
 .support-badge {
 	display: inline-block;
@@ -1448,71 +1438,6 @@ p {
 .reward-coin {
 	color: #a87200;
 	background: #fff5cf;
-}
-.game-card {
-	padding: 0.75rem;
-	overflow: hidden;
-}
-.game-instruction {
-	font-weight: 800;
-}
-.phaser-host {
-	width: 100%;
-	min-height: 320px;
-	border-radius: 1rem;
-	overflow: hidden;
-}
-.semantic-game {
-	margin-top: 0.75rem;
-	padding-top: 0.75rem;
-	border-top: 2px dashed #b6a3df;
-}
-.semantic-game--primary {
-	border: 0;
-}
-.semantic-object-grid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 0.5rem;
-}
-.semantic-object {
-	min-width: 0;
-	margin: 0;
-	padding: 0.5rem;
-	border: 1px solid #b6a3df;
-	border-radius: 0.8rem;
-}
-.semantic-object button {
-	width: 100%;
-	margin-top: 0.35rem;
-	border: 1px solid var(--purple);
-	border-radius: 0.7rem;
-	color: var(--ink);
-	background: #fff;
-}
-.summary-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 0.55rem;
-}
-.mobile-shell .summary-grid div {
-	display: grid;
-	gap: 0.3rem;
-	padding: 0.8rem 0.35rem;
-	border-radius: 17px;
-	background: #fff;
-	box-shadow: var(--shadow);
-	text-align: center;
-}
-.summary-grid strong,
-.reward-value {
-	color: var(--purple);
-	font-size: 1.45rem;
-	font-weight: 900;
-}
-.summary-grid span {
-	color: var(--muted);
-	font-size: 0.72rem;
 }
 .progress-row {
 	display: flex;
@@ -1574,9 +1499,6 @@ p {
 	.stats small,
 	.nav-item small {
 		font-size: 0.5rem;
-	}
-	.semantic-object-grid {
-		grid-template-columns: 1fr;
 	}
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3792,10 +3714,6 @@ p {
 	.river-route {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
-}
-.mobile-shell[data-game="true"] .game-card {
-	background: transparent;
-	box-shadow: none;
 }
 
 .subtraction-adventure {

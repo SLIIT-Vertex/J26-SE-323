@@ -1,6 +1,5 @@
 // biome-ignore-all lint/a11y/useButtonType: this application contains no HTML forms; all buttons are application actions.
 
-import { Capacitor } from "@capacitor/core";
 import {
 	type ComponentType,
 	type CSSProperties,
@@ -37,13 +36,10 @@ import {
 	type FixtureRoundClient,
 } from "./api/fixtureRoundClient";
 import type {
-	ChildEpisodeResponse,
 	DraftMissionRecord,
 	DraftTemplateId,
 	ExperimentCondition,
 	LearnerStateAction,
-	PresentationManifest,
-	SupportView,
 } from "./api/generated";
 import {
 	createDraftMissionCatalogClient,
@@ -52,17 +48,9 @@ import {
 	LearningFlowApiError,
 	type LearningFlowClient,
 } from "./api/learningFlowClient";
-import type { ServerScore } from "./api/runtime";
-import type { HalfSetManifest, SceneDomainEvent } from "./bridge/contracts";
 import { FixtureRoundPlayer } from "./FixtureRoundPlayer";
-import { HalfSetGame } from "./game/HalfSetGame";
 import { ENGLISH_LEARNING_AREAS, learningAreaName } from "./learningAreas";
-import {
-	EncryptedEventQueue,
-	IndexedDbNonExtractableKeyProvider,
-	MemoryEncryptedStore,
-	WebCryptoLocalStore,
-} from "./offline/EncryptedEventQueue";
+
 
 type LazyNamedComponent<Module, Name extends keyof Module> =
 	Module[Name] extends ComponentType<infer Props>
@@ -234,16 +222,6 @@ type Screen =
 	| "mindy"
 	| "rewards"
 	| "account"
-	| "mission"
-	| "overview"
-	| "baseline"
-	| "difficulty"
-	| "support"
-	| "withdrawal"
-	| "after"
-	| "result"
-	| "reward"
-	| "summary"
 	| "progress"
 	| "settings"
 	| "failure"
@@ -285,16 +263,6 @@ type Screen =
 	| "conversation-street";
 
 const GAME_SCREENS = new Set<Screen>([
-	"mission",
-	"overview",
-	"baseline",
-	"difficulty",
-	"support",
-	"withdrawal",
-	"after",
-	"result",
-	"reward",
-	"summary",
 	"draft-player",
 	"fixture-round",
 	"number-world",
@@ -476,20 +444,6 @@ export function MobileLearningApp({
 	const papersRoute = usePapersRoute();
 	const [learnerName, setLearnerName] = useState("කවිඳු");
 	const [avatarTone, setAvatarTone] = useState<AvatarTone>("violet");
-	const [episode, setEpisode] = useState<ChildEpisodeResponse | null>(null);
-	const [manifest, setManifest] = useState<PresentationManifest | null>(null);
-	const [support, setSupport] = useState<SupportView | null>(null);
-	const [selected, setSelected] = useState<string | null>(null);
-	const [completionProof, setCompletionProof] = useState<{
-		manifestRevisionId: string;
-		groupedCount: number;
-		groupSizes: [number, number];
-	} | null>(null);
-	const [withdrawing, setWithdrawing] = useState(false);
-	const [withdrawalRequest, setWithdrawalRequest] = useState<{
-		requestId: string;
-		supportRevisionId: string;
-	} | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [failure, setFailure] = useState("BACKEND_UNAVAILABLE");
 	const [syncState, setSyncState] = useState<SyncState>(
@@ -501,11 +455,7 @@ export function MobileLearningApp({
 			false,
 	);
 	const sessionId = useRef(crypto.randomUUID());
-	const handledWithdrawal = useRef<string | null>(null);
 	const apiTail = useRef<Promise<void>>(Promise.resolve());
-	const syncConflict = useRef(false);
-	const [queueReady, setQueueReady] = useState(false);
-	const [syncTick, setSyncTick] = useState(0);
 	const [draftMissions, setDraftMissions] = useState<DraftMissionRecord[]>([]);
 	const [draftCatalogStatus, setDraftCatalogStatus] = useState<
 		"idle" | "loading" | "ready" | "error"
@@ -513,7 +463,6 @@ export function MobileLearningApp({
 	const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
 	const [openSubject, setOpenSubject] = useState<SubjectCode | null>(null);
 	const [draftAnswerSent, setDraftAnswerSent] = useState(false);
-	const [serverScores, setServerScores] = useState<ServerScore[]>([]);
 	const draftCatalog = useMemo(
 		() => catalog ?? createDraftMissionCatalogClient({}),
 		[catalog],
@@ -591,21 +540,6 @@ export function MobileLearningApp({
 		);
 		return result;
 	}, []);
-	const queue = useMemo(
-		() =>
-			new EncryptedEventQueue(
-				!Capacitor.isNativePlatform() &&
-					globalThis.crypto?.subtle &&
-					globalThis.localStorage &&
-					globalThis.indexedDB
-					? new WebCryptoLocalStore(
-							"mindbridge.mobile-learning.queue.v1",
-							new IndexedDbNonExtractableKeyProvider(),
-						)
-					: new MemoryEncryptedStore(),
-			),
-		[],
-	);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -646,25 +580,7 @@ export function MobileLearningApp({
 		}
 	}, [papersRoute]);
 	useEffect(() => {
-		void queue
-			.initialize()
-			.then(() => {
-				setQueueReady(true);
-				if (queue.pendingCount)
-					setSyncState(navigator.onLine ? "pending" : "offline");
-			})
-			.catch(() => setSyncState("conflict"));
-	}, [queue]);
-	useEffect(() => {
-		const online = () => {
-			syncConflict.current = false;
-			setSyncState(
-				episode && queue.pendingCountFor(episode.episode_id)
-					? "pending"
-					: "synced",
-			);
-			setSyncTick((value) => value + 1);
-		};
+		const online = () => setSyncState("synced");
 		const offline = () => setSyncState("offline");
 		window.addEventListener("online", online);
 		window.addEventListener("offline", offline);
@@ -672,7 +588,7 @@ export function MobileLearningApp({
 			window.removeEventListener("online", online);
 			window.removeEventListener("offline", offline);
 		};
-	}, [episode, queue]);
+	}, []);
 
 	const safeFailure = useCallback((error: unknown) => {
 		const code =
@@ -684,119 +600,82 @@ export function MobileLearningApp({
 		setBusy(false);
 	}, []);
 
-	const record = useCallback(
-		async (event: SceneDomainEvent, critical = false) => {
-			if (!episode) return;
-			const payload: Record<string, string | number | boolean> = {
-				event_type: event.type,
-			};
-			if (manifest?.presentation_id)
-				payload.presentation_id = manifest.presentation_id;
-			if ("groupedCount" in event) payload.grouped_count = event.groupedCount;
-			if ("group" in event) payload.group = event.group;
-			if ("step" in event) payload.step = event.step;
-			await queue.enqueue(episode.episode_id, payload, critical);
-			setSyncState(navigator.onLine ? "pending" : "offline");
-		},
-		[episode, manifest, queue],
-	);
-
 	const chooseMission = (areaId: string) => {
 		setDraftAnswerSent(false);
-		setServerScores([]);
+		setSelectedAreaId(areaId);
 		const mission = draftMissions.find((item) => item.area_id === areaId);
 		if (areaId === "G5-AREA-ENG-01") {
-			setSelectedAreaId(areaId);
 			setScreen("classroom-action-quest");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-02") {
-			setSelectedAreaId(areaId);
 			setScreen("sri-lanka-discovery");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-03") {
-			setSelectedAreaId(areaId);
 			setScreen("plant-explorer");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-04") {
-			setSelectedAreaId(areaId);
 			setScreen("wildlife-ranger");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-05") {
-			setSelectedAreaId(areaId);
 			setScreen("everyday-object-quest");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-06") {
-			setSelectedAreaId(areaId);
 			setScreen("island-food-festival");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-07") {
-			setSelectedAreaId(areaId);
 			setScreen("rainbow-wardrobe-quest");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-08") {
-			setSelectedAreaId(areaId);
 			setScreen("water-works-adventure");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-09") {
-			setSelectedAreaId(areaId);
 			setScreen("transit-terminal-quest");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-10") {
-			setSelectedAreaId(areaId);
 			setScreen("bloom-builder-garden");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-11") {
-			setSelectedAreaId(areaId);
 			setScreen("workplace-link-city");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-12") {
-			setSelectedAreaId(areaId);
 			setScreen("family-word-constellation");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-13") {
-			setSelectedAreaId(areaId);
 			setScreen("earth-sky-explorer");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-14") {
-			setSelectedAreaId(areaId);
 			setScreen("blueprint-quest");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-15") {
-			setSelectedAreaId(areaId);
 			setScreen("information-station");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-16") {
-			setSelectedAreaId(areaId);
 			setScreen("heritage-museum");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-17") {
-			setSelectedAreaId(areaId);
 			setScreen("classroom-language-live");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-18") {
-			setSelectedAreaId(areaId);
 			setScreen("conversation-street");
 			return;
 		}
-		if (!mission) return;
-		setSelectedAreaId(areaId);
 		if (areaId === "G5-AREA-MAT-01") {
 			setScreen("number-world");
 			return;
@@ -861,6 +740,7 @@ export function MobileLearningApp({
 			setScreen("roman-adventure");
 			return;
 		}
+		if (!mission) return;
 		setScreen(isFixtureLoop(mission) ? "fixture-round" : "draft-player");
 	};
 
@@ -904,280 +784,9 @@ export function MobileLearningApp({
 		}
 	};
 
-	const begin = async () => {
-		setBusy(true);
-		setServerScores([]);
-		try {
-			const opened = await runApi(() =>
-				api.open(
-					{
-						learner_id: learnerId,
-						session_id: sessionId.current,
-						grade: 5,
-						medium: "si",
-						condition: engineeringCondition,
-						environment: EPISODE_ENVIRONMENT,
-						allow_draft: true,
-					},
-					crypto.randomUUID(),
-				),
-			);
-			setEpisode(opened);
-			setManifest(opened.manifest);
-			setScreen("baseline");
-			setBusy(false);
-		} catch (error) {
-			safeFailure(error);
-		}
-	};
-
-	const rememberScore = (score: ServerScore | null | undefined) => {
-		if (!score) return;
-		setServerScores((current) => [
-			...current.filter(
-				(item) => item.measurement_role !== score.measurement_role,
-			),
-			score,
-		]);
-	};
-
-	const submitBefore = async () => {
-		if (!episode || !selected) return;
-		setBusy(true);
-		await record({ type: "answer_submitted", groupedCount: 0 }, true);
-		try {
-			const response = await runApi(() =>
-				api.answerBefore(
-					episode.episode_id,
-					{ option_id: selected },
-					crypto.randomUUID(),
-				),
-			);
-			setEpisode(response);
-			rememberScore(response.server_score);
-			setSelected(null);
-			if (response.status === "support_active" && response.support) {
-				setSupport(response.support);
-				setScreen("difficulty");
-			} else setScreen("result");
-			setBusy(false);
-		} catch (error) {
-			safeFailure(error);
-		}
-	};
-
-	const onGameEvent = useCallback(
-		(event: SceneDomainEvent) => {
-			if (event.type !== "withdrawal_acknowledged") {
-				void record(event, event.type === "answer_submitted").catch(() =>
-					setSyncState("conflict"),
-				);
-			}
-			if (event.type === "support_interaction_completed") {
-				setCompletionProof(event);
-			}
-			if (
-				event.type === "withdrawal_acknowledged" &&
-				episode &&
-				support &&
-				withdrawalRequest &&
-				event.requestId === withdrawalRequest.requestId &&
-				event.supportRevisionId === support.revision_id &&
-				event.manifestRevisionId === support.game_manifest.revision_id &&
-				handledWithdrawal.current !== event.requestId
-			) {
-				handledWithdrawal.current = event.requestId;
-				void (async () => {
-					try {
-						setBusy(true);
-						await record(event, true);
-						const response = await runApi(() =>
-							api.withdrawSupport(
-								episode.episode_id,
-								{
-									request_id: event.requestId,
-									support_revision_id: event.supportRevisionId,
-									manifest_revision_id: event.manifestRevisionId,
-									all_support_removed: event.allSupportRemoved,
-									answer_revealing_state_cleared:
-										event.answerRevealingStateCleared,
-									input_handlers_cleared: event.inputHandlersCleared,
-								},
-								crypto.randomUUID(),
-							),
-						);
-						setEpisode(response);
-						setSupport(null);
-						setWithdrawing(false);
-						setScreen("withdrawal");
-						setBusy(false);
-					} catch (error) {
-						safeFailure(error);
-					}
-				})();
-			}
-		},
-		[api, episode, record, runApi, safeFailure, support, withdrawalRequest],
-	);
-
-	const finishSupport = async () => {
-		if (!episode || !support || !completionProof) return;
-		setBusy(true);
-		try {
-			const response = await runApi(() =>
-				api.completeSupport(
-					episode.episode_id,
-					{
-						duration_ms: 1_200,
-						steps_viewed: Math.min(
-							support.maximum_steps,
-							support.body_si.length,
-						),
-						manifest_revision_id: completionProof.manifestRevisionId,
-						grouped_count: completionProof.groupedCount,
-						group_sizes: completionProof.groupSizes,
-					},
-					crypto.randomUUID(),
-				),
-			);
-			setEpisode(response);
-			setWithdrawing(true);
-			setWithdrawalRequest({
-				requestId: crypto.randomUUID(),
-				supportRevisionId: support.revision_id,
-			});
-			setBusy(false);
-		} catch (error) {
-			safeFailure(error);
-		}
-	};
-
-	const presentAfter = async () => {
-		if (!episode) return;
-		setBusy(true);
-		try {
-			const response = await runApi(() =>
-				api.presentAfter(episode.episode_id, crypto.randomUUID()),
-			);
-			if (response.status === "invalidated") {
-				setFailure("INTERRUPTED_OR_CONTAMINATED");
-				setScreen("failure");
-			} else {
-				setEpisode(response);
-				setManifest(response.manifest);
-				setScreen("after");
-			}
-			setBusy(false);
-		} catch (error) {
-			safeFailure(error);
-		}
-	};
-
-	const submitAfter = async () => {
-		if (!episode || !selected) return;
-		setBusy(true);
-		await record({ type: "answer_submitted", groupedCount: 0 }, true);
-		try {
-			const response = await runApi(() =>
-				api.answerAfter(
-					episode.episode_id,
-					{ option_id: selected },
-					crypto.randomUUID(),
-				),
-			);
-			setEpisode(response);
-			rememberScore(response.server_score);
-			setSelected(null);
-			setScreen("result");
-			setBusy(false);
-		} catch (error) {
-			safeFailure(error);
-		}
-	};
-
-	const sync = useCallback(async () => {
-		if (busy) return false;
-		if (!navigator.onLine) {
-			setSyncState("offline");
-			return false;
-		}
-		if (!episode) {
-			// No game is open, so there is nothing of this episode to send. This is not a lost
-			// connection: show events of earlier episodes as still waiting, otherwise synced.
-			setSyncState(queue.pendingCount ? "pending" : "synced");
-			return false;
-		}
-		const batch = queue.takeBatch(episode.episode_id);
-		if (!batch) {
-			setSyncState("synced");
-			return true;
-		}
-		setSyncState("pending");
-		try {
-			const ack = await runApi(() =>
-				api.telemetry(episode.episode_id, batch, batch.batch_id),
-			);
-			await queue.acknowledge(episode.episode_id, ack.next_sequence);
-			setSyncState(
-				queue.pendingCountFor(episode.episode_id) ? "pending" : "synced",
-			);
-			return true;
-		} catch (error) {
-			if (
-				error instanceof LearningFlowApiError &&
-				error.code.includes("SEQUENCE") &&
-				error.expectedSequence !== undefined
-			) {
-				try {
-					await queue.reconcileExpectedSequence(
-						episode.episode_id,
-						error.expectedSequence,
-					);
-					setSyncState(
-						queue.pendingCountFor(episode.episode_id) ? "pending" : "synced",
-					);
-				} catch {
-					syncConflict.current = true;
-					setSyncState("conflict");
-				}
-			} else {
-				setSyncState("offline");
-			}
-			return false;
-		}
-	}, [api, busy, episode, queue, runApi]);
-
-	useEffect(() => {
-		void syncTick;
-		if (
-			!queueReady ||
-			!episode ||
-			busy ||
-			!navigator.onLine ||
-			queue.pendingCountFor(episode.episode_id) === 0 ||
-			syncConflict.current
-		)
-			return;
-		let cancelled = false;
-		let timer = 0;
-		const attempt = async () => {
-			if (cancelled || !navigator.onLine || syncConflict.current) return;
-			const complete = await sync();
-			if (
-				!complete &&
-				!cancelled &&
-				navigator.onLine &&
-				!syncConflict.current
-			) {
-				timer = window.setTimeout(attempt, queue.nextBackoffMs());
-			}
-		};
-		timer = window.setTimeout(attempt, 0);
-		return () => {
-			cancelled = true;
-			window.clearTimeout(timer);
-		};
-	}, [busy, episode, queue, queueReady, sync, syncTick]);
+	const sync = useCallback(() => {
+		setSyncState(navigator.onLine ? "synced" : "offline");
+	}, []);
 
 	const selectedDraftMission = draftMissions.find(
 		(item) => item.area_id === selectedAreaId,
@@ -1248,7 +857,7 @@ export function MobileLearningApp({
 						name={learnerName}
 						avatarTone={avatarTone}
 						onProfile={() => setScreen("account")}
-						onMission={() => setScreen("mission")}
+						onMission={chooseMission}
 						onLearn={() => setScreen("learn")}
 						onPractice={() => {
 							go({ name: "papers" });
@@ -1266,7 +875,6 @@ export function MobileLearningApp({
 						onChoose={chooseMission}
 						openSubject={openSubject}
 						onOpenSubject={setOpenSubject}
-						avatarTone={avatarTone}
 					/>
 				)}
 				{screen === "practice" && (
@@ -1286,85 +894,6 @@ export function MobileLearningApp({
 						onRewards={() => setScreen("rewards")}
 						onSettings={() => setScreen("settings")}
 						onOnboarding={() => setScreen("onboarding")}
-					/>
-				)}
-				{screen === "mission" && (
-					<Mission
-						onContinue={() => setScreen("overview")}
-						onBack={() => setScreen("learn")}
-					/>
-				)}
-				{screen === "overview" && (
-					<Overview
-						busy={busy}
-						onStart={begin}
-						onBack={() => setScreen("learn")}
-					/>
-				)}
-				{screen === "baseline" && manifest && (
-					<ChoiceActivity
-						title="ඔබම උත්සාහ කරන්න"
-						manifest={manifest}
-						selected={selected}
-						busy={busy}
-						onSelect={setSelected}
-						onSubmit={submitBefore}
-					/>
-				)}
-				{screen === "difficulty" && (
-					<Transition
-						title="වෙනත් ක්‍රමයකින් උත්සාහ කරමු"
-						body="අපි කුඩා ක්‍රීඩාවකින් සමාන කාණ්ඩ දෙකක් සාදමු."
-						onContinue={() => setScreen("support")}
-					/>
-				)}
-				{screen === "support" && support && (
-					<SupportPractice
-						support={support}
-						done={Boolean(completionProof)}
-						withdrawing={withdrawing}
-						withdrawalRequest={withdrawalRequest}
-						busy={busy}
-						reducedMotion={reducedMotion}
-						onEvent={onGameEvent}
-						onFinish={finishSupport}
-					/>
-				)}
-				{screen === "withdrawal" && (
-					<Transition
-						title="දැන් අලුත් එකක් ඔබම උත්සාහ කරන්න"
-						body="උදව් අවසන්. අලුත් ප්‍රශ්නයේදී ඔබට ඉඟි නොපෙන්වයි."
-						onContinue={presentAfter}
-						busy={busy}
-					/>
-				)}
-				{screen === "after" && manifest && (
-					<ChoiceActivity
-						title="අලුත් එක ඔබම උත්සාහ කරන්න"
-						manifest={manifest}
-						selected={selected}
-						busy={busy}
-						onSelect={setSelected}
-						onSubmit={submitAfter}
-					/>
-				)}
-				{screen === "result" && (
-					<Result
-						hasReward={Boolean(episode?.reward?.points)}
-						onContinue={() => setScreen("reward")}
-					/>
-				)}
-				{screen === "reward" && (
-					<Reward
-						points={episode?.reward?.points ?? 0}
-						onContinue={() => setScreen("summary")}
-					/>
-				)}
-				{screen === "summary" && (
-					<Summary
-						supported={Boolean(support || completionProof)}
-						onProgress={() => setScreen("progress")}
-						onHome={() => setScreen("home")}
 					/>
 				)}
 				{screen === "progress" && (
@@ -1393,31 +922,6 @@ export function MobileLearningApp({
 				{screen === "failure" && (
 					<Failure code={failure} onSafePractice={() => setScreen("home")} />
 				)}
-				{serverScores.length > 0 &&
-					[
-						"difficulty",
-						"support",
-						"withdrawal",
-						"after",
-						"result",
-						"reward",
-						"summary",
-					].includes(screen) && (
-						<ul aria-label="සේවාදායක ලකුණු">
-							{serverScores.map((score) => (
-								<li
-									key={score.measurement_role}
-									data-server-score={score.earned_score}
-									data-maximum-score={score.maximum_score}
-									data-scoring-version={score.scoring_version}
-									data-server-authoritative="true"
-									data-measurement-role={score.measurement_role}
-								>
-									සේවාදායක ලකුණු {score.earned_score}/{score.maximum_score}
-								</li>
-							))}
-						</ul>
-					)}
 				{screen === "fixture-round" && fixtureMission && (
 					<FixtureRoundPlayer
 						mission={fixtureMission}
@@ -1778,11 +1282,11 @@ export function MobileLearningApp({
 						onBack={() => setScreen("learn")}
 					/>
 				)}
-				{["home", "learn", "mission", "practice", "mindy", "progress"].includes(
+				{["home", "learn", "practice", "mindy", "progress"].includes(
 					screen,
 				) && (
 					<BottomNavigation
-						active={screen === "mission" ? "learn" : screen}
+						active={screen}
 						onNavigate={(destination) => {
 							if (destination === "practice") {
 								go({ name: "papers" });
@@ -2236,6 +1740,14 @@ function ProfileSetup({
 }
 
 
+const FEATURED_GAMES = [
+	...Array.from({ length: 16 }, (_, index) => {
+		const areaId = `G5-AREA-MAT-${String(index + 1).padStart(2, "0")}`;
+		return { areaId, title: learningAreaName(areaId), subject: "ගණිතය" };
+	}),
+	...ENGLISH_LEARNING_AREAS.map((area) => ({ ...area, subject: "ඉංග්‍රීසි" })),
+];
+
 function HomeScreen({
 	name,
 	avatarTone,
@@ -2250,13 +1762,14 @@ function HomeScreen({
 	name: string;
 	avatarTone: AvatarTone;
 	onProfile(): void;
-	onMission(): void;
+	onMission(areaId: string): void;
 	onLearn(): void;
 	onPractice(): void;
 	onMindy(): void;
 	onProgress(): void;
 	onRewards(): void;
 }) {
+	const [featuredGame] = useState(() => FEATURED_GAMES[Math.floor(Math.random() * FEATURED_GAMES.length)]);
 	const [notificationsOpen, setNotificationsOpen] = useState(false);
 	const [hasUnread, setHasUnread] = useState(true);
 	return (
@@ -2293,7 +1806,7 @@ function HomeScreen({
 					</span>
 					<div>
 						<strong>අද මෙහෙයුම සූදානම්!</strong>
-						<p>මිනිත්තු 5ක බාග අභියෝගයක් ඔබ බලා සිටී.</p>
+						<p>{featuredGame.title} — {featuredGame.subject} ක්‍රීඩාවක් ඔබ බලා සිටී.</p>
 					</div>
 					<button
 						type="button"
@@ -2340,22 +1853,10 @@ function HomeScreen({
 				<p className="eyebrow">
 					<AppIcon name="target" size={16} /> අද මෙහෙයුම
 				</p>
-				<h2>බාගය සොයමු!</h2>
-				<p>වස්තු සමාන කොටස් දෙකකට බෙදා බාගය හඳුනා ගන්න.</p>
-				<div className="mission-progress">
-					<span
-						role="progressbar"
-						aria-label="අද මෙහෙයුමේ ප්‍රගතිය"
-						aria-valuemin={0}
-						aria-valuemax={3}
-						aria-valuenow={1}
-					>
-						<i />
-					</span>
-					<strong>1 / 3</strong>
-				</div>
-				<button className="primary-action" type="button" onClick={onMission}>
-					දිගටම කරගෙන යමු <AppIcon name="arrow" size={18} />
+				<h2>{featuredGame.title}</h2>
+				<p>ක්‍රීඩාවක් සමඟ අද අලුත් දෙයක් ඉගෙන ගනිමු.</p>
+				<button className="primary-action" type="button" onClick={() => onMission(featuredGame.areaId)} data-area-id={featuredGame.areaId}>
+					අභියෝගය අරඹමු <AppIcon name="arrow" size={18} />
 				</button>
 			</article>
 
@@ -2520,14 +2021,12 @@ function GamesHome({
 	onChoose,
 	openSubject = null,
 	onOpenSubject,
-	avatarTone = "violet",
 }: {
 	missions?: DraftMissionRecord[];
 	catalogStatus?: "idle" | "loading" | "ready" | "error";
 	onChoose?(areaId: string): void;
 	openSubject?: SubjectCode | null;
 	onOpenSubject?(subject: SubjectCode | null): void;
-	avatarTone?: AvatarTone;
 }) {
 	const subject = GAME_SUBJECTS.find((item) => item.code === openSubject);
 	const subjectMissions = subject
@@ -2579,12 +2078,8 @@ function GamesHome({
 				<>
 					<header className="games-hero">
 						<div className="games-title">
-							<span>ක්‍රීඩා</span>
-							<strong>කරමින්</strong>
-							<em>ඉගෙන ගමු!</em>
-						</div>
-						<div className="games-avatar">
-							<LearnerAvatar tone={avatarTone} />
+							<span>ක්‍රීඩා කරමින්</span>
+							<span className="games-title-last">ඉගෙන ගමු!</span>
 						</div>
 					</header>
 					<div className="subject-cards">
@@ -2625,277 +2120,6 @@ function GamesHome({
 	);
 }
 
-function Mission({
-	onContinue,
-	onBack,
-}: {
-	onContinue(): void;
-	onBack(): void;
-}) {
-	return (
-		<section>
-			<Back onClick={onBack} />
-			<p className="eyebrow">නිර්දේශිත මෙහෙයුම</p>
-			<h1>බාගය සොයමු</h1>
-			<div className="illustration" role="img" aria-label="සමාන කාණ්ඩ දෙකක ද්‍රව්‍ය">
-				● ● ●　│　● ● ●
-			</div>
-			<button className="primary-action" onClick={onContinue}>
-				මෙහෙයුම බලන්න
-			</button>
-		</section>
-	);
-}
-function Overview({
-	busy,
-	onStart,
-	onBack,
-}: {
-	busy: boolean;
-	onStart(): void;
-	onBack(): void;
-}) {
-	return (
-		<section>
-			<Back onClick={onBack} />
-			<p className="eyebrow">පළමු කුසලතාව</p>
-			<h1>ද්‍රව්‍ය සමූහයක බාගය</h1>
-			<div className="info-card">
-				<p>⏱ විනාඩි 5ක් පමණ</p>
-				<p>🧠 මුලින් ප්‍රශ්නයක් ඔබම උත්සාහ කරයි.</p>
-				<p>🌱 අවශ්‍ය නම් තාවකාලික උදව් ලැබේ.</p>
-			</div>
-			<button className="primary-action" disabled={busy} onClick={onStart}>
-				ආරම්භ කරන්න
-			</button>
-		</section>
-	);
-}
-
-function ChoiceActivity({
-	title,
-	manifest,
-	selected,
-	busy,
-	onSelect,
-	onSubmit,
-}: {
-	title: string;
-	manifest: PresentationManifest;
-	selected: string | null;
-	busy: boolean;
-	onSelect(id: string): void;
-	onSubmit(): void;
-}) {
-	return (
-		<section>
-			<p className="independent-badge">🔒 ඉඟි නොමැත</p>
-			<h1>{title}</h1>
-			<p className="question">
-				<span className="sr-only">{manifest.accessibility_label_si}</span>
-				<span aria-hidden="true">{manifest.prompt_si}</span>
-			</p>
-			<div className="choice-grid">
-				{manifest.options.map((option) => (
-					<button
-						key={option.option_id}
-						className={
-							selected === option.option_id
-								? "choice choice--selected"
-								: "choice"
-						}
-						aria-pressed={selected === option.option_id}
-						onClick={() => onSelect(option.option_id)}
-					>
-						{option.text_si}
-					</button>
-				))}
-			</div>
-			<button
-				className="primary-action"
-				disabled={!selected || busy}
-				onClick={onSubmit}
-			>
-				පිළිතුර යවන්න
-			</button>
-		</section>
-	);
-}
-function Transition({
-	title,
-	body,
-	onContinue,
-	busy = false,
-}: {
-	title: string;
-	body: string;
-	onContinue(): void;
-	busy?: boolean;
-}) {
-	return (
-		<section className="center-screen">
-			<div className="mascot" aria-hidden="true">
-				☀
-			</div>
-			<h1>{title}</h1>
-			<p>{body}</p>
-			<button className="primary-action" disabled={busy} onClick={onContinue}>
-				ඉදිරියට
-			</button>
-		</section>
-	);
-}
-
-function SupportPractice({
-	support,
-	done,
-	withdrawing,
-	withdrawalRequest,
-	busy,
-	reducedMotion,
-	onEvent,
-	onFinish,
-}: {
-	support: SupportView;
-	done: boolean;
-	withdrawing: boolean;
-	withdrawalRequest: { requestId: string; supportRevisionId: string } | null;
-	busy: boolean;
-	reducedMotion: boolean;
-	onEvent(event: SceneDomainEvent): void;
-	onFinish(): void;
-}) {
-	const halfSetManifest =
-		support.game_manifest.schema_version === "half-set-manifest-v1"
-			? support.game_manifest
-			: null;
-	const gameManifest: HalfSetManifest = useMemo(() => {
-		if (!halfSetManifest) throw new Error("HALF_SET_MANIFEST_REQUIRED");
-		return {
-			schemaVersion: halfSetManifest.schema_version,
-			activityId: halfSetManifest.activity_id,
-			revisionId: halfSetManifest.revision_id,
-			deterministicSeed: halfSetManifest.deterministic_seed,
-			totalObjects: halfSetManifest.total_objects,
-			groupCount: halfSetManifest.group_count,
-			objectLabelSi: halfSetManifest.object_label_si,
-			instructionSi: halfSetManifest.instruction_si,
-		};
-	}, [halfSetManifest]);
-	return (
-		<section>
-			<p className="support-badge">තාවකාලික උදව්</p>
-			<h1>{withdrawing ? "උදව් ඉවත් කරමින්" : support.title_si}</h1>
-			{!withdrawing && (
-				<aside className="support-panel" data-support-visible="true">
-					{support.body_si.slice(0, support.maximum_steps).map((line) => (
-						<p key={line}>{line}</p>
-					))}
-				</aside>
-			)}
-			<HalfSetGame
-				manifest={gameManifest}
-				support={
-					withdrawing
-						? null
-						: { titleSi: support.title_si, stepsSi: support.body_si }
-				}
-				withdrawalRequest={withdrawalRequest}
-				reducedMotion={reducedMotion}
-				onEvent={onEvent}
-			/>
-			<button
-				className="primary-action"
-				disabled={!done || busy || withdrawing}
-				onClick={onFinish}
-			>
-				උදව් අවසන් කරන්න
-			</button>
-		</section>
-	);
-}
-
-function Result({
-	hasReward,
-	onContinue,
-}: {
-	hasReward: boolean;
-	onContinue(): void;
-}) {
-	return (
-		<section className="center-screen">
-			<div className="success-mark" aria-hidden="true">
-				✓
-			</div>
-			<h1>හොඳ උත්සාහයක්!</h1>
-			<p>
-				{hasReward ? "ඔබ මෙහෙයුම අවසන් කළා." : "ඔබගේ උත්සාහය සුරැකිණි. ඊළඟ පියවරට යමු."}
-			</p>
-			<p className="quiet">මෙය එක් ඉගෙනුම් සාක්ෂියක් පමණි.</p>
-			<button className="primary-action" onClick={onContinue}>
-				ත්‍යාගය බලන්න
-			</button>
-		</section>
-	);
-}
-function Reward({
-	points,
-	onContinue,
-}: {
-	points: number;
-	onContinue(): void;
-}) {
-	return (
-		<section className="center-screen">
-			<div className="reward-coin" aria-hidden="true">
-				★
-			</div>
-			<h1>සහභාගීත්ව ත්‍යාගය</h1>
-			<p className="reward-value">+{points} කාසිය</p>
-			<p>මෙය ඔබ මෙහෙයුම සම්පූර්ණ කළ නිසා ලැබුණු ත්‍යාගයකි.</p>
-			<button className="primary-action" onClick={onContinue}>
-				සාරාංශය
-			</button>
-		</section>
-	);
-}
-function Summary({
-	supported,
-	onProgress,
-	onHome,
-}: {
-	supported: boolean;
-	onProgress(): void;
-	onHome(): void;
-}) {
-	return (
-		<section>
-			<p className="eyebrow">අද සාරාංශය</p>
-			<h1>ඉගෙනීම ඉදිරියට!</h1>
-			<div className="summary-grid">
-				<div>
-					<strong>1</strong>
-					<span>ක්‍රියාකාරකම</span>
-				</div>
-				<div>
-					<strong>~5</strong>
-					<span>මිනිත්තු</span>
-				</div>
-				<div>
-					<strong>{supported ? "1" : "0"}</strong>
-					<span>උදව් මොහොත</span>
-				</div>
-			</div>
-			<p>ස්වාධීන සාක්ෂිය සේවාදායකය විසින් පරීක්ෂා කර ඇත. එය ත්‍යාගයෙන් වෙන්ව තබා ඇත.</p>
-			<button className="primary-action" onClick={onProgress}>
-				ප්‍රගතිය බලන්න
-			</button>
-			<button className="text-action" onClick={onHome}>
-				මුල් පිටුව
-			</button>
-		</section>
-	);
-}
 function Settings({
 	syncState,
 	onSync,
