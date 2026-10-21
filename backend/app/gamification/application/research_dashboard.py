@@ -320,7 +320,7 @@ class ResearchDashboardService:
         result["simulation"] = None
         if SIMULATION_REPORT.exists():
             try:
-                result["simulation"] = present_simulation(json.loads(SIMULATION_REPORT.read_text()))
+                result["simulation"] = present_simulation(json.loads(SIMULATION_REPORT.read_text(encoding="utf-8")))
             except (ValueError, OSError):
                 pass
         if len(_ACCURACY_CACHE) > 32:

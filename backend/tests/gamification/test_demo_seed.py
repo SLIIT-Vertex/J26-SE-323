@@ -172,7 +172,7 @@ def test_cleanup_removes_only_the_seeded_episodes(world, tmp_path):
 
     snapshots = list(tmp_path.glob("*.json.gz"))
     assert len(snapshots) == 1
-    with gzip.open(snapshots[0], "rt") as handle:
+    with gzip.open(snapshots[0], "rt", encoding="utf-8") as handle:
         snapshot = json.load(handle)
     assert "learning_flow_episode_runs" in snapshot["tables"]
 

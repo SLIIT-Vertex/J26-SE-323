@@ -17,7 +17,7 @@ from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 @lru_cache
 def area_titles():
     return json.loads(
-        (GAMIFICATION_DATA_DIRECTORY / "research-dashboard/area_titles.json").read_text()
+        (GAMIFICATION_DATA_DIRECTORY / "research-dashboard/area_titles.json").read_text(encoding="utf-8")
     )
 
 
