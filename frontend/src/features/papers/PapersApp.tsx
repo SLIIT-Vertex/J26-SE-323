@@ -17,7 +17,7 @@ function TopBar({ learner }: { learner: Learner | null }) {
   return (
     <div className="mb-topbar">
       <a className="mb-brand" href="#/" aria-label="MindBridge">
-        <img className="mb-brand__wordmark" src="/primary_logo.png" alt="MindBridge" />
+        <img className="mb-brand__wordmark" src="/primary-logo.svg" alt="MindBridge" />
       </a>
       <span className="mb-pill">
         {learner ? (

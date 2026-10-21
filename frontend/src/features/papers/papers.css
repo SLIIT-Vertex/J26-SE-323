@@ -130,9 +130,8 @@ body.mb-body {
   display: block;
   width: min(11.5rem, 46vw);
   height: auto;
-  border-radius: 0.65rem;
   object-fit: contain;
-  background: #000;
+  background: transparent;
 }
 
 .mb-pill {

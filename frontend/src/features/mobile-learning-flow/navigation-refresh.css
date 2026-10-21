@@ -250,7 +250,7 @@
 .mobile-shell > .papers-tab {
   width: 100%;
   margin: 0;
-  padding-bottom: calc(4.2rem + env(safe-area-inset-bottom));
+  padding-bottom: var(--bottom-nav-space);
 }
 .mb--embedded .mb-frame {
   max-width: none;
