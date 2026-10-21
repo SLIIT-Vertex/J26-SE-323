@@ -836,3 +836,74 @@ describe("language", () => {
     expect(tn("count.questions", 3)).toBe("3 questions");
   });
 });
+
+// ---- the language chosen with the gear also chooses the printed paper ----------------------------------
+
+describe("making the weekly paper", () => {
+  const available = {
+    state: "available",
+    can_generate: true,
+    joined_at: "2026-10-01T00:00:00Z",
+    eligible_from: "2026-10-08T00:00:00Z",
+    days_until_eligible: 0,
+    week_start: "2026-10-17",
+    next_paper_date: "2026-10-24",
+    paper: null,
+  };
+  const made = {
+    paper_id: "p1",
+    code: "ABC",
+    status: "generated",
+    mode: "practice",
+    language: "ta",
+    week_start: "2026-10-17",
+    next_paper_date: "2026-10-24",
+    page_count: 1,
+    question_count: 8,
+    estimated_minutes: 10,
+    pdf_url: "/x.pdf",
+    created_at: null,
+    skipped_skills: [],
+    pages: [],
+  };
+
+  /** Every POST the screen makes, with its body. */
+  async function pressMakePaper(): Promise<{ body: string | undefined }[]> {
+    const posts: { body: string | undefined }[] = [];
+    vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
+      const address = String(url);
+      if (init?.method === "POST") {
+        posts.push({ body: typeof init.body === "string" ? init.body : undefined });
+        return new Response(JSON.stringify(made), { status: 201 });
+      }
+      return new Response(JSON.stringify(address.endsWith("/availability") ? available : []), { status: 200 });
+    });
+    await show(<PapersApp embedded route={{ name: "papers" }} />);
+    await act(async () => host.querySelector<HTMLButtonElement>("section.mb-hero button.mb-btn")?.click());
+    return posts;
+  }
+
+  it("asks for a Tamil paper when the screens are in Tamil", async () => {
+    setLanguage("ta", { remember: false });
+
+    const posts = await pressMakePaper();
+
+    expect(posts.map((p) => JSON.parse(p.body ?? "{}"))).toEqual([{ language: "ta" }]);
+  });
+
+  it("asks for a Sinhala paper when the screens are in Sinhala", async () => {
+    setLanguage("si", { remember: false });
+
+    const posts = await pressMakePaper();
+
+    expect(posts.map((p) => JSON.parse(p.body ?? "{}"))).toEqual([{ language: "si" }]);
+  });
+
+  it("leaves the language to the child's own when the screens are in English", async () => {
+    setLanguage("en", { remember: false });
+
+    const posts = await pressMakePaper();
+
+    expect(posts).toEqual([{ body: undefined }]);
+  });
+});

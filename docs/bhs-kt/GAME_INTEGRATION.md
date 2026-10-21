@@ -62,6 +62,23 @@ the file follows it.
 The reader still checks every record: the skill on it, after translation, must agree with the one the map
 gives for its item skill. A skill in neither table is skipped, so a wrong or new label cannot slip in.
 
+## Reading the game's answers by itself (done)
+
+By default the reader is a script (`python -m scripts.ingest_game_evidence`). To make it automatic, set in
+`backend/.env` and restart the backend:
+
+```
+GAME_EVIDENCE_AUTO_READ=true
+GAME_EVIDENCE_INCLUDE_DEVELOPMENT=true   # only on a local development database: reads development answers too
+```
+
+Then `GET /learners/{id}/mastery` ("My skills") and `POST /learners/{id}/papers` ("Make this week's paper")
+first read that learner's new game answers, and show the new estimate straight away. It is the same reader
+and the same rules as the script, reads only the asking learner's records (at most once every 3 seconds),
+never saves an answer twice, and never breaks the request: if the read fails it logs a warning and carries on
+with what the model already has. With `GAME_EVIDENCE_INCLUDE_DEVELOPMENT=false` only answers the game has
+released (the pilot rule below) are read. The code is `app/knowledge_tracing/api/game_sync.py`.
+
 ## How a game answer is released to the model (done)
 
 The game's adventure flows now set `model_ingestion_eligible` with a rule, in

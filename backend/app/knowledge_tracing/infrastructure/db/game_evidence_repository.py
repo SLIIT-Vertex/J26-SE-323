@@ -43,8 +43,9 @@ _outbox = Table(
 
 
 class OutboxEvidenceSource:
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, learner_id: UUID | None = None) -> None:
         self.session = session
+        self.learner_id = learner_id  # None: every learner's records
 
     def available(self) -> bool:
         """False when this database has no outbox table (the game's migrations were not run)."""
@@ -60,6 +61,8 @@ class OutboxEvidenceSource:
                 .order_by(_outbox.c.created_at, _outbox.c.id)
                 .limit(size)
             )
+            if self.learner_id is not None:
+                statement = statement.where(_outbox.c.learner_id == self.learner_id)
             if cursor is not None:
                 moment, last = cursor
                 statement = statement.where(

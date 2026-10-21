@@ -11,7 +11,7 @@ import {
 } from "../api";
 import { dayLabel, pageCount, paperStatusLabel, paperTitle, questionCount, shortDate } from "../format";
 import { useAsync } from "../hooks";
-import { rich, t, useLanguage } from "../i18n";
+import { getLanguage, rich, t, useLanguage } from "../i18n";
 import { go, hrefFor } from "../router";
 import { Chip, ErrorBox, LinkCard, Loading, PaperIcon, ScreenHeader, type Tone } from "../ui";
 
@@ -60,7 +60,9 @@ function MakePaper({ learnerId }: { learnerId: string }) {
     setMaking(true);
     setError(null);
     try {
-      const paper = await createWeeklyPaper(learnerId);
+      // the language chosen with the gear also chooses the printed paper (English: the child's own language)
+      const chosen = getLanguage();
+      const paper = await createWeeklyPaper(learnerId, chosen === "si" || chosen === "ta" ? chosen : undefined);
       go({ name: "paper", id: paper.paper_id });
     } catch (problem) {
       setError(friendlyMessage(problem));

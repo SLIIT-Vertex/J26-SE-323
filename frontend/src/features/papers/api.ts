@@ -304,8 +304,14 @@ export const getLearner = (id: string) => request<Learner>(`/learners/${id}`);
 export const getAvailability = (learnerId: string) =>
   request<Availability>(`/learners/${learnerId}/papers/availability`);
 
-export const createWeeklyPaper = (learnerId: string) =>
-  request<Paper>(`/learners/${learnerId}/papers`, { method: "POST" });
+/** The paper is printed in `language` (Sinhala or Tamil) when given, otherwise in the child's own language. */
+export const createWeeklyPaper = (learnerId: string, language?: "si" | "ta") =>
+  request<Paper>(
+    `/learners/${learnerId}/papers`,
+    language
+      ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ language }) }
+      : { method: "POST" },
+  );
 
 export const listPapers = (learnerId: string) => request<Paper[]>(`/learners/${learnerId}/papers?limit=20`);
 

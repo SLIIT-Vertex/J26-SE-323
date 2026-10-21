@@ -17,7 +17,7 @@ export const en = {
   "settings.language": "Language",
   "settings.done": "Done",
   "settings.note":
-    "This changes the words on the practice pages. The questions on the printed paper stay in the child's own language.",
+    "This changes the words on the practice pages, and the language of the next weekly paper you make (Sinhala or Tamil). With English, the paper is in the child's own language.",
 
   // ---- counts ------------------------------------------------------------------------------------
   "count.questions.one": "{n} question",

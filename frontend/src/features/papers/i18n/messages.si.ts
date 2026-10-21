@@ -13,7 +13,8 @@ export const si: Record<MessageKey, string> = {
   "settings.title": "සැකසුම්",
   "settings.language": "භාෂාව",
   "settings.done": "හරි",
-  "settings.note": "මෙය පුහුණු පිටුවල වචන වෙනස් කරයි. මුද්‍රිත ප්‍රශ්න පත්‍රයේ ප්‍රශ්න දරුවාගේ මව් භාෂාවෙන්ම පවතී.",
+  "settings.note":
+    "මෙය පුහුණු පිටුවල වචන සහ ඔබ ඊළඟට සාදන සතිපතා ප්‍රශ්න පත්‍රයේ භාෂාව (සිංහල හෝ දෙමළ) වෙනස් කරයි. ඉංග්‍රීසි තෝරන්නේ නම් ප්‍රශ්න පත්‍රය දරුවාගේ මව් භාෂාවෙන් වේ.",
 
   "count.questions.one": "ප්‍රශ්න {n}",
   "count.questions.other": "ප්‍රශ්න {n}",

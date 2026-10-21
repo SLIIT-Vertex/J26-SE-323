@@ -10,6 +10,14 @@ os.environ.setdefault("DATABASE_URL", "sqlite://")
 # Tests feed the reader scripted readings in order; the blank re-check (on in the app) would use up
 # the next one, so it is off here and tested on its own.
 os.environ.setdefault("GRADING_RECHECK_BLANKS", "false")
+# Settings a developer changes in their own backend/.env for demos and trials (no waiting for the weekly
+# paper, reading the game's development answers by itself) must not change what the tests expect: an
+# environment variable beats the .env file, so the defaults are pinned here. Tests that need another
+# value set it themselves.
+os.environ.setdefault("PAPER_MIN_DAYS_AFTER_JOINING", "7")
+os.environ.setdefault("PAPER_DEFAULT_MODE", "auto")
+os.environ.setdefault("GAME_EVIDENCE_AUTO_READ", "false")
+os.environ.setdefault("GAME_EVIDENCE_INCLUDE_DEVELOPMENT", "false")
 
 from app.main import app
 from app.shared.database.base import Base

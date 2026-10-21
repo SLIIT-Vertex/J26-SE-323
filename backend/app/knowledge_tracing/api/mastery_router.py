@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.knowledge_tracing.api.game_sync import sync_game_answers
 from app.knowledge_tracing.application.mastery_service import (
     LearnerNotFoundError,
     MasteryService,
@@ -89,7 +90,7 @@ def to_read(
     )
 
 
-@router.get("/{learner_id}/mastery", response_model=MasteryRead)
+@router.get("/{learner_id}/mastery", response_model=MasteryRead, dependencies=[Depends(sync_game_answers)])
 def get_mastery(
     learner_id: UUID,
     service: Annotated[MasteryService, Depends(get_mastery_service)],

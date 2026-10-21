@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.knowledge_tracing.api.game_sync import sync_game_answers
 from app.knowledge_tracing.api.mastery_router import get_estimator
 from app.knowledge_tracing.application.mastery_service import (
     LearnerNotFoundError,
@@ -215,6 +216,7 @@ ServiceDep = Annotated[PaperService, Depends(get_paper_service)]
     "/learners/{learner_id}/papers",
     response_model=PaperRead,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(sync_game_answers)],
 )
 def create_weekly_paper(
     learner_id: UUID,
@@ -224,11 +226,13 @@ def create_weekly_paper(
 ) -> PaperRead:
     """This week's paper. Called again in the same week it returns the same paper (200)."""
     body = body or PaperCreate()
+    # a request that does not choose a mode ("auto") gets the configured default (PAPER_DEFAULT_MODE)
+    mode = get_settings().paper_default_mode if body.mode == "auto" else body.mode
     request = PaperRequest(
         max_questions=body.max_questions,
         max_minutes=body.max_minutes,
         max_pages=body.max_pages,
-        mode=body.mode,
+        mode=mode,
         focus_skills=tuple(body.focus_skills),
         language=body.language,
     )
