@@ -126,6 +126,24 @@
               "title": "Episode Id",
               "type": "string"
             },
+            "learner_state_action": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "none",
+                    "monitor",
+                    "request_tutor_support",
+                    "request_reengagement_support",
+                    "collect_more_evidence"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Learner State Action"
+            },
             "manifest": {
               "anyOf": [
                 {

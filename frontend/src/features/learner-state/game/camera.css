@@ -1,0 +1,157 @@
+/* Learner-state camera status and consent, using the app's design tokens (src/styles.css). */
+
+.camera-badge {
+	position: fixed;
+	top: calc(env(safe-area-inset-top, 0px) + 0.6rem);
+	right: 0.75rem;
+	z-index: 40;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	max-width: calc(100vw - 1.5rem);
+	padding: 0.35rem 0.7rem;
+	border-radius: 999px;
+	color: var(--ink);
+	background: rgba(255, 255, 255, 0.94);
+	box-shadow: var(--shadow);
+	font-size: 0.68rem;
+	font-weight: 800;
+	pointer-events: none;
+}
+
+.camera-badge__dot {
+	width: 0.55rem;
+	height: 0.55rem;
+	border-radius: 50%;
+	background: var(--faint);
+}
+
+.camera-badge--running .camera-badge__dot {
+	background: var(--teal);
+	animation: camera-badge-pulse 2s ease-in-out infinite;
+}
+
+.camera-badge--error .camera-badge__dot {
+	background: var(--orange);
+}
+
+@keyframes camera-badge-pulse {
+	50% {
+		opacity: 0.35;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.camera-badge--running .camera-badge__dot {
+		animation: none;
+	}
+}
+
+.camera-consent-card {
+	margin: 1rem 0;
+	padding: 1rem;
+	border: 2px solid var(--purple-soft);
+	border-radius: 24px;
+	background: #fff;
+	box-shadow: var(--shadow);
+}
+
+.camera-consent-card h2 {
+	margin: 0.1rem 0 0.75rem;
+	font-size: 1.05rem;
+}
+
+.camera-consent-switch {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-height: 48px;
+	font-weight: 800;
+}
+
+.camera-consent-switch input {
+	flex: none;
+	width: 1.5rem;
+	height: 1.5rem;
+	accent-color: var(--purple);
+}
+
+.camera-consent-facts {
+	margin: 0.6rem 0 0;
+	padding-left: 1.1rem;
+	color: var(--muted);
+	font-size: 0.8rem;
+	line-height: 1.6;
+}
+
+.camera-consent-message {
+	margin: 0.75rem 0 0;
+	padding: 0.6rem 0.75rem;
+	border-radius: 14px;
+	color: var(--ink);
+	background: var(--orange-soft);
+	font-size: 0.8rem;
+}
+
+.camera-consent-message--error {
+	background: #ffe4e4;
+}
+
+/* Gentle learner-state prompt after an answer: above the game, never a blocking dialog. */
+.learner-support-prompt {
+	position: fixed;
+	right: 0.75rem;
+	bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+	left: 0.75rem;
+	z-index: 45;
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.4rem 0.75rem;
+	align-items: center;
+	max-width: 28rem;
+	margin: 0 auto;
+	padding: 1rem;
+	border: 2px solid var(--purple-soft);
+	border-radius: 24px;
+	background: #fff;
+	box-shadow: var(--shadow);
+	animation: learner-support-prompt-in 0.3s ease-out;
+}
+
+.learner-support-prompt--take-a-break {
+	border-color: var(--teal-soft);
+}
+
+.learner-support-prompt__icon {
+	font-size: 2rem;
+}
+
+.learner-support-prompt h2 {
+	margin: 0;
+	font-size: 1rem;
+}
+
+.learner-support-prompt p {
+	margin: 0.2rem 0 0;
+	color: var(--muted);
+	font-size: 0.82rem;
+	line-height: 1.5;
+}
+
+.learner-support-prompt button {
+	grid-column: 1 / -1;
+	min-height: 48px;
+}
+
+@keyframes learner-support-prompt-in {
+	from {
+		opacity: 0;
+		transform: translateY(1rem);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.learner-support-prompt {
+		animation: none;
+	}
+}

@@ -588,8 +588,7 @@ class NumberWorldFlow:
             "before_presented",
             transition,
         )
-        self._record_learner_state(scored, visual, learner_state_session_id)
-        return response
+        return self._with_learner_state(response, scored, visual, learner_state_session_id)
 
     def complete_support(
         self,
@@ -865,8 +864,7 @@ class NumberWorldFlow:
             "after_presented",
             transition,
         )
-        self._record_learner_state(scored, visual, learner_state_session_id)
-        return response
+        return self._with_learner_state(response, scored, visual, learner_state_session_id)
 
     @staticmethod
     def _with_learner_state_request(
@@ -882,18 +880,33 @@ class NumberWorldFlow:
             request["learner_state_session_id"] = str(learner_state_session_id)
         return request
 
+    def _with_learner_state(
+        self,
+        response: dict[str, object],
+        scored: Mapping[str, object],
+        visual: Mapping[str, float] | None,
+        learner_state_session_id: UUID | None,
+    ) -> dict[str, object]:
+        """Record the scored answer and add its learner-state action to the response.
+
+        The action is not part of the stored receipt: a replayed request returns the receipt
+        without it, so the app never acts twice on one answer.
+        """
+        action = self._record_learner_state(scored, visual, learner_state_session_id)
+        return response if action is None else {**response, "learner_state_action": action}
+
     def _record_learner_state(
         self,
         scored: Mapping[str, object],
         visual: Mapping[str, float] | None,
         learner_state_session_id: UUID | None,
-    ) -> None:
+    ) -> str | None:
         # Nothing was scored when the request replayed a stored receipt.
         if not scored or not self.records_learner_state:
-            return
+            return None
         state, score, at = scored["state"], scored["score"], scored["at"]
         assert isinstance(state, dict) and isinstance(score, dict) and isinstance(at, datetime)
-        record_scored_answer(
+        return record_scored_answer(
             self._learner_state,
             self._camera_consent,
             # One learner-state session spans the episodes of one app session; each episode has

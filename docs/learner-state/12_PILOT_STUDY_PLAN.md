@@ -51,7 +51,9 @@ learning-support signals ([`07` §5](07_EVALUATION_AND_LIMITATIONS.md#5-privacy-
 - **Silent mode (recommended):** learner-state decisions are computed and logged but do **not**
   change what the child sees. Otherwise the support given after a detection would change the
   behaviour and the labels that follow it, and the game's own conditions would be mixed with the
-  learner-state evaluation. This needs a switch on the game side (§10).
+  learner-state evaluation. Build the app with `VITE_LEARNER_STATE_PROMPTS=off`: decisions are
+  still recorded, and the support prompts of [`11` §7](11_GAME_INTEGRATION.md#7-consuming-the-result)
+  are not shown.
 - **Learners without camera consent** can still take part in the game. Their windows carry no
   visual evidence and are analysed only for behaviour-only questions.
 
@@ -203,12 +205,13 @@ a feasibility pilot.
 
 ## 10. Prerequisites
 
-| Prerequisite | Owner | Status (2026-10-18) |
+| Prerequisite | Owner | Status (2026-10-20) |
 | --- | --- | --- |
 | Ethics approval of the final protocol | learner-state owner with supervisor | not started |
-| Game integration on the active path (`MobileLearningApp`), composing `GameAnswerRecorder` | game owner | open ([`11` §8](11_GAME_INTEGRATION.md#8-status-of-the-game-side)) |
-| Camera-consent flow (`learner_state_camera`) and `useGameVisualFeatures` in the game screen | game owner | open |
-| Silent mode: record decisions without acting on them | game owner | not started |
+| Game integration on the active path (`MobileLearningApp`), composing `GameAnswerRecorder` | learner-state owner, agreed with the game owner | done ([`11` §2](11_GAME_INTEGRATION.md#2-integration-point-grade-5-adventures)) |
+| Camera-consent flow (`learner_state_camera`) and `useGameVisualFeatures` in the game screen | learner-state owner, agreed with the game owner | done for development; production needs guardian authentication ([`11` §4](11_GAME_INTEGRATION.md#4-camera-consent)) |
+| Silent mode: record decisions without acting on them | learner-state owner | done: `VITE_LEARNER_STATE_PROMPTS=off` |
+| Logging of shown prompts, if a pilot uses prompts | learner-state owner | not started |
 | Per-window research log for consenting participants (§4) | learner-state owner | not started |
 | Observer coding sheet or tool keyed by question number, and coding manual | learner-state owner | not started |
 | `task_progress` from the game (only for productive confusion) | game owner | optional |

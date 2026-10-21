@@ -215,20 +215,24 @@ export function MultiplicationAdventureJourney({
 	};
 
 	const finishSupport = async () => {
-		if (
-			!episodeId ||
-			!support ||
-			support.game_manifest.schema_version === "half-set-manifest-v1"
-		)
-			return;
+		if (!episodeId || !support) return;
+		const supportManifest = support.game_manifest;
+		if (supportManifest.schema_version === "half-set-manifest-v1") return;
 		const completed = await run(() =>
 			api.completeSupport(
 				episodeId,
 				{
 					duration_ms: Math.max(1000, Date.now() - startedAt),
 					steps_viewed: Math.max(1, supportActions),
-					manifest_revision_id: support.game_manifest.revision_id,
-					interaction_summary: { completed: true },
+					manifest_revision_id: supportManifest.revision_id,
+					// The server accepts the support as complete only with the renderer, the
+					// parallel example and the number of support actions (as in the other adventures).
+					interaction_summary: {
+						completed: true,
+						renderer_id: supportManifest.renderer_id,
+						parallel_example_id: supportManifest.parallel_example_id,
+						support_actions: supportActions,
+					},
 				},
 				crypto.randomUUID(),
 			),

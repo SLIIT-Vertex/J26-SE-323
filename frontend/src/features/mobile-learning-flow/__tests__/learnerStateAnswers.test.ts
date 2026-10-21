@@ -103,6 +103,32 @@ describe("learner-state evidence on adventure answers", () => {
 		expect(visualFeatures).toHaveBeenCalledTimes(2);
 	});
 
+	it("reports the learner-state decision of a newly scored answer", async () => {
+		const server = fakeServer();
+		const onLearnerStateAction = vi.fn();
+		const respond = server.request.getMockImplementation();
+		server.request.mockImplementation(async (input, init) =>
+			String(input).endsWith("/before")
+				? json({ ...EPISODE, learner_state_action: "request_tutor_support" })
+				: String(input).endsWith("/after")
+					? json({ ...EPISODE, learner_state_action: "something_new" })
+					: (respond as typeof server.request)(input, init),
+		);
+		const client = createLearningFlowClient({
+			baseUrl,
+			learnerId: CONFIGURED,
+			request: server.request,
+			onLearnerStateAction,
+		});
+
+		const answered = await client.answerBefore("episode", { option_id: "a" }, "key-1");
+		await client.answerAfter("episode", { option_id: "b" }, "key-2");
+
+		expect(answered.learner_state_action).toBe("request_tutor_support");
+		// An unknown value is ignored, never reported.
+		expect(onLearnerStateAction.mock.calls).toEqual([["request_tutor_support"]]);
+	});
+
 	it("sends no camera values without a camera window", async () => {
 		const server = fakeServer();
 		const client = createLearningFlowClient({

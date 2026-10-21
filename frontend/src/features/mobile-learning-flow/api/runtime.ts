@@ -12,6 +12,7 @@ import type {
 	DraftTemplateId,
 	FractionAdventureSupportManifest,
 	HeldOutcomeSlot,
+	LearnerStateAction,
 	MassAdventureSupportManifest,
 	MathematicsOutcomeSlot,
 	MoneyAdventureSupportManifest,
@@ -550,7 +551,25 @@ export function parseChildEpisodeResponse(
 			: null,
 	};
 	const serverScore = parseServerScore(row.server_score);
-	return serverScore ? { ...parsed, server_score: serverScore } : parsed;
+	const learnerStateAction = parseLearnerStateAction(row.learner_state_action);
+	return {
+		...parsed,
+		...(serverScore ? { server_score: serverScore } : {}),
+		...(learnerStateAction ? { learner_state_action: learnerStateAction } : {}),
+	};
+}
+
+const LEARNER_STATE_ACTIONS: readonly LearnerStateAction[] = [
+	"none",
+	"monitor",
+	"request_tutor_support",
+	"request_reengagement_support",
+	"collect_more_evidence",
+];
+
+/** An unknown action is ignored: learner-state is optional evidence and never fails an answer. */
+function parseLearnerStateAction(value: unknown): LearnerStateAction | null {
+	return LEARNER_STATE_ACTIONS.find((action) => action === value) ?? null;
 }
 
 function parseServerScore(value: unknown): ServerScore | null {

@@ -16,6 +16,17 @@ import {
 } from "react";
 import { PapersApp } from "../papers/PapersApp";
 import { go, usePapersRoute } from "../papers/router";
+import { CameraConsentCard } from "../learner-state/game/CameraConsentCard";
+import { CameraStatusBadge } from "../learner-state/game/CameraStatusBadge";
+import type { CameraProblem } from "../learner-state/game/cameraText";
+import { LearnerSupportPrompt } from "../learner-state/game/LearnerSupportPrompt";
+import {
+	learnerStatePromptsEnabled,
+	NO_PROMPT_YET,
+	nextSupportPrompt,
+	type PromptMemory,
+	type SupportPrompt,
+} from "../learner-state/game/supportPrompts";
 import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
 import {
 	createFixtureRoundClient,
@@ -26,6 +37,7 @@ import type {
 	DraftMissionRecord,
 	DraftTemplateId,
 	ExperimentCondition,
+	LearnerStateAction,
 	PresentationManifest,
 	SupportView,
 } from "./api/generated";
@@ -318,6 +330,7 @@ const GAME_SCREENS = new Set<Screen>([
 ]);
 
 type SyncState = "synced" | "pending" | "offline" | "conflict";
+type AvatarTone = "violet" | "sky" | "teal" | "orange";
 
 export interface MobileLearningService
 	extends Pick<
@@ -444,6 +457,7 @@ export function MobileLearningApp({
 	const [screen, setScreen] = useState<Screen>("splash");
 	const papersRoute = usePapersRoute();
 	const [learnerName, setLearnerName] = useState("කවිඳු");
+	const [avatarTone, setAvatarTone] = useState<AvatarTone>("violet");
 	const [episode, setEpisode] = useState<ChildEpisodeResponse | null>(null);
 	const [manifest, setManifest] = useState<PresentationManifest | null>(null);
 	const [support, setSupport] = useState<SupportView | null>(null);
@@ -491,31 +505,63 @@ export function MobileLearningApp({
 		[fixtureRounds, learnerId],
 	);
 	const [cameraConsent, setCameraConsent] = useState(false);
+	const [cameraConsentSaving, setCameraConsentSaving] = useState(false);
+	const [cameraConsentFailed, setCameraConsentFailed] = useState(false);
+	const [cameraProblem, setCameraProblem] = useState<CameraProblem | null>(null);
 	// Learner-state camera: only with the guardian's consent, and only while a mathematics game
 	// screen is open. Frames stay on the device; only 11 numbers go with each answer.
-	const camera = useGameVisualFeatures({
-		enabled:
-			cameraConsent &&
-			GAME_SCREENS.has(screen) &&
-			screen !== "classroom-action-quest",
-	});
+	const cameraEnabled =
+		cameraConsent &&
+		GAME_SCREENS.has(screen) &&
+		screen !== "classroom-action-quest";
+	const camera = useGameVisualFeatures({ enabled: cameraEnabled });
+	// Remember the last camera problem so settings can explain it after the game is closed.
+	useEffect(() => {
+		if (camera.status.state === "error") setCameraProblem(camera.status.kind);
+		if (camera.status.state === "running") setCameraProblem(null);
+	}, [camera.status]);
 	const visualFeatures = useRef(camera.visualFeatures);
 	visualFeatures.current = camera.visualFeatures;
+	// Gentle learner-state prompts after scored answers (off in silent mode).
+	const [supportPrompt, setSupportPrompt] = useState<SupportPrompt | null>(null);
+	const promptMemory = useRef<PromptMemory>(NO_PROMPT_YET);
+	const reactToLearnerState = useCallback((action: LearnerStateAction) => {
+		if (!learnerStatePromptsEnabled()) return;
+		const next = nextSupportPrompt(promptMemory.current, action, Date.now());
+		promptMemory.current = next.memory;
+		if (next.prompt) setSupportPrompt(next.prompt);
+	}, []);
+	useEffect(() => {
+		if (!GAME_SCREENS.has(screen)) setSupportPrompt(null);
+	}, [screen]);
 	const api = useMemo(
 		() =>
 			service ??
 			createLearningFlowClient({
 				learnerId,
 				visualFeatures: () => visualFeatures.current(),
+				onLearnerStateAction: reactToLearnerState,
 			}),
-		[learnerId, service],
+		[learnerId, service, reactToLearnerState],
 	);
 	useEffect(() => {
 		api.cameraConsent?.().then(setCameraConsent, () => setCameraConsent(false));
 	}, [api]);
 	const changeCameraConsent = useCallback(
 		(granted: boolean) => {
-			api.setCameraConsent?.(granted).then(setCameraConsent, () => undefined);
+			if (!api.setCameraConsent) return;
+			setCameraConsentSaving(true);
+			setCameraConsentFailed(false);
+			api.setCameraConsent(granted).then(
+				(saved) => {
+					setCameraConsent(saved);
+					setCameraConsentSaving(false);
+				},
+				() => {
+					setCameraConsentFailed(true);
+					setCameraConsentSaving(false);
+				},
+			);
 		},
 		[api],
 	);
@@ -1031,8 +1077,14 @@ export function MobileLearningApp({
 
 	const sync = useCallback(async () => {
 		if (busy) return false;
-		if (!episode || !navigator.onLine) {
+		if (!navigator.onLine) {
 			setSyncState("offline");
+			return false;
+		}
+		if (!episode) {
+			// No game is open, so there is nothing of this episode to send. This is not a lost
+			// connection: show events of earlier episodes as still waiting, otherwise synced.
+			setSyncState(queue.pendingCount ? "pending" : "synced");
 			return false;
 		}
 		const batch = queue.takeBatch(episode.episode_id);
@@ -1125,6 +1177,13 @@ export function MobileLearningApp({
 			data-screen={screen}
 			data-game={GAME_SCREENS.has(screen) ? "true" : undefined}
 		>
+			{cameraEnabled && <CameraStatusBadge status={camera.status} />}
+			{supportPrompt && GAME_SCREENS.has(screen) && (
+				<LearnerSupportPrompt
+					prompt={supportPrompt}
+					onDismiss={() => setSupportPrompt(null)}
+				/>
+			)}
 			<Suspense fallback={<p role="status">ක්‍රීඩාව පූරණය වෙමින්…</p>}>
 				{screen === "splash" && (
 					<Splash
@@ -1140,29 +1199,42 @@ export function MobileLearningApp({
 					/>
 				)}
 				{screen === "onboarding" && (
-					<Onboarding onContinue={() => setScreen("language")} />
+					<Onboarding
+						onBack={() => setScreen("splash")}
+						onContinue={() => setScreen("language")}
+					/>
 				)}
 				{screen === "language" && (
-					<LanguageSetup onContinue={() => setScreen("profile-setup")} />
+					<LanguageSetup
+						onBack={() => setScreen("onboarding")}
+						onContinue={() => setScreen("profile-setup")}
+					/>
 				)}
 				{screen === "profile-setup" && (
 					<ProfileSetup
 						name={learnerName}
 						onNameChange={setLearnerName}
+						avatarTone={avatarTone}
+						onAvatarToneChange={setAvatarTone}
+						onBack={() => setScreen("language")}
 						onContinue={() => setScreen(papersRoute ? "practice" : "home")}
 					/>
 				)}
 				{screen === "home" && (
-					<PlannedPage title="මුල් පිටුව">
-						{/* The bottom navigation has no account tab, so the guardian reaches settings,
-						    including the learner-state camera decision, from here. */}
-						<button
-							className="secondary-action"
-							onClick={() => setScreen("settings")}
-						>
-							<AppIcon name="settings" size={19} /> වැඩිහිටි සැකසුම්
-						</button>
-					</PlannedPage>
+					<HomeScreen
+						name={learnerName}
+						avatarTone={avatarTone}
+						onProfile={() => setScreen("account")}
+						onMission={() => setScreen("mission")}
+						onLearn={() => setScreen("learn")}
+						onPractice={() => {
+							go({ name: "papers" });
+							setScreen("practice");
+						}}
+						onMindy={() => setScreen("mindy")}
+						onProgress={() => setScreen("progress")}
+						onRewards={() => setScreen("rewards")}
+					/>
 				)}
 				{screen === "learn" && (
 					<GamesHome
@@ -1172,6 +1244,7 @@ export function MobileLearningApp({
 						onChoose={chooseMission}
 						openSubject={openSubject}
 						onOpenSubject={setOpenSubject}
+						avatarTone={avatarTone}
 					/>
 				)}
 				{screen === "practice" && (
@@ -1180,10 +1253,15 @@ export function MobileLearningApp({
 					</div>
 				)}
 				{screen === "mindy" && <TutorDemo embedded />}
-				{screen === "rewards" && <RewardsHub />}
+				{screen === "rewards" && <RewardsHub onBack={() => setScreen("home")} />}
 				{screen === "account" && (
 					<Account
 						name={learnerName}
+						onNameChange={setLearnerName}
+						avatarTone={avatarTone}
+						onAvatarToneChange={setAvatarTone}
+						onBack={() => setScreen("home")}
+						onRewards={() => setScreen("rewards")}
 						onSettings={() => setScreen("settings")}
 						onOnboarding={() => setScreen("onboarding")}
 					/>
@@ -1267,7 +1345,15 @@ export function MobileLearningApp({
 						onHome={() => setScreen("home")}
 					/>
 				)}
-				{screen === "progress" && <PlannedPage title="ප්‍රගතිය" />}
+				{screen === "progress" && (
+					<ProgressScreen
+						onLearn={() => setScreen("learn")}
+						onPractice={() => {
+							go({ name: "papers" });
+							setScreen("practice");
+						}}
+					/>
+				)}
 				{screen === "settings" && (
 					<Settings
 						syncState={syncState}
@@ -1275,6 +1361,9 @@ export function MobileLearningApp({
 						reducedMotion={reducedMotion}
 						setReducedMotion={setReducedMotion}
 						cameraConsent={cameraConsent}
+						cameraConsentSaving={cameraConsentSaving}
+						cameraConsentFailed={cameraConsentFailed}
+						cameraProblem={cameraProblem}
 						onCameraConsent={changeCameraConsent}
 						onBack={() => setScreen("home")}
 					/>
@@ -1792,20 +1881,80 @@ const onboardingSlides = [
 	},
 ];
 
-function Onboarding({ onContinue }: { onContinue(): void }) {
+function Onboarding({
+	onBack,
+	onContinue,
+}: {
+	onBack(): void;
+	onContinue(): void;
+}) {
 	const [index, setIndex] = useState(0);
+	const pointerStart = useRef<number | null>(null);
 	const slide = onboardingSlides[index];
+	const moveSlide = (direction: -1 | 1) => {
+		setIndex((current) =>
+			Math.max(0, Math.min(onboardingSlides.length - 1, current + direction)),
+		);
+	};
 	return (
-		<section className="onboarding-screen">
+		// Swiping is a touch shortcut; the previous/next buttons give keyboard and screen-reader
+		// users the same navigation.
+		<section
+			className="onboarding-screen"
+			aria-roledescription="carousel"
+			aria-label="MindBridge හඳුන්වාදීම"
+			onPointerDown={(event) => {
+				pointerStart.current = event.clientX;
+			}}
+			onPointerUp={(event) => {
+				if (pointerStart.current === null) return;
+				const distance = event.clientX - pointerStart.current;
+				pointerStart.current = null;
+				if (Math.abs(distance) > 48) moveSlide(distance > 0 ? -1 : 1);
+			}}
+			onPointerCancel={() => {
+				pointerStart.current = null;
+			}}
+		>
 			<header className="onboarding-brand">
-				<BrandMark variant="submark" />
-				<span>MindBridge</span>
+				<button
+					type="button"
+					className="setup-back"
+					aria-label="ආරම්භක පිටුවට ආපසු"
+					onClick={onBack}
+				>
+					<AppIcon name="back" size={19} />
+				</button>
+				<span className="onboarding-wordmark">
+					<BrandMark variant="submark" /> MindBridge
+				</span>
+				<small>
+					{index + 1} / {onboardingSlides.length}
+				</small>
 			</header>
 			<div className={`onboarding-art onboarding-art--${slide.tone}`}>
+				<button
+					type="button"
+					className="slide-arrow slide-arrow--previous"
+					aria-label="පෙර විනිවිදකය"
+					disabled={index === 0}
+					onClick={() => moveSlide(-1)}
+				>
+					<AppIcon name="back" size={18} />
+				</button>
 				<div className="onboarding-art__ring" />
 				<AppIcon name={slide.icon} size={72} />
 				<span className="art-star art-star--one">✦</span>
 				<span className="art-star art-star--two">✦</span>
+				<button
+					type="button"
+					className="slide-arrow slide-arrow--next"
+					aria-label="ඊළඟ විනිවිදකය"
+					disabled={index === onboardingSlides.length - 1}
+					onClick={() => moveSlide(1)}
+				>
+					<AppIcon name="arrow" size={18} />
+				</button>
 			</div>
 			<div className="onboarding-copy" aria-live="polite">
 				<p className="eyebrow">{slide.kicker}</p>
@@ -1847,9 +1996,18 @@ function Onboarding({ onContinue }: { onContinue(): void }) {
 	);
 }
 
-function LanguageSetup({ onContinue }: { onContinue(): void }) {
+function LanguageSetup({
+	onBack,
+	onContinue,
+}: {
+	onBack(): void;
+	onContinue(): void;
+}) {
+	const [selected, setSelected] = useState(true);
+	const [previewOpen, setPreviewOpen] = useState(false);
 	return (
-		<section className="setup-screen">
+		<section className="setup-screen language-setup">
+			<SetupProgress current={2} onBack={onBack} />
 			<div className="setup-icon">
 				<AppIcon name="globe" size={34} />
 			</div>
@@ -1857,48 +2015,162 @@ function LanguageSetup({ onContinue }: { onContinue(): void }) {
 			<h1>සිංහල මාධ්‍ය ඉගෙනීම</h1>
 			<p className="quiet">මෙම ඉගෙනුම් ගමන 5 ශ්‍රේණිය සඳහා සිංහලෙන් සකස් කර ඇත.</p>
 			<div className="language-list">
-				<div className="language-card language-card--selected">
+				<button
+					type="button"
+					className={
+						selected ? "language-card language-card--selected" : "language-card"
+					}
+					aria-pressed={selected}
+					onClick={() => setSelected((value) => !value)}
+				>
 					<span className="language-sample">ආයුබෝවන්</span>
 					<span>
 						<strong>සිංහල</strong>
-						<small>Sinhala</small>
+						<small>Sinhala · 5 ශ්‍රේණිය</small>
 					</span>
 					<span className="selection-check" aria-hidden="true">
 						✓
 					</span>
-				</div>
+				</button>
 			</div>
-			<button className="primary-action setup-continue" onClick={onContinue}>
+			<button
+				className="language-preview-toggle"
+				type="button"
+				aria-expanded={previewOpen}
+				onClick={() => setPreviewOpen((open) => !open)}
+			>
+				<span>
+					<AppIcon name="book" size={19} /> භාෂා පෙරදසුන
+				</span>
+				<b aria-hidden="true">{previewOpen ? "−" : "+"}</b>
+			</button>
+			{previewOpen && (
+				<div className="language-preview" aria-live="polite">
+					<p>
+						<span>ආයුබෝවන්</span>
+						<small>සුබ පැතුමක්</small>
+					</p>
+					<p>
+						<span>ගණිතය</span>
+						<small>අංක සහ හැඩතල</small>
+					</p>
+					<p>
+						<span>පරිසරය</span>
+						<small>අප වටා ලෝකය</small>
+					</p>
+				</div>
+			)}
+			<p className="language-help">
+				<AppIcon name="shield" size={17} /> පසුව පැතිකඩෙන් භාෂාව නැවත තහවුරු කළ හැක.
+			</p>
+			<button
+				className="primary-action setup-continue"
+				disabled={!selected}
+				onClick={onContinue}
+			>
 				ඉදිරියට යමු
 			</button>
 		</section>
 	);
 }
 
+function SetupProgress({
+	current,
+	onBack,
+}: {
+	current: number;
+	onBack(): void;
+}) {
+	return (
+		<header className="setup-progress-row">
+			<button
+				type="button"
+				className="setup-back"
+				aria-label="පෙර පිටුවට"
+				onClick={onBack}
+			>
+				<AppIcon name="back" size={19} />
+			</button>
+			<div
+				className="setup-progress-track"
+				role="progressbar"
+				aria-label="පැතිකඩ සැකසීමේ ප්‍රගතිය"
+				aria-valuemin={1}
+				aria-valuemax={3}
+				aria-valuenow={current}
+			>
+				<span style={{ width: `${(current / 3) * 100}%` }} />
+			</div>
+			<small>{current} / 3</small>
+		</header>
+	);
+}
+
 function ProfileSetup({
 	name,
 	onNameChange,
+	avatarTone,
+	onAvatarToneChange,
+	onBack,
 	onContinue,
 }: {
 	name: string;
 	onNameChange(value: string): void;
+	avatarTone: AvatarTone;
+	onAvatarToneChange(value: AvatarTone): void;
+	onBack(): void;
 	onContinue(): void;
 }) {
+	const tones: AvatarTone[] = ["violet", "sky", "teal", "orange"];
+	const toneLabels: Record<AvatarTone, string> = {
+		violet: "දම්",
+		sky: "නිල්",
+		teal: "කොළ",
+		orange: "තැඹිලි",
+	};
 	return (
 		<section className="setup-screen profile-setup">
+			<SetupProgress current={3} onBack={onBack} />
 			<p className="eyebrow">අවසන් පියවර</p>
 			<h1>ඔබව හඳුනා ගනිමු</h1>
 			<p className="quiet">ඔබගේ ඉගෙනුම් ගමන පුද්ගලීකරණය කිරීමට මෙය උපකාරී වේ.</p>
 			<div className="avatar-picker">
-				<LearnerAvatar />
-				<button className="avatar-edit" aria-label="අවතාරය වෙනස් කරන්න">
+				<LearnerAvatar tone={avatarTone} />
+				<button
+					className="avatar-edit"
+					aria-label="අවතාරයේ වර්ණය වෙනස් කරන්න"
+					onClick={() => {
+						const index = tones.indexOf(avatarTone);
+						onAvatarToneChange(tones[(index + 1) % tones.length]);
+					}}
+				>
 					✎
 				</button>
 			</div>
+			<fieldset className="setup-avatar-tones">
+				<legend>ඔබ කැමති වර්ණය</legend>
+				<div>
+					{tones.map((tone) => (
+						<button
+							className={`avatar-tone avatar-tone--${tone}`}
+							type="button"
+							key={tone}
+							aria-label={`${toneLabels[tone]} වර්ණය`}
+							aria-pressed={avatarTone === tone}
+							onClick={() => onAvatarToneChange(tone)}
+						>
+							{avatarTone === tone && <span>✓</span>}
+						</button>
+					))}
+				</div>
+			</fieldset>
 			<label className="field-card">
-				<span>ඔබේ නම</span>
+				<span>
+					ඔබේ නම <small>{name.length} / 24</small>
+				</span>
 				<input
 					value={name}
+					maxLength={24}
 					onChange={(event) => onNameChange(event.target.value)}
 					placeholder="උදා: කවිඳු"
 				/>
@@ -1924,18 +2196,193 @@ function ProfileSetup({
 	);
 }
 
-function PlannedPage({
-	title,
-	children,
+
+function HomeScreen({
+	name,
+	avatarTone,
+	onProfile,
+	onMission,
+	onLearn,
+	onPractice,
+	onMindy,
+	onProgress,
+	onRewards,
 }: {
-	title: string;
-	children?: ReactNode;
+	name: string;
+	avatarTone: AvatarTone;
+	onProfile(): void;
+	onMission(): void;
+	onLearn(): void;
+	onPractice(): void;
+	onMindy(): void;
+	onProgress(): void;
+	onRewards(): void;
 }) {
+	const [notificationsOpen, setNotificationsOpen] = useState(false);
+	const [hasUnread, setHasUnread] = useState(true);
 	return (
-		<section className="tab-screen planned-page" data-planned-page={title}>
-			<h1>{title}</h1>
-			<p className="planned-mark">To be implemented</p>
-			{children}
+		<section className="tab-screen home-screen">
+			<header className="home-header">
+				<button
+					className="home-identity"
+					type="button"
+					aria-label={`${name}ගේ පැතිකඩ බලන්න`}
+					onClick={onProfile}
+				>
+					<LearnerAvatar tone={avatarTone} />
+					<span>
+						<p>සුබ දවසක්!</p>
+						<h1>{name} 👋</h1>
+					</span>
+				</button>
+				<button
+					className="notification-button"
+					type="button"
+					aria-label={hasUnread ? "නව දැනුම්දීම් 1ක්" : "දැනුම්දීම්"}
+					aria-expanded={notificationsOpen}
+					onClick={() => setNotificationsOpen((open) => !open)}
+				>
+					<AppIcon name="bell" size={21} />
+					{hasUnread && <span aria-hidden="true" />}
+				</button>
+			</header>
+
+			{notificationsOpen && (
+				<aside className="home-notification-panel" aria-label="දැනුම්දීම්">
+					<span className="notification-symbol" aria-hidden="true">
+						★
+					</span>
+					<div>
+						<strong>අද මෙහෙයුම සූදානම්!</strong>
+						<p>මිනිත්තු 5ක බාග අභියෝගයක් ඔබ බලා සිටී.</p>
+					</div>
+					<button
+						type="button"
+						aria-label="දැනුම්දීම කියවූ ලෙස සලකුණු කරන්න"
+						onClick={() => {
+							setHasUnread(false);
+							setNotificationsOpen(false);
+						}}
+					>
+						✓
+					</button>
+				</aside>
+			)}
+
+			<ul className="stats" aria-label="අද ප්‍රගතිය">
+				<li>
+					<span className="stat-icon stat-icon--fire">
+						<AppIcon name="fire" size={18} />
+					</span>
+					<strong>දින 3</strong>
+					<small>අඛණ්ඩ මාලාව</small>
+				</li>
+				<li>
+					<span className="stat-icon stat-icon--star">
+						<AppIcon name="trophy" size={18} />
+					</span>
+					<strong>60 XP</strong>
+					<small>මුළු ලකුණු</small>
+				</li>
+				<li>
+					<span className="stat-icon stat-icon--coin">●</span>
+					<strong>28</strong>
+					<small>කාසි</small>
+				</li>
+			</ul>
+
+			<article className="mission-card home-mission-card">
+				<img
+					className="home-mission-art"
+					src="/curriculum/game/shared/child-celebrating-stars.png"
+					alt=""
+					aria-hidden="true"
+				/>
+				<p className="eyebrow">
+					<AppIcon name="target" size={16} /> අද මෙහෙයුම
+				</p>
+				<h2>බාගය සොයමු!</h2>
+				<p>වස්තු සමාන කොටස් දෙකකට බෙදා බාගය හඳුනා ගන්න.</p>
+				<div className="mission-progress">
+					<span
+						role="progressbar"
+						aria-label="අද මෙහෙයුමේ ප්‍රගතිය"
+						aria-valuemin={0}
+						aria-valuemax={3}
+						aria-valuenow={1}
+					>
+						<i />
+					</span>
+					<strong>1 / 3</strong>
+				</div>
+				<button className="primary-action" type="button" onClick={onMission}>
+					දිගටම කරගෙන යමු <AppIcon name="arrow" size={18} />
+				</button>
+			</article>
+
+			<button
+				className="recommendation-card"
+				type="button"
+				onClick={onPractice}
+			>
+				<span className="recommendation-icon">
+					<AppIcon name="document" size={23} />
+				</span>
+				<span>
+					<small>ඔබට නිර්දේශිතයි</small>
+					<strong>පසුගිය ප්‍රශ්න පත්‍ර පුහුණුව</strong>
+					<em>කෙටි ප්‍රශ්න 5ක් · මිනිත්තු 8යි</em>
+				</span>
+				<b aria-hidden="true">›</b>
+			</button>
+
+			<button className="smart-support-card" type="button" onClick={onMindy}>
+				<span>
+					<AppIcon name="sparkle" size={23} />
+				</span>
+				<span>
+					<strong>Mindyගෙන් උදව්වක් ඕනෑ ද?</strong>
+					<small>පිළිතුර නොකියා ඔබටම සොයා ගන්නට කුඩා ඉඟියක්</small>
+				</span>
+				<b aria-hidden="true">›</b>
+			</button>
+
+			<div className="section-heading home-section-heading">
+				<div>
+					<p className="eyebrow">ඉක්මන් පිවිසුම්</p>
+					<h2>දැන් මොනවා කරමු ද?</h2>
+				</div>
+			</div>
+			<div className="feature-grid">
+				<button type="button" onClick={onLearn}>
+					<span className="feature-icon feature-icon--purple">
+						<AppIcon name="game" size={24} />
+					</span>
+					<strong>ක්‍රීඩා කරමින් ඉගෙන ගන්න</strong>
+					<small>විෂයක් තෝරා අලුත් අභියෝගයක් අරඹන්න.</small>
+				</button>
+				<button type="button" onClick={onProgress}>
+					<span className="feature-icon feature-icon--sky">
+						<AppIcon name="chart" size={24} />
+					</span>
+					<strong>මගේ ප්‍රගතිය බලන්න</strong>
+					<small>ඔබ දියුණු වූ කුසලතා එකම තැනකින් බලන්න.</small>
+				</button>
+				<button type="button" onClick={onRewards}>
+					<span className="feature-icon feature-icon--orange">
+						<AppIcon name="trophy" size={24} />
+					</span>
+					<strong>ත්‍යාග සහ ලාංඡන</strong>
+					<small>ඔබ දිනාගත් ලාංඡන සහ මාලාව පරීක්ෂා කරන්න.</small>
+				</button>
+				<button type="button" onClick={onProfile}>
+					<span className="feature-icon feature-icon--teal">
+						<AppIcon name="user" size={24} />
+					</span>
+					<strong>මගේ පැතිකඩ</strong>
+					<small>නම, අවතාරය සහ යෙදුම් සැකසුම් වෙනස් කරන්න.</small>
+				</button>
+			</div>
 		</section>
 	);
 }
@@ -1991,6 +2438,7 @@ function GamesHome({
 	onChoose,
 	openSubject = null,
 	onOpenSubject,
+	avatarTone = "violet",
 }: {
 	onPlay(): void;
 	missions?: DraftMissionRecord[];
@@ -1998,6 +2446,7 @@ function GamesHome({
 	onChoose?(areaId: string): void;
 	openSubject?: SubjectCode | null;
 	onOpenSubject?(subject: SubjectCode | null): void;
+	avatarTone?: AvatarTone;
 }) {
 	const subject = GAME_SUBJECTS.find((item) => item.code === openSubject);
 	const subjectMissions = subject
@@ -2068,7 +2517,7 @@ function GamesHome({
 							<em>ඉගෙන ගමු!</em>
 						</div>
 						<div className="games-avatar">
-							<LearnerAvatar />
+							<LearnerAvatar tone={avatarTone} />
 						</div>
 					</header>
 					<div className="subject-cards">
@@ -2396,6 +2845,9 @@ function Settings({
 	reducedMotion,
 	setReducedMotion,
 	cameraConsent,
+	cameraConsentSaving,
+	cameraConsentFailed,
+	cameraProblem,
 	onCameraConsent,
 	onBack,
 }: {
@@ -2404,6 +2856,9 @@ function Settings({
 	reducedMotion: boolean;
 	setReducedMotion(value: boolean): void;
 	cameraConsent: boolean;
+	cameraConsentSaving: boolean;
+	cameraConsentFailed: boolean;
+	cameraProblem: CameraProblem | null;
 	onCameraConsent(granted: boolean): void;
 	onBack(): void;
 }) {
@@ -2420,18 +2875,13 @@ function Settings({
 				/>{" "}
 				චලනය අඩු කරන්න
 			</label>
-			<label className="toggle">
-				<input
-					type="checkbox"
-					checked={cameraConsent}
-					onChange={(event) => onCameraConsent(event.target.checked)}
-				/>{" "}
-				ඉගෙනීමට උදව් වීමට කැමරාව භාවිත කරන්න
-			</label>
-			<p className="camera-consent-note">
-				කැමරා රූප මෙම උපාංගයෙන් පිටතට නොයයි, ගබඩා කරන්නේද නැත. ඉගෙනුම් ක්‍රීඩා අතරතුර ඇස් සහ
-				හිසෙහි පිහිටීම පිළිබඳ අංක කිහිපයක් පමණක් භාවිත වේ. ඕනෑම වේලාවක මෙය අක්‍රිය කළ හැක.
-			</p>
+			<CameraConsentCard
+				granted={cameraConsent}
+				saving={cameraConsentSaving}
+				saveFailed={cameraConsentFailed}
+				problem={cameraProblem}
+				onChange={onCameraConsent}
+			/>
 			<p role="status">
 				සමමුහුර්ත තත්ත්වය: <strong>{labels[syncState]}</strong>
 			</p>
@@ -2477,7 +2927,276 @@ function Back({ onClick }: { onClick(): void }) {
 	);
 }
 
-function RewardsHub() {
+type ProgressRange = "week" | "month";
+
+const progressSubjects = [
+	{
+		id: "math",
+		title: "ගණිතය",
+		note: "ඉතා හොඳින් ඉදිරියට යනවා",
+		percent: 72,
+		xp: 34,
+		tone: "purple",
+		symbol: "123",
+		skills: [
+			{ title: "බාග", percent: 82 },
+			{ title: "එකතු කිරීම", percent: 76 },
+			{ title: "හැඩතල", percent: 58 },
+		],
+	},
+	{
+		id: "sinhala",
+		title: "සිංහල",
+		note: "අද තවත් කුඩා පියවරක්",
+		percent: 61,
+		xp: 21,
+		tone: "pink",
+		symbol: "අ",
+		skills: [
+			{ title: "කියවීම", percent: 70 },
+			{ title: "වචන", percent: 63 },
+			{ title: "ව්‍යාකරණ", percent: 48 },
+		],
+	},
+	{
+		id: "environment",
+		title: "පරිසරය",
+		note: "තවත් පුහුණුවෙන් දියුණු වෙමු",
+		percent: 48,
+		xp: 13,
+		tone: "teal",
+		symbol: "✿",
+		skills: [
+			{ title: "අප වටා ලෝකය", percent: 60 },
+			{ title: "සත්ව ලෝකය", percent: 46 },
+			{ title: "පරිසර ආරක්ෂාව", percent: 38 },
+		],
+	},
+	{
+		id: "english",
+		title: "ඉංග්‍රීසි",
+		note: "අලුත් වචන සමඟ නැවත උත්සාහ කරමු",
+		percent: 35,
+		xp: 8,
+		tone: "orange",
+		symbol: "Aa",
+		skills: [
+			{ title: "Classroom words", percent: 51 },
+			{ title: "Listening", percent: 34 },
+			{ title: "Simple sentences", percent: 22 },
+		],
+	},
+] as const;
+
+function ProgressScreen({
+	onLearn,
+	onPractice,
+}: {
+	onLearn(): void;
+	onPractice(): void;
+}) {
+	const [range, setRange] = useState<ProgressRange>("week");
+	const [selectedDay, setSelectedDay] = useState(5);
+	const [openSubject, setOpenSubject] = useState<string | null>("math");
+	const activity =
+		range === "week"
+			? [
+					{ label: "ස", value: 34, xp: 8 },
+					{ label: "අ", value: 58, xp: 14 },
+					{ label: "බ", value: 43, xp: 10 },
+					{ label: "බ්‍ර", value: 72, xp: 18 },
+					{ label: "සි", value: 50, xp: 12 },
+					{ label: "සෙ", value: 88, xp: 22 },
+					{ label: "ඉ", value: 62, xp: 16 },
+				]
+			: [
+					{ label: "ස 1", value: 46, xp: 42 },
+					{ label: "ස 2", value: 68, xp: 61 },
+					{ label: "ස 3", value: 55, xp: 49 },
+					{ label: "ස 4", value: 82, xp: 76 },
+				];
+	const overall = range === "week" ? 68 : 74;
+	const totalXp = range === "week" ? 60 : 228;
+	const activeIndex = Math.min(selectedDay, activity.length - 1);
+
+	return (
+		<section className="tab-screen progress-screen">
+			<header className="progress-header">
+				<div>
+					<p className="eyebrow">මගේ ඉගෙනුම් ගමන</p>
+					<h1>ප්‍රගතිය</h1>
+				</div>
+				<div className="progress-streak">
+					<AppIcon name="fire" size={18} />
+					<strong>3</strong>
+					<small>දින</small>
+				</div>
+			</header>
+
+			<fieldset className="progress-range">
+				<legend className="sr-only">ප්‍රගති කාල පරාසය</legend>
+				<button
+					type="button"
+					className={range === "week" ? "is-active" : ""}
+					aria-pressed={range === "week"}
+					onClick={() => {
+						setRange("week");
+						setSelectedDay(5);
+					}}
+				>
+					මෙම සතිය
+				</button>
+				<button
+					type="button"
+					className={range === "month" ? "is-active" : ""}
+					aria-pressed={range === "month"}
+					onClick={() => {
+						setRange("month");
+						setSelectedDay(3);
+					}}
+				>
+					මෙම මාසය
+				</button>
+			</fieldset>
+
+			<article className="progress-overview-card">
+				<div
+					className="progress-ring"
+					style={{
+						background: `conic-gradient(#ffc542 ${overall}%, rgba(255,255,255,.2) 0)`,
+					}}
+				>
+					<div>
+						<strong>{overall}%</strong>
+						<span>සම්පූර්ණයි</span>
+					</div>
+				</div>
+				<div className="progress-overview-copy">
+					<p className="eyebrow">සමස්ත දියුණුව</p>
+					<h2>ඔබ හොඳින් ඉදිරියට යනවා!</h2>
+					<p>
+						මෙම {range === "week" ? "සතියේ" : "මාසයේ"} තවත් කුසලතා 3ක් ශක්තිමත් කර ඇත.
+					</p>
+				</div>
+				<div className="progress-overview-stats">
+					<span>
+						<strong>{totalXp}</strong>
+						<small>XP ලකුණු</small>
+					</span>
+					<span>
+						<strong>9</strong>
+						<small>ක්‍රියාකාරකම්</small>
+					</span>
+					<span>
+						<strong>82%</strong>
+						<small>හොඳම ලකුණ</small>
+					</span>
+				</div>
+			</article>
+
+			<article className="activity-card">
+				<div className="progress-card-heading">
+					<div>
+						<p className="eyebrow">ක්‍රියාකාරීත්වය</p>
+						<h2>{range === "week" ? "මෙම සතිය" : "පසුගිය සති 4"}</h2>
+					</div>
+					<span>{activity[activeIndex].xp} XP</span>
+				</div>
+				<figure
+					className={`activity-chart activity-chart--${range}`}
+					aria-label="ඉගෙනුම් ක්‍රියාකාරීත්ව සටහන"
+				>
+					{activity.map((day, index) => (
+						<button
+							type="button"
+							key={`${range}-${day.label}`}
+							className={index === activeIndex ? "is-active" : ""}
+							aria-label={`${day.label}: XP ${day.xp}`}
+							aria-pressed={index === activeIndex}
+							onClick={() => setSelectedDay(index)}
+						>
+							<i style={{ height: `${day.value}%` }}>
+								<span>{day.xp}</span>
+							</i>
+							<small>{day.label}</small>
+						</button>
+					))}
+				</figure>
+			</article>
+
+			<div className="section-heading progress-section-heading">
+				<div>
+					<p className="eyebrow">විෂය අනුව</p>
+					<h2>කුසලතා දියුණුව</h2>
+				</div>
+				<small>විවෘත කිරීමට තට්ටු කරන්න</small>
+			</div>
+			<div className="progress-subjects">
+				{progressSubjects.map((subject) => {
+					const open = openSubject === subject.id;
+					return (
+						<article
+							className={`progress-subject-card progress-subject-card--${subject.tone}${open ? " is-open" : ""}`}
+							key={subject.id}
+						>
+							<button
+								type="button"
+								className="progress-subject-summary"
+								aria-expanded={open}
+								onClick={() => setOpenSubject(open ? null : subject.id)}
+							>
+								<span className="progress-subject-icon">{subject.symbol}</span>
+								<span className="progress-subject-copy">
+									<strong>{subject.title}</strong>
+									<small>{subject.note}</small>
+									<i>
+										<b style={{ width: `${subject.percent}%` }} />
+									</i>
+								</span>
+								<span className="progress-subject-score">
+									<strong>{subject.percent}%</strong>
+									<small>+{subject.xp} XP</small>
+									<b aria-hidden="true">⌄</b>
+								</span>
+							</button>
+							{open && (
+								<div className="progress-skill-details">
+									{subject.skills.map((skill) => (
+										<div key={skill.title}>
+											<span>
+												<strong>{skill.title}</strong>
+												<small>{skill.percent}%</small>
+											</span>
+											<i>
+												<b style={{ width: `${skill.percent}%` }} />
+											</i>
+										</div>
+									))}
+									<button type="button" onClick={onLearn}>
+										මෙම විෂය පුහුණු වන්න <AppIcon name="arrow" size={17} />
+									</button>
+								</div>
+							)}
+						</article>
+					);
+				})}
+			</div>
+
+			<button className="progress-insight" type="button" onClick={onPractice}>
+				<span>
+					<AppIcon name="sparkle" size={24} />
+				</span>
+				<span>
+					<small>Mindyගේ යෝජනාව</small>
+					<strong>බාග සහ හැඩතල සඳහා කෙටි පුහුණුවක් කරමු.</strong>
+				</span>
+				<b aria-hidden="true">›</b>
+			</button>
+		</section>
+	);
+}
+
+function RewardsHub({ onBack }: { onBack(): void }) {
 	const achievements = [
 		{
 			icon: "★",
@@ -2510,6 +3229,7 @@ function RewardsHub() {
 	];
 	return (
 		<section className="tab-screen rewards-screen">
+			<Back onClick={onBack} />
 			<div className="page-title-row">
 				<div>
 					<p className="eyebrow">මගේ එකතුව</p>
@@ -2583,23 +3303,149 @@ function RewardsHub() {
 
 function Account({
 	name,
+	onNameChange,
+	avatarTone,
+	onAvatarToneChange,
+	onBack,
+	onRewards,
 	onSettings,
 	onOnboarding,
 }: {
 	name: string;
+	onNameChange(value: string): void;
+	avatarTone: AvatarTone;
+	onAvatarToneChange(value: AvatarTone): void;
+	onBack(): void;
+	onRewards(): void;
 	onSettings(): void;
 	onOnboarding(): void;
 }) {
+	const [editing, setEditing] = useState(false);
+	const [draftName, setDraftName] = useState(name);
+	const [draftTone, setDraftTone] = useState<AvatarTone>(avatarTone);
+	const [parentNoteOpen, setParentNoteOpen] = useState(false);
+	const avatarChoices: Array<{ tone: AvatarTone; label: string }> = [
+		{ tone: "violet", label: "දම්" },
+		{ tone: "sky", label: "නිල්" },
+		{ tone: "teal", label: "කොළ" },
+		{ tone: "orange", label: "තැඹිලි" },
+	];
+	const openEditor = () => {
+		setDraftName(name);
+		setDraftTone(avatarTone);
+		setEditing(true);
+	};
 	return (
 		<section className="tab-screen account-screen">
-			<div className="profile-hero">
-				<LearnerAvatar />
+			<header className="profile-topbar">
+				<button
+					className="icon-button"
+					type="button"
+					aria-label="මුල් පිටුවට ආපසු"
+					onClick={onBack}
+				>
+					<AppIcon name="back" size={20} />
+				</button>
 				<div>
-					<p className="eyebrow">මගේ පැතිකඩ</p>
+					<p className="eyebrow">MindBridge</p>
+					<h1>මගේ පැතිකඩ</h1>
+				</div>
+				<button
+					className="icon-button"
+					type="button"
+					aria-label="යෙදුම් සැකසුම්"
+					onClick={onSettings}
+				>
+					<AppIcon name="settings" size={20} />
+				</button>
+			</header>
+			<div className="profile-hero">
+				<button
+					className="profile-avatar-button"
+					type="button"
+					aria-label="පැතිකඩ සංස්කරණය කරන්න"
+					onClick={openEditor}
+				>
+					<LearnerAvatar tone={avatarTone} />
+					<span aria-hidden="true">✎</span>
+				</button>
+				<div className="profile-hero-copy">
+					<p className="eyebrow">පුංචි ගවේෂකයා</p>
 					<h1>{name}</h1>
 					<p>5 ශ්‍රේණිය · සිංහල</p>
 				</div>
+				<button
+					className="profile-edit-button"
+					type="button"
+					onClick={openEditor}
+				>
+					වෙනස් කරන්න
+				</button>
 			</div>
+
+			{editing && (
+				<section className="profile-edit-panel" aria-labelledby="profile-edit-title">
+					<div className="profile-edit-heading">
+						<div>
+							<p className="eyebrow">පුද්ගලීකරණය</p>
+							<h2 id="profile-edit-title">ඔබේ පැතිකඩ වෙනස් කරන්න</h2>
+						</div>
+						<button
+							type="button"
+							aria-label="සංස්කරණය වසන්න"
+							onClick={() => setEditing(false)}
+						>
+							×
+						</button>
+					</div>
+					<label className="field-card">
+						<span>ඔබේ නම</span>
+						<input
+							value={draftName}
+							maxLength={24}
+							onChange={(event) => setDraftName(event.target.value)}
+						/>
+					</label>
+					<fieldset className="avatar-tone-field">
+						<legend>අවතාර වර්ණය</legend>
+						<div>
+							{avatarChoices.map((choice) => (
+								<button
+									className={`avatar-tone avatar-tone--${choice.tone}`}
+									type="button"
+									key={choice.tone}
+									aria-label={`${choice.label} වර්ණය`}
+									aria-pressed={draftTone === choice.tone}
+									onClick={() => setDraftTone(choice.tone)}
+								>
+									{draftTone === choice.tone && <span>✓</span>}
+								</button>
+							))}
+						</div>
+					</fieldset>
+					<div className="profile-edit-actions">
+						<button
+							className="text-action"
+							type="button"
+							onClick={() => setEditing(false)}
+						>
+							අවලංගු කරන්න
+						</button>
+						<button
+							className="primary-action"
+							type="button"
+							disabled={!draftName.trim()}
+							onClick={() => {
+								onNameChange(draftName.trim());
+								onAvatarToneChange(draftTone);
+								setEditing(false);
+							}}
+						>
+							වෙනස්කම් සුරකින්න
+						</button>
+					</div>
+				</section>
+			)}
 			<div className="profile-stats">
 				<div>
 					<strong>2</strong>
@@ -2609,10 +3455,14 @@ function Account({
 					<strong>60</strong>
 					<span>මුළු XP</span>
 				</div>
-				<div>
+				<button
+					type="button"
+					onClick={onRewards}
+					aria-label="ලාංඡන 2ක් — ත්‍යාග බලන්න"
+				>
 					<strong>2</strong>
-					<span>ලාංඡන</span>
-				</div>
+					<span>ලාංඡන ›</span>
+				</button>
 			</div>
 			<h2 className="list-title">පැතිකඩ සහ යෙදුම</h2>
 			<div className="settings-list">
@@ -2636,7 +3486,11 @@ function Account({
 					</span>
 					<b>›</b>
 				</button>
-				<button>
+				<button
+					type="button"
+					onClick={() => setParentNoteOpen((open) => !open)}
+					aria-expanded={parentNoteOpen}
+				>
 					<span className="settings-icon settings-icon--teal">
 						<AppIcon name="shield" size={21} />
 					</span>
@@ -2647,6 +3501,18 @@ function Account({
 					<b>›</b>
 				</button>
 			</div>
+			{parentNoteOpen && (
+				<div className="parent-note" role="status">
+					<AppIcon name="shield" size={21} />
+					<p>
+						<strong>වැඩිහිටියෙකු සමඟ විවෘත කරන්න.</strong> කැමරා අවසර සහ ප්‍රවේශතා පාලන
+						යෙදුම් සැකසුම් තුළ ඇත.
+					</p>
+					<button className="text-action" type="button" onClick={onSettings}>
+						සැකසුම් බලන්න
+					</button>
+				</div>
+			)}
 			<div className="profile-brand">
 				<BrandMark variant="submark" />
 				<span>MindBridge</span>
@@ -2710,7 +3576,17 @@ function BrandMark({
 	);
 }
 
-function LearnerAvatar() {
+function LearnerAvatar({ tone = "violet" }: { tone?: AvatarTone }) {
+	const palette: Record<
+		AvatarTone,
+		{ background: string; shirt: string; backpack: string }
+	> = {
+		violet: { background: "#efecfd", shirt: "#6c5ce7", backpack: "#4ebbc4" },
+		sky: { background: "#e8f5fe", shirt: "#3fa9f5", backpack: "#6c5ce7" },
+		teal: { background: "#e4faf5", shirt: "#16bfa6", backpack: "#ff9f5a" },
+		orange: { background: "#fff0e3", shirt: "#ff8b45", backpack: "#6c5ce7" },
+	};
+	const colors = palette[tone];
 	return (
 		<svg
 			className="learner-avatar"
@@ -2718,8 +3594,13 @@ function LearnerAvatar() {
 			role="img"
 			aria-label="තෝරාගත් අවතාරය"
 		>
-			<circle cx="50" cy="50" r="48" fill="#efecfd" />
-			<ellipse cx="50" cy="71" rx="27" ry="20" fill="#6c5ce7" />
+			<circle cx="50" cy="50" r="48" fill={colors.background} />
+			<path
+				d="M24 69q2-15 13-19l13 19-9 20H28q-5-9-4-20Z"
+				fill={colors.backpack}
+				opacity=".82"
+			/>
+			<ellipse cx="50" cy="71" rx="27" ry="20" fill={colors.shirt} />
 			<circle cx="50" cy="43" r="23" fill="#f2bf91" />
 			<path d="M27 38Q50 12 73 38Q72 20 50 19Q28 21 27 38Z" fill="#342a38" />
 			<circle cx="42" cy="43" r="2.7" fill="#2e2a45" />

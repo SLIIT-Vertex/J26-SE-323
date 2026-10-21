@@ -7,8 +7,9 @@ game-side changes. The game owner's description is in
 [`docs/adaptive-gamified-learning/learner-state-answer-integration.md`](../adaptive-gamified-learning/learner-state-answer-integration.md).
 
 **Status (2026-10-20):** every scored answer in the Grade 5 mathematics adventures is recorded as a
-learner-state window. The result is stored but does not yet change what the child sees (silent
-mode, [`12`](12_PILOT_STUDY_PLAN.md#3-design)).
+learner-state window. The app shows a gentle prompt for the two support actions (§7); with
+`VITE_LEARNER_STATE_PROMPTS=off` it runs in silent mode for the pilot
+([`12`](12_PILOT_STUDY_PLAN.md#3-design)), where decisions are recorded but nothing is shown.
 
 ## 1. Responsibilities
 
@@ -117,8 +118,27 @@ productive, so a meaningful source must be agreed first.
 
 ## 7. Consuming the result
 
-In the adventures the result is stored only (silent mode); the next steps that would act on it
-are a learner-facing re-engagement action and the tutor hand-off ([`09`](09_TUTOR_HANDOFF.md)).
+The answer response carries the window's decision as `learner_state_action`. It is not part of
+the stored idempotency receipt, so a retried request returns no decision and the app never reacts
+twice to one answer. The shared client passes it to the app, which shows a gentle prompt
+(`frontend/src/features/learner-state/game/supportPrompts.ts`, `LearnerSupportPrompt.tsx`):
+
+| Decision | Prompt |
+| --- | --- |
+| `request_reengagement_support` | "කෙටි විවේකයක් ගනිමු" (let's take a short break): breathe, rest the eyes, "මම සූදානම්!" |
+| `request_tutor_support` | "ඔබට පුළුවන්!" (you can do it): the task is a little challenging, think step by step |
+| `monitor`, `collect_more_evidence`, `none` | nothing |
+
+- The prompts describe the task, never the child: no wording says "confused" or "not paying
+  attention" (checked by a test), and they promise no tutor help, which is not connected yet.
+- After a prompt, at least 3 further answers and 2 minutes must pass before the next one.
+- A prompt is a dismissible card at the bottom of a game screen, announced politely to screen
+  readers; it is cleared when the child leaves the game.
+- `VITE_LEARNER_STATE_PROMPTS=off` switches prompts off (silent mode for the pilot).
+
+Shown prompts are not yet logged; a pilot that uses prompts must log them, so that later
+behaviour can be analysed with the prompt in mind. The tutor hand-off is described in
+[`09`](09_TUTOR_HANDOFF.md).
 
 The older pilot path (`POST /api/v1/game-sessions/{session_id}/responses`, `SessionPlay`,
 `GameHost`) built in #26 uses `recommended_action` in its struggle trigger instead of a separate
@@ -142,7 +162,7 @@ and has no gateway composed.
 1. Guardian authentication for the camera decision (§4).
 2. Agreement on the provisional `overlap_time` and `original` values, and a source for
    `task_progress` (§6).
-3. Leaving silent mode: what the game does with `request_tutor_support` and
-   `request_reengagement_support` in the adventures.
+3. Logging shown prompts, and a real tutor hand-off for `request_tutor_support` instead of an
+   encouraging prompt only.
 4. Session history is in memory; a backend restart starts every learner-state session afresh
    ([`07` §4.3](07_EVALUATION_AND_LIMITATIONS.md#43-runtime-and-deployment)).

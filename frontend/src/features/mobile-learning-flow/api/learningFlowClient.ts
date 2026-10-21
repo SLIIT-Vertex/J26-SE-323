@@ -3,6 +3,7 @@ import type {
 	CameraConsentResponse,
 	DraftMissionCatalog,
 	DraftMissionRecord,
+	LearnerStateAction,
 	OpenEpisodeRequest,
 	SupportCompleteRequest,
 	TelemetryAcknowledgement,
@@ -42,6 +43,7 @@ export function createLearningFlowClient({
 	request = fetch,
 	visualFeatures,
 	learnerStateSessionId = crypto.randomUUID(),
+	onLearnerStateAction,
 }: {
 	baseUrl?: string;
 	learnerId: string;
@@ -50,7 +52,13 @@ export function createLearningFlowClient({
 	visualFeatures?: () => VisualFeatureWindow | null;
 	/** One learner-state session for all episodes played with this client (one app session). */
 	learnerStateSessionId?: string;
+	/** Called with the learner-state decision of each newly scored answer. */
+	onLearnerStateAction?: (action: LearnerStateAction) => void;
 }) {
+	const reportLearnerState = (response: ScoredEpisodeResponse): ScoredEpisodeResponse => {
+		if (response.learner_state_action) onLearnerStateAction?.(response.learner_state_action);
+		return response;
+	};
 	let activeLearnerId = learnerId;
 	// Device-level camera decision, re-recorded when development learner switching picks another
 	// learner, so that the server keeps accepting camera values.
@@ -257,7 +265,7 @@ export function createLearningFlowClient({
 				`/episodes/${episodeId}/before`,
 				key,
 				withLearnerState(body, key),
-			),
+			).then(reportLearnerState),
 		completeSupport: (
 			episodeId: string,
 			body: SupportCompleteRequest,
@@ -285,7 +293,7 @@ export function createLearningFlowClient({
 				`/episodes/${episodeId}/after`,
 				key,
 				withLearnerState(body, key),
-			),
+			).then(reportLearnerState),
 		telemetry: (
 			episodeId: string,
 			body: TelemetryBatch,
