@@ -32,3 +32,11 @@ backend/data/curriculum/raw
 /data/curriculum/raw/
 /data/curriculum/extracted/
 /data/curriculum/reports/
+
+# Private personal notes — never tracked
+/private-notes/
+/research/
+/.claude/
+# Local learner-specific sensitivity replay.
+/backend/reports/research-accuracy.json
+/backend/reports/simulated-validation.json
