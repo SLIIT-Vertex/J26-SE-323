@@ -3,6 +3,7 @@
 import { Capacitor } from "@capacitor/core";
 import {
 	type ComponentType,
+	type CSSProperties,
 	type FunctionComponent,
 	type LazyExoticComponent,
 	lazy,
@@ -2427,37 +2428,81 @@ function HomeScreen({
 
 type SubjectCode = "MAT" | "SIN" | "ENV" | "ENG";
 
-const GAME_SUBJECTS: Array<{
+type GameSubject = {
 	code: SubjectCode;
 	title: string;
 	image: string;
 	tone: "math" | "sinhala" | "env" | "english";
-}> = [
+	bannerColors: { start: string; end: string; accent: string };
+};
+
+const GAME_SUBJECTS: GameSubject[] = [
 	{
 		code: "MAT",
 		title: "ගණිතය",
 		image: "/curriculum/math.svg",
 		tone: "math",
+		bannerColors: { start: "#eff8ff", end: "#dceeff", accent: "#c1def6" },
 	},
 	{
 		code: "SIN",
 		title: "සිංහල",
 		image: "/curriculum/sinhala.svg",
 		tone: "sinhala",
+		bannerColors: { start: "#f7f2ff", end: "#e9e0fb", accent: "#d6c5f2" },
 	},
 	{
 		code: "ENV",
 		title: "පරිසර අධ්‍යයනය",
 		image: "/curriculum/environmental-studies.svg",
 		tone: "env",
+		bannerColors: { start: "#effaf5", end: "#daf1e7", accent: "#b9e2d4" },
 	},
 	{
 		code: "ENG",
 		title: "ඉංග්‍රීසි",
 		image: "/curriculum/english.svg",
 		tone: "english",
+		bannerColors: { start: "#fff3f8", end: "#fbe1ee", accent: "#f2c6dc" },
 	},
 ];
+
+function SubjectPageHeader({
+	subject,
+	onBack,
+}: {
+	subject: GameSubject;
+	onBack(): void;
+}) {
+	const bannerStyle = {
+		"--subject-banner-start": subject.bannerColors.start,
+		"--subject-banner-end": subject.bannerColors.end,
+		"--subject-banner-accent": subject.bannerColors.accent,
+	} as CSSProperties;
+
+	return (
+		<header className="subject-page-header" lang="si">
+			<div className="subject-page-header__navigation">
+				<button
+					className="back-button"
+					type="button"
+					aria-label="ආපසු"
+					onClick={onBack}
+				>
+					<AppIcon name="back" size={21} />
+				</button>
+				<span>විෂයයන්</span>
+			</div>
+			<div className="subject-page-header__banner" style={bannerStyle}>
+				<div className="subject-page-header__copy">
+					<h1>{subject.title}</h1>
+					<p>අදත් අලුත් දෙයක් ඉගෙන ගනිමු!</p>
+				</div>
+				<img src={subject.image} alt="" aria-hidden="true" />
+			</div>
+		</header>
+	);
+}
 
 function missionsForSubject(
 	subject: SubjectCode,
@@ -2493,18 +2538,10 @@ function GamesHome({
 		<section className="tab-screen games-screen">
 			{subject ? (
 				<section className="learning-areas" data-subject-areas={subject.code}>
-					<button
-						className="back-button"
-						type="button"
-						aria-label="ආපසු"
-						onClick={() => onOpenSubject?.(null)}
-					>
-						<AppIcon name="back" size={19} />
-					</button>
-					<header className="learning-areas__intro">
-						<img src={subject.image} alt="" aria-hidden="true" />
-						<h1>{subject.title}</h1>
-					</header>
+					<SubjectPageHeader
+						subject={subject}
+						onBack={() => onOpenSubject?.(null)}
+					/>
 					{subjectMissions.length > 0 ? (
 						<ul>
 							{subjectMissions.map((mission) => (
