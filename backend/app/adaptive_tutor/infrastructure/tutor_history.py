@@ -30,11 +30,16 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from app.adaptive_tutor.application.context_assembly import (
+    AssistanceHistoryBasis,
     AssistanceHistoryResult,
     ContextEvidenceRequest,
     EvidenceOrigin,
     EvidenceSource,
     EvidenceStatus,
+)
+from app.adaptive_tutor.application.hint_effectiveness import (
+    HintEffectiveness,
+    as_controller_evidence,
 )
 from app.adaptive_tutor.domain import AssistanceLevel, DecisionReasonCode
 from app.shared.database.base import Base
@@ -45,6 +50,10 @@ NonBlankText = Annotated[
 ]
 JsonType = JSON().with_variant(JSONB(), "postgresql")
 
+# Required provenance for research-only presentation events. These record that an unverified
+# experimental draft was shown to an adult researcher; they never imply learner delivery.
+RESEARCH_PRESENTATION_PROVENANCE = "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+
 
 class TutorHistoryEventType(StrEnum):
     ASSISTANCE_SELECTED = "ASSISTANCE_SELECTED"
@@ -54,6 +63,7 @@ class TutorHistoryEventType(StrEnum):
     RESPONSE_DELIVERED = "RESPONSE_DELIVERED"
     OUTCOME_OBSERVED = "OUTCOME_OBSERVED"
     EFFECTIVENESS_STATUS_RECORDED = "EFFECTIVENESS_STATUS_RECORDED"
+    RESEARCH_PRESENTATION = "RESEARCH_PRESENTATION"
 
 
 class TutorHistoryEventStatus(StrEnum):
@@ -69,6 +79,10 @@ class TutorHistoryEventStatus(StrEnum):
     UNKNOWN = "UNKNOWN"
     OBSERVED = "OBSERVED"
     NOT_MEASURED = "NOT_MEASURED"
+    PRESENTED_TO_RESEARCHER = "PRESENTED_TO_RESEARCHER"
+    EFFECTIVE = HintEffectiveness.EFFECTIVE.value
+    INEFFECTIVE = HintEffectiveness.INEFFECTIVE.value
+    INSUFFICIENT_EVIDENCE = HintEffectiveness.INSUFFICIENT_EVIDENCE.value
 
 
 _ALLOWED_STATUSES = {
@@ -93,6 +107,12 @@ _ALLOWED_STATUSES = {
     TutorHistoryEventType.OUTCOME_OBSERVED: {TutorHistoryEventStatus.OBSERVED},
     TutorHistoryEventType.EFFECTIVENESS_STATUS_RECORDED: {
         TutorHistoryEventStatus.NOT_MEASURED,
+        TutorHistoryEventStatus.EFFECTIVE,
+        TutorHistoryEventStatus.INEFFECTIVE,
+        TutorHistoryEventStatus.INSUFFICIENT_EVIDENCE,
+    },
+    TutorHistoryEventType.RESEARCH_PRESENTATION: {
+        TutorHistoryEventStatus.PRESENTED_TO_RESEARCHER,
     },
 }
 
@@ -135,6 +155,11 @@ class TutorHistoryEvent(BaseModel):
             or self.status not in _ALLOWED_STATUSES[self.event_type]
         ):
             raise ValueError("lifecycle event fields do not match its event type")
+
+        if (self.event_type is TutorHistoryEventType.RESEARCH_PRESENTATION) != (
+            self.provenance == RESEARCH_PRESENTATION_PROVENANCE
+        ):
+            raise ValueError("research presentation provenance is reserved for that event type")
 
         if (
             self.event_type
@@ -299,6 +324,40 @@ class SqlAlchemyTutorHistoryRepository:
         ).all()
         return tuple(_to_event(row) for row in rows)
 
+    def in_interaction(
+        self,
+        *,
+        learner_id: UUID,
+        skill_id: str,
+        session_id: UUID,
+        interaction_sequence: int,
+    ) -> tuple[TutorHistoryEvent, ...]:
+        """Events already recorded for one interaction, newest first."""
+
+        rows = self._session.scalars(
+            select(TutorInteractionEventModel)
+            .where(
+                TutorInteractionEventModel.learner_id == learner_id,
+                TutorInteractionEventModel.skill_id == skill_id,
+                TutorInteractionEventModel.session_id == session_id,
+                TutorInteractionEventModel.interaction_sequence == interaction_sequence,
+            )
+            .order_by(
+                TutorInteractionEventModel.event_sequence.desc(),
+                TutorInteractionEventModel.id.desc(),
+            )
+        ).all()
+        return tuple(_to_event(row) for row in rows)
+
+    def next_event_sequence(self, *, session_id: UUID, interaction_sequence: int) -> int:
+        latest = self._session.scalar(
+            select(func.max(TutorInteractionEventModel.event_sequence)).where(
+                TutorInteractionEventModel.session_id == session_id,
+                TutorInteractionEventModel.interaction_sequence == interaction_sequence,
+            )
+        )
+        return (latest or 0) + 1
+
     def _by_idempotency_key(self, key: str) -> TutorHistoryEvent | None:
         row = self._session.scalars(
             select(TutorInteractionEventModel).where(
@@ -312,9 +371,20 @@ class TutorHistoryProvider:
     source = EvidenceSource(
         source_id="adaptive-tutor:interaction-history", origin=EvidenceOrigin.REAL
     )
+    research_presentation_source = EvidenceSource(
+        source_id="adaptive-tutor:interaction-history-research-presentation",
+        origin=EvidenceOrigin.SYNTHETIC,
+    )
 
     def __init__(self, repository: SqlAlchemyTutorHistoryRepository) -> None:
         self._repository = repository
+
+    def source_for_result(self, result: AssistanceHistoryResult) -> EvidenceSource:
+        """History built on research-only presentations is never real delivery evidence."""
+
+        if result.basis is AssistanceHistoryBasis.RESEARCH_PRESENTATION:
+            return self.research_presentation_source
+        return self.source
 
     def get_assistance_history(
         self,
@@ -333,6 +403,12 @@ class TutorHistoryProvider:
             return AssistanceHistoryResult(status=EvidenceStatus.INVALID_EVIDENCE)
 
         try:
+            current = self._repository.in_interaction(
+                learner_id=request.learner_id,
+                skill_id=request.skill_id,
+                session_id=session_id,
+                interaction_sequence=request.interaction_sequence,
+            )
             events = self._repository.before(
                 learner_id=request.learner_id,
                 skill_id=request.skill_id,
@@ -348,8 +424,12 @@ class TutorHistoryProvider:
         except Exception:  # noqa: BLE001 - provider boundary fails closed
             return AssistanceHistoryResult(status=EvidenceStatus.PROVIDER_ERROR)
 
-        if any(event.occurred_at > request.as_of for event in events):
+        if any(event.occurred_at > request.as_of for event in (*current, *events)):
             return AssistanceHistoryResult(status=EvidenceStatus.INVALID_EVIDENCE)
+
+        presented = _latest_research_presentation(current)
+        if presented is not None:
+            return presented
 
         selections = [
             event
@@ -381,6 +461,7 @@ class TutorHistoryProvider:
                 status=EvidenceStatus.AVAILABLE,
                 previous_assistance_level=selection.assistance_level,
                 previous_hint_effective=None,
+                basis=AssistanceHistoryBasis.VERIFIED_DELIVERY,
             )
 
         return AssistanceHistoryResult(
@@ -390,3 +471,43 @@ class TutorHistoryProvider:
                 else EvidenceStatus.NOT_DELIVERED
             )
         )
+
+
+def _latest_research_presentation(
+    events: tuple[TutorHistoryEvent, ...],
+) -> AssistanceHistoryResult | None:
+    """Most recent assistance shown to the researcher within the current interaction.
+
+    The PRE_INTERACTION decision is the independent-attempt baseline, not assistance, so it is
+    skipped. Effectiveness comes only from a recorded EFFECTIVENESS_STATUS_RECORDED event.
+    """
+
+    for selection in events:
+        if (
+            selection.event_type is not TutorHistoryEventType.ASSISTANCE_SELECTED
+            or DecisionReasonCode.PRE_INTERACTION in selection.reason_codes
+        ):
+            continue
+        related = [event for event in events if event.decision_id == selection.decision_id]
+        if not any(
+            event.event_type is TutorHistoryEventType.RESEARCH_PRESENTATION for event in related
+        ):
+            continue
+        effectiveness = next(
+            (
+                HintEffectiveness(event.status.value)
+                for event in related
+                if event.event_type is TutorHistoryEventType.EFFECTIVENESS_STATUS_RECORDED
+                and event.status is not None
+                and event.status.value in HintEffectiveness.__members__
+            ),
+            None,
+        )
+        assert selection.assistance_level is not None
+        return AssistanceHistoryResult(
+            status=EvidenceStatus.AVAILABLE,
+            previous_assistance_level=selection.assistance_level,
+            previous_hint_effective=as_controller_evidence(effectiveness),
+            basis=AssistanceHistoryBasis.RESEARCH_PRESENTATION,
+        )
+    return None

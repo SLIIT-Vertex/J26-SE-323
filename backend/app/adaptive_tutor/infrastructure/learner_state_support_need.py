@@ -28,6 +28,16 @@ from app.learner_state.application.support_need import SupportNeedStatus
 logger = logging.getLogger("mindbridge.adaptive_tutor.learner_state")
 
 
+MISSING_SUPPORT_NEED_SOURCE = EvidenceSource(
+    source_id="adaptive-tutor:experimental-missing-support-need-default",
+    origin=EvidenceOrigin.SYNTHETIC,
+)
+
+
+class _DefaultSupportNeed(SupportNeedResult):
+    """Internal marker: this value is the configured default, not stored Learner State."""
+
+
 class LearnerStateSupportNeedProvider:
     """Require trusted session and time bounds before exposing stored support need."""
 
@@ -48,13 +58,23 @@ class LearnerStateSupportNeedProvider:
         ):
             raise ValueError("not_found_default must be within [0, 1]")
         self._not_found_default = not_found_default
-        if not_found_default is not None:
-            self.source = EvidenceSource(
-                source_id="adaptive-tutor:experimental-missing-support-need-default",
-                origin=EvidenceOrigin.SYNTHETIC,
-            )
 
     def get_support_need(self, request: ContextEvidenceRequest) -> SupportNeedResult:
+        return self.get_support_need_with_source(request)[0]
+
+    def get_support_need_with_source(
+        self, request: ContextEvidenceRequest
+    ) -> tuple[SupportNeedResult, EvidenceSource]:
+        """Per-value provenance: stored Learner State is REAL; only the default is SYNTHETIC."""
+
+        result = self._lookup(request)
+        if isinstance(result, _DefaultSupportNeed):
+            return SupportNeedResult.model_validate(
+                result.model_dump()
+            ), MISSING_SUPPORT_NEED_SOURCE
+        return result, self.source
+
+    def _lookup(self, request: ContextEvidenceRequest) -> SupportNeedResult:
         if request.session_id is None or request.as_of is None or request.max_age_ms is None:
             return self._result(EvidenceStatus.CONTEXT_REQUIRED)
 
@@ -92,7 +112,7 @@ class LearnerStateSupportNeedProvider:
             return self._result(EvidenceStatus.INVALID_EVIDENCE)
         if result.status is SupportNeedStatus.NOT_FOUND:
             if self._not_found_default is not None:
-                return SupportNeedResult(
+                return _DefaultSupportNeed(
                     status=EvidenceStatus.AVAILABLE,
                     support_need=self._not_found_default,
                 )

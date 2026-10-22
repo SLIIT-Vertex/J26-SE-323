@@ -384,6 +384,8 @@ def _check_level_structure(request: VerificationRequest) -> VerificationCheckRes
             VerificationReasonCode.LEVEL_STRUCTURE_VIOLATION,
             "The response contains an explicit answer disclosure prohibited at this level.",
         )
+    if level is AssistanceLevel.INDEPENDENT_RETRY:
+        return _check_independent_retry(text)
     numbered_steps = re.findall(r"(?m)^\s*(?:step\s*)?\d+[.)]\s+", text, re.IGNORECASE)
     if (
         level
@@ -420,6 +422,37 @@ def _check_level_structure(request: VerificationRequest) -> VerificationCheckRes
         VerificationCheckOutcome.PASS,
         VerificationReasonCode.LEVEL_STRUCTURE_COMPATIBLE,
         "No obvious structural conflict with the selected assistance level was detected.",
+    )
+
+
+_L0_MAX_WORDS = 35
+_L0_MAX_SENTENCES = 2
+_MATHEMATICAL_NOTATION = re.compile(r"\d|[=+×÷/%]")
+
+
+def _check_independent_retry(text: str) -> VerificationCheckResult:
+    """L0 is neutral encouragement. Deterministic signals only; wording-level hints need semantics."""
+
+    if _MATHEMATICAL_NOTATION.search(text):
+        return _check(
+            VerificationCheckName.LEVEL_STRUCTURE,
+            VerificationCheckOutcome.FAIL,
+            VerificationReasonCode.LEVEL_STRUCTURE_VIOLATION,
+            "An independent-retry response must not contain numbers or mathematical notation.",
+        )
+    sentences = [part for part in re.split(r"[.!?]+", text) if part.strip()]
+    if len(text.split()) > _L0_MAX_WORDS or len(sentences) > _L0_MAX_SENTENCES:
+        return _check(
+            VerificationCheckName.LEVEL_STRUCTURE,
+            VerificationCheckOutcome.INDETERMINATE,
+            VerificationReasonCode.LEVEL_COMPLIANCE_UNCERTAIN,
+            "The response is longer than neutral encouragement; semantic review must rule out hints.",
+        )
+    return _check(
+        VerificationCheckName.LEVEL_STRUCTURE,
+        VerificationCheckOutcome.PASS,
+        VerificationReasonCode.LEVEL_STRUCTURE_COMPATIBLE,
+        "Short and free of mathematical notation; hints expressed in words need semantic review.",
     )
 
 

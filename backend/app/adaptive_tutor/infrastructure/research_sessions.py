@@ -21,6 +21,11 @@ from app.adaptive_tutor.application.generation import (
     ProviderFailureReason,
     assistance_level_instruction,
 )
+from app.adaptive_tutor.application.hint_effectiveness import (
+    HINT_EFFECTIVENESS_RULE_VERSION,
+    ReviewedAttempt,
+    assess_hint_effectiveness,
+)
 from app.adaptive_tutor.application.orchestration import (
     SkillMapper,
     TutorOrchestrator,
@@ -31,7 +36,7 @@ from app.adaptive_tutor.application.skill_mapper_contracts import (
     SkillMappingRequest,
     SkillMappingResult,
 )
-from app.adaptive_tutor.domain import AssistanceLevel, SkillMappingStatus
+from app.adaptive_tutor.domain import AssistanceLevel, DecisionReasonCode, SkillMappingStatus
 from app.adaptive_tutor.infrastructure.shadow_mode import CONTROLLER_POLICY_VERSION
 from app.adaptive_tutor.infrastructure.tutor_assessment import (
     AssessmentAttemptStatus,
@@ -40,6 +45,7 @@ from app.adaptive_tutor.infrastructure.tutor_assessment import (
     TutorAssessmentInteraction,
 )
 from app.adaptive_tutor.infrastructure.tutor_history import (
+    RESEARCH_PRESENTATION_PROVENANCE,
     SqlAlchemyTutorHistoryRepository,
     TutorHistoryEvent,
     TutorHistoryEventStatus,
@@ -69,6 +75,12 @@ class ExperimentalGeneration:
     provider_reason: ProviderFailureReason | None = None
 
 
+# Offline rehearsals use a separate provider whose name states it is not Gemini, so a rehearsal
+# draft is never labelled as model output. Only these two providers may draft PP1 responses.
+GEMINI_PROVIDER_NAME = "google-gemini"
+REHEARSAL_PROVIDER_NAME = "fake-rehearsal-not-gemini"
+
+
 class ExperimentalHintGenerator:
     """Generate an explicitly unverified local draft from unreviewed content."""
 
@@ -78,8 +90,11 @@ class ExperimentalHintGenerator:
         curriculum_content: str,
         learner_grade: Callable[[UUID], int | None],
     ) -> None:
-        if provider.name != "google-gemini":
-            raise ValueError("experimental PP1 generation requires the Gemini adapter")
+        if provider.name not in {GEMINI_PROVIDER_NAME, REHEARSAL_PROVIDER_NAME}:
+            raise ValueError(
+                "experimental PP1 generation requires the Gemini adapter or the labelled "
+                "rehearsal provider"
+            )
         if "UNREVIEWED" not in curriculum_content or not curriculum_content.strip():
             raise ValueError("experimental curriculum must remain explicitly unreviewed")
         self._provider = provider
@@ -122,7 +137,12 @@ class ExperimentalHintGenerator:
                     "confirmed_skill_id": skill_id,
                     "grade": grade,
                     "curriculum_provenance": EXPERIMENTAL_CURRICULUM_PROVENANCE,
-                    "experimental_curriculum": self._content,
+                    # L0 is neutral encouragement only; teaching content would invite hints.
+                    "experimental_curriculum": (
+                        None
+                        if assistance_level is AssistanceLevel.INDEPENDENT_RETRY
+                        else self._content
+                    ),
                 },
                 ensure_ascii=False,
                 separators=(",", ":"),
@@ -195,6 +215,24 @@ class ResearchTurn:
     experimental_generation: ExperimentalGeneration | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class PresentedDecision:
+    """An assistance decision whose experimental draft was shown to the researcher."""
+
+    decision_id: UUID
+    attempts_before: int
+    pre_interaction: bool
+
+
+@dataclass(slots=True)
+class InteractionProgress:
+    """Per-interaction learning sequence: decisions, presentations and reviewed attempts."""
+
+    latest_decision_id: UUID | None = None
+    presented: PresentedDecision | None = None
+    attempts: list[ReviewedAttempt] = field(default_factory=list)
+
+
 @dataclass(slots=True)
 class ResearchSession:
     session_id: UUID
@@ -206,6 +244,7 @@ class ResearchSession:
     attempt_results: dict[str, tuple[UUID, ResearchAttemptAnnotation, ResearchTurn]] = field(
         default_factory=dict
     )
+    progress: dict[UUID, InteractionProgress] = field(default_factory=dict)
 
 
 class ResearchTutorService:
@@ -314,8 +353,22 @@ class ResearchTutorService:
                 current,
                 mapping=mapping,
             )
+            progress = session.progress.setdefault(interaction_id, InteractionProgress())
             decision_id = self._record_selection(
-                session, interaction_id, sequence, skill_id, result, current
+                session, interaction_id, sequence, skill_id, result, current, step=0
+            )
+            progress.latest_decision_id = decision_id
+            experimental = self._experimental(session, question, language, skill_id, result)
+            self._record_presentation(
+                session,
+                interaction_id,
+                sequence,
+                skill_id,
+                decision_id,
+                result,
+                experimental,
+                progress,
+                current,
             )
             turn = ResearchTurn(
                 interaction_id=interaction_id,
@@ -326,9 +379,7 @@ class ResearchTutorService:
                 skill_mapping=mapping,
                 skill_id=skill_id,
                 result=result,
-                experimental_generation=self._experimental(
-                    session, question, language, skill_id, result
-                ),
+                experimental_generation=experimental,
             )
             session.turns.append(turn)
             return turn
@@ -406,27 +457,36 @@ class ResearchTutorService:
                     accepted_at=current,
                 )
             )
-            if turn.decision_id is not None:
+            progress = session.progress.setdefault(interaction_id, InteractionProgress())
+            assessment_reference = f"{accepted.source_component}:{accepted.source_score_reference}"
+            if progress.latest_decision_id is not None:
                 self._history.append(
                     TutorHistoryEvent(
                         event_id=uuid4(),
                         idempotency_key=f"research-outcome:{accepted.attempt_id}",
-                        decision_id=turn.decision_id,
+                        decision_id=progress.latest_decision_id,
                         learner_id=session.learner_id,
                         skill_id=turn.skill_id,
                         session_id=session.session_id,
                         interaction_id=str(turn.interaction_id),
                         interaction_sequence=turn.interaction_sequence,
-                        event_sequence=2,
+                        event_sequence=self._next_event(session, turn.interaction_sequence),
                         event_type=TutorHistoryEventType.OUTCOME_OBSERVED,
                         occurred_at=current,
                         provenance="CONTROLLED_RESEARCH_ANNOTATION",
                         status=TutorHistoryEventStatus.OBSERVED,
-                        assessment_reference=(
-                            f"{accepted.source_component}:{accepted.source_score_reference}"
-                        ),
+                        assessment_reference=assessment_reference,
                     )
                 )
+            reviewed = ReviewedAttempt(
+                is_correct=annotation.is_correct,
+                severity_value=annotation.severity_value,
+                severity_policy_version=annotation.severity_policy_version,
+            )
+            self._record_effectiveness(
+                session, turn, progress, reviewed, assessment_reference, current
+            )
+            progress.attempts.append(reviewed)
             result = self._run(
                 session,
                 turn.interaction_id,
@@ -436,18 +496,41 @@ class ResearchTutorService:
                 current,
                 mapping=turn.skill_mapping,
             )
+            decision_id = self._record_selection(
+                session,
+                turn.interaction_id,
+                turn.interaction_sequence,
+                turn.skill_id,
+                result,
+                current,
+                step=len(progress.attempts),
+            )
+            if decision_id is not None:
+                progress.latest_decision_id = decision_id
+            experimental = self._experimental(
+                session, turn.question, turn.language, turn.skill_id, result
+            )
+            self._record_presentation(
+                session,
+                turn.interaction_id,
+                turn.interaction_sequence,
+                turn.skill_id,
+                decision_id,
+                result,
+                experimental,
+                progress,
+                current,
+            )
             updated = ResearchTurn(
                 interaction_id=turn.interaction_id,
                 interaction_sequence=turn.interaction_sequence,
-                decision_id=turn.decision_id,
+                decision_id=decision_id,
                 question=turn.question,
                 language=turn.language,
                 skill_mapping=turn.skill_mapping,
                 skill_id=turn.skill_id,
                 result=result,
-                experimental_generation=self._experimental(
-                    session, turn.question, turn.language, turn.skill_id, result
-                ),
+                experimental_generation=experimental,
             )
             session.attempt_results[annotation.idempotency_key] = (
                 interaction_id,
@@ -493,7 +576,11 @@ class ResearchTutorService:
         skill_id: str | None,
         result: TutorWorkflowResult,
         now: datetime,
+        *,
+        step: int,
     ) -> UUID | None:
+        """Record one Controller decision; ``step`` is the number of reviewed attempts so far."""
+
         if (
             skill_id is None
             or result.assistance_level is None
@@ -504,14 +591,14 @@ class ResearchTutorService:
         self._history.append(
             TutorHistoryEvent(
                 event_id=uuid4(),
-                idempotency_key=f"research-selection:{interaction_id}",
+                idempotency_key=f"research-selection:{interaction_id}:{step}",
                 decision_id=decision_id,
                 learner_id=session.learner_id,
                 skill_id=skill_id,
                 session_id=session.session_id,
                 interaction_id=str(interaction_id),
                 interaction_sequence=sequence,
-                event_sequence=1,
+                event_sequence=self._next_event(session, sequence),
                 event_type=TutorHistoryEventType.ASSISTANCE_SELECTED,
                 occurred_at=now,
                 provenance="RESEARCH_LOCAL",
@@ -521,6 +608,94 @@ class ResearchTutorService:
             )
         )
         return decision_id
+
+    def _record_presentation(
+        self,
+        session: ResearchSession,
+        interaction_id: UUID,
+        sequence: int,
+        skill_id: str | None,
+        decision_id: UUID | None,
+        result: TutorWorkflowResult,
+        experimental: ExperimentalGeneration | None,
+        progress: InteractionProgress,
+        now: datetime,
+    ) -> None:
+        """Record that an unverified draft was shown to the researcher; never learner delivery."""
+
+        if (
+            decision_id is None
+            or skill_id is None
+            or experimental is None
+            or experimental.status is not ExperimentalGenerationStatus.GENERATED
+        ):
+            return
+        self._history.append(
+            TutorHistoryEvent(
+                event_id=uuid4(),
+                idempotency_key=f"research-presentation:{decision_id}",
+                decision_id=decision_id,
+                learner_id=session.learner_id,
+                skill_id=skill_id,
+                session_id=session.session_id,
+                interaction_id=str(interaction_id),
+                interaction_sequence=sequence,
+                event_sequence=self._next_event(session, sequence),
+                event_type=TutorHistoryEventType.RESEARCH_PRESENTATION,
+                occurred_at=now,
+                provenance=RESEARCH_PRESENTATION_PROVENANCE,
+                status=TutorHistoryEventStatus.PRESENTED_TO_RESEARCHER,
+            )
+        )
+        progress.presented = PresentedDecision(
+            decision_id=decision_id,
+            attempts_before=len(progress.attempts),
+            pre_interaction=DecisionReasonCode.PRE_INTERACTION in result.controller_reason_codes,
+        )
+
+    def _record_effectiveness(
+        self,
+        session: ResearchSession,
+        turn: ResearchTurn,
+        progress: InteractionProgress,
+        after_hint: ReviewedAttempt,
+        assessment_reference: str,
+        now: datetime,
+    ) -> None:
+        """Judge the most recent presented assistance against the attempt that followed it."""
+
+        presented = progress.presented
+        if presented is None or presented.pre_interaction or turn.skill_id is None:
+            return
+        before_hint = (
+            progress.attempts[presented.attempts_before - 1]
+            if presented.attempts_before >= 1
+            else None
+        )
+        effectiveness = assess_hint_effectiveness(before_hint=before_hint, after_hint=after_hint)
+        self._history.append(
+            TutorHistoryEvent(
+                event_id=uuid4(),
+                idempotency_key=f"research-effectiveness:{assessment_reference}",
+                decision_id=presented.decision_id,
+                learner_id=session.learner_id,
+                skill_id=turn.skill_id,
+                session_id=session.session_id,
+                interaction_id=str(turn.interaction_id),
+                interaction_sequence=turn.interaction_sequence,
+                event_sequence=self._next_event(session, turn.interaction_sequence),
+                event_type=TutorHistoryEventType.EFFECTIVENESS_STATUS_RECORDED,
+                occurred_at=now,
+                provenance=f"RESEARCH_DERIVED:{HINT_EFFECTIVENESS_RULE_VERSION}",
+                status=TutorHistoryEventStatus(effectiveness.value),
+                assessment_reference=assessment_reference,
+            )
+        )
+
+    def _next_event(self, session: ResearchSession, sequence: int) -> int:
+        return self._history.next_event_sequence(
+            session_id=session.session_id, interaction_sequence=sequence
+        )
 
     def _experimental(
         self,

@@ -8,6 +8,7 @@ from typing import Any, Protocol
 import httpx
 from pydantic import ValidationError
 
+from app.adaptive_tutor.application.generation import assistance_level_instruction
 from app.adaptive_tutor.application.verification import (
     SemanticVerificationResult,
     SemanticVerifierError,
@@ -140,6 +141,8 @@ class ConfiguredSemanticVerifier:
             "student_question": request.student_question,
             "confirmed_skill_id": request.skill_id,
             "assistance_level": request.assistance_level.value,
+            # The judge needs the level's meaning, not just its code, to rate compliance.
+            "assistance_level_definition": assistance_level_instruction(request.assistance_level),
             "response_language": request.response_language,
             "grade": request.grade,
             "draft": request.response_text,

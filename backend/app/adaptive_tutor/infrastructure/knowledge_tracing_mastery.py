@@ -27,6 +27,16 @@ from app.knowledge_tracing.domain.mastery import MasterySnapshot
 logger = logging.getLogger("mindbridge.adaptive_tutor.kt_mastery")
 
 
+COLD_START_MASTERY_SOURCE = EvidenceSource(
+    source_id="adaptive-tutor:experimental-cold-start-mastery-default",
+    origin=EvidenceOrigin.SYNTHETIC,
+)
+
+
+class _ColdStartMastery(MasteryResult):
+    """Internal marker: this value is the configured default, not a KT estimate."""
+
+
 class KnowledgeTracingMasteryProvider:
     """Select one validated skill from the real KT all-skill snapshot."""
 
@@ -49,15 +59,23 @@ class KnowledgeTracingMasteryProvider:
         ):
             raise ValueError("cold_start_default must be within [0, 1]")
         self._cold_start_default = cold_start_default
-        if cold_start_default is not None:
-            self.source = EvidenceSource(
-                source_id="adaptive-tutor:experimental-cold-start-mastery-default",
-                origin=EvidenceOrigin.SYNTHETIC,
-            )
         if not self._valid_skill_ids:
             raise ValueError("valid_skill_ids must not be empty")
 
     def get_mastery(self, request: MasteryRetrievalRequest) -> MasteryResult:
+        return self.get_mastery_with_source(request)[0]
+
+    def get_mastery_with_source(
+        self, request: MasteryRetrievalRequest
+    ) -> tuple[MasteryResult, EvidenceSource]:
+        """Per-value provenance: KT estimates are REAL; only a cold-start default is SYNTHETIC."""
+
+        result = self._lookup(request)
+        if isinstance(result, _ColdStartMastery):
+            return MasteryResult.model_validate(result.model_dump()), COLD_START_MASTERY_SOURCE
+        return result, self.source
+
+    def _lookup(self, request: MasteryRetrievalRequest) -> MasteryResult:
         try:
             validate_mastery_request_against_taxonomy(request, self._valid_skill_ids)
         except ValueError:
@@ -102,7 +120,7 @@ class KnowledgeTracingMasteryProvider:
             mastery = matches[0].mastery
             if mastery is None:
                 if self._cold_start_default is not None:
-                    return MasteryResult(
+                    return _ColdStartMastery(
                         learner_id=request.learner_id,
                         skill_id=request.skill_id,
                         status=MasteryStatus.AVAILABLE,

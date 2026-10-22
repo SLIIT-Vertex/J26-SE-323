@@ -4901,6 +4901,17 @@ p {
 	}
 }
 
+.mindy-chat .synthetic-flag p,
+.mindy-chat .synthetic-flag ul {
+	margin: 0;
+}
+
+.mindy-chat .synthetic-flag ul {
+	margin-top: 0.35rem;
+	padding-left: 1.1rem;
+	font-weight: 600;
+}
+
 /* Kept last: more specific than the generic "... small" rules above (Biome noDescendingSpecificity). */
 .field-card > span small {
 	color: var(--faint);

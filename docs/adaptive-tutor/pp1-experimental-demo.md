@@ -1,5 +1,8 @@
 # PP1 local experimental Tutor demo
 
+Multi-turn transitions and the exact evidence behind them are described in
+[research-interaction-lifecycle.md](research-interaction-lifecycle.md).
+
 Status: local adult research only. Generated text is unverified and never enters the verified
 response field. The unreviewed Fractions template is read directly; it is not imported into the
 approved curriculum index.
