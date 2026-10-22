@@ -9,8 +9,8 @@ import type {
 	Trace,
 } from "../api";
 import { DotTimeline, HBarList } from "../charts";
-import { MisconceptionTab, SupportTab } from "../model-tabs";
-import { CheckRow } from "../panels";
+import { MisconceptionTab, SupportTab } from "../ModelTabs";
+import { ModelCheckCard } from "../panels";
 import { ResearchDashboard } from "../ResearchDashboard";
 
 const LEARNER = "00000000-0000-4000-8000-000000000721";
@@ -281,6 +281,19 @@ function fakeClient(overrides: Partial<ResearchClient> = {}) {
 				{
 					name: "Probabilistic Misconception",
 					subtitle: "Why",
+					kind: "model" as const,
+					check: {
+						question: "Does the predicted reason match the next mistake?",
+						rule: "Passes when the low end beats guessing.",
+						value: 0.8,
+						interval: [0.6, 0.92] as [number, number],
+						count: 25,
+						minimum: 20,
+						reference: 0.25,
+						reference_label: "guessing",
+						reference_count: null,
+						status: "passing" as const,
+					},
 					metrics: [
 						{
 							key: "agreement",
@@ -328,6 +341,19 @@ function fakeClient(overrides: Partial<ResearchClient> = {}) {
 				{
 					name: "Contextual Support Selection",
 					subtitle: "Help",
+					kind: "model" as const,
+					check: {
+						question: "Does the chosen help work?",
+						rule: "Passes when the low end beats the fixed order.",
+						value: 0.5,
+						interval: [0.1, 0.8] as [number, number],
+						count: 4,
+						minimum: 20,
+						reference: 0.25,
+						reference_label: "fixed order",
+						reference_count: 4,
+						status: "not_enough_data" as const,
+					},
 					metrics: [
 						{
 							key: "first",
@@ -408,6 +434,7 @@ function fakeClient(overrides: Partial<ResearchClient> = {}) {
 				{
 					name: "Independence Gain",
 					subtitle: "Gain",
+					kind: "measurement" as const,
 					metrics: [
 						{
 							key: "fair",
@@ -710,19 +737,23 @@ describe("judge-facing research dashboard", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("leads with how each model is validated, with a small simulated example", async () => {
+	it("shows one accuracy test and verdict per learned model", async () => {
 		const { host, root, onClose } = await mount();
 		await tab(host, "Parameter validation & accuracy");
-		expect(host.textContent).toContain("How we validate each model");
-		expect(host.querySelectorAll(".rd-method li")).toHaveLength(3);
-		expect(host.querySelectorAll(".rd-validate")).toHaveLength(3);
-		expect(host.querySelector(".rd-tried .is-current")?.textContent).toBe(
-			"72%",
+		expect(host.textContent).toContain("Is each model working accurately?");
+		// Only the two learned models get a card; independence gain is a short note.
+		expect(host.querySelectorAll(".rd-validate")).toHaveLength(2);
+		expect(host.querySelector(".rd-verdict.is-passing")?.textContent).toContain(
+			"Working accurately",
 		);
-		expect(host.querySelectorAll(".rd-check").length).toBeGreaterThan(0);
-		expect(host.textContent).toContain("early sign");
-		expect(host.querySelectorAll(".rd-sim-mini > ul > li")).toHaveLength(3);
-		expect(host.querySelector("details")?.hasAttribute("open")).toBe(false);
+		expect(host.textContent).toContain("vs 25% guessing");
+		expect(
+			host.querySelector(".rd-verdict.is-not-enough-data")?.textContent,
+		).toContain("16 more needed");
+		expect(host.querySelector(".rd-gain-note")?.textContent).toContain(
+			"not a learned model",
+		);
+		expect(host.querySelector(".rd-sim-mini")).toBeNull();
 		await act(async () => {
 			window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 		});
@@ -881,30 +912,27 @@ describe("clear mobile research summaries", () => {
 		expect(row?.textContent).not.toContain("Incorrect");
 		act(() => root.unmount());
 	});
-	it("does not show a success tick or a numeric result without evidence", () => {
+	it("does not show a verdict or a number without evidence", () => {
 		const { host, root } = render(
-			<ul>
-				<CheckRow
-					metric={{
-						key: "test",
-						title: "Agreement",
-						good: "Higher is closer agreement.",
-						method: "Compare with a later answer.",
-						count: 0,
-						minimum: 20,
-						value: 0.69,
-						unit: "rate",
-						meaning: "Waiting for evidence.",
-						interval: null,
-						technical: {},
-					}}
-				/>
-			</ul>,
+			<ModelCheckCard
+				check={{
+					question: "Agreement",
+					rule: "Passes when the low end beats guessing.",
+					value: null,
+					interval: null,
+					count: 0,
+					minimum: 20,
+					reference: null,
+					reference_label: "guessing",
+					reference_count: null,
+					status: "not_enough_data",
+				}}
+			/>,
 		);
 		expect(host.textContent).toContain("No result yet");
-		expect(host.textContent).not.toContain("69%");
-		expect(host.textContent).not.toContain("✓");
-		expect(host.querySelector(".rd-check__head h5")).toBeTruthy();
+		expect(host.textContent).toContain("Not enough games yet");
+		expect(host.textContent).toContain("20 more needed");
+		expect(host.textContent).not.toContain("Working accurately");
 		act(() => root.unmount());
 	});
 });

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { HistoryModel, Trace } from "./api";
 import { HELP_STYLE, HelpMark, pct } from "./charts";
-import { answerLabel } from "./game-row";
+import { answerLabel } from "./GameRow";
 
 /**
  * One game, seen through one model, in a sheet that slides up from the bottom.

@@ -16,7 +16,7 @@ import {
 	RunningRateBand,
 	StackedBar100,
 } from "./charts";
-import { answerLabel, GameRow, PlayStatus } from "./game-row";
+import { answerLabel, GameRow, PlayStatus } from "./GameRow";
 
 /** Every help, most to least preferred, from what worked when help was removed. */
 function HelpRanking({

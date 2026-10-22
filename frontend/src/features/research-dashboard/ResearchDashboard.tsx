@@ -12,8 +12,8 @@ import {
 	type SupportSeries,
 	type Trace,
 } from "./api";
-import { GameDetailSheet } from "./detail-sheet";
-import { GainTab, MisconceptionTab, SupportTab } from "./model-tabs";
+import { GameDetailSheet } from "./GameDetailSheet";
+import { GainTab, MisconceptionTab, SupportTab } from "./ModelTabs";
 import {
 	AccuracyPanel,
 	EmptyStep,

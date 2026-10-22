@@ -1181,49 +1181,10 @@
 	}
 }
 
-/* Parameter validation & accuracy: method first, results second. */
-.rd-method {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0.6rem;
-	margin: 0.6rem 0 0.5rem;
-	padding: 0;
-	list-style: none;
-	counter-reset: none;
-}
-
-.rd-method li {
-	display: grid;
-	grid-template-columns: auto 1fr;
-	column-gap: 0.6rem;
-	align-items: start;
-	padding: 0.75rem 0.9rem;
-	border: 1px solid var(--rd-line);
-	border-radius: 12px;
-	background: var(--rd-panel);
-}
-
-.rd-method li > span:last-child {
-	grid-column: 2;
-	color: var(--rd-muted);
-	font-size: 0.88rem;
-}
-
-.rd-method__n {
-	grid-row: span 2;
-	display: grid;
-	place-items: center;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	background: var(--rd-accent);
-	color: #fff;
-	font-weight: 800;
-}
-
+/* Parameter validation & accuracy: one test and one verdict per model. */
 .rd-validate-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.9rem;
 	align-items: start;
 }
@@ -1262,17 +1223,13 @@
 	list-style: none;
 }
 
-.rd-settings > li,
-.rd-check {
-	display: grid;
-	gap: 0.3rem;
-	padding: 0.65rem 0.75rem;
+.rd-settings > li {
+	padding: 0.5rem 0.75rem;
 	border-radius: 10px;
 	background: var(--rd-bg);
 }
 
-.rd-settings__head,
-.rd-check__head {
+.rd-settings__head {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
@@ -1289,164 +1246,66 @@
 	white-space: nowrap;
 }
 
-.rd-tried {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.3rem;
-	color: var(--rd-muted);
-	font-size: 0.8rem;
-}
-
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-tried span {
-	padding: 0.05rem 0.45rem;
-	border: 1px solid var(--rd-line);
-	border-radius: 6px;
-	background: #fff;
-	color: var(--rd-ink);
-}
-
-.rd-tried span.is-current {
-	border-color: var(--rd-accent);
-	background: var(--rd-accent);
-	color: #fff;
-}
-
-.rd-replay {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	font-size: 0.8rem;
-}
-
-.rd-replay li {
+.rd-verdict {
 	display: grid;
-	justify-items: center;
-	min-width: 4.2rem;
-	padding: 0.3rem 0.4rem;
-	border-radius: 8px;
-	background: #fff;
+	gap: 0.35rem;
+	padding: 0.9rem 1rem;
+	border-radius: 12px;
+	background: var(--rd-bg);
 }
 
-.rd-replay li small {
-	color: var(--rd-muted);
-	font-size: 0.68rem;
-}
-
-.rd-replay.is-waiting {
-	display: grid;
-	gap: 0.3rem;
-	color: var(--rd-muted);
-}
-
-.rd-progress {
-	display: block;
-	height: 6px;
-	border-radius: 99px;
-	background: var(--rd-line);
-	overflow: hidden;
-}
-
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-progress span {
-	display: block;
-	height: 100%;
-	background: var(--rd-accent);
-}
-
-.rd-check h5 {
-	flex: 1;
-	margin: 0;
-	font-size: 0.92rem;
-}
-
-.rd-check__icon {
-	display: grid;
-	place-items: center;
-	flex: none;
-	width: 1.4rem;
-	height: 1.4rem;
-	border-radius: 50%;
+.rd-verdict.is-passing {
 	background: var(--rd-good-soft);
-	color: var(--rd-good);
-	font-weight: 800;
-	font-size: 0.8rem;
 }
 
-.rd-check__value {
-	font-size: 1.15rem;
+.rd-verdict.is-not-passing {
+	background: var(--rd-bad-soft);
+}
+
+.rd-verdict__status {
+	margin: 0;
+	font-weight: 800;
+}
+
+.rd-verdict.is-passing .rd-verdict__status {
+	color: var(--rd-good);
+}
+
+.rd-verdict.is-not-passing .rd-verdict__status {
+	color: var(--rd-bad);
+}
+
+.rd-verdict__numbers {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem;
+	color: var(--rd-muted);
 }
 
 /* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-check p {
+.rd-verdict__numbers strong {
+	color: var(--rd-ink);
+	font-size: 1.8rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-verdict p {
+	margin: 0;
+}
+
+.rd-verdict__rule {
 	color: var(--rd-muted);
 	font-size: 0.84rem;
 }
 
-.rd-check p b {
-	display: inline-block;
-	min-width: 2.6rem;
-	color: var(--rd-ink);
-	font-size: 0.72rem;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-}
-
-.rd-check__foot {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.rd-check__foot .rd-range {
-	flex: 1 1 8rem;
-}
-
-.rd-sim-mini {
-	display: grid;
-	grid-template-columns: auto 1fr auto;
-	align-items: center;
-	gap: 1rem;
-	padding: 0.75rem 1rem;
-	border: 1px dashed var(--rd-line);
-	border-radius: 12px;
-	background: var(--rd-panel);
-}
-
-.rd-sim-mini > ul {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem 1.25rem;
+.rd-gain-note {
 	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.rd-sim-mini li {
-	display: flex;
-	align-items: baseline;
-	gap: 0.4rem;
-	font-size: 0.86rem;
-}
-
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-sim-mini li strong {
-	font-size: 1.05rem;
-}
-
-.rd-sim-mini li small {
-	color: var(--rd-muted);
+	font-size: 0.85rem;
 }
 
 @media (max-width: 1023px) {
-	.rd-validate-grid,
-	.rd-method,
-	.rd-sim-mini {
+	.rd-validate-grid {
 		grid-template-columns: 1fr;
 	}
 }
@@ -1565,9 +1424,7 @@
 	gap: 3px;
 	min-width: 0;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-game-row__facts b,
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-first-help-list b {
 	display: block;
 	color: var(--rd-muted);
@@ -1919,7 +1776,6 @@
 	white-space: nowrap;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-rank__text small {
 	color: var(--rd-muted);
 }
@@ -1956,7 +1812,6 @@
 	color: var(--rd-accent);
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-flow__steps small {
 	color: var(--rd-muted);
 	font-weight: 400;
@@ -1991,7 +1846,6 @@
 	display: grid;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-flow__outcomes small {
 	color: var(--rd-muted);
 }
@@ -2211,7 +2065,6 @@
 	background: var(--rd-accent-soft, #eef0ff);
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
 .rd-sheet__order small {
 	color: var(--rd-muted, #5b6475);
 }
