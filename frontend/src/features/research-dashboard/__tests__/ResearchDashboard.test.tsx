@@ -9,6 +9,7 @@ import type {
 	Trace,
 } from "../api";
 import { DotTimeline, HBarList } from "../charts";
+import { GameDetailSheet } from "../GameDetailSheet";
 import { MisconceptionTab, SupportTab } from "../ModelTabs";
 import { ModelCheckCard } from "../panels";
 import { ResearchDashboard } from "../ResearchDashboard";
@@ -64,6 +65,8 @@ const trace: Trace = {
 	model2_record: null,
 	rounds: [
 		{
+			position: 1,
+			phase: "measured",
 			round_number: 1,
 			scaffold_type: "conceptual_reexplanation",
 			name: "Explain the idea again",
@@ -910,6 +913,45 @@ describe("clear mobile research summaries", () => {
 		expect(row?.textContent).toContain("Explain the idea again");
 		expect(row?.textContent).toContain("Not retested");
 		expect(row?.textContent).not.toContain("Incorrect");
+		act(() => root.unmount());
+	});
+	it("shows help given after the try alone next to the measured help", () => {
+		const followed: Trace = {
+			...trace,
+			rounds: [
+				...trace.rounds,
+				{
+					position: 2,
+					phase: "follow_up",
+					round_number: 1,
+					scaffold_type: "visual_guidance",
+					name: "Visual hint",
+					stages: [],
+					attempts: [{ correct: true, error: "correct" }],
+					outcome: "succeeded",
+					rule: "The child managed it with help. The help is then removed.",
+				},
+			],
+			follow_up: {
+				status: "finished",
+				finish_reason: "independent_success",
+				headline: "Right alone on a fresh practice question after the follow-up help.",
+				why: "This help does not change the independence gain.",
+				practice: [{ correct: true, error: "correct" }],
+			},
+		};
+		const { host, root } = render(
+			<GameDetailSheet model="support" trace={followed} onClose={() => {}} />,
+		);
+		const rounds = [...host.querySelectorAll(".rd-sheet__rounds > li")];
+		expect(rounds.map((row) => row.querySelector("b")?.textContent)).toEqual([
+			"1. Explain the idea again",
+			"2. Visual hint",
+		]);
+		expect(rounds[1]?.textContent).toContain("After the try alone");
+		expect(host.textContent).toContain("Given after the try alone (round 2)");
+		expect(host.textContent).toContain("Help after the try alone");
+		expect(host.textContent).toContain("Fresh practice questions: ✓ right");
 		act(() => root.unmount());
 	});
 	it("does not show a verdict or a number without evidence", () => {

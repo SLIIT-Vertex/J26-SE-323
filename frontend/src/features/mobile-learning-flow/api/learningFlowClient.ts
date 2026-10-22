@@ -228,6 +228,9 @@ export function createLearningFlowClient({
 		body: OpenEpisodeRequest,
 		key: string,
 	): Promise<ScoredEpisodeResponse> => {
+		// Every new game starts from the configured learner: a fallback learner taken over after a
+		// probe clash covers only that one game, so the other skills stay with the configured one.
+		activeLearnerId = learnerId;
 		await ensureDevelopmentLearner(body.atomic_skill_id ?? undefined);
 		try {
 			return await post("/episodes", key, {

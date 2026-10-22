@@ -211,7 +211,13 @@ export function LivePanel({ trace }: { trace: Trace }) {
 					<p>Each dot is one help round.</p>
 					<p className="rd-help-row">
 						{trace.rounds.map((round) => (
-							<span key={round.round_number} className="rd-round-dot">
+							<span
+								key={round.position}
+								className="rd-round-dot"
+								title={
+									round.phase === "follow_up" ? "After the try alone" : undefined
+								}
+							>
 								<HelpMark code={round.scaffold_type} />
 								<Mark
 									value={

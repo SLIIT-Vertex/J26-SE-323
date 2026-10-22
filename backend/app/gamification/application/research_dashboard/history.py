@@ -14,6 +14,7 @@ from decimal import Decimal
 from app.gamification.application.research_dashboard.accuracy import is_independent, wilson
 from app.gamification.application.research_dashboard.explain import (
     english_title,
+    help_rounds,
     name,
     research_subject,
     resolved_area,
@@ -22,6 +23,7 @@ from app.gamification.application.research_dashboard.glossary import (
     EXCLUSIONS,
     FAMILY_NAMES,
     MODE_NAMES,
+    plain_status,
     reason_name,
 )
 from app.gamification.application.research_dashboard.play_status import STATUS_LABELS, play_status
@@ -207,6 +209,7 @@ def _support(run, earlier):
     mode = str(model2.get("support_selection_mode"))
     changed, unchanged, chips = [], [], []
     family = str(model2.get("reason_family") or "unclear")
+    unchanged.extend(_help_given(state))
     if mode == "baseline_fixed_order":
         unchanged.append("Comparison group: the fixed help order was used.")
     else:
@@ -295,6 +298,25 @@ def _support(run, earlier):
         ],
         chips=chips,
     )
+
+
+def _help_given(state) -> list[str]:
+    """What the child actually saw, which can be fewer helps than the planned order."""
+
+    rounds = help_rounds(state)
+    lines = []
+    for stage_phase, label in (
+        ("measured", "Help given"),
+        ("follow_up", "More help after the try alone"),
+    ):
+        given = [
+            f"{name(row.get('scaffold_type'))} ({plain_status(row.get('outcome')).lower()})"
+            for phase, row in rounds
+            if phase == stage_phase
+        ]
+        if given:
+            lines.append(f"{label}: {' → '.join(given)}.")
+    return lines
 
 
 # Independence Gain ----------------------------------------------------------------------------------

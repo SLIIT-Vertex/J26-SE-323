@@ -167,7 +167,11 @@ function SupportDetail({ trace }: { trace: Trace }) {
 									<small>{orderReason(index, model2.why)}</small>
 								</span>
 								<small>
-									{used ? `Given in round ${used.round_number}` : "Not needed"}
+									{!used
+										? "Not needed"
+										: used.phase === "follow_up"
+											? `Given after the try alone (round ${used.position})`
+											: `Given in round ${used.position}`}
 								</small>
 							</li>
 						);
@@ -181,12 +185,15 @@ function SupportDetail({ trace }: { trace: Trace }) {
 				) : (
 					<ol className="rd-sheet__rounds">
 						{trace.rounds.map((round) => (
-							<li key={round.round_number}>
+							<li key={round.position}>
 								<header>
 									<HelpMark code={round.scaffold_type} />
 									<b>
-										{round.round_number}. {round.name}
+										{round.position}. {round.name}
 									</b>
+									{round.phase === "follow_up" && (
+										<small className="rd-quiet">After the try alone</small>
+									)}
 									<span className={roundClass(round.outcome)}>
 										{round.outcome_label ?? round.outcome ?? "In progress"}
 									</span>
@@ -216,6 +223,27 @@ function SupportDetail({ trace }: { trace: Trace }) {
 					</ol>
 				)}
 			</section>
+			{trace.follow_up && (
+				<section>
+					<h4>Help after the try alone</h4>
+					<p>
+						<b>{trace.follow_up.headline}</b>
+					</p>
+					<p className="rd-quiet">{trace.follow_up.why}</p>
+					{trace.follow_up.practice.length > 0 && (
+						<p className="rd-quiet">
+							Fresh practice questions:{" "}
+							{trace.follow_up.practice
+								.map((attempt) =>
+									attempt.correct
+										? "✓ right"
+										: `✗ ${readable(attempt.error) || "wrong"}`,
+								)
+								.join(" · ")}
+						</p>
+					)}
+				</section>
+			)}
 		</>
 	);
 }

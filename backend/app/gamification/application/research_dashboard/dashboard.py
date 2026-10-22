@@ -27,10 +27,12 @@ from app.gamification.application.research_dashboard.explain import (
     area_titles,
     english_title,
     episode_summary,
+    explain_follow_up,
     explain_model1,
     explain_model2,
     explain_model3,
     explain_rounds,
+    help_rounds,
     research_subject,
     resolved_area,
 )
@@ -182,6 +184,7 @@ class ResearchDashboardService:
             "rounds": explain_rounds(state),
             "withdrawal": state.get("withdrawal"),
             "model3": explain_model3(state),
+            "follow_up": explain_follow_up(state),
             "measurement_record": state.get("measurement"),
             "events": [
                 {"type": event.get("event_type"), "at": event.get("occurred_at")}
@@ -330,7 +333,9 @@ class ResearchDashboardService:
         result["simulation"] = None
         if SIMULATION_REPORT.exists():
             try:
-                result["simulation"] = present_simulation(json.loads(SIMULATION_REPORT.read_text(encoding="utf-8")))
+                result["simulation"] = present_simulation(
+                    json.loads(SIMULATION_REPORT.read_text(encoding="utf-8"))
+                )
             except (ValueError, OSError):
                 pass
         if len(_ACCURACY_CACHE) > 32:
@@ -407,13 +412,13 @@ def _pipeline(state: Mapping[str, object]) -> list[dict[str, object]]:
 
     status = str(state.get("status"))
     events = {str(event.get("event_type")) for event in state.get("events") or []}
-    loop = state.get("support_loop") if isinstance(state.get("support_loop"), Mapping) else {}
+    measured = [row for phase, row in help_rounds(state) if phase == "measured"]
     stages = [
         ("answer", "First answer (no help)", "unsupported_before_scored" in events),
         ("difficulty", "Difficulty detected", "difficulty_detected" in events),
         ("model1", "Why it went wrong", isinstance(state.get("model1"), Mapping)),
         ("model2", "Help chosen", isinstance(state.get("model2"), Mapping)),
-        ("help", "Help rounds", bool(loop.get("rounds")) if loop else False),
+        ("help", "Help rounds", bool(measured)),
         ("withdrawal", "Help removed", isinstance(state.get("withdrawal"), Mapping)),
         (
             "after",
@@ -422,6 +427,11 @@ def _pipeline(state: Mapping[str, object]) -> list[dict[str, object]]:
         ),
         ("model3", "Result", isinstance(state.get("measurement"), Mapping)),
         ("update", "What the system learned", bool(state.get("policy_updates"))),
+        *(
+            [("follow_up", "More help after the try alone", True)]
+            if isinstance(state.get("follow_up"), Mapping)
+            else []
+        ),
     ]
     return [
         {"key": key, "label": label, "reached": reached, "terminal": status in TERMINAL}
@@ -478,7 +488,7 @@ def _weeks(completed: list[dict[str, object]]) -> list[dict[str, object]]:
             ),
             None,
         )
-        helped = bool(state.get("support_loop") or state.get("measurement"))
+        helped = bool(help_rounds(state) or state.get("measurement"))
         if is_independent(state):
             bucket["alone"] = int(bucket["alone"]) + 1
         elif helped:

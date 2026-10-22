@@ -23,6 +23,7 @@ export interface EpisodeSummary {
 	before_correct: boolean | null;
 	after_correct: boolean | null;
 	help_types: SupportType[];
+	follow_up_result?: string | null;
 	selection_mode: string | null;
 	first_help: SupportType | null;
 	gain: string | null;
@@ -104,6 +105,10 @@ export interface Model3Explained extends Explained {
 export interface RoundExplained {
 	what_child_saw?: string[];
 	outcome_label?: string;
+	/** 1, 2, … across every round the child saw, measured and follow-up. */
+	position: number;
+	/** "follow_up" rounds came after a failed after-question; they never change the gain. */
+	phase: "measured" | "follow_up";
 	round_number: number;
 	scaffold_type: SupportType;
 	name: string;
@@ -111,6 +116,14 @@ export interface RoundExplained {
 	attempts: { correct: boolean; error: string | null }[];
 	outcome: string | null;
 	rule: string;
+}
+
+export interface FollowUpExplained {
+	status: string;
+	finish_reason: string | null;
+	headline: string;
+	why: string;
+	practice: { correct: boolean; error: string | null }[];
 }
 
 export interface Trace {
@@ -130,6 +143,7 @@ export interface Trace {
 	model2_record: Record<string, unknown> | null;
 	rounds: RoundExplained[];
 	model3: Model3Explained | null;
+	follow_up?: FollowUpExplained | null;
 	events: { type: string; at: string }[];
 }
 
