@@ -8,8 +8,9 @@ high-confidence draft items and 66 held slots. Environmental Studies missions
 carry 117 held slots. A held slot stores the traced string and does not create
 a child question. This package does not replace the existing half-set skill.
 
-The default call is the production loader and rejects the package. A development
-or test caller may read it only when ``allow_draft`` is true.
+``load_draft_mission_catalog`` verifies the manifest and loads the package. It is
+served only by the ``/learning-flow/draft-missions`` routes, which require the
+development caller mark with the researcher role.
 """
 
 from __future__ import annotations

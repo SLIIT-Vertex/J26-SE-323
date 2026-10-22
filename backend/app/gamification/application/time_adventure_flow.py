@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.engine.area_flow import AreaFlowError, AreaGameFlow
 from app.gamification.content.time_adventure import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -32,7 +32,7 @@ _VISUAL_FIRST = ("visual_guidance", "worked_parallel_example", "step_by_step_gui
 _WORKED_FIRST = ("worked_parallel_example", "visual_guidance", "step_by_step_guidance")
 
 
-class TimeAdventureFlow(NumberWorldFlow):
+class TimeAdventureFlow(AreaGameFlow):
     area_id = AREA_ID
     experience_id = "time_adventure"
     universal_skill_id = UNIVERSAL_SKILL_ID
@@ -99,20 +99,20 @@ class TimeAdventureFlow(NumberWorldFlow):
             "all_objects_placed",
         }
         if not set(result).issubset(allowed):
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in result.items():
             if key == "all_objects_placed":
                 if not isinstance(value, bool):
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key == "evidence_quality":
                 if (
                     isinstance(value, bool)
                     or not isinstance(value, (int, float))
                     or not 0 <= float(value) <= 1
                 ):
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif type(value) is not int or not 0 <= value <= 86_400_000:
-                raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return result
 
     @staticmethod

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.gamification.application.sri_lanka_discovery_flow import SriLankaDiscoveryFlow
+from app.gamification.application.engine.english_area_flow import EnglishAreaFlow
 from app.gamification.content.wildlife_ranger import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -27,7 +27,7 @@ from app.gamification.content.wildlife_ranger import (
 )
 
 
-class WildlifeRangerFlow(SriLankaDiscoveryFlow):
+class WildlifeRangerFlow(EnglishAreaFlow):
     area_id = AREA_ID
     experience_id = "wildlife_ranger"
     contract_version = "wildlife-ranger-learning-flow-v1"

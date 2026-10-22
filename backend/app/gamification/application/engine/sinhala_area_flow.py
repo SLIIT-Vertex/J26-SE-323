@@ -1,7 +1,7 @@
 """Shared durable flow for the Sinhala game packages, on the shared adaptive episode engine.
 
 A package is one content module (``content``) with the interface documented on
-:class:`SinhalaPackageFlow`. What differs from the shared profile:
+:class:`SinhalaAreaFlow`. What differs from the shared profile:
 
 - Help is built from separate assisted items of the episode's subfamily, never the scored before
   item and never a reserved after item. No help stage carries answer marks; worked examples show
@@ -21,20 +21,22 @@ from datetime import datetime
 from types import ModuleType
 from uuid import UUID, uuid4
 
-from app.gamification.application.learning_state_input import read_learning_state
-from app.gamification.application.number_world_flow import (
-    NumberWorldFlow,
-    NumberWorldFlowError,
+from app.gamification.application.engine.area_flow import (
+    AreaFlowError,
+    AreaGameFlow,
+    _attempts,
     _event,
     _model1_label,
     _model1_uncertain,
+    _presentations,
 )
+from app.gamification.application.learning_state_input import read_learning_state
 from app.gamification.application.support_builders import (
     SupportBuildContext,
     SupportPlan,
     SupportStage,
 )
-from app.gamification.application.support_rounds import SupportRoundService
+from app.gamification.application.support_rounds import SupportRoundService, scope
 from app.gamification.application.teardown_receipt import (
     TEARDOWN_RECEIPT_VERSION,
 )
@@ -93,7 +95,7 @@ class _SinhalaBuilder:
         item = next((c for c in candidates if c.revision_id not in context.reserved_revisions), None)
         item = item or next((c for c in candidates if c.revision_id not in probes), None)
         if item is None:
-            raise NumberWorldFlowError("SUPPORT_REUSED_RESERVED_PROBE")
+            raise AreaFlowError("SUPPORT_REUSED_RESERVED_PROBE")
         record = source.support_record(item, context.at)
         record.update(role="supported_practice", assistance_state="active")
         if emphasis is not None:
@@ -182,7 +184,7 @@ SINHALA_BUILDERS = {
 }
 
 
-class SinhalaPackageFlow(NumberWorldFlow):
+class SinhalaAreaFlow(AreaGameFlow):
     """One Sinhala package. Subclasses name the content module and their ids; ``bind`` copies
     the module's versions onto the class.
 
@@ -263,13 +265,13 @@ class SinhalaPackageFlow(NumberWorldFlow):
         at: datetime,
     ) -> dict[str, object]:
         if constructed_response is None or option_id is not None:
-            raise NumberWorldFlowError("MALFORMED_RESPONSE")
+            raise AreaFlowError("MALFORMED_RESPONSE")
         if constructed_response.get("interaction_version") != "constructed-response-v1":
-            raise NumberWorldFlowError("SCHEMA_MISMATCH")
+            raise AreaFlowError("SCHEMA_MISMATCH")
         if constructed_response.get("presentation_id") != item["presentation_id"]:
-            raise NumberWorldFlowError("STALE_OR_INCOMPATIBLE_MANIFEST")
+            raise AreaFlowError("STALE_OR_INCOMPATIBLE_MANIFEST")
         if constructed_response.get("item_revision_id") != item["revision_id"]:
-            raise NumberWorldFlowError("REVISION_MISMATCH")
+            raise AreaFlowError("REVISION_MISMATCH")
         payload = {
             key: value
             for key, value in constructed_response.items()
@@ -278,9 +280,9 @@ class SinhalaPackageFlow(NumberWorldFlow):
         try:
             correct, code, normalized = self.content.validate_constructed_response(item, payload)
         except self.content.ResponseError as error:
-            raise NumberWorldFlowError(error.code) from error
+            raise AreaFlowError(error.code) from error
         except (TypeError, ValueError, KeyError) as error:
-            raise NumberWorldFlowError("MALFORMED_RESPONSE") from error
+            raise AreaFlowError("MALFORMED_RESPONSE") from error
         return {
             "attempt_id": str(uuid4()),
             "presentation_id": item["presentation_id"],
@@ -302,13 +304,13 @@ class SinhalaPackageFlow(NumberWorldFlow):
         }
 
     def _summary(self, state: dict[str, object]) -> dict[str, object]:  # type: ignore[override]
-        response = NumberWorldFlow._summary(state)
+        response = AreaGameFlow._summary(state)
         score = response.get("server_score")
-        attempts = state.get("attempts")
-        if isinstance(score, dict) and isinstance(attempts, list) and attempts:
+        attempts = _attempts(state)
+        if isinstance(score, dict) and attempts:
             latest = attempts[-1]
             item = next(
-                row for row in state["presentations"]  # type: ignore[union-attr]
+                row for row in _presentations(state)
                 if row["presentation_id"] == latest["presentation_id"]
             )
             score["feedback_si"] = _feedback(self.content, latest, item)
@@ -328,16 +330,16 @@ class SinhalaPackageFlow(NumberWorldFlow):
         }
         allowed = counts | {"input_mode", "rendering_issue_reported"}
         if not set(result) <= allowed or len(result) > 12:
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in result.items():
             if key == "input_mode":
                 if value not in {"drag", "tap", "keyboard", "mixed"}:
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key == "rendering_issue_reported":
                 if type(value) is not bool:
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif type(value) is not int or not 0 <= value <= 86_400_000:
-                raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return result
 
     @staticmethod
@@ -399,7 +401,7 @@ class SinhalaPackageFlow(NumberWorldFlow):
                 ),
             )
         except ValueError as error:
-            raise NumberWorldFlowError(str(error)) from error
+            raise AreaFlowError(str(error)) from error
         cursor = _support_cursor(own_history, proposed=proposed)
         authored = tuple(s for s in AUTHORED_SEQUENCE if s in plans)
         start = cursor["next_position"] % len(authored)
@@ -477,12 +479,12 @@ class SinhalaPackageFlow(NumberWorldFlow):
         summary = self._validate_interaction_summary(interaction_summary)
 
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
-            loop = state["support_loop"]
+            loop = scope(state)["support_loop"]
             current = loop["rounds"][-1]  # type: ignore[index]
             stage = current["stages"][current["stage_index"]]
             if stage.get("guidance") and int(summary.get("move_count", 0)) < 1:
                 # Guided support counts only when the child actually acted.
-                raise NumberWorldFlowError("GUIDED_ACTIONS_REQUIRED")
+                raise AreaFlowError("GUIDED_ACTIONS_REQUIRED")
             item = self._support_rounds.current_item(state)
             score = self._score(state, item, None, constructed_response, response_time_ms, at)
             score.update(role="supported_practice", assistance_state="active", interaction_summary=dict(summary))
@@ -541,16 +543,16 @@ class SinhalaPackageFlow(NumberWorldFlow):
 
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             if interaction_summary.get("completed") is not True:
-                raise NumberWorldFlowError("INVALID_SUPPORT_COMPLETION")
-            current = state["support_loop"]["rounds"][-1]  # type: ignore[index]
+                raise AreaFlowError("INVALID_SUPPORT_COMPLETION")
+            current = scope(state)["support_loop"]["rounds"][-1]  # type: ignore[index]
             stage = current["stages"][current["stage_index"]]
             worked = stage.get("worked_example")
             authored = len(worked["steps_si"]) if isinstance(worked, Mapping) else 0
             presses = interaction_summary.get("next_presses")
             if type(presses) is not int or presses < authored or steps_viewed < authored:
-                raise NumberWorldFlowError("SUPPORT_STEPS_NOT_OBSERVED")
+                raise AreaFlowError("SUPPORT_STEPS_NOT_OBSERVED")
             status = self._support_rounds.record_view_complete(
-                state, manifest_revision_id, at, lambda: self._support_context(state, at)
+                state, manifest_revision_id, at
             )
             current.setdefault("observed_views", []).append(
                 {
@@ -600,7 +602,7 @@ class SinhalaPackageFlow(NumberWorldFlow):
 
         receipt = dict(teardown_receipt or {})
         if not receipt:
-            raise NumberWorldFlowError("TEARDOWN_RECEIPT_REQUIRED")
+            raise AreaFlowError("TEARDOWN_RECEIPT_REQUIRED")
         if (
             receipt.get("receipt_version") != TEARDOWN_RECEIPT_VERSION
             or receipt.get("support_revision_id") != support_revision_id
@@ -608,14 +610,15 @@ class SinhalaPackageFlow(NumberWorldFlow):
             or any(receipt.get(key) != 0 for key in _TEARDOWN_ZERO_COUNTS)
             or any(receipt.get(key) is not True for key in _TEARDOWN_TRUE_FLAGS)
         ):
-            raise NumberWorldFlowError("INVALID_TEARDOWN_RECEIPT")
+            raise AreaFlowError("INVALID_TEARDOWN_RECEIPT")
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             # A simulated receipt is for synthetic development/test clients only; it never
             # stands in for teardown observed on a phone.
             simulated = receipt.get("source") == "simulated_client"
             if simulated and state["environment"] not in {"development", "test"}:
-                raise NumberWorldFlowError("SIMULATED_TEARDOWN_NOT_ACCEPTED")
-            exposure = state["scaffold_exposure"]
+                raise AreaFlowError("SIMULATED_TEARDOWN_NOT_ACCEPTED")
+            holder = scope(state)
+            exposure = holder["scaffold_exposure"]
             assert isinstance(exposure, dict)
             if not (
                 support_revision_id == exposure["revision_id"]
@@ -624,9 +627,9 @@ class SinhalaPackageFlow(NumberWorldFlow):
                 and answer_revealing_state_cleared
                 and input_handlers_cleared
             ):
-                raise NumberWorldFlowError("INVALID_WITHDRAWAL_ACKNOWLEDGEMENT")
+                raise AreaFlowError("INVALID_WITHDRAWAL_ACKNOWLEDGEMENT")
             exposure["fully_withdrawn"] = True
-            state["withdrawal"] = {
+            holder["withdrawal"] = {
                 "acknowledgement_id": str(uuid4()),
                 "request_id": str(request_id),
                 "support_revision_id": support_revision_id,
@@ -638,7 +641,7 @@ class SinhalaPackageFlow(NumberWorldFlow):
                 "teardown_observed_on_device": not simulated,
                 "server_verified_at": at.isoformat(),
             }
-            state["status"] = "support_withdrawn"
+            holder["status"] = "support_withdrawn"
             _event(state, "support_withdrawn", at, teardown_receipt_version=TEARDOWN_RECEIPT_VERSION)
             return self._summary(state)
 
@@ -704,7 +707,7 @@ class SinhalaPackageFlow(NumberWorldFlow):
 def _opening_demonstration(content: ModuleType, skill_id: str, family: str) -> dict[str, object]:
     demo = content.opening_demonstration(skill_id, family)
     if demo is None:
-        raise NumberWorldFlowError("SINHALA_UNREVIEWED_DEMONSTRATION")
+        raise AreaFlowError("SINHALA_UNREVIEWED_DEMONSTRATION")
     return {
         **demo,
         "steps_si": list(content.support_copy(skill_id, family)["worked"]),
@@ -792,4 +795,4 @@ def _support_cursor(history: tuple[Mapping[str, object], ...], *, proposed: bool
     return {"next_position": 0, "unresolved": False, "preference_failed": False, "source_episode_id": None}
 
 
-__all__ = ["SINHALA_BUILDERS", "SinhalaPackageFlow"]
+__all__ = ["SINHALA_BUILDERS", "SinhalaAreaFlow"]

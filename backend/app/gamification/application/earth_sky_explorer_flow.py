@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.gamification.application.sri_lanka_discovery_flow import SriLankaDiscoveryFlow
+from app.gamification.application.engine.english_area_flow import EnglishAreaFlow
 from app.gamification.content.earth_sky_explorer import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -27,7 +27,7 @@ from app.gamification.content.earth_sky_explorer import (
 )
 
 
-class EarthSkyExplorerFlow(SriLankaDiscoveryFlow):
+class EarthSkyExplorerFlow(EnglishAreaFlow):
     area_id = AREA_ID
     experience_id = "earth_sky_explorer"
     contract_version = "earth-sky-explorer-learning-flow-v1"

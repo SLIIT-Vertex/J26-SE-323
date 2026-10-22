@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from app.gamification.application.number_world_flow import NumberWorldFlowError
-from app.gamification.application.sinhala_package_flow import SinhalaPackageFlow
+from app.gamification.application.engine.area_flow import AreaFlowError
+from app.gamification.application.engine.sinhala_area_flow import SinhalaAreaFlow
 from app.gamification.content import sinhala_punctuation
 
 
-class SinhalaPunctuationFlow(SinhalaPackageFlow):
+class SinhalaPunctuationFlow(SinhalaAreaFlow):
     experience_id = "sinhala_punctuation_journey"
     contract_version = "sinhala-punctuation-learning-flow-v1"
     context_version = "g5-sin-punctuation-context-v1"
@@ -21,7 +21,7 @@ class SinhalaPunctuationFlow(SinhalaPackageFlow):
         # anything is reserved or presented.
         skill = self.skills.get(str(kwargs.get("atomic_skill_id")))
         if skill is not None and skill.review_blocked:
-            raise NumberWorldFlowError("SINHALA_LINEBREAK_CONTENT_REVIEW_BLOCKED")
+            raise AreaFlowError("SINHALA_LINEBREAK_CONTENT_REVIEW_BLOCKED")
         return super().open(**kwargs)
 
 

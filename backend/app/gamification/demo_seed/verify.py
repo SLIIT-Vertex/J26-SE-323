@@ -18,8 +18,8 @@ from uuid import UUID
 from sqlalchemy import Uuid, bindparam, select, text
 from sqlalchemy.orm import Session
 
+from app.gamification.application.engine.area_flow import _model1_label, _model1_uncertain
 from app.gamification.application.learning_flow_orchestration import LearningFlowOrchestrator
-from app.gamification.application.number_world_flow import _model1_label, _model1_uncertain
 from app.gamification.content.support_types import SUPPORT_TYPES
 from app.gamification.infrastructure.db.models import (
     LearningFlowEpisodeRunModel,

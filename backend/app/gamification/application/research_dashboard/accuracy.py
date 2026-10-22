@@ -4,8 +4,8 @@ from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from math import sqrt
 
-from app.gamification.application.research_explain import area_title
-from app.gamification.application.research_glossary import EXCLUSIONS
+from app.gamification.application.research_dashboard.explain import area_title
+from app.gamification.application.research_dashboard.glossary import EXCLUSIONS
 from app.gamification.modeling.misconception_inference.learner_prior import PRIOR_CAP
 from app.gamification.modeling.support_selection.support_order import (
     LEAD_BY_REASON,
@@ -64,6 +64,35 @@ def metric(
         "meaning": meaning,
         "interval": wilson(sum(values), n) if n and unit == "rate" else None,
         "technical": technical or {},
+    }
+
+
+def model_check(question, rule, values, *, reference, reference_label, reference_count=None):
+    """The one deterministic accuracy test for a learned model.
+
+    The model passes when, with at least ``MIN_SESSIONS`` games behind both numbers, the lower end
+    of its 95% Wilson range is above the reference rate. Fewer games is "not enough data", never
+    a pass or a fail.
+    """
+
+    n = len(values)
+    interval = wilson(sum(values), n)
+    enough = n >= MIN_SESSIONS and (reference_count is None or reference_count >= MIN_SESSIONS)
+    if not enough or reference is None or interval is None:
+        status = "not_enough_data"
+    else:
+        status = "passing" if interval[0] > reference else "not_passing"
+    return {
+        "question": question,
+        "rule": rule,
+        "value": sum(values) / n if n else None,
+        "interval": interval,
+        "count": n,
+        "minimum": MIN_SESSIONS,
+        "reference": reference,
+        "reference_label": reference_label,
+        "reference_count": reference_count,
+        "status": status,
     }
 
 
@@ -129,9 +158,10 @@ def accuracy_report(runs, *, all_runs=None):
     measured = [s for s in helped if s.get("measurement")]
     valid = [s for s in measured if s.get("validity") == "valid"]
     pairs = prediction_pairs(states)
-    agreement, brier, bins = [], [], defaultdict(list)
+    agreement, brier, bins, chance = [], [], defaultdict(list), []
     for model, observed in pairs:
         probabilities = model["probabilities"]
+        chance.append(1 / max(1, len(probabilities)))
         top = max(probabilities, key=lambda k: float(probabilities[k]))
         agreement.append(int(top == observed))
         classes = set(probabilities) | {observed}
@@ -275,6 +305,8 @@ def accuracy_report(runs, *, all_runs=None):
                 "flagged": gap is not None and gap > 0.15,
             }
         )
+    proposed = [int(is_independent(s)) for s in valid if s.get("condition") == "proposed"]
+    baseline = [int(is_independent(s)) for s in valid if s.get("condition") == "baseline"]
     return {
         "generated_at": datetime.now(UTC).isoformat(),
         "minimum_sessions": MIN_SESSIONS,
@@ -283,6 +315,16 @@ def accuracy_report(runs, *, all_runs=None):
             {
                 "name": "Probabilistic Misconception",
                 "subtitle": "Why did the child get it wrong?",
+                "kind": "model",
+                "check": model_check(
+                    "Does the predicted reason match the child's next mistake?",
+                    "Working when, over at least 20 games, the predicted reason matches the "
+                    "child's next unaided mistake more often than guessing: the low end of the "
+                    "95% range must be above the guessing rate.",
+                    agreement,
+                    reference=sum(chance) / len(chance) if chance else None,
+                    reference_label="guessing",
+                ),
                 "metrics": [
                     metric(
                         "agreement",
@@ -343,6 +385,18 @@ def accuracy_report(runs, *, all_runs=None):
             {
                 "name": "Contextual Support Selection",
                 "subtitle": "Which help should come first, and in what order?",
+                "kind": "model",
+                "check": model_check(
+                    "Does the chosen help leave the child able to do it alone?",
+                    "Working when, over at least 20 games in each group, children helped in the "
+                    "model's order solve the fresh question alone more often than children given "
+                    "the fixed order: the low end of the 95% range must be above the fixed-order "
+                    "rate.",
+                    proposed,
+                    reference=sum(baseline) / len(baseline) if baseline else None,
+                    reference_label="fixed order",
+                    reference_count=len(baseline),
+                ),
                 "metrics": [
                     metric(
                         "first",
@@ -394,6 +448,8 @@ def accuracy_report(runs, *, all_runs=None):
             {
                 "name": "Independence Gain",
                 "subtitle": "After the help is taken away, can the child do it alone?",
+                # A before/after score difference, not a learned model: it has no accuracy test.
+                "kind": "measurement",
                 "metrics": [
                     metric(
                         "fair",

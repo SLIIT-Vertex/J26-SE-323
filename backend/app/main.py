@@ -83,7 +83,12 @@ _local_frontend = settings.frontend_origin.startswith(("http://localhost", "http
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$" if _local_frontend else None,
+    # Local web dev servers, plus the iOS/Android Capacitor shell (capacitor://localhost).
+    allow_origin_regex=(
+        r"(https?://(localhost|127\.0\.0\.1)(:\d+)?|capacitor://localhost)$"
+        if _local_frontend
+        else None
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from app.gamification.application.sinhala_package_flow import SinhalaPackageFlow
+from app.gamification.application.engine.sinhala_area_flow import SinhalaAreaFlow
 from app.gamification.content import sinhala_pillam
 
 
-class SinhalaPillamFlow(SinhalaPackageFlow):
+class SinhalaPillamFlow(SinhalaAreaFlow):
     experience_id = "sinhala_pillam_journey"
     contract_version = "sinhala-pillam-learning-flow-v1"
     context_version = "g5-sin-pillam-context-v1"

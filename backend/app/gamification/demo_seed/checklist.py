@@ -4,7 +4,7 @@ from collections import Counter
 from pathlib import Path
 from uuid import UUID
 
-from app.gamification.application.research_explain import area_title, resolved_area
+from app.gamification.application.research_dashboard.explain import area_title, resolved_area
 from app.gamification.infrastructure.db.research_dashboard_reader import (
     SqlAlchemyResearchDashboardReader,
 )

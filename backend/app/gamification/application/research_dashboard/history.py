@@ -11,20 +11,20 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from app.gamification.application.research_accuracy import is_independent, wilson
-from app.gamification.application.research_explain import (
+from app.gamification.application.research_dashboard.accuracy import is_independent, wilson
+from app.gamification.application.research_dashboard.explain import (
     english_title,
     name,
     research_subject,
     resolved_area,
 )
-from app.gamification.application.research_glossary import (
+from app.gamification.application.research_dashboard.glossary import (
     EXCLUSIONS,
     FAMILY_NAMES,
     MODE_NAMES,
     reason_name,
 )
-from app.gamification.application.research_play_status import STATUS_LABELS, play_status
+from app.gamification.application.research_dashboard.play_status import STATUS_LABELS, play_status
 from app.gamification.modeling.support_selection.support_order import (
     SUBJECT_ORDERS,
     credited_support,

@@ -11,14 +11,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from app.gamification.application.number_world_flow import NumberWorldFlowError
-from app.gamification.application.sinhala_package_flow import SinhalaPackageFlow
+from app.gamification.application.engine.area_flow import AreaFlowError
+from app.gamification.application.engine.sinhala_area_flow import SinhalaAreaFlow
 from app.gamification.content import sinhala_riddles
 
 EXPOSURE_RULE_VERSION = "g5-sin-riddles-exposure-v1"
 
 
-class SinhalaRiddleFlow(SinhalaPackageFlow):
+class SinhalaRiddleFlow(SinhalaAreaFlow):
     experience_id = "sinhala_riddle_journey"
     contract_version = "sinhala-riddle-learning-flow-v1"
     context_version = "g5-sin-riddles-context-v1"
@@ -60,7 +60,7 @@ class SinhalaRiddleFlow(SinhalaPackageFlow):
                 atomic_skill_id, base, revealed, reserved_after=reserved_after
             )
         except ValueError as error:
-            raise NumberWorldFlowError(str(error)) from error
+            raise AreaFlowError(str(error)) from error
         return seed
 
     def _response(self, state: dict[str, object], item) -> dict[str, object]:  # type: ignore[no-untyped-def,override]
@@ -83,7 +83,7 @@ class SinhalaRiddleFlow(SinhalaPackageFlow):
 
     @staticmethod
     def _additional_exclusions(state: dict[str, object], after_item: dict[str, object]) -> list[str]:
-        exclusions = SinhalaPackageFlow._additional_exclusions(state, after_item)
+        exclusions = SinhalaAreaFlow._additional_exclusions(state, after_item)
         check = state.get("exposure_check")
         if not isinstance(check, dict) or check.get("fresh") is not True:
             exclusions.append("PROBE_POOL_EXHAUSTED_OR_PREVIOUSLY_REVEALED")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.engine.area_flow import AreaFlowError, AreaGameFlow
 from app.gamification.content.number_patterns import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -29,7 +29,7 @@ _VISUAL_FIRST = ("visual_guidance", "worked_parallel_example", "step_by_step_gui
 _WORKED_FIRST = ("worked_parallel_example", "visual_guidance", "step_by_step_guidance")
 
 
-class NumberPatternsFlow(NumberWorldFlow):
+class NumberPatternsFlow(AreaGameFlow):
     area_id = AREA_ID
     experience_id = "number_pattern_adventure"
     universal_skill_id = "APT-PAT"
@@ -88,20 +88,20 @@ class NumberPatternsFlow(NumberWorldFlow):
             "evidence_quality",
         }
         if not set(summary).issubset(allowed) or len(summary) > 12:
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in summary.items():
             if key == "completion_order_valid":
                 if not isinstance(value, bool):
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key == "evidence_quality":
                 if not isinstance(value, (int, float)) or not 0 <= float(value) <= 1:
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif (
                 not isinstance(value, int)
                 or isinstance(value, bool)
                 or not 0 <= value <= 86_400_000
             ):
-                raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return summary
 
     def _infer_belief(

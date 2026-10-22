@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping, Sequence
 from functools import lru_cache
 
-from app.gamification.application.research_glossary import (
+from app.gamification.application.research_dashboard.glossary import (
     FAMILY_NAMES,
     MODE_NAMES,
     TYPE_NAMES,
@@ -155,6 +155,8 @@ def explain_rounds(state):
         rule = (
             "The child managed it with help. The help is then removed."
             if outcome == "succeeded"
+            else "The child watched how it is done. The help is then removed."
+            if outcome == "viewed"
             else "This help was not enough, so the next help was tried."
             if outcome == "failed" and index < len(loop["rounds"]) - 1
             else "All available help was tried. The child next tries alone."

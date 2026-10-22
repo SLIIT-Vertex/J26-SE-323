@@ -17,12 +17,12 @@ from time import monotonic
 from typing import Protocol
 from uuid import UUID
 
-from app.gamification.application.research_accuracy import (
+from app.gamification.application.research_dashboard.accuracy import (
     accuracy_report,
     is_independent,
     present_simulation,
 )
-from app.gamification.application.research_explain import (
+from app.gamification.application.research_dashboard.explain import (
     area_title,
     area_titles,
     english_title,
@@ -34,9 +34,9 @@ from app.gamification.application.research_explain import (
     research_subject,
     resolved_area,
 )
-from app.gamification.application.research_glossary import reason_name
-from app.gamification.application.research_history import model_history, model_series
-from app.gamification.application.research_play_status import (
+from app.gamification.application.research_dashboard.glossary import reason_name
+from app.gamification.application.research_dashboard.history import model_history, model_series
+from app.gamification.application.research_dashboard.play_status import (
     STATUS_LABELS,
     last_child_activity,
     parse_time,
@@ -50,7 +50,7 @@ from app.gamification.modeling.support_selection.support_order import (
 )
 
 _ACCURACY_CACHE = {}
-SIMULATION_REPORT = Path(__file__).resolve().parents[3] / "reports/simulated-validation.json"
+SIMULATION_REPORT = Path(__file__).resolve().parents[4] / "reports/simulated-validation.json"
 
 TERMINAL = {"completed", "invalidated"}
 # A just-finished or just-abandoned game stays on the live view this long.

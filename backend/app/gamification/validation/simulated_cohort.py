@@ -26,7 +26,7 @@ from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrationError,
     LearningFlowOrchestrator,
 )
-from app.gamification.application.research_accuracy import present_simulation, wilson
+from app.gamification.application.research_dashboard.accuracy import present_simulation, wilson
 from app.gamification.application.teardown_receipt import (
     shown_steps,
     simulated_receipt,

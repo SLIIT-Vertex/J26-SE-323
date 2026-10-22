@@ -1,4 +1,10 @@
-"""Durable development orchestration for the single draft Sinhala skill.
+"""Durable orchestration for every mobile learning-flow episode.
+
+:class:`LearningFlowOrchestrator` routes an episode by ``area_id`` to its area game flow
+(``application/<slug>_flow.py``, all built on ``application/engine/area_flow.py``). An episode with
+no area game falls back to the original draft Sinhala curriculum slice handled in this module,
+which uses ``modeling/misconception_inference/inference.py``, ``support_selection/selection.py``
+and ``independence_gain/measurement.py``.
 
 The service is intentionally unavailable to production/child composition. It persists a
 hash-bound projection plus append-only events for every accepted command. Public manifests never
@@ -29,6 +35,7 @@ from app.gamification.application.direction_adventure_flow import DirectionAdven
 from app.gamification.application.distance_adventure_flow import DistanceAdventureFlow
 from app.gamification.application.division_adventure_flow import DivisionAdventureFlow
 from app.gamification.application.earth_sky_explorer_flow import EarthSkyExplorerFlow
+from app.gamification.application.engine.area_flow import AreaFlowError
 from app.gamification.application.everyday_object_quest_flow import EverydayObjectQuestFlow
 from app.gamification.application.family_word_constellation_flow import FamilyWordConstellationFlow
 from app.gamification.application.fraction_adventure_flow import FractionAdventureFlow
@@ -40,7 +47,7 @@ from app.gamification.application.mass_adventure_flow import MassAdventureFlow
 from app.gamification.application.money_adventure_flow import MoneyAdventureFlow
 from app.gamification.application.multiplication_adventure_flow import MultiplicationAdventureFlow
 from app.gamification.application.number_patterns_flow import NumberPatternsFlow
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.number_world_flow import NumberWorldFlow
 from app.gamification.application.plant_explorer_flow import PlantExplorerFlow
 from app.gamification.application.ports import ConsentStore
 from app.gamification.application.rainbow_wardrobe_quest_flow import RainbowWardrobeQuestFlow
@@ -358,7 +365,7 @@ class LearningFlowOrchestrator:
                     idempotency_key=idempotency_key,
                     seed_source=seed_source,
                 )
-            except NumberWorldFlowError as error:
+            except AreaFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
         request: dict[str, object] = {
             "op": "open",
@@ -486,7 +493,7 @@ class LearningFlowOrchestrator:
                     visual=visual,
                     learner_state_session_id=learner_state_session_id,
                 )
-            except NumberWorldFlowError as error:
+            except AreaFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
         if option_id is None:
             raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
@@ -528,7 +535,7 @@ class LearningFlowOrchestrator:
                     interaction_summary=interaction_summary or {"completed": False},
                     idempotency_key=idempotency_key,
                 )
-            except NumberWorldFlowError as error:
+            except AreaFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
         if (
             duration_ms < 0
@@ -583,7 +590,7 @@ class LearningFlowOrchestrator:
                 interaction_summary=interaction_summary,
                 idempotency_key=idempotency_key,
             )
-        except NumberWorldFlowError as error:
+        except AreaFlowError as error:
             raise LearningFlowOrchestrationError(error.code, **error.context) from error
 
     def withdraw_support(
@@ -619,7 +626,7 @@ class LearningFlowOrchestrator:
                     idempotency_key=idempotency_key,
                     **extra,
                 )
-            except NumberWorldFlowError as error:
+            except AreaFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
         return self._mutate(
             episode_id,
@@ -652,7 +659,7 @@ class LearningFlowOrchestrator:
         if adaptive_flow is not None:
             try:
                 return adaptive_flow.present_after(episode_id, idempotency_key=idempotency_key)
-            except NumberWorldFlowError as error:
+            except AreaFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
         return self._mutate(
             episode_id,
@@ -685,7 +692,7 @@ class LearningFlowOrchestrator:
                     visual=visual,
                     learner_state_session_id=learner_state_session_id,
                 )
-            except NumberWorldFlowError as error:
+            except AreaFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error
         if option_id is None:
             raise LearningFlowOrchestrationError("PAYLOAD_OUT_OF_BOUNDS")
