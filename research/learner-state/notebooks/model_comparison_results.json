@@ -1,0 +1,155 @@
+{
+  "settings": {
+    "random_state": 42,
+    "threshold_search": "0.01-0.99 on validation, best macro-F1",
+    "lightgbm_available": true,
+    "versions": {
+      "xgboost": "3.4.1",
+      "scikit-learn": "1.6.1"
+    }
+  },
+  "published_deployed_roc_auc": {
+    "confusion_behaviour": 0.7601,
+    "disengagement_behaviour": 0.5337,
+    "confusion_visual": 0.576,
+    "disengagement_visual": 0.687
+  },
+  "results": {
+    "confusion_behaviour": {
+      "xgboost_deployed": {
+        "test_roc_auc": 0.7601,
+        "test_pr_auc": 0.1423,
+        "test_positive_rate": 0.042,
+        "threshold": 0.78,
+        "val_macro_f1": 0.5919,
+        "test_macro_f1": 0.5926
+      },
+      "logistic_regression": {
+        "test_roc_auc": 0.6317,
+        "test_pr_auc": 0.0588,
+        "test_positive_rate": 0.042,
+        "threshold": 0.58,
+        "val_macro_f1": 0.5061,
+        "test_macro_f1": 0.5071
+      },
+      "random_forest": {
+        "test_roc_auc": 0.7629,
+        "test_pr_auc": 0.1524,
+        "test_positive_rate": 0.042,
+        "threshold": 0.67,
+        "val_macro_f1": 0.5999,
+        "test_macro_f1": 0.6009
+      },
+      "lightgbm": {
+        "test_roc_auc": 0.7593,
+        "test_pr_auc": 0.143,
+        "test_positive_rate": 0.042,
+        "threshold": 0.8,
+        "val_macro_f1": 0.5931,
+        "test_macro_f1": 0.5937
+      }
+    },
+    "disengagement_behaviour": {
+      "xgboost_deployed": {
+        "test_roc_auc": 0.5337,
+        "test_pr_auc": 0.1722,
+        "test_positive_rate": 0.1566,
+        "threshold": 0.53,
+        "val_macro_f1": 0.5139,
+        "test_macro_f1": 0.5153
+      },
+      "logistic_regression": {
+        "test_roc_auc": 0.5253,
+        "test_pr_auc": 0.1681,
+        "test_positive_rate": 0.1566,
+        "threshold": 0.52,
+        "val_macro_f1": 0.511,
+        "test_macro_f1": 0.5127
+      },
+      "random_forest": {
+        "test_roc_auc": 0.532,
+        "test_pr_auc": 0.1714,
+        "test_positive_rate": 0.1566,
+        "threshold": 0.52,
+        "val_macro_f1": 0.5135,
+        "test_macro_f1": 0.514
+      },
+      "lightgbm": {
+        "test_roc_auc": 0.5336,
+        "test_pr_auc": 0.1721,
+        "test_positive_rate": 0.1566,
+        "threshold": 0.53,
+        "val_macro_f1": 0.514,
+        "test_macro_f1": 0.5144
+      }
+    },
+    "confusion_visual": {
+      "xgboost_deployed": {
+        "test_roc_auc": 0.5757,
+        "test_pr_auc": 0.3883,
+        "test_positive_rate": 0.3274,
+        "threshold": 0.51,
+        "val_macro_f1": 0.5193,
+        "test_macro_f1": 0.5512
+      },
+      "logistic_regression": {
+        "test_roc_auc": 0.5878,
+        "test_pr_auc": 0.4027,
+        "test_positive_rate": 0.3274,
+        "threshold": 0.53,
+        "val_macro_f1": 0.5516,
+        "test_macro_f1": 0.5632
+      },
+      "random_forest": {
+        "test_roc_auc": 0.5795,
+        "test_pr_auc": 0.3841,
+        "test_positive_rate": 0.3274,
+        "threshold": 0.42,
+        "val_macro_f1": 0.525,
+        "test_macro_f1": 0.5422
+      },
+      "lightgbm": {
+        "test_roc_auc": 0.5505,
+        "test_pr_auc": 0.3746,
+        "test_positive_rate": 0.3274,
+        "threshold": 0.48,
+        "val_macro_f1": 0.522,
+        "test_macro_f1": 0.5322
+      }
+    },
+    "disengagement_visual": {
+      "xgboost_deployed": {
+        "test_roc_auc": 0.6871,
+        "test_pr_auc": 0.139,
+        "test_positive_rate": 0.0493,
+        "threshold": 0.54,
+        "val_macro_f1": 0.5918,
+        "test_macro_f1": 0.5497
+      },
+      "logistic_regression": {
+        "test_roc_auc": 0.7682,
+        "test_pr_auc": 0.2027,
+        "test_positive_rate": 0.0493,
+        "threshold": 0.76,
+        "val_macro_f1": 0.6066,
+        "test_macro_f1": 0.591
+      },
+      "random_forest": {
+        "test_roc_auc": 0.7323,
+        "test_pr_auc": 0.1348,
+        "test_positive_rate": 0.0493,
+        "threshold": 0.29,
+        "val_macro_f1": 0.6015,
+        "test_macro_f1": 0.5689
+      },
+      "lightgbm": {
+        "test_roc_auc": 0.6868,
+        "test_pr_auc": 0.1232,
+        "test_positive_rate": 0.0493,
+        "threshold": 0.19,
+        "val_macro_f1": 0.5902,
+        "test_macro_f1": 0.5412
+      }
+    }
+  }
+}
