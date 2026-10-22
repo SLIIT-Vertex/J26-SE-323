@@ -325,6 +325,44 @@ describe("development learner recovery", () => {
 		});
 	});
 
+	it("returns to the configured learner for the next game after a fallback", async () => {
+		const configured = "00000000-0000-4000-8000-000000000721";
+		const fresh = "00000000-0000-4000-8000-000000000799";
+		const listed = () =>
+			jsonResponse([{ id: configured, grade: 5, preferred_language: "si" }]);
+		const request = vi.fn().mockResolvedValueOnce(listed());
+		for (let call = 0; call < 6; call += 1) request.mockResolvedValueOnce(clash());
+		request
+			.mockResolvedValueOnce(
+				jsonResponse({ id: fresh, grade: 5, preferred_language: "si" }, 201),
+			)
+			.mockResolvedValueOnce(opened())
+			.mockResolvedValueOnce(listed())
+			.mockResolvedValueOnce(opened());
+		const client = createLearningFlowClient({
+			baseUrl,
+			learnerId: configured,
+			request,
+		});
+
+		await client.open(openBody(configured), "first-game");
+		await client.open(
+			{
+				...openBody(configured),
+				area_id: "G5-AREA-ENG-01",
+				atomic_skill_id: "G5-ENG-BEH-POSTURE-01",
+			},
+			"second-game",
+		);
+
+		const secondInit = request.mock.calls.at(-1)?.[1];
+		if (!secondInit) throw new Error("second open options missing");
+		expect((secondInit.headers as Record<string, string>)["X-Learner-Id"]).toBe(
+			configured,
+		);
+		expect(JSON.parse(String(secondInit.body)).learner_id).toBe(configured);
+	});
+
 	it("keeps the configured learner on a skill it has already played", async () => {
 		const configured = "00000000-0000-4000-8000-000000000721";
 		const request = vi
