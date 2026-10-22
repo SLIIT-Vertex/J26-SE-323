@@ -1,0 +1,561 @@
+{
+  "scenario_id": "pp1-fractions-escalation-fading-v1",
+  "run_at": "2026-10-22T02:40:08+00:00",
+  "provider": "fake",
+  "provider_label": "FAKE PROVIDER REHEARSAL — not Gemini output",
+  "gemini_thinking_level": "(provider default)",
+  "database": "configured",
+  "learner": "configured learner (id withheld)",
+  "question": "Why is 1/2 equal to 2/4?",
+  "language": "en",
+  "notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+  "plan_note": "Expected levels assume every draft is generated and shown; a failed draft is not previous assistance, so later levels legitimately differ.",
+  "provider_call_count": 7,
+  "provider_call_limit": null,
+  "stopped_early": null,
+  "steps": [
+    {
+      "step": "question",
+      "http_seconds": 6.605,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L0",
+      "controller_reason_codes": [
+        "PRE_INTERACTION"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L0.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: REAL/NOT_YET_OBSERVED (adaptive-tutor:assessment-ledger-empty-snapshot)",
+        "ASSISTANCE_HISTORY: REAL/NOT_YET_OBSERVED (adaptive-tutor:interaction-history)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "FAIL (LEVEL_STRUCTURE_VIOLATION)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "expected_level": "L0",
+      "draft_presented": true
+    },
+    {
+      "step": "a1",
+      "http_seconds": 0.027,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L2",
+      "controller_reason_codes": [
+        "FIRST_ATTEMPT",
+        "LOW_MASTERY",
+        "HIGH_ERROR_SEVERITY",
+        "MINIMUM_SUFFICIENT_ASSISTANCE"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L2.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: SYNTHETIC/AVAILABLE (adaptive-tutor:assessment-ledger-controlled)",
+        "ASSISTANCE_HISTORY: REAL/NOT_YET_OBSERVED (adaptive-tutor:interaction-history)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "PASS (LEVEL_STRUCTURE_COMPATIBLE)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "annotation": {
+        "is_correct": false,
+        "severity": 0.7
+      },
+      "expected_level": "L2",
+      "draft_presented": true
+    },
+    {
+      "step": "a2",
+      "http_seconds": 0.024,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L2",
+      "controller_reason_codes": [
+        "REPEATED_DIFFICULTY",
+        "LOW_MASTERY",
+        "HIGH_ERROR_SEVERITY",
+        "PREVIOUS_HINT_INEFFECTIVE",
+        "SUPPORT_MAINTAINED"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L2.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: SYNTHETIC/AVAILABLE (adaptive-tutor:assessment-ledger-controlled)",
+        "ASSISTANCE_HISTORY: SYNTHETIC/AVAILABLE (adaptive-tutor:interaction-history-research-presentation)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "PASS (LEVEL_STRUCTURE_COMPATIBLE)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "annotation": {
+        "is_correct": false,
+        "severity": 0.7
+      },
+      "expected_level": "L2",
+      "draft_presented": true
+    },
+    {
+      "step": "a3",
+      "http_seconds": 0.021,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L3",
+      "controller_reason_codes": [
+        "REPEATED_DIFFICULTY",
+        "LOW_MASTERY",
+        "HIGH_ERROR_SEVERITY",
+        "PREVIOUS_HINT_INEFFECTIVE",
+        "ESCALATION_JUSTIFIED"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L3.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: SYNTHETIC/AVAILABLE (adaptive-tutor:assessment-ledger-controlled)",
+        "ASSISTANCE_HISTORY: SYNTHETIC/AVAILABLE (adaptive-tutor:interaction-history-research-presentation)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "PASS (LEVEL_STRUCTURE_COMPATIBLE)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "annotation": {
+        "is_correct": false,
+        "severity": 0.7
+      },
+      "expected_level": "L3",
+      "draft_presented": true
+    },
+    {
+      "step": "a4",
+      "http_seconds": 0.019,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L4",
+      "controller_reason_codes": [
+        "REPEATED_DIFFICULTY",
+        "LOW_MASTERY",
+        "HIGH_ERROR_SEVERITY",
+        "PREVIOUS_HINT_INEFFECTIVE",
+        "ESCALATION_JUSTIFIED"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L4.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: SYNTHETIC/AVAILABLE (adaptive-tutor:assessment-ledger-controlled)",
+        "ASSISTANCE_HISTORY: SYNTHETIC/AVAILABLE (adaptive-tutor:interaction-history-research-presentation)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "PASS (LEVEL_STRUCTURE_COMPATIBLE)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "annotation": {
+        "is_correct": false,
+        "severity": 0.7
+      },
+      "expected_level": "L4",
+      "draft_presented": true
+    },
+    {
+      "step": "a5",
+      "http_seconds": 0.019,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L3",
+      "controller_reason_codes": [
+        "REPEATED_DIFFICULTY",
+        "LOW_MASTERY",
+        "PREVIOUS_HINT_EFFECTIVE",
+        "FADING_JUSTIFIED"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L3.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: SYNTHETIC/AVAILABLE (adaptive-tutor:assessment-ledger-controlled)",
+        "ASSISTANCE_HISTORY: SYNTHETIC/AVAILABLE (adaptive-tutor:interaction-history-research-presentation)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "PASS (LEVEL_STRUCTURE_COMPATIBLE)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "annotation": {
+        "is_correct": false,
+        "severity": 0.3
+      },
+      "expected_level": "L3",
+      "draft_presented": true
+    },
+    {
+      "step": "a6",
+      "http_seconds": 0.018,
+      "provider_calls": [
+        {
+          "seconds": 0.0,
+          "outcome": "OK"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L0",
+      "controller_reason_codes": [
+        "LOW_MASTERY",
+        "LOW_ERROR_SEVERITY",
+        "PREVIOUS_HINT_EFFECTIVE",
+        "SUCCESS_AFTER_ASSISTANCE",
+        "FADING_JUSTIFIED"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "GENERATED",
+      "experimental_provider_reason_code": null,
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": "[FAKE PROVIDER — NOT GEMINI] Rehearsal draft for L0.",
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: SYNTHETIC/AVAILABLE (adaptive-tutor:assessment-ledger-controlled)",
+        "ASSISTANCE_HISTORY: SYNTHETIC/AVAILABLE (adaptive-tutor:interaction-history-research-presentation)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": {
+        "RESPONSE_STRUCTURE": "PASS (RESPONSE_WELL_FORMED)",
+        "LEVEL_STRUCTURE": "FAIL (LEVEL_STRUCTURE_VIOLATION)",
+        "ANSWER_LEAKAGE": "INDETERMINATE (TRUSTED_ANSWER_NOT_AVAILABLE)",
+        "LANGUAGE_SCRIPT": "PASS (LANGUAGE_SIGNAL_COMPATIBLE)",
+        "CHILD_SAFETY": "PASS (NO_OBVIOUS_UNSAFE_CONTENT)"
+      },
+      "annotation": {
+        "is_correct": true,
+        "severity": 0.0
+      },
+      "expected_level": "L0",
+      "draft_presented": true
+    }
+  ],
+  "history_events": [
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 1,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L0",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 2,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 3,
+      "event_type": "OUTCOME_OBSERVED",
+      "status": "OBSERVED",
+      "assistance_level": null,
+      "provenance": "CONTROLLED_RESEARCH_ANNOTATION"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 4,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L2",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 5,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 6,
+      "event_type": "OUTCOME_OBSERVED",
+      "status": "OBSERVED",
+      "assistance_level": null,
+      "provenance": "CONTROLLED_RESEARCH_ANNOTATION"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 7,
+      "event_type": "EFFECTIVENESS_STATUS_RECORDED",
+      "status": "INEFFECTIVE",
+      "assistance_level": null,
+      "provenance": "RESEARCH_DERIVED:research-hint-effectiveness-v1"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 8,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L2",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 9,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 10,
+      "event_type": "OUTCOME_OBSERVED",
+      "status": "OBSERVED",
+      "assistance_level": null,
+      "provenance": "CONTROLLED_RESEARCH_ANNOTATION"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 11,
+      "event_type": "EFFECTIVENESS_STATUS_RECORDED",
+      "status": "INEFFECTIVE",
+      "assistance_level": null,
+      "provenance": "RESEARCH_DERIVED:research-hint-effectiveness-v1"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 12,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L3",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 13,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 14,
+      "event_type": "OUTCOME_OBSERVED",
+      "status": "OBSERVED",
+      "assistance_level": null,
+      "provenance": "CONTROLLED_RESEARCH_ANNOTATION"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 15,
+      "event_type": "EFFECTIVENESS_STATUS_RECORDED",
+      "status": "INEFFECTIVE",
+      "assistance_level": null,
+      "provenance": "RESEARCH_DERIVED:research-hint-effectiveness-v1"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 16,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L4",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 17,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 18,
+      "event_type": "OUTCOME_OBSERVED",
+      "status": "OBSERVED",
+      "assistance_level": null,
+      "provenance": "CONTROLLED_RESEARCH_ANNOTATION"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 19,
+      "event_type": "EFFECTIVENESS_STATUS_RECORDED",
+      "status": "EFFECTIVE",
+      "assistance_level": null,
+      "provenance": "RESEARCH_DERIVED:research-hint-effectiveness-v1"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 20,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L3",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 21,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 22,
+      "event_type": "OUTCOME_OBSERVED",
+      "status": "OBSERVED",
+      "assistance_level": null,
+      "provenance": "CONTROLLED_RESEARCH_ANNOTATION"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 23,
+      "event_type": "EFFECTIVENESS_STATUS_RECORDED",
+      "status": "EFFECTIVE",
+      "assistance_level": null,
+      "provenance": "RESEARCH_DERIVED:research-hint-effectiveness-v1"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 24,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L0",
+      "provenance": "RESEARCH_LOCAL"
+    },
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 25,
+      "event_type": "RESEARCH_PRESENTATION",
+      "status": "PRESENTED_TO_RESEARCHER",
+      "assistance_level": null,
+      "provenance": "EXPERIMENTAL_UNVERIFIED_RESEARCH_ONLY"
+    }
+  ],
+  "invariants": {
+    "no_learner_delivery_events": true,
+    "no_verified_response_text": true,
+    "no_delivery_authorized": true,
+    "presentation_only_for_generated_drafts": true,
+    "levels_match_full_presentation_plan": true,
+    "scenario_completed": true
+  }
+}

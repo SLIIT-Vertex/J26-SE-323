@@ -91,7 +91,7 @@ def request_for(
 @pytest.mark.parametrize(
     ("level", "expected_instruction"),
     [
-        (AssistanceLevel.INDEPENDENT_RETRY, "one independent attempt"),
+        (AssistanceLevel.INDEPENDENT_RETRY, "neutral encouragement to try the problem again"),
         (AssistanceLevel.METACOGNITIVE_PROMPT, "metacognitive question"),
         (AssistanceLevel.CONCEPTUAL_HINT, "conceptual hint"),
         (AssistanceLevel.TARGETED_HINT, "next useful reasoning step"),

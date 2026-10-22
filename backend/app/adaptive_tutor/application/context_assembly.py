@@ -1,6 +1,6 @@
 from collections.abc import Collection
 from enum import StrEnum
-from typing import Annotated, Literal, Protocol, Self
+from typing import Annotated, Any, Literal, Protocol, Self
 from uuid import UUID
 
 from pydantic import (
@@ -277,15 +277,26 @@ class AssessmentEvidenceResult(BaseModel):
         return self
 
 
+class AssistanceHistoryBasis(StrEnum):
+    """What made the previous assistance count as seen."""
+
+    VERIFIED_DELIVERY = "VERIFIED_DELIVERY"
+    RESEARCH_PRESENTATION = "RESEARCH_PRESENTATION"
+
+
 class AssistanceHistoryResult(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     status: EvidenceStatus
     previous_assistance_level: AssistanceLevel | None = None
     previous_hint_effective: StrictBool | None = None
+    basis: AssistanceHistoryBasis | None = None
 
     @model_validator(mode="after")
     def validate_status(self) -> Self:
+        if self.status is not EvidenceStatus.AVAILABLE and self.basis is not None:
+            raise ValueError("only AVAILABLE history may state its basis")
+
         if self.status is EvidenceStatus.NOT_YET_OBSERVED:
             if (
                 self.previous_assistance_level is not None
@@ -574,7 +585,7 @@ class TutorContextAssembler:
             skill_id=request.skill_id,
         )
         try:
-            raw_result = self._mastery_provider.get_mastery(mastery_request)
+            raw_result, source = _sourced(self._mastery_provider, "get_mastery", mastery_request)
         except Exception:  # noqa: BLE001 - integration boundary fails closed
             _append_provider_provenance(
                 provenance,
@@ -590,7 +601,7 @@ class TutorContextAssembler:
             _append_provider_provenance(
                 provenance,
                 ContextInput.MASTERY,
-                self._mastery_provider.source,
+                source,
                 EvidenceStatus.INVALID_EVIDENCE,
             )
             return None, _issue(
@@ -599,9 +610,7 @@ class TutorContextAssembler:
                 ContextReadinessReason.MASTERY_INVALID,
                 "Mastery evidence is invalid or does not match the request.",
             )
-        _append_provider_provenance(
-            provenance, ContextInput.MASTERY, self._mastery_provider.source, result.status
-        )
+        _append_provider_provenance(provenance, ContextInput.MASTERY, source, result.status)
         if result.status is MasteryStatus.AVAILABLE:
             return result, None
         return None, _mastery_status_issue(result.status)
@@ -612,7 +621,7 @@ class TutorContextAssembler:
         provenance: list[ContextEvidenceProvenance],
     ) -> tuple[SupportNeedResult | None, ContextIssue | None]:
         try:
-            raw_result = self._support_need_provider.get_support_need(request)
+            raw_result, source = _sourced(self._support_need_provider, "get_support_need", request)
         except Exception:  # noqa: BLE001 - integration boundary fails closed
             _append_provider_provenance(
                 provenance,
@@ -627,7 +636,7 @@ class TutorContextAssembler:
             _append_provider_provenance(
                 provenance,
                 ContextInput.SUPPORT_NEED,
-                self._support_need_provider.source,
+                source,
                 EvidenceStatus.INVALID_EVIDENCE,
             )
             return None, _issue(
@@ -636,12 +645,7 @@ class TutorContextAssembler:
                 ContextReadinessReason.SUPPORT_NEED_INVALID,
                 "Support-need evidence must be a reviewed normalized numeric value.",
             )
-        _append_provider_provenance(
-            provenance,
-            ContextInput.SUPPORT_NEED,
-            self._support_need_provider.source,
-            result.status,
-        )
+        _append_provider_provenance(provenance, ContextInput.SUPPORT_NEED, source, result.status)
         if result.status is EvidenceStatus.AVAILABLE:
             return result, None
         return None, _status_issue(ContextInput.SUPPORT_NEED, result.status)
@@ -722,10 +726,13 @@ class TutorContextAssembler:
                 ContextReadinessReason.ASSISTANCE_HISTORY_INVALID,
                 "Assistance-history evidence is internally inconsistent.",
             )
+        source_for_result = getattr(self._history_provider, "source_for_result", None)
         _append_provider_provenance(
             provenance,
             ContextInput.ASSISTANCE_HISTORY,
-            self._history_provider.source,
+            source_for_result(result)
+            if callable(source_for_result)
+            else self._history_provider.source,
             result.status,
         )
         if result.status in {
@@ -735,6 +742,16 @@ class TutorContextAssembler:
         }:
             return result, None
         return None, _status_issue(ContextInput.ASSISTANCE_HISTORY, result.status)
+
+
+def _sourced(provider: Any, method: str, request: object) -> tuple[object, EvidenceSource]:
+    """Prefer a provider's per-value ``<method>_with_source``; else its declared source."""
+
+    with_source = getattr(provider, f"{method}_with_source", None)
+    if callable(with_source):
+        result, source = with_source(request)
+        return result, EvidenceSource.model_validate(source, from_attributes=True)
+    return getattr(provider, method)(request), provider.source
 
 
 def _append_provider_provenance(

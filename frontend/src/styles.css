@@ -4479,3 +4479,14 @@ p {
 		scroll-behavior: auto;
 	}
 }
+
+.mindy-chat .synthetic-flag p,
+.mindy-chat .synthetic-flag ul {
+	margin: 0;
+}
+
+.mindy-chat .synthetic-flag ul {
+	margin-top: 0.35rem;
+	padding-left: 1.1rem;
+	font-weight: 600;
+}

@@ -206,8 +206,11 @@ _LANGUAGE_NAMES = {"si": "Sinhala", "ta": "Tamil", "en": "English"}
 
 _LEVEL_INSTRUCTIONS = {
     AssistanceLevel.INDEPENDENT_RETRY: (
-        "Encourage one independent attempt. Do not give a hint, steps, worked example, "
-        "solution, or final answer."
+        "Write at most two short sentences of neutral encouragement to try the problem again "
+        "independently; you may invite the learner to share their answer or thinking. Say "
+        "nothing about the mathematics: no concepts, comparisons, objects or drawings to use, "
+        "strategies, guiding questions that point to a method, steps, formulas, numbers, "
+        "intermediate results, worked examples, or final answer."
     ),
     AssistanceLevel.METACOGNITIVE_PROMPT: (
         "Ask one concise metacognitive question about the learner's approach. Do not give a "

@@ -348,7 +348,7 @@ function TutorReply({
             <svg className="research-chevron" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" /></svg>
             <span>Researcher</span>
             <span className="research-summary-meta">{summary}</span>
-            {usesSynthetic ? <span className="research-summary-flag">Synthetic data</span> : null}
+            {usesSynthetic ? <span className="research-summary-flag">Not real student data</span> : null}
           </summary>
           <div className="research-details-body">
             <ResearchDiagnostics result={result} />

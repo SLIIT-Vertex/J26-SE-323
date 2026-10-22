@@ -243,7 +243,7 @@ describe("Mindy research chat", () => {
     expect(details?.open).toBe(false);
     expect(details?.querySelector("summary")?.textContent).toContain("Researcher");
     expect(details?.querySelector("summary")?.textContent).toContain("L0 · Not delivered · Draft ready");
-    expect(details?.querySelector(".research-summary-flag")?.textContent).toBe("Synthetic data");
+    expect(details?.querySelector(".research-summary-flag")?.textContent).toBe("Not real student data");
     expect(details?.querySelector(".research-chevron")).not.toBeNull();
 
     await act(async () => details?.querySelector("summary")?.click());
@@ -282,8 +282,9 @@ describe("Mindy research chat", () => {
     await askQuestion("Explain equivalent fractions.");
 
     const tools = lastDetails();
+    // An unrecognised source is reported as plain synthetic data with its ID, never guessed.
     expect(tools?.querySelector('[role="note"]')?.textContent).toContain(
-      "Synthetic defaults used for Mastery (knowledge tracing)",
+      "Mastery (knowledge tracing) (synthetic): synthetic or test data (source pp1-default).",
     );
     const synthetic = tools?.querySelector('li[data-origin="SYNTHETIC"]');
     expect(synthetic?.textContent).toContain("Mastery (knowledge tracing)");
@@ -299,6 +300,58 @@ describe("Mindy research chat", () => {
     expect(technical?.querySelector("summary")?.textContent).toBe("Technical details");
     expect(technical?.textContent).toContain("L0 — Independent retry");
     expect(technical?.textContent).toContain("PRE_INTERACTION");
+  });
+
+  it("explains each research evidence source instead of calling it a default", async () => {
+    const provenance = [
+      { input: "SKILL_MAPPING", source_id: "skill-mapper:e5", origin: "REAL", status: "MATCHED" },
+      { input: "MASTERY", source_id: "knowledge-tracing:mastery-service", origin: "REAL", status: "AVAILABLE" },
+      {
+        input: "SUPPORT_NEED",
+        source_id: "adaptive-tutor:experimental-missing-support-need-default",
+        origin: "SYNTHETIC",
+        status: "AVAILABLE",
+      },
+      { input: "ASSESSMENT", source_id: "adaptive-tutor:assessment-ledger-controlled", origin: "SYNTHETIC", status: "AVAILABLE" },
+      {
+        input: "ASSISTANCE_HISTORY",
+        source_id: "adaptive-tutor:interaction-history-research-presentation",
+        origin: "SYNTHETIC",
+        status: "AVAILABLE",
+      },
+    ];
+    await render(api({ ask: vi.fn(async () => ({ ...experimental, context_provenance: provenance })) }));
+    await askQuestion("Explain equivalent fractions.");
+
+    const tools = lastDetails();
+    const badge = (input: string) =>
+      [...(tools?.querySelectorAll(".evidence-list li") ?? [])]
+        .find((item) => item.textContent?.startsWith(input))
+        ?.querySelector(".origin-badge")?.textContent;
+    expect(badge("Mastery (knowledge tracing)")).toBe("Real");
+    expect(badge("Support need (learner state)")).toBe("Cold-start default");
+    expect(badge("Assessment evidence")).toBe("Researcher-entered");
+    expect(badge("Help history")).toBe("Derived (research)");
+
+    const note = tools?.querySelector('[role="note"]')?.textContent ?? "";
+    expect(note).toContain("not real student data");
+    expect(note).not.toContain("Mastery");
+    expect(note).toContain("not observed from a student");
+    expect(note).toContain("nothing was delivered to a learner");
+    expect(note).not.toContain("placeholders, not real learner evidence");
+  });
+
+  it.each([
+    ["google-gemini", "Google Gemini API"],
+    ["fake-rehearsal-not-gemini", "Fake rehearsal provider — not Gemini output"],
+    ["deterministic-fake-llm", "deterministic-fake-llm — not Gemini output"],
+  ])("labels the %s draft source without calling a fake Gemini", async (name, label) => {
+    await render(api({ ask: vi.fn(async () => ({ ...experimental, experimental_provider_name: name })) }));
+    await askQuestion("Explain equivalent fractions.");
+
+    const source = lastDetails()?.querySelector(".draft-source")?.textContent ?? "";
+    expect(source).toContain(label);
+    if (name !== "google-gemini") expect(source).not.toContain("Google Gemini API");
   });
 
   it("shows failed requests inline and retries the same question", async () => {
