@@ -316,6 +316,7 @@ class ResearchAuthorizationResponse(BaseModel):
     researcher_authorized: bool = True
     execution_mode: str = "research-local"
     child_delivery_enabled: bool = False
+    severity_policy_versions: tuple[str, ...] = ()
 
 
 class StartResearchSessionResponse(BaseModel):
@@ -387,6 +388,7 @@ class ResearchInteractionResponse(BaseModel):
     delivery_authorized: bool
     confirmed_skill_id: NonBlankText | None = None
     skill_mapping_status: SkillMappingStatus | None = None
+    skill_mapping_reason_codes: tuple[SkillMappingReasonCode, ...] = ()
     assistance_level: AssistanceLevel | None = None
     controller_reason_codes: tuple[DecisionReasonCode, ...] = ()
     context_issue_codes: tuple[ContextReadinessReason, ...] = ()
@@ -431,6 +433,7 @@ class ResearchInteractionResponse(BaseModel):
             delivery_authorized=approved,
             confirmed_skill_id=result.confirmed_skill_id,
             skill_mapping_status=result.skill_mapping_status,
+            skill_mapping_reason_codes=result.skill_mapping_reason_codes,
             assistance_level=result.assistance_level,
             controller_reason_codes=result.controller_reason_codes,
             context_issue_codes=tuple(issue.reason for issue in result.context_issues),

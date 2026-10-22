@@ -1,7 +1,8 @@
+import json
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from sqlalchemy import create_engine, select
@@ -27,13 +28,21 @@ from app.adaptive_tutor.application.orchestration import (
     TutorOrchestrator,
     TutorWorkflowStatus,
 )
-from app.adaptive_tutor.application.skill_mapper_contracts import SkillMappingResult
+from app.adaptive_tutor.application.skill_mapper_contracts import (
+    ConversationTurn,
+    SkillMappingResult,
+)
 from app.adaptive_tutor.application.verification import (
     DeterministicFakeSemanticVerifier,
     SemanticVerificationResult,
     VerificationCheckOutcome,
 )
-from app.adaptive_tutor.domain import AssistanceLevel, LearningIntent, SkillMappingStatus
+from app.adaptive_tutor.domain import (
+    AssistanceLevel,
+    LearningIntent,
+    SkillMappingReasonCode,
+    SkillMappingStatus,
+)
 from app.adaptive_tutor.infrastructure.assessment_evidence import (
     LedgerAssessmentEvidenceProvider,
 )
@@ -48,7 +57,9 @@ from app.adaptive_tutor.infrastructure.research_sessions import (
     ExperimentalHintGenerator,
     ResearchAttemptAnnotation,
     ResearchSessionError,
+    ResearchTurn,
     ResearchTutorService,
+    _continue_active_topic,
 )
 from app.adaptive_tutor.infrastructure.synthetic_orchestration import (
     SyntheticCurriculumRetriever,
@@ -73,7 +84,9 @@ LEARNER_ID = UUID("00000000-0000-4000-8000-000000000221")
 RESEARCHER_ID = UUID("00000000-0000-4000-8000-000000000222")
 NOW = datetime(2026, 10, 19, 12, tzinfo=UTC)
 POLICY = "controlled-research-severity-v1"
-SOURCE = EvidenceSource(source_id="MOCKED:test:controlled-research", origin=EvidenceOrigin.SYNTHETIC)
+SOURCE = EvidenceSource(
+    source_id="MOCKED:test:controlled-research", origin=EvidenceOrigin.SYNTHETIC
+)
 
 
 class ArbitraryQuestionMapper:
@@ -861,3 +874,181 @@ def test_research_sessions_do_not_share_assistance_history() -> None:
         assert fresh.result.assistance_level is AssistanceLevel.CONCEPTUAL_HINT
         assert "MINIMUM_SUFFICIENT_ASSISTANCE" in codes
         assert history_provenance(fresh).status != "AVAILABLE"
+
+
+class FollowUpMapper(ArbitraryQuestionMapper):
+    """Matches only explicit fraction questions; vague follow-ups come back AMBIGUOUS."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.requests: list[object] = []
+
+    def map(self, request: object) -> SkillMappingResult:
+        self.requests.append(request)
+        if "1/2" in request.learner_message:
+            return super().map(request)
+        return SkillMappingResult(
+            status=SkillMappingStatus.AMBIGUOUS,
+            intent=LearningIntent.EXPLANATION_REQUEST,
+            candidate_skills=(),
+            clarification_needed=True,
+            clarification_question="Is your question about Proverbs or Reading Comprehension?",
+        )
+
+
+def test_vague_follow_up_stays_on_the_session_topic_with_conversation() -> None:
+    """The reported case: a follow-up after a matched Fractions question asked to clarify."""
+
+    with research_engine() as session:
+        client = RecordingGeminiClient()
+        mapper = FollowUpMapper()
+        service, _ = build_service(
+            session, mapper=mapper, experimental_generator=experimental_generator(client)
+        )
+        research, token = service.start(researcher_id=RESEARCHER_ID, learner_id=LEARNER_ID, now=NOW)
+        first = service.ask(
+            research.session_id,
+            token,
+            question="first why is 1/2 equal to 2/4?",
+            language="en",
+            now=NOW,
+        )
+        service.submit_attempt(
+            research.session_id, token, first.interaction_id, reviewed("h1"), now=NOW
+        )
+
+        follow_up = service.ask(
+            research.session_id,
+            token,
+            question="i have no idea how can that process ?",
+            language="en",
+            now=NOW + timedelta(seconds=1),
+        )
+
+        assert follow_up.skill_id == "MAT-FRC"
+        assert follow_up.result.status is not TutorWorkflowStatus.CLARIFICATION_REQUIRED
+        assert follow_up.skill_mapping.reason_codes == (
+            SkillMappingReasonCode.CONVERSATION_CONTEXT_USED,
+            SkillMappingReasonCode.ACTIVE_SKILL_USED,
+        )
+        assert follow_up.skill_mapping.confidence == first.skill_mapping.confidence
+        sent = mapper.requests[-1]
+        assert sent.active_skill_id == "MAT-FRC"
+        assert sent.conversation_context[0].message == "first why is 1/2 equal to 2/4?"
+        assert sent.conversation_context[1].role == "TUTOR"
+        response = ResearchInteractionResponse.from_turn(research.session_id, follow_up)
+        assert response.skill_mapping_reason_codes == follow_up.skill_mapping.reason_codes
+        assert response.delivery_authorized is False
+
+
+def test_first_vague_message_still_asks_for_clarification() -> None:
+    with research_engine() as session:
+        service, _ = build_service(session, mapper=FollowUpMapper())
+        research, token = service.start(researcher_id=RESEARCHER_ID, learner_id=LEARNER_ID, now=NOW)
+
+        turn = service.ask(
+            research.session_id, token, question="i have no idea", language="en", now=NOW
+        )
+
+        assert turn.skill_id is None
+        assert turn.result.status is TutorWorkflowStatus.CLARIFICATION_REQUIRED
+
+
+def matched(skill_id: str) -> SkillMappingResult:
+    return SkillMappingResult(
+        status=SkillMappingStatus.MATCHED,
+        intent=LearningIntent.EXPLANATION_REQUEST,
+        skill_id=skill_id,
+        confidence=0.9,
+        clarification_needed=False,
+    )
+
+
+def anchor_turn() -> ResearchTurn:
+    return ResearchTurn(
+        interaction_id=uuid4(),
+        interaction_sequence=1,
+        decision_id=None,
+        question="why is 1/2 equal to 2/4?",
+        language="en",
+        skill_mapping=matched("MAT-FRC"),
+        skill_id="MAT-FRC",
+        result=None,  # type: ignore[arg-type]
+    )
+
+
+@pytest.mark.parametrize(
+    "mapping",
+    [
+        matched("MAT-OPS"),
+        SkillMappingResult(
+            status=SkillMappingStatus.NOT_SKILL_RELATED,
+            intent=LearningIntent.GREETING,
+            clarification_needed=False,
+        ),
+    ],
+)
+def test_a_new_topic_or_greeting_is_not_forced_onto_the_active_skill(
+    mapping: SkillMappingResult,
+) -> None:
+    assert _continue_active_topic(mapping, anchor_turn()) == mapping
+
+
+def test_no_match_continues_and_l0_drafts_omit_earlier_conversation() -> None:
+    no_match = SkillMappingResult(
+        status=SkillMappingStatus.NO_MATCH,
+        intent=LearningIntent.EXPLANATION_REQUEST,
+        clarification_needed=False,
+    )
+    assert _continue_active_topic(no_match, anchor_turn()).skill_id == "MAT-FRC"
+    assert _continue_active_topic(no_match, None) == no_match
+
+    client = RecordingGeminiClient()
+    generator = experimental_generator(client)
+    earlier = (ConversationTurn(role="LEARNER", message="why is 1/2 equal to 2/4?"),)
+    for level in (AssistanceLevel.INDEPENDENT_RETRY, AssistanceLevel.CONCEPTUAL_HINT):
+        generator.generate(
+            learner_id=LEARNER_ID,
+            question="i have no idea",
+            language="en",
+            assistance_level=level,
+            skill_id="MAT-FRC",
+            conversation=earlier,
+        )
+    payloads = [json.loads(str(call["contents"]).split("\n", 1)[1]) for call in client.models.calls]
+    assert payloads[0]["earlier_conversation"] == []
+    assert payloads[1]["earlier_conversation"] == [
+        {"role": "LEARNER", "message": "why is 1/2 equal to 2/4?"}
+    ]
+
+
+@pytest.mark.parametrize(
+    ("annotation", "message"),
+    [
+        (
+            replace(reviewed("p1"), severity_policy_version="pp1-controlled-research"),
+            f"severity policy version is not configured for research; use one of: {POLICY}",
+        ),
+        (
+            replace(reviewed("p2"), reviewer_confirmed=False),
+            "research severity annotation must be reviewer-confirmed",
+        ),
+    ],
+)
+def test_rejected_annotations_say_which_check_failed(
+    annotation: ResearchAttemptAnnotation, message: str
+) -> None:
+    with research_engine() as session:
+        service, _ = build_service(session)
+        research, token = service.start(researcher_id=RESEARCHER_ID, learner_id=LEARNER_ID, now=NOW)
+        first = service.ask(
+            research.session_id, token, question="Fractions?", language="en", now=NOW
+        )
+
+        with pytest.raises(PermissionError) as raised:
+            service.submit_attempt(
+                research.session_id, token, first.interaction_id, annotation, now=NOW
+            )
+
+        assert str(raised.value) == message
+        assert service.severity_policy_versions == (POLICY,)

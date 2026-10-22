@@ -51,6 +51,8 @@ export function ResearchDiagnostics({ result }: { result: Interaction }) {
   const provenance = result.context_provenance ?? [];
   const synthetic = provenance.filter((item) => item.origin !== "REAL");
   const matched = result.skill_mapping_status === "MATCHED";
+  // A vague follow-up kept on the session's topic, not matched from the message itself.
+  const continuedTopic = matched && (result.skill_mapping_reason_codes ?? []).includes("ACTIVE_SKILL_USED");
   const draftGenerated = Boolean(result.experimental_response_text);
 
   return (
@@ -59,7 +61,7 @@ export function ResearchDiagnostics({ result }: { result: Interaction }) {
         <Tile
           label="Skill"
           value={result.confirmed_skill_id ?? "Not confirmed"}
-          note={humanize(result.skill_mapping_status)}
+          note={continuedTopic ? "Continued from earlier question" : humanize(result.skill_mapping_status)}
           tone={matched ? "ok" : "warn"}
         />
         <Tile

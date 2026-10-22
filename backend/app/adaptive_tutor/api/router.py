@@ -347,7 +347,7 @@ def research_status(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "Reviewed research provider composition is not configured.",
         )
-    return ResearchAuthorizationResponse()
+    return ResearchAuthorizationResponse(severity_policy_versions=service.severity_policy_versions)
 
 
 @router.post(
