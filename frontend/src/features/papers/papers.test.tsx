@@ -907,3 +907,76 @@ describe("making the weekly paper", () => {
     expect(posts).toEqual([{ body: undefined }]);
   });
 });
+
+// ---- a replaced (cancelled) paper is never listed -------------------------------------------------------------
+
+describe("cancelled papers", () => {
+  const paper = (id: string, status: string, week = "2026-10-10") => ({
+    paper_id: id,
+    code: id.toUpperCase(),
+    status,
+    mode: "diagnostic",
+    language: "si",
+    week_start: week,
+    next_paper_date: "2026-10-17",
+    page_count: 1,
+    question_count: 8,
+    estimated_minutes: 10,
+    pdf_url: "/x.pdf",
+    created_at: null,
+    skipped_skills: [],
+    pages: [],
+  });
+  const waiting = {
+    state: "not_yet_eligible",
+    can_generate: false,
+    joined_at: "2026-10-18T00:00:00Z",
+    eligible_from: "2026-10-25T00:00:00Z",
+    days_until_eligible: 3,
+    week_start: "2026-10-17",
+    next_paper_date: "2026-10-24",
+    paper: null,
+  };
+
+  function backend(list: object[], history: object[]) {
+    vi.stubGlobal("fetch", async (url: string) => {
+      const address = String(url);
+      const body = address.endsWith("/availability")
+        ? waiting
+        : address.endsWith("/papers/history")
+          ? history
+          : address.endsWith("/papers?limit=20")
+            ? list
+            : { id: SHARED_LEARNER_ID, grade: 5, preferred_language: "si", created_at: "2026-10-01T00:00:00Z" };
+      return new Response(JSON.stringify(body), { status: 200 });
+    });
+  }
+
+  it("does not show them under earlier papers", async () => {
+    backend([paper("old1", "cancelled"), paper("kept", "graded"), paper("old2", "cancelled")], []);
+
+    await show(<PapersApp embedded route={{ name: "papers" }} />);
+
+    const rows = [...host.querySelectorAll("a.mb-paper-row")];
+    expect(rows.length).toBe(1);
+    expect(rows[0].getAttribute("href")).toContain("kept");
+  });
+
+  it("shows no earlier-papers section when every old paper was cancelled", async () => {
+    backend([paper("old1", "cancelled"), paper("old2", "cancelled")], []);
+
+    await show(<PapersApp embedded route={{ name: "papers" }} />);
+
+    expect(host.querySelector("a.mb-paper-row")).toBeNull();
+  });
+
+  it("does not show them in the past papers either", async () => {
+    const done = { ...paper("kept", "confirmed"), results: null, results_complete: false };
+    const gone = { ...paper("old", "cancelled"), results: null, results_complete: false };
+    backend([], [gone, done]);
+
+    await show(<PapersApp embedded route={{ name: "history" }} />);
+
+    expect(host.querySelectorAll("li.mb-past").length).toBe(1);
+  });
+});

@@ -180,8 +180,11 @@ export function PapersHome({ learnerId }: { learnerId: string }) {
   const list = useAsync(() => listPapers(learnerId), `papers:${learnerId}`);
 
   const current = availability.state.status === "ready" ? availability.state.data : null;
+  // a cancelled paper was replaced by another one, so it is not listed
   const earlier =
-    list.state.status === "ready" ? list.state.data.filter((paper) => paper.paper_id !== current?.paper?.paper_id) : [];
+    list.state.status === "ready"
+      ? list.state.data.filter((paper) => paper.paper_id !== current?.paper?.paper_id && paper.status !== "cancelled")
+      : [];
 
   return (
     <>

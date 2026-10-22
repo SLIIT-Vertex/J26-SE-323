@@ -52,12 +52,13 @@ def simulate(num_students=NUM_STUDENTS, seed=DATA_SEED):
     rows = []
     DIFF_LEVELS = np.array([0.0, 0.15, 0.30])      # easy / medium / hard (known from the question bank)
     for uid in range(num_students):
+        # each simulated student only ever practises 3 to 5 of the 30 skills
         focus = rng.choice(NUM_SKILLS, size=rng.integers(3, 6), replace=False)
         lr = rng.uniform(0.04, 0.12)               # this student's learning speed
         forget = rng.uniform(0.001, 0.006)         # this student's forgetting speed
         mastery = {int(s): rng.uniform(0.0, 0.25) for s in focus}
         last_seen = {int(s): 0 for s in focus}
-        n_steps = int(rng.integers(80, 141))
+        n_steps = int(rng.integers(80, 141))       # 80 to 140 answers, so the history cap of 140 matches
         cur = int(rng.choice(focus))
         for t in range(n_steps):
             if rng.random() > 0.6:                 # 60% stay on the same skill (study in blocks)
@@ -65,9 +66,11 @@ def simulate(num_students=NUM_STUDENTS, seed=DATA_SEED):
             m = mastery[cur] * np.exp(-forget * (t - last_seen[cur]))
             source = DIGITAL if rng.random() < 0.70 else PAPER
             diff = float(rng.choice(DIFF_LEVELS))
+            # games get a boost and more guessing than paper, this is the gap the source flag has to learn
             ability = m + (0.20 if source == DIGITAL else 0.0) - diff
             guess = 0.25 if source == DIGITAL else 0.10
             slip = 0.08
+            # p_true is the real chance of a right answer; the oracle AUC is computed from it
             p_true = guess + (1 - guess - slip) * sigmoid(10.0 * (ability - 0.5))
             correct = int(rng.random() < p_true)
             if source == DIGITAL:
@@ -95,6 +98,7 @@ print(df.groupby('source')['correct'].mean().rename({0: 'paper', 1: 'digital'}).
 
 # Cell 3 — student-level split
 from sklearn.model_selection import train_test_split
+# the split is by student, so no student's answers are in both training and testing
 ids = np.arange(NUM_STUDENTS)
 train_ids, test_ids = train_test_split(ids, test_size=0.15, random_state=DATA_SEED)
 train_ids, val_ids = train_test_split(train_ids, test_size=0.15 / 0.85, random_state=DATA_SEED)
@@ -213,6 +217,7 @@ def run_epoch(model, loader_, w_paper, optimizer=None):
             skills, corrects, sources, penalties, diffs, mask = to_dev(batch)
             logits = model(skills, corrects, sources, penalties, diffs)
             y, m, s = corrects[:, 1:], mask[:, 1:], sources[:, 1:]
+            # paper answers count w_paper times more in the loss (2.0 for variant C), game answers count 1
             w = torch.where(s == PAPER, torch.tensor(w_paper, device=device), torch.tensor(1.0, device=device)) * m
             loss = (bce(logits, y) * w).sum() / w.sum()
             if train:
@@ -233,6 +238,7 @@ def fit_model(use_source, w_paper, seed):
         run_epoch(model, tl, w_paper, opt)
         _, y, p, _ = run_epoch(model, val_loader, 1.0)
         auc = roc_auc_score(y, p)
+        # early stopping: keep the epoch with the best validation AUC, stop after 6 epochs with no gain
         if auc > best_auc + 1e-4:
             best_auc, best_state, bad = auc, copy.deepcopy(model.state_dict()), 0
         else:
@@ -262,6 +268,8 @@ for name, cfg in VARIANTS.items():
         r = report(f'{name} (seed {seed})', y, p, s)
         r['val_AUC'] = val_auc; r['epochs'] = ep; r['logloss'] = log_loss(y, np.clip(p, 1e-6, 1 - 1e-6))
         results.append(r)
+        # the saved weights are the best of the 3 seeds of variant C, picked by test AUC, so this single number
+        # is a little optimistic; the mean and std over seeds in the summary table below is the fairer figure
         if name.startswith('C') and (seed == SEEDS[0] or r['AUC_all'] > best_overall['auc']):
             best_overall = {'auc': r['AUC_all'], 'state': copy.deepcopy(model.state_dict())}
         print(f"{name} seed {seed}: test AUC {r['AUC_all']:.4f} (paper {r['AUC_paper']:.4f}, digital {r['AUC_digital']:.4f}) "

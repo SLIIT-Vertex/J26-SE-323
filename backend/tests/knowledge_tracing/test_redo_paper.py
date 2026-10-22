@@ -157,3 +157,33 @@ def test_a_mode_named_in_the_request_beats_the_default(world: dict, client, defa
     default_mode("practice")
 
     assert client.post(f"/api/v1/learners/{learner_id}/papers", json={"mode": "diagnostic"}).json()["mode"] == "diagnostic"
+
+
+def test_keep_answers_clears_a_marked_paper_and_the_childs_history_stays(world: dict) -> None:
+    learner_id = learner(world)
+    give_history(world, learner_id)
+    svc = service(world)
+    paper = svc.generate_weekly(learner_id).paper
+    mark_one_answer(world, learner_id, paper.id)
+    paper_answers = select(func.count()).select_from(AttemptModel).where(AttemptModel.source == 0)
+
+    done = redo_paper(world["db"], svc, mastery_for(world), learner_id, REQUEST, keep_answers=True)
+
+    assert done.cancelled is not None and done.removed_answers == 0 and done.new.created
+    assert world["db"].get(PaperModel, paper.id).status == "cancelled"
+    assert world["db"].scalar(paper_answers) == 1  # the model still has the answer the paper gave it
+
+
+def test_the_model_estimates_do_not_change_when_a_marked_paper_is_cleared_keeping_its_answers(world: dict) -> None:
+    learner_id = learner(world)
+    give_history(world, learner_id)
+    svc = service(world)
+    paper = svc.generate_weekly(learner_id).paper
+    mark_one_answer(world, learner_id, paper.id)
+    mastery = mastery_for(world)
+    before = [(s.code, s.mastery, s.attempts) for s in mastery.refresh(learner_id).skills]
+
+    redo_paper(world["db"], svc, mastery, learner_id, REQUEST, keep_answers=True, make_new=False)
+
+    after = [(s.code, s.mastery, s.attempts) for s in mastery.refresh(learner_id).skills]
+    assert after == before

@@ -23,6 +23,7 @@ def build_arrays(history: Sequence[HistoryItem], cap: int) -> HistoryArrays:
     Only skill, correctness, source and penalty are fed to the model for past steps;
     difficulty is used for the question being asked, not for history.
     """
+    # only the latest 140 answers: the model was trained on histories of at most 140 steps
     window = list(history)[-cap:] if cap > 0 else []
     return HistoryArrays(
         skills=[item.skill_index for item in window],

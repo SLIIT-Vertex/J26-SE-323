@@ -38,6 +38,7 @@ def predict(
         base = torch.tensor(np.asarray(history), dtype=torch.float32)[None].repeat(n, 1)
         return torch.cat([base, torch.as_tensor(extra, dtype=torch.float32)[:, None]], dim=1)
 
+    # one copy of the child's history per skill we want to ask about, each with one extra made-up step at the end
     skill_tensor = torch.cat(
         [
             torch.tensor(list(skills), dtype=torch.long)[None].repeat(n, 1),
@@ -45,13 +46,14 @@ def predict(
         ],
         dim=1,
     )
-    corrects_tensor = with_query(corrects, np.zeros(n))
-    sources_tensor = with_query(sources, np.full(n, float(query_source)))
+    corrects_tensor = with_query(corrects, np.zeros(n))  # the answer of the made-up step is not used
+    sources_tensor = with_query(sources, np.full(n, float(query_source)))  # ask as if it is a paper question
     penalties_tensor = with_query(penalties, np.zeros(n))
     diffs_tensor = with_query(np.zeros(len(skills)), np.asarray(query_difficulties, dtype=float))
 
     model.eval()
     logits = model(skill_tensor, corrects_tensor, sources_tensor, penalties_tensor, diffs_tensor)
+    # the last logit is the prediction for the made-up question; sigmoid turns it into a chance between 0 and 1
     return torch.sigmoid(logits[:, -1]).numpy()
 
 

@@ -15,8 +15,12 @@ class MindBridgeDKT(nn.Module):
     ) -> None:
         super().__init__()
         self.use_source = use_source
+        # each of the 30 skills becomes a list of 32 numbers the network can learn
         self.skill_emb = nn.Embedding(num_skills, emb)
+        # the gru reads the history one answer at a time and keeps a memory of it.
+        # per answer it gets: skill (32 numbers) + correct + source + penalty = emb + 3
         self.gru = nn.GRU(emb + 3, hidden, num_layers=2, batch_first=True, dropout=0.3)
+        # the head turns "memory + next question" into one number
         self.head = nn.Sequential(
             nn.Linear(hidden + emb + 2, 64), nn.ReLU(), nn.Dropout(0.2), nn.Linear(64, 1)
         )
@@ -29,8 +33,11 @@ class MindBridgeDKT(nn.Module):
         penalties: torch.Tensor,
         diffs: torch.Tensor,
     ) -> torch.Tensor:
+        # use_source=False hides game/paper from the model (used for the no-source test in training)
         src = sources if self.use_source else torch.zeros_like(sources)
         e = self.skill_emb(skills)
         h, _ = self.gru(torch.cat([e, corrects[..., None], src[..., None], penalties[..., None]], -1))
+        # the memory after step t is paired with the question at step t+1, so every step predicts the next answer.
+        # difficulty comes in only here (for the next question), never for the past answers
         q = torch.cat([e[:, 1:], src[:, 1:, None], diffs[:, 1:, None]], -1)  # next question's info
         return self.head(torch.cat([h[:, :-1], q], -1)).squeeze(-1)  # logits for steps 1..T-1

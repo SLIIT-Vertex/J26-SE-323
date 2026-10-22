@@ -176,6 +176,7 @@ def classify_skills(
     weak: dict[str, SkillState] = {}
     for s in known:
         assert s.mastery is not None
+        # a skill enters "weak" below 0.60, but only leaves once it reaches 0.70 (so it does not flip back and forth)
         limit = config.weak_exit if s.was_weak else config.weak_enter
         if s.mastery < limit:
             weak[s.code] = s
@@ -204,7 +205,9 @@ def classify_skills(
 
 
 def _needs_verification(state: SkillState, config: SelectionConfig) -> bool:
-    """Game accuracy is high, but the paper has not confirmed it yet."""
+    """Game accuracy is high, but the paper has not confirmed it yet.
+
+    This is the hybrid idea: a skill the child does well in games is checked on paper before we trust it."""
     if state.digital_attempts < config.verify_min_digital:
         return False
     accuracy = state.digital_correct / state.digital_attempts
@@ -234,9 +237,10 @@ def question_value(
         need = config.unknown_need
         fit = config.unknown_fit[DIFFICULTIES.index(candidate.difficulty)]
     else:
+        # need = how far the skill is below 0.80, fit = how close the child's chance on this question is to 0.60
         need = max(config.need_floor, config.target_mastery - state.mastery)
         fit = stretch(predicted_p, config)
-    value = need * fit
+    value = need * fit  # the knapsack tries to collect as much of this value as the page and time limits allow
     if focus:
         value *= config.focus_boost
     if verify:
@@ -290,6 +294,7 @@ def _resolve_mode(
         return "diagnostic"
     if params.mode == "practice":
         return "practice"
+    # a new child, or one with more than 15 unknown skills, gets the check-up paper instead of a weighted one
     if item_probs is None or len(groups.unknown) > config.diagnostic_unknown_threshold:
         return "diagnostic"
     return "practice"

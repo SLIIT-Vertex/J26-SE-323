@@ -54,6 +54,7 @@ class KnowledgeModel:
         model = MindBridgeDKT(num_skills=len(spec.skills), use_source=True)
         state = torch.load(path, map_location="cpu", weights_only=True)
         model.load_state_dict(state)  # strict: a different architecture fails loudly
+        # the first 8 characters of the weights file's hash go into the version name, so we can tell which weights made a result
         digest = hashlib.sha256(path.read_bytes()).hexdigest()[:8]
         return cls(model, spec, f"{MODEL_FAMILY}-{digest}")
 
@@ -71,6 +72,7 @@ class KnowledgeModel:
             num_skills=len(self.spec.skills),
             difficulty=self.spec.difficulty_values["medium"],
         )
+        # a skill with fewer than 3 answers is shown as None (unknown), not as a weak skill
         minimum = self.spec.min_attempts_for_known_skill
         return [
             SkillMastery(

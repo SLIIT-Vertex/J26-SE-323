@@ -27,6 +27,7 @@ def compute_penalty(
     paper_penalty: float,
 ) -> float:
     if source == PAPER:
+        # no time or hints are recorded on paper, so every paper answer gets the same value (0.08)
         return paper_penalty
     if source != DIGITAL:
         raise ValueError(f"source must be 0 (paper) or 1 (digital), got {source!r}")

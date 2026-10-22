@@ -77,7 +77,8 @@ function PastPaper({ paper }: { paper: PaperHistory }) {
 export function HistoryScreen({ learnerId }: { learnerId: string }) {
   useLanguage();
   const { state, reload } = useAsync(() => getHistory(learnerId), `history:${learnerId}`);
-  const papers = state.status === "ready" ? state.data : [];
+  // a cancelled paper was replaced by another one: it is not part of the child's history
+  const papers = state.status === "ready" ? state.data.filter((paper) => paper.status !== "cancelled") : [];
   const completed = papers.filter((p) => p.results_complete);
   const others = papers.filter((p) => !p.results_complete);
 

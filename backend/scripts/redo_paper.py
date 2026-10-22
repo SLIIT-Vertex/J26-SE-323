@@ -10,9 +10,10 @@ A learner gets one paper per week, and asking again returns the same one. This c
 and makes a new paper from what the model knows now, so you can try the paper as often as you like.
 
 If nobody has started on the old paper, that is all. If pages were already photographed or answers were
-saved from it, it stops and says so, because those answers are already part of the child's history. With
---purge they are deleted (and the estimates recomputed), so the child's history is as if that paper had
-never been marked. The old page photos stay on disk. Development databases only.
+saved from it, it stops and says so, because those answers are already part of the child's history. Then
+choose: --keep-answers clears the paper and KEEPS those answers (the model keeps what it learned from
+them), or --purge deletes them too (and the estimates are recomputed), so the child's history is as if that
+paper had never been marked. The old page photos stay on disk. Development databases only.
 """
 
 import argparse
@@ -73,6 +74,7 @@ def redo_paper(
     request: PaperRequest,
     *,
     purge: bool = False,
+    keep_answers: bool = False,
     make_new: bool = True,
 ) -> Redone:
     cancelled: Paper | None = None
@@ -85,9 +87,9 @@ def redo_paper(
             select(func.count()).select_from(PaperSubmissionModel).where(PaperSubmissionModel.paper_id == paper.id)
         )
         answers = db.scalar(select(func.count()).select_from(AttemptModel).where(AttemptModel.paper_item_id.in_(item_ids)))
-        if (photos or answers) and not purge:
+        if (photos or answers) and not (purge or keep_answers):
             raise PaperInUse(photos or 0, answers or 0)
-        if answers:
+        if answers and purge and not keep_answers:  # only --purge deletes; --keep-answers never does
             db.execute(delete(AttemptModel).where(AttemptModel.paper_item_id.in_(item_ids)))
             db.commit()
             removed = answers
@@ -109,6 +111,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--language", choices=("si", "ta"))
     parser.add_argument("--purge", action="store_true", help="also delete answers already marked from the old paper")
     parser.add_argument(
+        "--keep-answers", action="store_true",
+        help="clear the paper even if it was already marked, and KEEP its answers in the child's history",
+    )
+    parser.add_argument(
         "--clear", action="store_true",
         help="only clear this week's paper; the app then shows the 'Make this week's paper' button again",
     )
@@ -125,7 +131,8 @@ def main(argv: list[str] | None = None) -> int:
         mastery = MasteryService(SqlAlchemyMasteryRepository(session), estimator, get_feature_spec())
         try:
             done = redo_paper(
-                session, service, mastery, args.learner_id, request, purge=args.purge, make_new=not args.clear
+                session, service, mastery, args.learner_id, request, purge=args.purge,
+                keep_answers=args.keep_answers, make_new=not args.clear
             )
         except PaperInUse as error:
             print(
