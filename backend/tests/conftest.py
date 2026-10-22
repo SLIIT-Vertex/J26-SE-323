@@ -19,9 +19,27 @@ os.environ.setdefault("PAPER_DEFAULT_MODE", "auto")
 os.environ.setdefault("GAME_EVIDENCE_AUTO_READ", "false")
 os.environ.setdefault("GAME_EVIDENCE_INCLUDE_DEVELOPMENT", "false")
 
+from pathlib import Path
+
 from app.main import app
 from app.shared.database.base import Base
 from app.shared.database.session import get_db
+
+# research/ is private and untracked, so CI has none of its fixtures; tests that read it skip there.
+RESEARCH_DIRECTORY = Path(__file__).resolve().parents[2] / "research"
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "requires_research: reads files from the private research/ tree")
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    if RESEARCH_DIRECTORY.is_dir():
+        return
+    skip = pytest.mark.skip(reason="private research/ directory is not checked out")
+    for item in items:
+        if item.get_closest_marker("requires_research"):
+            item.add_marker(skip)
 
 
 @pytest.fixture

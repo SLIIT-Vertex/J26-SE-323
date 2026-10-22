@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[3]
 MATRIX = (
     ROOT
@@ -112,6 +114,7 @@ def _rows() -> list[dict]:
     return [json.loads(line) for line in MATRIX.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+@pytest.mark.requires_research
 def test_supplied_areas_appear_exactly_once() -> None:
     rows = _rows()
 
@@ -128,6 +131,7 @@ def test_supplied_areas_appear_exactly_once() -> None:
     assert all(row["subject"] != "ENG" for row in rows)
 
 
+@pytest.mark.requires_research
 def test_statuses_stay_unapproved_and_only_the_fractions_skill_exists() -> None:
     rows = _rows()
     plan = PLAN.read_text(encoding="utf-8")

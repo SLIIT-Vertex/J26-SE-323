@@ -176,6 +176,7 @@ def test_each_area_uses_its_assigned_template() -> None:
         assert {area_id: actual[area_id] for area_id in areas} == dict.fromkeys(areas, template_id)
 
 
+@pytest.mark.requires_research
 def test_cited_nodes_come_from_mapped_draft_rows() -> None:
     catalog = _development_catalog()
     rows = _coverage_rows()
@@ -194,6 +195,7 @@ def test_cited_nodes_come_from_mapped_draft_rows() -> None:
     assert fractions.cited_node_id != EXISTING_HALF_SET_SKILL_ID
 
 
+@pytest.mark.requires_research
 def test_package_omits_games_english_rows_and_the_2009_guide() -> None:
     raw = json.loads(
         (DRAFT_MISSION_CATALOG_DIRECTORY / "missions.json").read_text(encoding="utf-8")

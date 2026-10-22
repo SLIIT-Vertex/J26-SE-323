@@ -45,6 +45,7 @@ def _coverage_names() -> dict[str, str]:
     return names
 
 
+@pytest.mark.requires_research
 def test_every_mapped_area_has_a_provisional_candidate_set() -> None:
     catalog = _development_catalog()
     names = _coverage_names()

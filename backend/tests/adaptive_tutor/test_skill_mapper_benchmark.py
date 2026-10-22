@@ -257,6 +257,7 @@ def load_corpus() -> tuple[dict[str, object], dict[str, object]]:
     )
 
 
+@pytest.mark.requires_research
 def test_corpus_labels_are_proposals_and_splits_are_group_disjoint() -> None:
     development, test = load_corpus()
     cases = [*development["cases"], *test["cases"]]  # type: ignore[misc]
@@ -271,6 +272,7 @@ def test_corpus_labels_are_proposals_and_splits_are_group_disjoint() -> None:
     assert development["content_sha256"] == test["content_sha256"]
 
 
+@pytest.mark.requires_research
 def test_corpus_covers_every_skill_and_language_form_in_both_splits() -> None:
     development, test = load_corpus()
     for split in (development, test):
@@ -286,6 +288,7 @@ def test_corpus_covers_every_skill_and_language_form_in_both_splits() -> None:
     assert len(coverage) == 210 and set(coverage.values()) == {1}
 
 
+@pytest.mark.requires_research
 def test_frozen_baseline_snapshots_match_their_manifest() -> None:
     manifest = json.loads((V2 / "baselines/manifest.json").read_text(encoding="utf-8"))
     for entry in manifest["baselines"].values():

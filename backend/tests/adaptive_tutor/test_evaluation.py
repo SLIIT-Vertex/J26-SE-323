@@ -128,6 +128,7 @@ def test_invalid_violation_labels_are_rejected() -> None:
         binary_violation_metrics([True], [1])  # type: ignore[list-item]
 
 
+@pytest.mark.requires_research
 def test_reference_policy_evaluation_is_reproducible_and_exact() -> None:
     first = evaluate_reference_policy(
         document(), manifest(), dataset_source=str(SCENARIOS.relative_to(REPOSITORY_ROOT))
@@ -151,6 +152,7 @@ def test_reference_policy_evaluation_is_reproducible_and_exact() -> None:
     assert transitions["transition_reason_conformance"]["value"] == 1.0
 
 
+@pytest.mark.requires_research
 def test_reference_report_preserves_provenance_and_does_not_invent_grade() -> None:
     report = evaluate_reference_policy(
         document(), manifest(), dataset_source="canonical-reference.json"
@@ -174,6 +176,7 @@ def test_reference_report_preserves_provenance_and_does_not_invent_grade() -> No
     assert report["verifier_violation_metrics"]["evaluation_status"] == "NOT_EVALUATED"
 
 
+@pytest.mark.requires_research
 def test_dataset_and_manifest_versions_are_validated() -> None:
     wrong_dataset_manifest = manifest().model_copy(update={"dataset_version": "other-v1"})
 
@@ -187,6 +190,7 @@ def test_dataset_and_manifest_versions_are_validated() -> None:
         )
 
 
+@pytest.mark.requires_research
 def test_dataset_schema_defines_all_requested_dataset_families() -> None:
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
 
@@ -204,6 +208,7 @@ def test_dataset_schema_defines_all_requested_dataset_families() -> None:
     }
 
 
+@pytest.mark.requires_research
 def test_exporter_writes_identical_machine_and_human_results(tmp_path: Path) -> None:
     json_output = tmp_path / "report.json"
     summary_output = tmp_path / "report.md"
@@ -222,6 +227,7 @@ def test_exporter_writes_identical_machine_and_human_results(tmp_path: Path) -> 
     assert "NOT_EVALUATED" in summary_output.read_text(encoding="utf-8")
 
 
+@pytest.mark.requires_research
 def test_evaluation_uses_no_network_or_database(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
