@@ -1,7 +1,9 @@
 # Adaptive gamified learning
 
 > Read this file first. It describes one component: the Grade 5 Sinhala-medium adaptive game
-> loop. Code lives in `backend/app/gamification/` and `frontend/src/features/mobile-learning-flow/`.
+> loop. Code lives in `backend/app/gamification/`, `frontend/src/features/mobile-learning-flow/`
+> (the app shell) and `frontend/src/features/areas/` (one folder per area game). §6 links the
+> README of each.
 
 ## 1. Purpose
 
@@ -17,8 +19,9 @@ support that policy.
 ## 2. Scope
 
 - Learners are Grade 5 and Sinhala-medium (`grade = 5`, `curriculum_medium = si`).
-- Learner-facing copy, items, feedback, and scaffolds are Sinhala. The English school subject
-  is outside the 57-area coverage target.
+- Learner-facing copy, items, feedback, and scaffolds are Sinhala. The 57-area coverage target
+  is Mathematics (16 areas), Sinhala (25) and Environment (16). The 18 English (`G5-AREA-ENG-*`) area
+  games run on the same engine but are outside that target.
 - The client is React packaged with Capacitor for Android and iOS. Phaser draws the interactive
   scene and talks only to React. React owns navigation, accessibility, Sinhala copy, and the
   server conversation. The layout fills the device.
@@ -48,6 +51,9 @@ A skill is publishable when its Grade 5 source, page, outcome, medium, and revie
    and update later choices. Invalid, contaminated, and incomplete episodes are stored and do
    not train the policy.
 
+The pilot API's domain model (`backend/app/gamification/domain/types.py`, `EpisodePhase`) names
+every step:
+
 ```text
 CREATED -> BASELINE_RESERVED -> BASELINE_ACTIVE -> BASELINE_SCORED
   -> GAMEPLAY_ACTIVE -> DIFFICULTY_DETECTED -> MISCONCEPTION_ESTIMATED
@@ -59,6 +65,12 @@ CREATED -> BASELINE_RESERVED -> BASELINE_ACTIVE -> BASELINE_SCORED
 A baseline episode may go from `REWARD_VALIDATED` to `COMPLETED` without `POLICY_UPDATED`.
 Any nonterminal state may move to `ABORTED` or `INVALIDATED` with a stable reason. Withdrawal,
 independent scoring, and reward validation stay in the path.
+
+The mobile area games (`application/engine/area_flow.py`) store a shorter status for the same
+steps: `before_presented → support_active → support_complete → support_withdrawn →
+after_presented → completed`, or `invalidated`. Each step also appends an event
+(`unsupported_before_scored`, `support_withdrawn`, `unsupported_after_scored`,
+`episode_completed`, …).
 
 Roles, assigned at presentation: `practice`, `unsupported_before`, `supported_practice`,
 `unsupported_after`, `retention`. Unsupported roles and retention require
@@ -79,19 +91,26 @@ the event order is complete.
 | Model | Question | Output |
 | --- | --- | --- |
 | Model 1 | Why is this learner likely struggling? | A distribution over the reviewed catalogue, including `unknown_or_other`, plus confidence and the evidence used |
-| Model 2 | Which eligible scaffold should be shown? | The selected scaffold, a predicted reward and uncertainty for every eligible scaffold, and the decision record |
+| Model 2 | Which eligible help should be shown, and in which order? | The help order for the episode, why the first help leads (Model 1 reason, learning state, or a learned post-withdrawal preference), and the decision record. The pilot API's bandit also stores a predicted reward and uncertainty for every eligible scaffold |
 | Model 3 | Did unsupported performance improve after support was removed? | Validity, the before and after proportions, raw Independence Gain, and whether the policy may update |
 
 Model 3 is the measurement engine. Supported correctness is not its reward.
 
-Scaffold types are visual guidance, a worked example that leaves the scored probe hidden, and
-step-by-step guidance that still requires the learner to act.
+Help (scaffold) types are defined in `backend/app/gamification/content/support_types.py`:
+visual guidance, step-by-step guidance that still requires the learner to act, conceptual
+re-explanation, a simpler version of the same game, prerequisite repair, and a worked parallel
+example that leaves the scored probe hidden. Each area may use only the types listed for it in
+`data/gamification/grade5-area-support-catalog/`. One episode can show several help rounds in
+order (the multi-help loop, `application/support_rounds.py`).
 
-The same phone flow also runs a baseline: a predefined scaffold, no use of the misconception
-distribution, and no policy update from Independence Gain.
+The same phone flow also runs a baseline: the subject's fixed help order, no use of the
+misconception distribution or the learning state, and no policy update from Independence Gain.
 
 Low Model 1 evidence moves the belief toward `unknown_or_other` and keeps confidence low.
 Missing mastery, learner state, or a curriculum passage is stored as an absence.
+
+How each model works, and which implementation each app path runs: [Models](models.md) and
+[`backend/app/gamification/modeling/README.md`](../../backend/app/gamification/modeling/README.md).
 
 ## 5. Ownership
 
@@ -116,60 +135,76 @@ unsupported performance, and support dependence separate.
 
 ## 6. Code
 
-```text
-backend/app/gamification/
-  api/            HTTP, including the development episode routes
-  application/    episode flow, delivery, orchestration
-  domain/         episode states
-  modeling/       Model 1, Model 2, and Independence Gain
-  content/        draft content registry
-  infrastructure/ persistence and the curriculum, mastery, and learner-state adapters
-frontend/src/features/mobile-learning-flow/   React client, Phaser half-set scene, event queue
-frontend/src/features/skill-area-1/           Number World React/Phaser draft client
-frontend/src/features/skill-area-2/           Addition Adventure mobile-first draft client
-data/gamification/               draft content and synthetic development data
-```
+Each code folder has its own README with a "where is…?" table:
 
-Machine contracts in this folder are `mobile-learning-contracts-v1.json` and
-`openapi-pilot-v1.json`. Development routes are `/api/v1/development/learning-flow`.
-Local `npm run dev` shows the draft missions; the limit is written in
-[Local development](local-development.md), not hidden behind a flag you must set.
-The header `X-Dev-Principal` stays a development caller mark.
+- [`backend/app/gamification/README.md`](../../backend/app/gamification/README.md): API, the shared
+  episode engine (`application/engine/area_flow.py`), one `application/<slug>_flow.py` profile per
+  area, content, models, persistence.
+- [`backend/app/gamification/modeling/README.md`](../../backend/app/gamification/modeling/README.md):
+  Model 1, Model 2 and Model 3, and which implementation each app path runs.
+- [`frontend/src/features/mobile-learning-flow/README.md`](../../frontend/src/features/mobile-learning-flow/README.md):
+  the app shell, help UI and API client.
+- [`frontend/src/features/areas/README.md`](../../frontend/src/features/areas/README.md): every area
+  game, with its area id, backend flow, content module and data folder.
+- [`data/gamification/README.md`](../../data/gamification/README.md): versioned content and
+  synthetic development data.
+- [`tools/README.md`](../../tools/README.md): every offline builder and analysis command.
+
+Machine contracts in this folder are generated, never edited by hand:
+
+- `mobile-learning-contracts-v1.json`: the mobile learning-flow API, built by
+  `tools/gamification/learning_flow/build_mobile_learning_contracts.py`. The frontend types in
+  `frontend/src/features/mobile-learning-flow/api/generated.ts` come from it
+  (`npm run generate:mobile-learning-types`).
+- `openapi-pilot-v1.json`: the pilot API. `frontend/src/features/gamification/api/generated.ts`
+  comes from it (`npm run generate:api`).
+
+Routes (all under `/api/v1`):
+
+| Prefix | Router | Used for |
+|---|---|---|
+| `/development/learning-flow` | `api/learning_flow_router.py` | every area-game episode, learner-state camera consent, telemetry, reconstruction |
+| `/learning-flow` | `api/learning_flow_router.py` | draft missions, area support types, fixture rounds |
+| `/research-dashboard` | `api/research_dashboard_router.py` | the researcher-only dashboard |
+| `/adaptive-episodes`, `/game-sessions`, `/admin`, … | `api/router.py` | the pilot API |
+
+Every learning-flow request carries the development caller mark `X-Dev-Principal:
+NOT_FOR_PRODUCTION` with `X-Dev-Role` `learner` or `researcher`. The draft mission list needs
+the researcher role. How to run it locally: [Local development](local-development.md).
 The production React entry mounts only `MobileLearningApp`; the old hash routes and inspector are not part
 of the child bundle. `VITE_MOBILE_LEARNING_CONDITION` is an engineering-build input, not a child setting.
 Native project generation is reproducible through `npm run native:generate` from locked inputs.
 
-The telemetry queue is scoped by episode, preserves occurrence time and stable event/batch IDs,
-and retries automatically with bounded backoff and expected-sequence reconciliation. It does not
-queue answers or episode transitions. Browser development storage uses a non-extractable
-IndexedDB CryptoKey; native builds fall back to memory until a reviewed keystore/keychain adapter
-exists, so native process-death recovery remains a mobile-learning blocker rather than a security claim.
+Telemetry: the pilot client's `TelemetryQueue` (`frontend/src/features/gamification/telemetry/queue.ts`)
+keeps sequence-numbered events with stable event ids and client occurrence time, in memory, and
+hands them over as one batch. It does not queue answers or episode transitions, does not retry,
+and does not persist. The child app's client has a `telemetry` call for
+`/development/learning-flow/episodes/{id}/telemetry`, but no area game sends telemetry yet.
+Durable, offline-safe telemetry and native process-death recovery remain open work.
 
 The answer-time learner-state, visual-feature, consent, and learner-evidence contract is
 documented in [Learner-state integration at answer submission](learner-state-answer-integration.md).
 
 ## 7. Before a child uses it
 
-The first complete loop is one reviewed Grade 5 Sinhala skill, one reusable template, and the
-three scaffold types, in baseline and proposed modes, on the phone. The first skill area is
-Grade 5 Mathematics fractions (`MAT-FRC`). A larger skill inventory is not that loop.
+Nothing in this component is approved for children. A named reviewer approves content, ethics
+and release; passing tests do not approve those decisions.
 
-`G5-AREA-MAT-01` (`සංඛ්‍යා`) also has a development-only Number World package covering eight
-atomic draft skills in four chapters. It uses the same durable development endpoint and the
-unsupported-before → Model 1 → Model 2 → support → acknowledged withdrawal → fresh
-unsupported-after → raw Independence Gain sequence. Its content, misconception catalogue,
-scaffold mappings, and production release remain blocked pending the named human reviews and
-the mobile-slice and pilot-readiness exit gates; engineering tests do not make it child-ready or
-research-ready.
-
-`G5-AREA-MAT-02` (`එකතු කිරීම`) is a development-only Addition Adventure package with five
-textbook-derived interactive game families and nine atomic draft skills. It preserves exact-task
-support, deterministic activity-specific escalation, full support withdrawal, and fresh
-unsupported-after measurement. Its photographed school-name transcriptions and all curriculum
-mappings remain pending human review.
-
-A named reviewer approves content, ethics, and release. Passing tests do not approve those
-decisions. Draft content loads only when development mode explicitly allows it. The draft
-mission catalog for the 55 mapped skill areas is the same: a development or test caller may
-read it only with `allow_draft`, and the production loader rejects it. The play path
-returns `CURRICULUM_RETRIEVAL_UNAVAILABLE` until the shared retriever supplies a passage.
+- **Pilot slice.** The first complete loop to be reviewed is one Grade 5 Sinhala-medium skill, one
+  reusable template, and the three original scaffold types, in baseline and proposed modes, on
+  the phone. Its content is still researcher-authored draft awaiting educator review.
+  The skill area is Grade 5 Mathematics fractions (`MAT-FRC`,
+  `data/gamification/grade5-pilot-slice/v1/`). `load_pilot_content_package` refuses it unless
+  `allow_draft=True`. The pilot play path returns `CURRICULUM_RETRIEVAL_UNAVAILABLE` until the
+  shared retriever supplies a passage.
+- **Area games.** 37 development-only area games (16 Mathematics, 18 English, 3 Sinhala) run the
+  full unsupported-before → Model 1 → Model 2 → help rounds → acknowledged withdrawal → fresh
+  unsupported-after → raw Independence Gain sequence. The index is
+  [`frontend/src/features/areas/README.md`](../../frontend/src/features/areas/README.md). Content,
+  misconception catalogues, scaffold mappings and curriculum mappings all wait for human review;
+  where an area has a package README in `data/gamification/grade5-<slug>/`, it records exactly
+  what remains blocked.
+- **Draft missions.** The draft mission catalogue covers 54 mapped areas (16 Mathematics, 22
+  buildable Sinhala, 16 Environment; `data/gamification/grade5-draft-mission-catalog/v1/`). It is
+  served only to the development researcher role. Environment areas play as fixture rounds;
+  other areas without a game open the draft template player.

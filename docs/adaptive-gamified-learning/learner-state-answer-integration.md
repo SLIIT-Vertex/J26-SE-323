@@ -132,10 +132,11 @@ learning-flow adventures use the hook as described in §6.
 
 ## 6. Learning-flow adventures (active path)
 
-The Grade 5 adventures (`/development/learning-flow/episodes`) record learner-state evidence
-for every scored mathematics answer:
+The Grade 5 area games (`/development/learning-flow/episodes`) record learner-state evidence
+for every scored answer of a game whose profile sets `records_learner_state = True`:
 
-1. `NumberWorldFlow`, the base of every adventure flow, scores and commits the answer as before.
+1. `AreaGameFlow` (`backend/app/gamification/application/engine/area_flow.py`), the base of every
+   area game flow, scores and commits the answer as before.
 2. Only after the commit, and never for a replayed idempotent request, it calls
    `record_scored_answer()` (`application/learner_state_answers.py`) with the Universal Skill ID
    of the area, the server correctness, `response_time_ms`, `supported = false` and
@@ -147,9 +148,20 @@ for every scored mathematics answer:
    `infrastructure/gateways/learner_state_answers.py`. It records in its own database session.
 5. Any learner-state error is logged and ignored; the answer is never changed or rejected.
 
-The result does not change the adventure yet (silent mode for the pilot,
-`docs/learner-state/12_PILOT_STUDY_PLAN.md`). The English classroom quest does not record
-learner-state evidence, because the behaviour models were trained on mathematics answers.
+Every area game records except Classroom Action Quest (`G5-AREA-ENG-01`) and the three Sinhala
+games (`G5-AREA-SIN-01` to `SIN-03`), whose profiles set `records_learner_state = False`.
+
+The result reaches the child in two ways:
+
+- The recorded answer returns the learner-state action. The app shows the matching
+  `LearnerSupportPrompt` during the game (`frontend/src/features/learner-state/game/supportPrompts.ts`),
+  unless the build sets `VITE_LEARNER_STATE_PROMPTS=off`.
+- In the proposed condition, a current-session Learning State reading may change Model 2's help
+  order (`modeling/support_selection/support_order.py`): `disengaged`, or `confused` while Model
+  1 is uncertain, puts the simpler version first; `confused` moves the worked example earlier. A
+  missing or stale reading changes nothing, and the baseline condition never reads it. The
+  reading is wired in `api/learning_flow_router.py` through
+  `infrastructure/gateways/research_learning_state.py`.
 
 Request fields (both optional, both part of the idempotency fingerprint when sent):
 
@@ -164,7 +176,7 @@ need an allocator.
 Camera consent is stored in `consent_decisions` (migration `gam_20261020_01`) and read and
 written through `GET` / `PUT /development/learning-flow/consents/learner-state-camera`. In the
 app, a guardian switch under **Settings** (වැඩිහිටි සැකසුම්) sets it; the camera runs only while
-consent is given and a mathematics game screen is open. The development endpoint stands in for a
+consent is given and a game screen other than Classroom Action Quest is open. The development endpoint stands in for a
 guardian-authenticated decision, which production needs.
 
 ## 7. Remaining work
@@ -173,7 +185,8 @@ guardian-authenticated decision, which production needs.
 - Agreement on the provisional behaviour values used by `GameAnswerRecorder`
   (`original = 1`, `overlap_time = response_time_ms`) and a source for `task_progress`
   (`docs/learner-state/11_GAME_INTEGRATION.md`).
-- A learner-facing re-engagement action before learner-state results change what the child sees.
+- Review of the learner-state prompts now shown during games, and of the learning-state change
+  to the proposed help order, before a child uses them.
 - Confirm downstream ingestion policy for v2 evidence.
 
 ## 8. Contract and verification locations
