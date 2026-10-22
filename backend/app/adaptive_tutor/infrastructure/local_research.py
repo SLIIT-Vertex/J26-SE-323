@@ -3,11 +3,13 @@
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from app.adaptive_tutor.application.context_assembly import EvidenceOrigin, EvidenceSource
+from app.adaptive_tutor.application.generation import LlmProvider
 from app.adaptive_tutor.application.orchestration import TrustedAnswerReference
 from app.adaptive_tutor.application.skill_mapper import (
     ConversationalSkillMapper,
@@ -82,8 +84,10 @@ def configured_research_trusted_answer(
         raw_answers = json.loads(settings.tutor_research_trusted_answers_json)
     except json.JSONDecodeError as error:
         raise ValueError("TUTOR_RESEARCH_TRUSTED_ANSWERS_JSON must be valid JSON") from error
-    if not isinstance(raw_answers, list) or not raw_answers or any(
-        not isinstance(answer, str) or not answer.strip() for answer in raw_answers
+    if (
+        not isinstance(raw_answers, list)
+        or not raw_answers
+        or any(not isinstance(answer, str) or not answer.strip() for answer in raw_answers)
     ):
         raise ValueError(
             "TUTOR_RESEARCH_TRUSTED_ANSWERS_JSON must be a non-empty JSON string array"
@@ -143,8 +147,18 @@ def validate_local_research_settings(settings: Settings) -> frozenset[str]:
 def build_local_research_tutor_service(
     settings: Settings,
     session: Session,
+    *,
+    gemini_client: Any | None = None,
+    llm_provider: LlmProvider | None = None,
 ) -> ResearchTutorService:
-    """Build the reviewed local slice only after every live opt-in is present."""
+    """Build the reviewed local slice only after every live opt-in is present.
+
+    ``llm_provider`` replaces the configured provider outright (offline rehearsals), so its own
+    name, never ``google-gemini``, labels every draft. ``gemini_client`` only wraps real Gemini.
+    """
+
+    if llm_provider is not None and gemini_client is not None:
+        raise ValueError("pass either llm_provider or gemini_client, not both")
 
     severity_policies = validate_local_research_settings(settings)
 
@@ -155,7 +169,7 @@ def build_local_research_tutor_service(
 
     feature_spec = load_feature_spec(settings.feature_spec_path)
     estimator = KnowledgeModel.load(settings.model_weights_path, feature_spec)
-    llm_provider = select_tutor_llm_provider(settings)
+    llm_provider = llm_provider or select_tutor_llm_provider(settings, gemini_client=gemini_client)
     experimental = settings.tutor_pp1_experimental_demo_enabled
     semantic_verifier = (
         None

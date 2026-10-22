@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import type { ResearchInteraction as Interaction } from "./api";
-import { ASSISTANCE_LEVELS, describeLevel } from "./tutorLabels";
+import { ASSISTANCE_LEVELS, describeDraftProvider, describeEvidence, describeLevel } from "./tutorLabels";
 
 type Tone = "ok" | "warn" | "muted";
 
@@ -87,10 +87,17 @@ export function ResearchDiagnostics({ result }: { result: Interaction }) {
       </dl>
 
       {synthetic.length ? (
-        <p className="synthetic-flag" role="note">
-          Synthetic defaults used for {synthetic.map((item) => INPUT_NAMES[item.input] ?? humanize(item.input)).join(", ")}.
-          These are research placeholders, not real learner evidence.
-        </p>
+        <div className="synthetic-flag" role="note">
+          <p>This turn used evidence that is not real student data:</p>
+          <ul>
+            {synthetic.map((item) => (
+              <li key={`${item.input}:${item.source_id}`}>
+                <strong>{INPUT_NAMES[item.input] ?? humanize(item.input)}</strong>
+                {` (${describeEvidence(item).badge.toLowerCase()}): ${describeEvidence(item).meaning}.`}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       <Section title="Why this level">
@@ -112,7 +119,7 @@ export function ResearchDiagnostics({ result }: { result: Interaction }) {
               <li key={`${item.input}:${item.source_id}`} data-origin={item.origin}>
                 <span className="evidence-name">{INPUT_NAMES[item.input] ?? humanize(item.input)}</span>
                 <span className={`origin-badge origin-badge--${item.origin === "REAL" ? "real" : "synthetic"}`}>
-                  {item.origin === "REAL" ? "Real" : "Synthetic"}
+                  {describeEvidence(item).badge}
                 </span>
                 <span className="evidence-status">{humanize(item.status)}</span>
               </li>
@@ -141,7 +148,7 @@ export function ResearchDiagnostics({ result }: { result: Interaction }) {
             <>
               <dt>Draft source</dt>
               <dd className="draft-source">
-                {result.experimental_provider_name} · {result.experimental_provenance} content
+                {describeDraftProvider(result.experimental_provider_name)} · {result.experimental_provenance} content
                 <small>{result.experimental_notice}</small>
               </dd>
             </>

@@ -30,6 +30,7 @@ from app.adaptive_tutor.infrastructure import (
     XlsxSkillTaxonomyCatalog,
 )
 from app.knowledge_tracing.application.mastery import (
+    MasteryResult,
     MasteryRetrievalRequest,
     MasteryStatus,
 )
@@ -217,13 +218,30 @@ def test_explicit_experimental_cold_start_uses_labelled_zero_default() -> None:
         cold_start_default=0.0,
     )
 
-    result = adapter.get_mastery(request())
+    result, source = adapter.get_mastery_with_source(request())
 
     assert result.status is MasteryStatus.AVAILABLE
     assert result.mastery == 0.0
-    assert adapter.source == EvidenceSource(
+    assert type(result) is MasteryResult
+    assert source == EvidenceSource(
         source_id="adaptive-tutor:experimental-cold-start-mastery-default",
         origin=EvidenceOrigin.SYNTHETIC,
+    )
+    assert adapter.get_mastery(request()) == result
+
+
+def test_real_kt_estimate_stays_real_when_a_cold_start_default_is_configured() -> None:
+    adapter = KnowledgeTracingMasteryProvider(
+        StubMasteryService(snapshot(0.625)),  # type: ignore[arg-type]
+        {SKILL_ID, OTHER_SKILL_ID},
+        cold_start_default=0.0,
+    )
+
+    result, source = adapter.get_mastery_with_source(request())
+
+    assert result.mastery == 0.625
+    assert source == EvidenceSource(
+        source_id="knowledge-tracing:mastery-service", origin=EvidenceOrigin.REAL
     )
 
 

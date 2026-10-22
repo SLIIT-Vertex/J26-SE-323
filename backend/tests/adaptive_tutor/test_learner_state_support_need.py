@@ -138,14 +138,28 @@ def test_explicit_experimental_missing_state_uses_labelled_zero_default() -> Non
         not_found_default=0.0,
     )
 
-    result = real.get_support_need(context_request())
+    result, source = real.get_support_need_with_source(context_request())
 
     assert result.status is EvidenceStatus.AVAILABLE
     assert result.support_need == 0.0
-    assert real.source == EvidenceSource(
+    assert source == EvidenceSource(
         source_id="adaptive-tutor:experimental-missing-support-need-default",
         origin=EvidenceOrigin.SYNTHETIC,
     )
+    assert real.get_support_need(context_request()) == result
+
+
+def test_stored_support_need_stays_real_when_a_default_is_configured() -> None:
+    real = LearnerStateSupportNeedProvider(
+        StubLearnerStateProvider(learner_state_result()),  # type: ignore[arg-type]
+        not_found_default=0.0,
+    )
+
+    result, source = real.get_support_need_with_source(context_request())
+
+    assert result.support_need == 0.625
+    assert source.origin is EvidenceOrigin.REAL
+    assert source.source_id == "learner-state:stored-support-need"
 
 
 def test_experimental_default_does_not_hide_uncertain_state() -> None:

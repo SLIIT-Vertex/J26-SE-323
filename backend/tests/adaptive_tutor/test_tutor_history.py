@@ -14,6 +14,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.adaptive_tutor.application import ContextEvidenceRequest, EvidenceStatus
+from app.adaptive_tutor.application.context_assembly import (
+    AssistanceHistoryBasis,
+    EvidenceOrigin,
+)
 from app.adaptive_tutor.domain import AssistanceLevel, DecisionReasonCode
 from app.adaptive_tutor.infrastructure import (
     SqlAlchemyTutorHistoryRepository,
@@ -23,6 +27,7 @@ from app.adaptive_tutor.infrastructure import (
     TutorHistoryProvider,
     TutorInteractionEventModel,
 )
+from app.adaptive_tutor.infrastructure.tutor_history import RESEARCH_PRESENTATION_PROVENANCE
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 
@@ -79,7 +84,11 @@ def event(
         event_sequence=event_sequence,
         event_type=event_type,
         occurred_at=occurred_at,
-        provenance="test:authoritative-history",
+        provenance=(
+            RESEARCH_PRESENTATION_PROVENANCE
+            if event_type is TutorHistoryEventType.RESEARCH_PRESENTATION
+            else "test:authoritative-history"
+        ),
         assistance_level=AssistanceLevel.CONCEPTUAL_HINT if selected else None,
         policy_version="reference-policy-v1" if selected else None,
         reason_codes=(DecisionReasonCode.MINIMUM_SUFFICIENT_ASSISTANCE,) if selected else (),
@@ -258,7 +267,22 @@ def test_event_contract_rejects_malformed_level_and_unapproved_effectiveness() -
                 status=TutorHistoryEventStatus.OBSERVED,
             ).model_dump()
         )
-    assert "EFFECTIVE" not in TutorHistoryEventStatus.__members__
+    # Effectiveness may only be recorded against a reviewed assessment, never on its own.
+    with pytest.raises(ValidationError):
+        event(
+            TutorHistoryEventType.EFFECTIVENESS_STATUS_RECORDED,
+            decision_id=uuid4(),
+            event_sequence=1,
+            status=TutorHistoryEventStatus.EFFECTIVE,
+        )
+    with pytest.raises(ValidationError):
+        event(
+            TutorHistoryEventType.OUTCOME_OBSERVED,
+            decision_id=uuid4(),
+            event_sequence=1,
+            status=TutorHistoryEventStatus.EFFECTIVE,
+            assessment_reference="annotation:1",
+        )
 
 
 def test_repeated_assessment_link_rolls_back(session: Session) -> None:
@@ -343,6 +367,9 @@ def test_missing_or_invalid_context_and_repository_failure_fail_closed(session: 
     assert provider.get_assistance_history(invalid).status is EvidenceStatus.INVALID_EVIDENCE
 
     class BrokenRepository:
+        def in_interaction(self, **_: object) -> tuple[()]:
+            raise OperationalError("select", {}, RuntimeError("offline"))
+
         def before(self, **_: object) -> tuple[()]:
             raise OperationalError("select", {}, RuntimeError("offline"))
 
@@ -369,3 +396,138 @@ def test_tutor_history_migration_upgrades_and_downgrades_isolated_database() -> 
 
         migration["downgrade"]()
         assert "tutor_interaction_events" not in inspect_database(connection).get_table_names()
+
+
+def research(item: TutorHistoryEvent, **update: object) -> TutorHistoryEvent:
+    """Re-validate an event with research-presentation fields (the helper uses test provenance)."""
+
+    return TutorHistoryEvent.model_validate({**item.model_dump(), **update})
+
+
+def presented_selection(
+    repository: SqlAlchemyTutorHistoryRepository,
+    *,
+    interaction_sequence: int,
+    first_event: int,
+    reason: DecisionReasonCode = DecisionReasonCode.MINIMUM_SUFFICIENT_ASSISTANCE,
+) -> UUID:
+    decision_id = uuid4()
+    repository.append(
+        research(
+            event(
+                TutorHistoryEventType.ASSISTANCE_SELECTED,
+                decision_id=decision_id,
+                event_sequence=first_event,
+                interaction_sequence=interaction_sequence,
+            ),
+            reason_codes=(reason,),
+        )
+    )
+    repository.append(
+        event(
+            TutorHistoryEventType.RESEARCH_PRESENTATION,
+            decision_id=decision_id,
+            event_sequence=first_event + 1,
+            interaction_sequence=interaction_sequence,
+            status=TutorHistoryEventStatus.PRESENTED_TO_RESEARCHER,
+        )
+    )
+    return decision_id
+
+
+def test_research_presentation_is_never_verified_delivery(session: Session) -> None:
+    repository = SqlAlchemyTutorHistoryRepository(session)
+    presented_selection(repository, interaction_sequence=1, first_event=1)
+
+    result = TutorHistoryProvider(repository).get_assistance_history(
+        request(interaction_sequence=2)
+    )
+
+    assert result.status is EvidenceStatus.NOT_DELIVERED
+    assert result.previous_assistance_level is None
+    with pytest.raises(ValidationError):
+        event(
+            TutorHistoryEventType.RESEARCH_PRESENTATION,
+            decision_id=uuid4(),
+            event_sequence=1,
+            status=TutorHistoryEventStatus.DELIVERED,
+        )
+    with pytest.raises(ValidationError, match="reserved"):
+        research(
+            event(
+                TutorHistoryEventType.RESPONSE_DELIVERED,
+                decision_id=uuid4(),
+                event_sequence=1,
+                status=TutorHistoryEventStatus.DELIVERED,
+            ),
+            provenance=RESEARCH_PRESENTATION_PROVENANCE,
+        )
+
+
+def test_presented_assistance_in_the_current_interaction_is_synthetic_history(
+    session: Session,
+) -> None:
+    repository = SqlAlchemyTutorHistoryRepository(session)
+    provider = TutorHistoryProvider(repository)
+    decision_id = presented_selection(repository, interaction_sequence=2, first_event=1)
+
+    unknown = provider.get_assistance_history(request(interaction_sequence=2))
+    repository.append(
+        event(
+            TutorHistoryEventType.EFFECTIVENESS_STATUS_RECORDED,
+            decision_id=decision_id,
+            event_sequence=3,
+            interaction_sequence=2,
+            status=TutorHistoryEventStatus.INEFFECTIVE,
+            assessment_reference="annotation:attempt-2",
+        )
+    )
+    observed = provider.get_assistance_history(request(interaction_sequence=2))
+
+    assert unknown.status is EvidenceStatus.AVAILABLE
+    assert unknown.previous_assistance_level is AssistanceLevel.CONCEPTUAL_HINT
+    assert unknown.previous_hint_effective is None
+    assert observed.previous_hint_effective is False
+    assert observed.basis is AssistanceHistoryBasis.RESEARCH_PRESENTATION
+    source = provider.source_for_result(observed)
+    assert source.origin is EvidenceOrigin.SYNTHETIC
+    assert source.source_id.endswith("research-presentation")
+
+
+def test_pre_interaction_baseline_is_not_previous_assistance(session: Session) -> None:
+    repository = SqlAlchemyTutorHistoryRepository(session)
+    presented_selection(
+        repository,
+        interaction_sequence=1,
+        first_event=1,
+        reason=DecisionReasonCode.PRE_INTERACTION,
+    )
+
+    result = TutorHistoryProvider(repository).get_assistance_history(
+        request(interaction_sequence=1)
+    )
+
+    assert result.status is EvidenceStatus.NOT_YET_OBSERVED
+    assert result.previous_assistance_level is None
+
+
+def test_insufficient_effectiveness_evidence_stays_unknown(session: Session) -> None:
+    repository = SqlAlchemyTutorHistoryRepository(session)
+    decision_id = presented_selection(repository, interaction_sequence=2, first_event=1)
+    repository.append(
+        event(
+            TutorHistoryEventType.EFFECTIVENESS_STATUS_RECORDED,
+            decision_id=decision_id,
+            event_sequence=3,
+            interaction_sequence=2,
+            status=TutorHistoryEventStatus.INSUFFICIENT_EVIDENCE,
+            assessment_reference="annotation:attempt-1",
+        )
+    )
+
+    result = TutorHistoryProvider(repository).get_assistance_history(
+        request(interaction_sequence=2)
+    )
+
+    assert result.previous_assistance_level is AssistanceLevel.CONCEPTUAL_HINT
+    assert result.previous_hint_effective is None
