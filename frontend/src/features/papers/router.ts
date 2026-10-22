@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // Hash routes, in the same style as the rest of the app: #/papers, #/papers/<id>, ...
 
@@ -58,5 +58,7 @@ export function usePapersRoute(): Route | null {
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
-  return parseRoute(hash);
+  // Stable per hash: callers use the route as an effect dependency, and a new object on every
+  // render made them re-run mid-navigation (e.g. snapping a bottom-tab press back to papers).
+  return useMemo(() => parseRoute(hash), [hash]);
 }

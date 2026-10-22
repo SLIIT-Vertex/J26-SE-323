@@ -13,6 +13,7 @@ from threading import Lock
 from uuid import UUID, uuid4
 
 from app.adaptive_tutor.application.generation import (
+    MAX_CONVERSATION_CHARS,
     MAX_PROVIDER_OUTPUT_CHARS,
     GenerationPrompt,
     LlmProvider,
@@ -33,10 +34,19 @@ from app.adaptive_tutor.application.orchestration import (
     TutorWorkflowResult,
 )
 from app.adaptive_tutor.application.skill_mapper_contracts import (
+    MAX_CONVERSATION_TURNS,
+    ConversationTurn,
     SkillMappingRequest,
     SkillMappingResult,
 )
-from app.adaptive_tutor.domain import AssistanceLevel, DecisionReasonCode, SkillMappingStatus
+from app.adaptive_tutor.domain import (
+    AssistanceLevel,
+    ConversationRole,
+    DecisionReasonCode,
+    LearningIntent,
+    SkillMappingReasonCode,
+    SkillMappingStatus,
+)
 from app.adaptive_tutor.infrastructure.shadow_mode import CONTROLLER_POLICY_VERSION
 from app.adaptive_tutor.infrastructure.tutor_assessment import (
     AssessmentAttemptStatus,
@@ -109,6 +119,7 @@ class ExperimentalHintGenerator:
         language: str,
         assistance_level: AssistanceLevel,
         skill_id: str,
+        conversation: tuple[ConversationTurn, ...] = (),
     ) -> ExperimentalGeneration:
         grade = self._learner_grade(learner_id)
         if grade not in {4, 5} or language != "en":
@@ -134,6 +145,15 @@ class ExperimentalHintGenerator:
             + json.dumps(
                 {
                     "student_question": question,
+                    # Earlier turns, oldest first; withheld at L0 like the curriculum.
+                    "earlier_conversation": (
+                        []
+                        if assistance_level is AssistanceLevel.INDEPENDENT_RETRY
+                        else [
+                            {"role": turn.role.value, "message": turn.message}
+                            for turn in conversation
+                        ]
+                    ),
                     "confirmed_skill_id": skill_id,
                     "grade": grade,
                     "curriculum_provenance": EXPERIMENTAL_CURRICULUM_PROVENANCE,
@@ -213,6 +233,7 @@ class ResearchTurn:
     skill_id: str | None
     result: TutorWorkflowResult
     experimental_generation: ExperimentalGeneration | None = None
+    conversation: tuple[ConversationTurn, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -279,6 +300,12 @@ class ResearchTutorService:
         self._sessions: dict[UUID, ResearchSession] = {}
         self._lock = Lock()
 
+    @property
+    def severity_policy_versions(self) -> tuple[str, ...]:
+        """Configured severity policies a researcher may annotate attempts with."""
+
+        return tuple(sorted(self._eligible_policies))
+
     def start(
         self,
         *,
@@ -317,14 +344,19 @@ class ResearchTutorService:
                 raise PermissionError("research session interaction limit reached")
             sequence = len(session.turns) + 1
             interaction_id = uuid4()
+            conversation = _conversation(session.turns)
+            anchor = next((turn for turn in reversed(session.turns) if turn.skill_id), None)
             mapping = SkillMappingResult.model_validate(
                 self._skill_mapper.map(
                     SkillMappingRequest(
                         learner_message=question,
                         preferred_language=language,
+                        conversation_context=conversation,
+                        active_skill_id=anchor.skill_id if anchor is not None else None,
                     )
                 )
             )
+            mapping = _continue_active_topic(mapping, anchor)
             skill_id = mapping.skill_id if mapping.status is SkillMappingStatus.MATCHED else None
             if skill_id is not None:
                 self._assessments.create_interaction(
@@ -352,13 +384,16 @@ class ResearchTutorService:
                 language,
                 current,
                 mapping=mapping,
+                conversation=conversation,
             )
             progress = session.progress.setdefault(interaction_id, InteractionProgress())
             decision_id = self._record_selection(
                 session, interaction_id, sequence, skill_id, result, current, step=0
             )
             progress.latest_decision_id = decision_id
-            experimental = self._experimental(session, question, language, skill_id, result)
+            experimental = self._experimental(
+                session, question, language, skill_id, result, conversation
+            )
             self._record_presentation(
                 session,
                 interaction_id,
@@ -380,6 +415,7 @@ class ResearchTutorService:
                 skill_id=skill_id,
                 result=result,
                 experimental_generation=experimental,
+                conversation=conversation,
             )
             session.turns.append(turn)
             return turn
@@ -416,11 +452,13 @@ class ResearchTutorService:
             )
             if attempt_count >= self._max_attempts_per_interaction:
                 raise PermissionError("research interaction attempt limit reached")
-            if (
-                not annotation.reviewer_confirmed
-                or annotation.severity_policy_version not in self._eligible_policies
-            ):
-                raise PermissionError("research severity annotation is not configured or confirmed")
+            if not annotation.reviewer_confirmed:
+                raise PermissionError("research severity annotation must be reviewer-confirmed")
+            if annotation.severity_policy_version not in self._eligible_policies:
+                allowed = ", ".join(self.severity_policy_versions) or "none configured"
+                raise PermissionError(
+                    f"severity policy version is not configured for research; use one of: {allowed}"
+                )
             attempt_id = uuid4()
             common = {
                 "attempt_id": attempt_id,
@@ -495,6 +533,7 @@ class ResearchTutorService:
                 turn.language,
                 current,
                 mapping=turn.skill_mapping,
+                conversation=turn.conversation,
             )
             decision_id = self._record_selection(
                 session,
@@ -508,7 +547,7 @@ class ResearchTutorService:
             if decision_id is not None:
                 progress.latest_decision_id = decision_id
             experimental = self._experimental(
-                session, turn.question, turn.language, turn.skill_id, result
+                session, turn.question, turn.language, turn.skill_id, result, turn.conversation
             )
             self._record_presentation(
                 session,
@@ -531,7 +570,10 @@ class ResearchTutorService:
                 skill_id=turn.skill_id,
                 result=result,
                 experimental_generation=experimental,
+                conversation=turn.conversation,
             )
+            # Later questions see the reply that was actually shown last for this question.
+            session.turns[session.turns.index(turn)] = updated
             session.attempt_results[annotation.idempotency_key] = (
                 interaction_id,
                 annotation,
@@ -553,6 +595,7 @@ class ResearchTutorService:
         language: str,
         now: datetime,
         mapping: SkillMappingResult | None = None,
+        conversation: tuple[ConversationTurn, ...] = (),
     ) -> TutorWorkflowResult:
         return self._orchestrator.run(
             TutorWorkflowRequest(
@@ -565,6 +608,7 @@ class ResearchTutorService:
                 as_of=now,
                 max_age_ms=self._freshness_ms,
                 trusted_skill_mapping=mapping,
+                conversation_context=conversation,
             )
         )
 
@@ -704,6 +748,7 @@ class ResearchTutorService:
         language: str,
         skill_id: str | None,
         result: TutorWorkflowResult,
+        conversation: tuple[ConversationTurn, ...] = (),
     ) -> ExperimentalGeneration | None:
         if (
             self._experimental_generator is None
@@ -717,6 +762,7 @@ class ResearchTutorService:
             language=language,
             assistance_level=result.assistance_level,
             skill_id=skill_id,
+            conversation=conversation,
         )
 
     def _require(self, session_id: UUID, token: str, now: datetime) -> ResearchSession:
@@ -749,3 +795,52 @@ class ResearchTutorService:
 
 def _digest(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def _conversation(turns: list[ResearchTurn]) -> tuple[ConversationTurn, ...]:
+    """Recent learner messages and the tutor reply shown for each, within contract limits."""
+
+    items: list[ConversationTurn] = []
+    for turn in turns:
+        items.append(ConversationTurn(role=ConversationRole.LEARNER, message=turn.question))
+        experimental = turn.experimental_generation
+        reply = (
+            experimental.text
+            if experimental is not None and experimental.text
+            else turn.result.safe_message
+        )
+        if reply and reply.strip():
+            items.append(ConversationTurn(role=ConversationRole.TUTOR, message=reply))
+    items = items[-MAX_CONVERSATION_TURNS:]
+    while items and sum(len(item.message) for item in items) > MAX_CONVERSATION_CHARS:
+        items.pop(0)
+    return tuple(items)
+
+
+def _continue_active_topic(
+    mapping: SkillMappingResult, anchor: ResearchTurn | None
+) -> SkillMappingResult:
+    """Keep an unclear follow-up on the session's current skill instead of asking again.
+
+    Only AMBIGUOUS or NO_MATCH results continue; a confident match to another skill switches
+    topic, and greetings or off-topic messages stay as mapped. The continued result keeps the
+    confidence of the turn that matched the skill and never claims direct skill evidence.
+    """
+
+    if anchor is None or mapping.status not in {
+        SkillMappingStatus.AMBIGUOUS,
+        SkillMappingStatus.NO_MATCH,
+    }:
+        return mapping
+    assert anchor.skill_id is not None and anchor.skill_mapping.confidence is not None
+    return SkillMappingResult(
+        status=SkillMappingStatus.MATCHED,
+        intent=LearningIntent.FOLLOW_UP_QUESTION,
+        skill_id=anchor.skill_id,
+        confidence=anchor.skill_mapping.confidence,
+        clarification_needed=False,
+        reason_codes=(
+            SkillMappingReasonCode.CONVERSATION_CONTEXT_USED,
+            SkillMappingReasonCode.ACTIVE_SKILL_USED,
+        ),
+    )

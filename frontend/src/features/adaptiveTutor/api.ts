@@ -36,6 +36,7 @@ export type ResearchInteraction = {
   delivery_authorized: boolean;
   confirmed_skill_id?: string;
   skill_mapping_status?: string;
+  skill_mapping_reason_codes?: string[];
   assistance_level?: string;
   controller_reason_codes: string[];
   context_issue_codes: string[];
@@ -68,7 +69,11 @@ export type ResearchAnnotation = {
 };
 
 export interface ResearchTutorApi {
-  authorize(): Promise<{ researcher_authorized: true; child_delivery_enabled: false }>;
+  authorize(): Promise<{
+    researcher_authorized: true;
+    child_delivery_enabled: false;
+    severity_policy_versions?: string[];
+  }>;
   start(learnerId: string): Promise<ResearchSession>;
   ask(session: ResearchSession, question: string, language: string): Promise<ResearchInteraction>;
   attempt(

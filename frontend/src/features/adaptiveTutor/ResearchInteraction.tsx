@@ -1,4 +1,4 @@
-import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import {
   type ResearchAnnotation,
@@ -52,6 +52,7 @@ export function ResearchInteraction({
   standalone?: boolean;
 }) {
   const [authorized, setAuthorized] = useState(false);
+  const [policies, setPolicies] = useState<string[]>([]);
   const [session, setSession] = useState<ResearchSession | null>(null);
   const [starting, setStarting] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -69,7 +70,11 @@ export function ResearchInteraction({
   useEffect(() => {
     let active = true;
     api.authorize().then(
-      () => active && setAuthorized(true),
+      (status) => {
+        if (!active) return;
+        setPolicies(status.severity_policy_versions ?? []);
+        setAuthorized(true);
+      },
       (reason: unknown) => active && setError(message(reason, "Researcher authorization failed.")),
     );
     return () => { active = false; };
@@ -235,6 +240,7 @@ export function ResearchInteraction({
                 turn={turn}
                 annotatable={turn === latestDone && Boolean(turn.result?.confirmed_skill_id)}
                 busy={busy}
+                policies={policies}
                 onRetry={turn.kind === "question" && turn.question && ready ? () => void ask(turn.question ?? "", turn) : undefined}
                 onAttempt={(annotation) => void recordAttempt(turn, annotation)}
               />
@@ -278,12 +284,14 @@ function TutorReply({
   turn,
   annotatable,
   busy,
+  policies,
   onRetry,
   onAttempt,
 }: {
   turn: Turn;
   annotatable: boolean;
   busy: boolean;
+  policies: string[];
   onRetry?: () => void;
   onAttempt: (annotation: ResearchAnnotation) => void;
 }) {
@@ -355,7 +363,12 @@ function TutorReply({
             {annotatable ? (
               <details className="research-subsection">
                 <summary>Record reviewed attempt</summary>
-                <AttemptForm sequence={result.interaction_sequence} busy={busy} onSubmit={onAttempt} />
+                <AttemptForm
+                  sequence={result.interaction_sequence}
+                  busy={busy}
+                  policies={policies}
+                  onSubmit={onAttempt}
+                />
               </details>
             ) : null}
           </div>
@@ -368,15 +381,19 @@ function TutorReply({
 function AttemptForm({
   sequence,
   busy,
+  policies,
   onSubmit,
 }: {
   sequence: number;
   busy: boolean;
+  /** Policies the backend accepts; offered as a choice so a typo cannot be rejected later. */
+  policies: string[];
   onSubmit: (annotation: ResearchAnnotation) => void;
 }) {
   const [correct, setCorrect] = useState(false);
   const [severity, setSeverity] = useState("0.7");
-  const [policy, setPolicy] = useState("");
+  const [policy, setPolicy] = useState(policies[0] ?? "");
+  const policyId = useId();
   const [reviewed, setReviewed] = useState(false);
 
   function submit(event: FormEvent) {
@@ -387,7 +404,7 @@ function AttemptForm({
       partial_credit: null,
       severity_category: correct ? "CORRECT" : "RESEARCHER_ANNOTATED_ERROR",
       severity_value: correct ? 0 : Number(severity),
-      severity_policy_version: policy,
+      severity_policy_version: policy.trim(),
       scoring_version: "researcher-review-v1",
       item_rubric_version: "researcher-supplied-v1",
       reviewer_confirmed: reviewed,
@@ -400,9 +417,20 @@ function AttemptForm({
       <p className="quiet">Controlled research annotation for turn {sequence}. It is not an approved learner assessment.</p>
       <label className="attempt-check"><input type="checkbox" checked={correct} onChange={(event) => setCorrect(event.target.checked)} /> Answer is correct</label>
       <label className="attempt-field"><span>Error severity</span><input type="number" min="0" max="1" step="0.05" value={correct ? "0" : severity} onChange={(event) => setSeverity(event.target.value)} disabled={correct} /></label>
-      <label className="attempt-field"><span>Severity policy version</span><input value={policy} onChange={(event) => setPolicy(event.target.value)} required /></label>
+      <label className="attempt-field" htmlFor={policyId}>
+        <span>Severity policy version</span>
+        {policies.length ? (
+          <select id={policyId} value={policy} onChange={(event) => setPolicy(event.target.value)} required>
+            {policies.map((version) => (
+              <option key={version} value={version}>{version}</option>
+            ))}
+          </select>
+        ) : (
+          <input id={policyId} value={policy} onChange={(event) => setPolicy(event.target.value)} required />
+        )}
+      </label>
       <label className="attempt-check"><input type="checkbox" checked={reviewed} onChange={(event) => setReviewed(event.target.checked)} required /> I am a qualified researcher and reviewed this annotation</label>
-      <button className="attempt-submit" type="submit" disabled={busy || !reviewed || !policy}>Record attempt and rerun Controller</button>
+      <button className="attempt-submit" type="submit" disabled={busy || !reviewed || !policy.trim()}>Record attempt and rerun Controller</button>
     </form>
   );
 }

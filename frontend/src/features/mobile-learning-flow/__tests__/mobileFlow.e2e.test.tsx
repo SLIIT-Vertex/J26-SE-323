@@ -230,6 +230,44 @@ describe("baseline mobile flow", () => {
 		await act(async () => root.unmount());
 	});
 
+	it("leaves the papers page from every bottom navigation tab", async () => {
+		const container = document.createElement("div");
+		document.body.append(container);
+		const root = createRoot(container);
+		await act(async () =>
+			root.render(<MobileLearningApp service={fakeService()} />),
+		);
+		await click(container, "මගේ පැතිකඩට");
+		const tab = (label: string) =>
+			[...container.querySelectorAll(".bottom-navigation button")].find(
+				(button) => button.textContent?.trim() === label,
+			);
+		const press = async (label: string) => {
+			await act(async () => {
+				tab(label)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+				await new Promise((resolve) => setTimeout(resolve, 5));
+			});
+		};
+		const destinations: Array<[string, string]> = [
+			["මුල් පිටුව", ".home-screen"],
+			["ක්‍රීඩා", ".games-screen"],
+			["Mindy", ".tutor-workspace"],
+			["ප්‍රගතිය", ".progress-screen"],
+		];
+		for (const [label, selector] of destinations) {
+			await press("පුහුණුව");
+			expect(container.querySelector(".papers-tab")).not.toBeNull();
+			await press(label);
+			await waitForSelector(container, selector); // some tabs load lazily
+			expect(container.querySelector(".papers-tab"), label).toBeNull();
+			expect(container.querySelector(selector), label).not.toBeNull();
+			expect(container.querySelector(".nav-item--active")?.textContent, label).toBe(label);
+			expect(window.location.hash, label).not.toMatch(/papers/);
+		}
+		await act(async () => root.unmount());
+		window.location.hash = "";
+	});
+
 	it("keeps onboarding fixed to Grade 5 Sinhala medium", async () => {
 		const container = document.createElement("div");
 		document.body.append(container);

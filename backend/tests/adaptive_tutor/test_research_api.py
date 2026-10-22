@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -20,7 +21,9 @@ def research_client() -> Generator[TestClient, None, None]:
         tutor_research_access_key="separate-research-key",
         tutor_researcher_id="00000000-0000-4000-8000-000000000222",
     )
-    app.dependency_overrides[get_research_tutor_service] = lambda: object()
+    app.dependency_overrides[get_research_tutor_service] = lambda: SimpleNamespace(
+        severity_policy_versions=("pp1-controlled-research-v1",)
+    )
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client
     app.dependency_overrides.clear()
@@ -46,6 +49,8 @@ def test_research_status_requires_separate_research_authorization(
         "researcher_authorized": True,
         "execution_mode": "research-local",
         "child_delivery_enabled": False,
+        # The form offers these, so a mistyped policy cannot be rejected after review.
+        "severity_policy_versions": ["pp1-controlled-research-v1"],
     }
 
 

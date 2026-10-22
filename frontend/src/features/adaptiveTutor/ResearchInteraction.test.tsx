@@ -363,6 +363,24 @@ describe("Mindy research chat", () => {
     if (name !== "google-gemini") expect(source).not.toContain("Google Gemini API");
   });
 
+  it("marks a follow-up kept on the earlier topic instead of calling it a direct match", async () => {
+    await render(
+      api({
+        ask: vi.fn(async () => ({
+          ...experimental,
+          skill_mapping_reason_codes: ["CONVERSATION_CONTEXT_USED", "ACTIVE_SKILL_USED"],
+        })),
+      }),
+    );
+    await askQuestion("i have no idea how can that process ?");
+
+    const skillTile = [...(lastDetails()?.querySelectorAll(".glance-tile") ?? [])].find((tile) =>
+      tile.textContent?.startsWith("Skill"),
+    );
+    expect(skillTile?.textContent).toContain("MAT-FRC");
+    expect(skillTile?.textContent).toContain("Continued from earlier question");
+  });
+
   it("shows failed requests inline and retries the same question", async () => {
     const ask = vi
       .fn()
@@ -411,6 +429,35 @@ describe("Mindy research chat", () => {
     expect(lastDetails()?.textContent).toContain("L4 — Guided steps");
     expect(host.querySelectorAll("form.attempt-form")).toHaveLength(1);
     expect(lastDetails()?.querySelector("form.attempt-form")).not.toBeNull();
+  });
+
+  it("offers the backend's configured severity policies so no policy has to be typed", async () => {
+    const client = api({
+      authorize: vi.fn(async () => ({
+        researcher_authorized: true as const,
+        child_delivery_enabled: false as const,
+        severity_policy_versions: ["pp1-controlled-research-v1"],
+      })),
+    });
+    await render(client);
+    await askQuestion("Why is 1/2 equal to 2/4?");
+
+    const panel = host.querySelector("form.attempt-form");
+    const choice = panel?.querySelector<HTMLSelectElement>("select");
+    const reviewed = panel?.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')[1];
+    if (!choice || !reviewed) throw new Error("annotation controls missing");
+    expect(choice.value).toBe("pp1-controlled-research-v1");
+    await act(async () => reviewed.click());
+    await act(async () =>
+      choice.closest("form")?.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })),
+    );
+    await flush();
+
+    expect(client.attempt).toHaveBeenCalledWith(
+      session,
+      blocked.interaction_id,
+      expect.objectContaining({ severity_policy_version: "pp1-controlled-research-v1" }),
+    );
   });
 
   it("ends the server session and starts a fresh one for a new chat", async () => {
