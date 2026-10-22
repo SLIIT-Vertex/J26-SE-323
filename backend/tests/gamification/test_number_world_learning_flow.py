@@ -200,8 +200,13 @@ def test_future_episode_starts_with_support_that_previously_led_to_independent_s
         flow,
         _open(flow, skill, key_suffix="learn-preference"),
     )
-    # The first help was answered correctly, then the fresh item was answered alone.
-    learned = learned_from["support_loop"]["types_used"]
+    # The visual demonstration is only watched; the next help was answered correctly, then the
+    # fresh item was answered alone, so that help is the one learned.
+    learned = [
+        row["scaffold_type"]
+        for row in learned_from["support_loop"]["rounds"]
+        if row["outcome"] == "succeeded"
+    ]
     assert len(learned) == 1
 
     opened = _open(flow, skill, key_suffix="reuse-preference")
@@ -281,8 +286,10 @@ def test_server_solution_of_the_exact_failed_item_feeds_the_help(service, skill)
     correct, error_code, _ = validate_constructed_response(before, worked["correct_response"])
     assert correct is True
     assert error_code == "correct"
+    # A worked example and the visual demonstration both show a solved board.
     assert state["scaffold_exposure"]["answer_revealing"] is (
-        state["scaffold_exposure"]["scaffold_type"] == "worked_parallel_example"
+        state["scaffold_exposure"]["scaffold_type"]
+        in {"worked_parallel_example", "visual_guidance"}
     )
 
 
@@ -344,3 +351,23 @@ def test_contaminated_probe_is_auditable_and_never_updates_policy():
     assert final["exclusion_reasons"] == ["PRIOR_PROBE_EXPOSURE"]
     assert final["policy_updates"] == []
     session.close()
+
+
+def test_starting_a_skill_again_draws_a_fresh_after_item_instead_of_refusing(service):
+    """A child who gets it wrong and starts the same skill again must not be refused because
+    the new episode drew the after item the unfinished one still holds."""
+
+    flow, _ = service
+    game_flow = flow._area_flows["G5-AREA-MAT-01"]
+    # Force every open onto the same first seed, as one session replaying one skill does.
+    game_flow._episode_seed = lambda **_: 12_345
+    skill = ATOMIC_SKILLS[0].skill_id
+    first = flow.reconstruct(UUID(_open(flow, skill, key_suffix="first")["episode_id"]))["state"]
+    second = flow.reconstruct(UUID(_open(flow, skill, key_suffix="second")["episode_id"]))[
+        "state"
+    ]
+
+    assert second["seed"] != first["seed"]
+    after = game_flow.generate_item(skill, role="unsupported_after", seed=second["seed"])
+    held = game_flow.generate_item(skill, role="unsupported_after", seed=first["seed"])
+    assert after.revision_id != held.revision_id

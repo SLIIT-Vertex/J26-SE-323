@@ -76,7 +76,8 @@ def test_every_mapped_area_has_a_provisional_candidate_set() -> None:
 def test_verbal_relation_areas_leave_out_a_depicting_visual() -> None:
     catalog = _development_catalog()
 
-    assert len(VERBAL_RELATION_AREAS) == 8
+    # SIN-03 (riddles) left the verbal-relation rule for its own riddle_inference rule.
+    assert len(VERBAL_RELATION_AREAS) == 7
     for area_id in VERBAL_RELATION_AREAS:
         choices = catalog.choices(area_id)
         assert choices == ("worked_parallel_example", "step_by_step_guidance")
@@ -86,6 +87,7 @@ def test_verbal_relation_areas_leave_out_a_depicting_visual() -> None:
         for row in catalog.rows
         if row.area_id not in VERBAL_RELATION_AREAS and row.subject != "MAT"
     ]
+    assert catalog.row("G5-AREA-SIN-03").rule == "riddle_inference"
     assert all(row.eligible_support_types == GAME_SUPPORT_TYPES for row in others)
 
 
@@ -108,4 +110,4 @@ def test_blocked_and_unknown_areas_have_no_assignment() -> None:
 
 def test_loader_reads_the_catalog_without_a_runtime_switch() -> None:
     catalog = load_area_support_catalog()
-    assert len(catalog.rows) == 55
+    assert len(catalog.rows) == 54

@@ -27,6 +27,11 @@ from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrator,
 )
 from app.gamification.application.research_accuracy import present_simulation, wilson
+from app.gamification.application.teardown_receipt import (
+    shown_steps,
+    simulated_receipt,
+    supported_summary,
+)
 from app.gamification.content.support_types import SUPPORT_TYPES
 from app.gamification.demo_seed.answers import correct_answer, wrong_answers
 from app.gamification.demo_seed.runner import multi_help_areas
@@ -218,11 +223,11 @@ def _play(orchestrator, learner, obs: Observation, rng, a: Assumptions) -> bool:
             response = orchestrator.complete_support(
                 episode,
                 duration_ms=rng.randint(8_000, 20_000),
-                steps_viewed=3,
+                steps_viewed=shown_steps(response),
                 manifest_revision_id=status["manifest_revision_id"],
                 grouped_count=0,
                 group_sizes=(0, 0),
-                interaction_summary={"completed": True},
+                interaction_summary={"completed": True, "next_presses": shown_steps(response)},
                 idempotency_key=f"{prefix}:help:{step}:view",
             )
             continue
@@ -244,7 +249,7 @@ def _play(orchestrator, learner, obs: Observation, rng, a: Assumptions) -> bool:
             episode,
             constructed_response=answer,
             response_time_ms=rng.randint(5_000, 20_000),
-            interaction_summary={},
+            interaction_summary=supported_summary(flow),
             idempotency_key=f"{prefix}:help:{step}",
         )
     status = response["support_round"]
@@ -269,6 +274,9 @@ def _play(orchestrator, learner, obs: Observation, rng, a: Assumptions) -> bool:
         answer_revealing_state_cleared=True,
         input_handlers_cleared=True,
         idempotency_key=f"{prefix}:withdraw",
+        teardown_receipt=simulated_receipt(
+            status["support_revision_id"], status["manifest_revision_id"]
+        ),
     )
     orchestrator.present_after(episode, idempotency_key=f"{prefix}:present-after")
     after = orchestrator.reconstruct(episode)["state"]["presentations"][-1]

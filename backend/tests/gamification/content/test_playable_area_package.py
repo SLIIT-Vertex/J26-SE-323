@@ -10,7 +10,11 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import ValidationError
 
-from app.gamification.application.fixture_round import FixtureRoundService, reset_fixture_rounds
+from app.gamification.application.fixture_round import (
+    FixtureRoundError,
+    FixtureRoundService,
+    reset_fixture_rounds,
+)
 from app.gamification.content.area_support_catalog import GAME_SUPPORT_TYPES, assignment
 from app.gamification.content.curriculum_registry import CURRICULUM_CONTENT_DIRECTORY
 from app.gamification.content.draft_mission_catalog import (
@@ -56,7 +60,6 @@ FIXTURE_AREAS = (
     "G5-AREA-SIN-02",
     "G5-AREA-SIN-14",
     "G5-AREA-SIN-15",
-    "G5-AREA-SIN-16",
     "G5-AREA-SIN-17",
     "G5-AREA-SIN-18",
     "G5-AREA-SIN-19",
@@ -279,7 +282,7 @@ def test_sinhala_form_areas_are_playable_word_workshop_loops() -> None:
     form_areas = (
         "G5-AREA-SIN-01",
         "G5-AREA-SIN-02",
-        *(f"G5-AREA-SIN-{index:02d}" for index in range(14, 26)),
+        *(f"G5-AREA-SIN-{index:02d}" for index in range(14, 26) if index != 16),
     )
     support = (
         "visual_guidance",
@@ -289,19 +292,16 @@ def test_sinhala_form_areas_are_playable_word_workshop_loops() -> None:
     roles = ("unsupported_before", "supported_practice", "unsupported_after")
     rows = {row.area_id: row for row in package.areas}
 
-    assert len(form_areas) == 14
+    assert len(form_areas) == 13
     story = rows["G5-AREA-SIN-13"]
     assert story.prompt_si == "ආරාධනා පත්‍ර"
     assert story.items[0].prompt_si == "ආරාධනා පත්‍රයක පළමුව ලියන්නේ කුමක්ද?"
-    spelling = rows["G5-AREA-SIN-16"]
-    traced = catalog.mission("G5-AREA-SIN-16").draft_item_slots[0]
-    assert traced.confidence == "high"
-    assert traced.item_text in spelling.prompt_si
-    assert "මෙය නිල ප්‍රශ්නයක් නොවේ." in spelling.prompt_si
     for area_id in form_areas:
         row = rows[area_id]
         mission = catalog.mission(area_id)
-        assert row.template_id == "word_workshop"
+        # SIN-01 is the dedicated durable Pillam Journey, not a reused fixture template.
+        expected_template = DEDICATED_SINHALA_TEMPLATES.get(area_id, "word_workshop")
+        assert row.template_id == expected_template
         assert row.no_universal_parent is True
         assert row.universal_skill_id is None
         assert row.eligible_support_types == support
@@ -322,14 +322,13 @@ def test_sinhala_form_areas_are_playable_word_workshop_loops() -> None:
             assert matched[0].item_text in row.prompt_si
             continue
         assert mission.draft_item_slots == ()
-        assert traced.item_text not in row.prompt_si
 
 
 def test_sinhala_verbal_relations_and_invitation_are_playable_with_exact_supports() -> None:
     package = load_playable_area_package()
     catalog = load_draft_mission_catalog()
     rows = {row.area_id: row for row in package.areas}
-    verbal_ids = tuple(f"G5-AREA-SIN-{index:02d}" for index in range(3, 11))
+    verbal_ids = tuple(f"G5-AREA-SIN-{index:02d}" for index in range(4, 11))
     verbal_support = ("worked_parallel_example", "step_by_step_guidance")
     roles = ("unsupported_before", "supported_practice", "unsupported_after")
 
@@ -470,6 +469,12 @@ _ANSWER_KEY_FIELDS = frozenset(
         "server_answer_keys",
     }
 )
+# Sinhala areas with a dedicated durable game instead of a reused fixture template.
+DEDICATED_SINHALA_TEMPLATES = {
+    "G5-AREA-SIN-01": "pillam_journey",
+    "G5-AREA-SIN-02": "punctuation_journey",
+    "G5-AREA-SIN-03": "riddle_journey",
+}
 _INVENTORY = {
     **{
         f"G5-AREA-MAT-{index:02d}": (
@@ -497,10 +502,13 @@ _INVENTORY = {
     },
     **{
         f"G5-AREA-SIN-{index:02d}": (
-            "story_studio" if index == 13 else "word_workshop",
+            {13: "story_studio", 1: "pillam_journey", 2: "punctuation_journey", 3: "riddle_journey"}.get(
+                index, "word_workshop"
+            ),
             "no_grade5_source" if index in {11, 12} else "mapped_draft",
         )
         for index in range(1, 26)
+        if index != 16
     },
     **{
         f"G5-AREA-ENV-{index:02d}": ("eco_explorer", "mapped_draft")
@@ -529,9 +537,9 @@ def test_inventory_loads_every_playable_area() -> None:
         for path in CURRICULUM_CONTENT_DIRECTORY.glob("*.json")
     )
 
-    assert len(_INVENTORY) == 57
+    assert len(_INVENTORY) == 56
     assert sum(area.startswith("G5-AREA-MAT-") for area in _INVENTORY) == 16
-    assert sum(area.startswith("G5-AREA-SIN-") for area in _INVENTORY) == 25
+    assert sum(area.startswith("G5-AREA-SIN-") for area in _INVENTORY) == 24
     assert sum(area.startswith("G5-AREA-ENV-") for area in _INVENTORY) == 16
     assert package.component_places.curriculum_retrieval.index_as_curriculum_evidence is False
 
@@ -569,6 +577,13 @@ def test_inventory_loads_every_playable_area() -> None:
         assert row.prompt_si not in curriculum_text
 
         learner_id = uuid4()
+        if template_id in set(DEDICATED_SINHALA_TEMPLATES.values()):
+            # The dedicated durable game refuses the fixture path.
+            with pytest.raises(FixtureRoundError, match="DEDICATED_GAME_REQUIRED"):
+                service.open_round(
+                    area_id=area_id, learner_id=learner_id, session_id=uuid4(), grade=5, medium="si"
+                )
+            continue
         opened = service.open_round(
             area_id=area_id,
             learner_id=learner_id,
@@ -638,7 +653,7 @@ def test_inventory_loads_every_playable_area() -> None:
         assert all(record["curriculum_passage_status"] == "NO_RELEVANT_PASSAGES" for record in evidence)
         assert all(record["skill_id"] != "G5-MAT-C03-L01-O01" for record in evidence)
 
-    assert len(rows) == 57
+    assert len(rows) == 56
     assert "fixture-rubric-v1" not in curriculum_text
     assert "market-rubric-v1" not in curriculum_text
 
@@ -650,7 +665,7 @@ def test_loader_returns_the_same_games_when_the_process_is_production(monkeypatc
     monkeypatch.setenv("APP_ENV", "production")
     second = load_playable_area_package()
 
-    assert len(first.areas) == 57
+    assert len(first.areas) == 56
     assert first.model_dump() == second.model_dump()
 
 
@@ -666,7 +681,7 @@ def test_missing_unsupported_after_raises() -> None:
 
 def test_verbal_relation_visual_guidance_raises() -> None:
     payload = _row(
-        area_id="G5-AREA-SIN-03",
+        area_id="G5-AREA-SIN-04",
         template_id="word_workshop",
         eligible_support_types=[
             "visual_guidance",

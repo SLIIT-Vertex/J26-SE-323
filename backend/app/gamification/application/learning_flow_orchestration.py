@@ -47,6 +47,9 @@ from app.gamification.application.rainbow_wardrobe_quest_flow import RainbowWard
 from app.gamification.application.roman_adventure_flow import RomanAdventureFlow
 from app.gamification.application.session_play import LearnerStateAnswerGateway
 from app.gamification.application.shape_adventure_flow import ShapeAdventureFlow
+from app.gamification.application.sinhala_pillam_flow import SinhalaPillamFlow
+from app.gamification.application.sinhala_punctuation_flow import SinhalaPunctuationFlow
+from app.gamification.application.sinhala_riddle_flow import SinhalaRiddleFlow
 from app.gamification.application.sri_lanka_discovery_flow import SriLankaDiscoveryFlow
 from app.gamification.application.subtraction_adventure_flow import SubtractionAdventureFlow
 from app.gamification.application.time_adventure_flow import TimeAdventureFlow
@@ -304,6 +307,9 @@ class LearningFlowOrchestrator:
             HeritageMuseumQuestFlow,
             ClassroomLanguageLiveFlow,
             ConversationStreetFlow,
+            SinhalaPillamFlow,
+            SinhalaPunctuationFlow,
+            SinhalaRiddleFlow,
         )
         flows: tuple[AdaptiveGameFlow, ...] = tuple(
             flow_type(
@@ -591,9 +597,16 @@ class LearningFlowOrchestrator:
         answer_revealing_state_cleared: bool,
         input_handlers_cleared: bool,
         idempotency_key: str,
+        teardown_receipt: Mapping[str, object] | None = None,
     ) -> dict[str, object]:
         adaptive_flow = self._adaptive_flow(episode_id)
         if adaptive_flow is not None:
+            # Only flows that verify a teardown receipt receive one.
+            extra = (
+                {"teardown_receipt": teardown_receipt}
+                if getattr(adaptive_flow, "accepts_teardown_receipt", False)
+                else {}
+            )
             try:
                 return adaptive_flow.withdraw(
                     episode_id,
@@ -604,6 +617,7 @@ class LearningFlowOrchestrator:
                     answer_revealing_state_cleared=answer_revealing_state_cleared,
                     input_handlers_cleared=input_handlers_cleared,
                     idempotency_key=idempotency_key,
+                    **extra,
                 )
             except NumberWorldFlowError as error:
                 raise LearningFlowOrchestrationError(error.code, **error.context) from error

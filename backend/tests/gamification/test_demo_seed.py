@@ -190,7 +190,7 @@ def test_the_seed_file_covers_every_multi_help_skill(world):
 
     planned = {skill.skill_id for skill in plan.skills}
     assert planned == {skills[0] for skills in areas.values()}
-    assert len(plan.skills) == 34
-    assert plan.episode_count == 51
+    assert len(plan.skills) == 37
+    assert plan.episode_count == 55
     assert set(ROTATION) == set(PATTERNS)
     assert {skill.pattern for skill in plan.skills} == set(PATTERNS)

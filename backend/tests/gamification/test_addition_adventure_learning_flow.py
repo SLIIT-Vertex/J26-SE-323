@@ -15,7 +15,7 @@ from app.gamification.content.addition_adventure import ATOMIC_SKILLS, MISCONCEP
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
-from tests.gamification.support_loop_helpers import finish_help, wrong_answer
+from tests.gamification.support_loop_helpers import finish_help, watch_demonstrations, wrong_answer
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000732")
 
@@ -182,6 +182,8 @@ def test_a_second_failed_attempt_strengthens_help_inside_the_episode(service):
         interaction_summary={"attempt_count": 2},
         idempotency_key="addition-second-failed-attempt",
     )
+    # A maths visual demonstration is watched, not answered; the answerable help comes next.
+    response = watch_demonstrations(flow, episode_id, response)
     first = response["support"]["scaffold_type"]
     current = flow._area_flows["G5-AREA-MAT-02"]._support_rounds.current_item(
         flow.reconstruct(episode_id)["state"]
@@ -197,7 +199,7 @@ def test_a_second_failed_attempt_strengthens_help_inside_the_episode(service):
 
     # The next help comes from the server's order for this episode, not from a phone count.
     order = flow.reconstruct(episode_id)["state"]["model2"]["support_order"]
-    assert second["support"]["scaffold_type"] == order[1] != first
+    assert second["support"]["scaffold_type"] == order[order.index(first) + 1] != first
 
 
 def test_before_interactions_reject_free_text_or_answer_data(service):

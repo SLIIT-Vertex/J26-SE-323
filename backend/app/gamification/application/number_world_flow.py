@@ -100,6 +100,11 @@ def evidence_difficulty(skill: object) -> tuple[str, str]:
     return "medium", "default_unlabelled"
 
 
+# How many other seeds an open tries when its fresh after item is already reserved or seen.
+PROBE_SEED_ATTEMPTS = 24
+PROBE_SEED_STRIDE = 104_729
+
+
 class NumberWorldFlowError(ValueError):
     def __init__(self, code: str, **context: object) -> None:
         super().__init__(code)
@@ -260,20 +265,35 @@ class NumberWorldFlow:
         if atomic_skill_id not in self.skills:
             raise NumberWorldFlowError(self.missing_skill_error)
         episode_id = uuid4()
-        seed = int.from_bytes(
-            hashlib.sha256(f"{session_id}:{atomic_skill_id}".encode()).digest()[:4], "big"
+        first_seed = self._episode_seed(
+            learner_id=learner_id, session_id=session_id, atomic_skill_id=atomic_skill_id
         )
-        before = self.generate_item(atomic_skill_id, role="unsupported_before", seed=seed)
-        after = self.generate_item(atomic_skill_id, role="unsupported_after", seed=seed)
-        if (
-            before.parallel_family_id != after.parallel_family_id
-            or before.revision_id == after.revision_id
-        ):
-            raise NumberWorldFlowError("PARALLEL_FAMILY_INVALID")
         at = self._now()
-        reservation_id = self._probe.reserve(
-            learner_id=learner_id, episode_id=episode_id, item_revision_id=after.revision_id, at=at
-        )
+        # The fresh after item must be new to this learner. A child who starts the same skill
+        # again in one session would draw the same seed, and with it an item still reserved by
+        # the unfinished episode, so a clash moves on to the next seed instead of refusing.
+        for attempt in range(PROBE_SEED_ATTEMPTS):
+            seed = (first_seed + attempt * PROBE_SEED_STRIDE) % 2**32
+            before = self.generate_item(atomic_skill_id, role="unsupported_before", seed=seed)
+            after = self.generate_item(atomic_skill_id, role="unsupported_after", seed=seed)
+            if (
+                before.parallel_family_id != after.parallel_family_id
+                or before.revision_id == after.revision_id
+            ):
+                raise NumberWorldFlowError("PARALLEL_FAMILY_INVALID")
+            try:
+                reservation_id = self._probe.reserve(
+                    learner_id=learner_id,
+                    episode_id=episode_id,
+                    item_revision_id=after.revision_id,
+                    at=at,
+                )
+                break
+            except Exception as error:
+                if getattr(error, "code", None) != "PROBE_ALREADY_RESERVED_OR_EXPOSED":
+                    raise
+                if attempt == PROBE_SEED_ATTEMPTS - 1:
+                    raise
         presentation_id = uuid4()
         state: dict[str, object] = {
             "contract_version": self.contract_version,
@@ -330,6 +350,15 @@ class NumberWorldFlow:
             )
         )
         return response
+
+    def _episode_seed(self, *, learner_id: UUID, session_id: UUID, atomic_skill_id: str) -> int:
+        """The episode's item seed. A flow whose pool must avoid this learner's earlier exposure
+        overrides it; the default depends only on the session and skill."""
+
+        del learner_id
+        return int.from_bytes(
+            hashlib.sha256(f"{session_id}:{atomic_skill_id}".encode()).digest()[:4], "big"
+        )
 
     def submit_before(
         self,
@@ -773,7 +802,9 @@ class NumberWorldFlow:
         def transition(state: dict[str, object], at: datetime) -> dict[str, object]:
             if interaction_summary.get("completed") is not True:
                 raise NumberWorldFlowError("INVALID_SUPPORT_COMPLETION")
-            status = self._support_rounds.record_view_complete(state, manifest_revision_id, at)
+            status = self._support_rounds.record_view_complete(
+                state, manifest_revision_id, at, lambda: self._support_context(state, at)
+            )
             response = self._summary(state)
             response.update(
                 support=self._support_rounds.public_view(state, activity=self.support_activity),
@@ -821,6 +852,8 @@ class NumberWorldFlow:
             seed=seed,
             reason_family=model2.get("reason_family") if isinstance(model2, Mapping) else None,
             subject=subject_of(self.area_id),
+            area_id=self.area_id,
+            failed_response=_before_response(state),
             at=at,
         )
 
@@ -1229,10 +1262,12 @@ class NumberWorldFlow:
             )
         elif skill_id.endswith("100000-01"):
             response = {"kind": "constructed_number", "constructed_number": int(game["number"])}
+            target = int(game["number"])
+            spaced = f"{target - 1:,}".replace(",", " ")
             steps = (
-                "99 999 හි එකක තැනට එකක් එකතු කරමු.",
-                "සෑම 9ක්ම 0 වී ඉදිරි තැනට එකක් ගෙන යමු.",
-                "නව ලක්ෂ තැනේ 1 සමඟ 100 000 ලැබේ.",
+                f"{spaced} හි එකක තැනට එකක් එකතු කරමු.",
+                "සෑම 9ක්ම 0 වී ඊළඟ තැනට එකක් ගෙන යමු.",
+                f"එවිට {target:,} ලැබේ.".replace(",", " "),
             )
         elif skill_id.endswith("ABACUS-01"):
             rods = [int(value) for value in game["rods"]]  # type: ignore[union-attr]
@@ -1314,6 +1349,16 @@ class NumberWorldFlow:
             "reward": state.get("reward"),
             "server_score": score,
         }
+
+
+def _before_response(state: Mapping[str, object]) -> Mapping[str, object] | None:
+    """The child's own answer to the failed before item, for help that starts from it."""
+
+    for attempt in state.get("attempts") or ():  # type: ignore[union-attr]
+        if isinstance(attempt, Mapping) and attempt.get("role") == "unsupported_before":
+            response = attempt.get("constructed_response")
+            return response if isinstance(response, Mapping) else None
+    return None
 
 
 def is_number_world_state(state: Mapping[str, object]) -> bool:

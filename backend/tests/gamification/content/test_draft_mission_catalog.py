@@ -88,13 +88,32 @@ EXPECTED_TEMPLATES = {
         "G5-AREA-MAT-12",
     },
     "story_studio": {"G5-AREA-SIN-13"},
+    "pillam_journey": {"G5-AREA-SIN-01"},
+    "punctuation_journey": {"G5-AREA-SIN-02"},
+    "riddle_journey": {"G5-AREA-SIN-03"},
     "eco_explorer": {f"G5-AREA-ENV-{number:02d}" for number in range(1, 17)},
 }
 EXPECTED_TEMPLATES["word_workshop"] = {
     "G5-AREA-MAT-16",
-    *(f"G5-AREA-SIN-{number:02d}" for number in range(1, 11)),
-    *(f"G5-AREA-SIN-{number:02d}" for number in range(14, 26)),
+    *(f"G5-AREA-SIN-{number:02d}" for number in range(4, 11)),
+    *(f"G5-AREA-SIN-{number:02d}" for number in range(14, 26) if number != 16),
 }
+# Outcomes once traced to the retired G5-AREA-SIN-16 area; no mission carries them now.
+RETIRED_SINHALA_NODES = frozenset(
+    {
+        "G5-SIN-C04-L10-O08",
+        "G5-SIN-C04-L01-O01",
+        "G5-SIN-C04-L01-O02",
+        "G5-SIN-C04-L03-O01",
+        "G5-SIN-C04-L06-O01",
+        "G5-SIN-C04-L06-O02",
+        "G5-SIN-C04-L06-O03",
+        "G5-SIN-C04-L06-O04",
+        "G5-SIN-C04-L06-O05",
+        "G5-SIN-C04-L07-O01",
+        "G5-SIN-C04-L09-O01",
+    }
+)
 
 
 def _coverage_rows() -> list[dict[str, object]]:
@@ -109,17 +128,17 @@ def _development_catalog():
     return load_draft_mission_catalog()
 
 
-def test_development_load_returns_55_missions() -> None:
+def test_development_load_returns_54_missions() -> None:
     catalog = _development_catalog()
     area_ids = [mission.area_id for mission in catalog.missions]
 
-    assert len(catalog.missions) == 55
-    assert len(set(area_ids)) == 55
+    assert len(catalog.missions) == 54
+    assert len(set(area_ids)) == 54
     assert area_ids[:16] == [f"G5-AREA-MAT-{number:02d}" for number in range(1, 17)]
-    assert area_ids[16:39] == [
-        f"G5-AREA-SIN-{number:02d}" for number in range(1, 26) if number not in {11, 12}
+    assert area_ids[16:38] == [
+        f"G5-AREA-SIN-{number:02d}" for number in range(1, 26) if number not in {11, 12, 16}
     ]
-    assert area_ids[39:] == [f"G5-AREA-ENV-{number:02d}" for number in range(1, 17)]
+    assert area_ids[38:] == [f"G5-AREA-ENV-{number:02d}" for number in range(1, 17)]
     assert catalog.development_only is True
     assert catalog.publication_status == "blocked"
     assert all(mission.development_only is True for mission in catalog.missions)
@@ -128,7 +147,7 @@ def test_development_load_returns_55_missions() -> None:
 
 def test_loader_reads_the_catalog_without_a_runtime_switch() -> None:
     catalog = load_draft_mission_catalog()
-    assert len(catalog.missions) == 55
+    assert len(catalog.missions) == 54
 
 
 def test_blocked_areas_are_absent() -> None:
@@ -152,7 +171,7 @@ def test_each_area_uses_its_assigned_template() -> None:
     assigned = set().union(*EXPECTED_TEMPLATES.values())
 
     assert assigned == set(actual)
-    assert sum(len(areas) for areas in EXPECTED_TEMPLATES.values()) == 55
+    assert sum(len(areas) for areas in EXPECTED_TEMPLATES.values()) == 54
     for template_id, areas in EXPECTED_TEMPLATES.items():
         assert {area_id: actual[area_id] for area_id in areas} == dict.fromkeys(areas, template_id)
 
@@ -167,7 +186,7 @@ def test_cited_nodes_come_from_mapped_draft_rows() -> None:
         assert isinstance(outcome, dict)
         cited[str(row["area_id"])] = str(outcome["node_id"])
 
-    assert len(mapped) == 55
+    assert len(mapped) == 54
     assert {mission.area_id: mission.cited_node_id for mission in catalog.missions} == cited
     fractions = catalog.mission("G5-AREA-MAT-05")
     assert fractions.cited_node_id == "G5-MAT-C03"
@@ -282,6 +301,7 @@ def test_remaining_outcomes_are_draft_items_or_held_slots() -> None:
         and node["node_type"] == "learning_outcome"
         and node["grade"] == 5
         and node["extraction_confidence"] == "high"
+        and node["curriculum_node_id"] not in RETIRED_SINHALA_NODES
     ]
     low = [
         node
@@ -290,6 +310,7 @@ def test_remaining_outcomes_are_draft_items_or_held_slots() -> None:
         and node["node_type"] == "learning_outcome"
         and node["grade"] == 5
         and node["extraction_confidence"] == "low"
+        and node["curriculum_node_id"] not in RETIRED_SINHALA_NODES
     ]
     environmental_outcomes = [
         node
@@ -300,8 +321,8 @@ def test_remaining_outcomes_are_draft_items_or_held_slots() -> None:
     ]
     cited = {mission.cited_node_id: mission.area_id for mission in sinhala}
 
-    assert len(draft_items) == len(high) == 8
-    assert len(sinhala_held) == len(low) == 76
+    assert len(draft_items) == len(high) == 7
+    assert len(sinhala_held) == len(low) == 66
     assert len(environmental_held) == len(environmental_outcomes) == 117
     assert {slot.node_id for slot in draft_items} == {str(node["curriculum_node_id"]) for node in high}
     assert {slot.node_id for slot in sinhala_held} == {str(node["curriculum_node_id"]) for node in low}

@@ -3,6 +3,7 @@
 # FastAPI dependency injection intentionally uses Depends calls in defaults.
 # ruff: noqa: B008
 
+import logging
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 from uuid import UUID
@@ -131,6 +132,8 @@ class WithdrawalAcknowledgementRequest(Boundary):
     all_support_removed: Literal[True]
     answer_revealing_state_cleared: Literal[True]
     input_handlers_cleared: Literal[True]
+    # The phone's revision-bound teardown receipt; required by flows that verify one.
+    teardown_receipt: dict[str, str | int | bool] | None = Field(default=None, max_length=10)
 
 
 class TelemetryEvent(Boundary):
@@ -216,6 +219,15 @@ class ServerScore(Boundary):
     item_revision_id: str | None = Field(default=None, exclude_if=lambda value: value is None)
     feedback_step_index: int | None = Field(default=None, ge=0, le=2, exclude_if=lambda value: value is None)
     feedback_column: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    # Short Sinhala explanation, given only after server scoring and only when it cannot teach a
+    # still-reserved probe.
+    feedback_si: str | None = Field(
+        default=None, max_length=240, exclude_if=lambda value: value is None
+    )
+    # Which code-built reveal illustration to draw; sent only when revealing is allowed.
+    reveal_key: str | None = Field(
+        default=None, max_length=32, pattern=r"^[a-z_]+$", exclude_if=lambda value: value is None
+    )
 
 
 class SupportRoundStatus(Boundary):
@@ -430,6 +442,9 @@ def _researcher(principal: tuple[str, UUID | None] = Depends(_principal)) -> Non
         raise HTTPException(status_code=403, detail={"code": "ROLE_FORBIDDEN"})
 
 
+logger = logging.getLogger(__name__)
+
+
 def _call(operation):
     try:
         return operation()
@@ -439,8 +454,17 @@ def _call(operation):
             "PAYLOAD_OUT_OF_BOUNDS",
             "PII_OR_ANSWER_DATA_REJECTED",
             "EVENT_VERSION_UNSUPPORTED",
+            "MALFORMED_RESPONSE",
+            "SCHEMA_MISMATCH",
+            "RESPONSE_KIND_MISMATCH",
+            "MATCH_MODE_MISMATCH",
+            "UNKNOWN_TOKEN",
+            "DUPLICATE_TOKEN",
+            "INCOMPLETE_RESPONSE",
         }:
             status = 422
+        # The HTTP access log shows only the status; the code says which rule refused.
+        logger.warning("learning flow refused: %s %s", status, error.code)
         raise HTTPException(
             status_code=status, detail={"code": error.code, **error.context}
         ) from error
@@ -579,6 +603,7 @@ def withdraw_support(
             answer_revealing_state_cleared=body.answer_revealing_state_cleared,
             input_handlers_cleared=body.input_handlers_cleared,
             idempotency_key=key,
+            teardown_receipt=body.teardown_receipt,
         )
     )
 

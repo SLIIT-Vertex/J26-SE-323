@@ -89,6 +89,10 @@ def test_worked_example_round_shows_a_full_trace_of_a_different_problem():
     for step in range(8):
         if response["support"]["scaffold_type"] == "worked_parallel_example":
             break
+        if response["support"]["game_manifest"]["stage_kind"] == "view":
+            # A visual demonstration is watched, not answered.
+            response = flow.complete_support(episode, duration_ms=100, steps_viewed=1, manifest_revision_id=response["support"]["game_manifest"]["revision_id"], grouped_count=0, group_sizes=(0, 0), interaction_summary={"completed": True}, idempotency_key=f"watch-help-{step}")
+            continue
         current = game_flow._support_rounds.current_item(flow.reconstruct(episode)["state"])
         response = flow.submit_supported(episode, constructed_response=wrong_answer(game_flow, current), response_time_ms=100, interaction_summary={}, idempotency_key=f"wrong-help-{step}")
     worked = response["support"]["game_manifest"]["worked_example"]

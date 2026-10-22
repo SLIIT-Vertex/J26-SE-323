@@ -333,6 +333,12 @@ def generate_simpler_item(
     return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
 
 
+def _spaced(value: int) -> str:
+    """``39 999``: thousands separated by a space, as the games print numbers."""
+
+    return f"{value:,}".replace(",", " ")
+
+
 def generate_item(
     skill_id: str, *, role: str, seed: int, simpler: bool = False
 ) -> NumberWorldItem:
@@ -376,36 +382,27 @@ def generate_item(
             (str(digit * 10 ** (power + 1)), "place_shift_left"),
         ]
         game_data.update(number=number, digit=digit, place=power)
-    elif skill_id.endswith("100000-01") and simpler:
-        # The same milestone pattern, two places shorter: 999 + 1.
-        number = 1_000
-        answer = "1000"
-        prompt = "රටාව බලන්න. 999 ට 1ක් එකතු කළ විට ලැබෙන සංඛ්‍යාව තෝරන්න."
-        distractors = [
-            ("100", "zero_placeholder_omitted"),
-            ("10", "zero_placeholder_omitted"),
-            ("10000", "counts_places_from_wrong_direction"),
-        ]
-        game_data.update(
-            number=number,
-            milestone=True,
-            milestone_steps=(10, 100, 1_000),
-            milestone_choices=(100, 1_000, 10_000),
-        )
     elif skill_id.endswith("100000-01"):
-        number = 100_000
-        answer = "100000"
-        prompt = "රටාව බලන්න. 99 999 ට 1ක් එකතු කළ විට ලැබෙන සංඛ්‍යාව තෝරන්න."
+        # A random round milestone, one below it given: 39 999 + 1 = 40 000, 7 999 + 1 = 8 000,
+        # up to 99 999 + 1 = 100 000. The simpler version stays at three and four digits.
+        power = rng.choice((2, 3) if simpler else (3, 4, 4))
+        lead = rng.randint(1, 9)
+        if not simpler and rng.random() < 0.2:
+            power, lead = 5, 1
+        number = lead * 10**power
+        base = number - 1
+        answer = str(number)
+        prompt = f"රටාව බලන්න. {_spaced(base)} ට 1ක් එකතු කළ විට ලැබෙන සංඛ්‍යාව තෝරන්න."
         distractors = [
-            ("10000", "zero_placeholder_omitted"),
-            ("1000", "zero_placeholder_omitted"),
-            ("1000000", "counts_places_from_wrong_direction"),
+            (str(number // 10), "zero_placeholder_omitted"),
+            (str(base + 10), "zero_placeholder_omitted"),
+            (str(number * 10), "counts_places_from_wrong_direction"),
         ]
         game_data.update(
             number=number,
             milestone=True,
-            milestone_steps=(10, 100, 1_000, 10_000, 100_000),
-            milestone_choices=(10_000, 100_000, 1_000_000),
+            milestone_steps=tuple(lead * 10**k for k in range(1, power + 1)),
+            milestone_choices=(number // 10, number, number * 10),
         )
     elif skill_id.endswith("ABACUS-01"):
         number = rng.choice(

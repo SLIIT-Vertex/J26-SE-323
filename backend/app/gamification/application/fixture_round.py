@@ -55,6 +55,9 @@ class FixtureRoundService:
         row = next((area for area in package.areas if area.area_id == area_id), None)
         if row is None:
             raise FixtureRoundError("FIXTURE_NOT_FOUND")
+        if row.template_id in {"pillam_journey", "punctuation_journey", "riddle_journey"}:
+            # A dedicated durable game never runs through the fixture path.
+            raise FixtureRoundError("DEDICATED_GAME_REQUIRED")
         episode_id = uuid4()
         before = _item(row, "unsupported_before")
         options, correct_option_id = _options(before)

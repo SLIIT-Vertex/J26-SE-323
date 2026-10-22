@@ -428,7 +428,7 @@ def _loop_checks(seeded: Sequence[Episode]) -> list[Check]:
         if types != expected or len(set(types)) != len(types):
             _fail(order_check, episode_id, f"{types} vs {expected}")
         for index, row in enumerate(rounds[:-1]):
-            if row.get("outcome") != "failed":
+            if row.get("outcome") not in {"failed", "viewed"}:
                 _fail(
                     switch, episode_id, f"round {index + 1} {row.get('outcome')} but another opened"
                 )

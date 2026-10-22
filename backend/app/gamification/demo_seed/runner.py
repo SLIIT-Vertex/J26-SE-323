@@ -17,6 +17,11 @@ from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrationError,
     LearningFlowOrchestrator,
 )
+from app.gamification.application.teardown_receipt import (
+    shown_steps,
+    simulated_receipt,
+    supported_summary,
+)
 from app.gamification.demo_seed.answers import correct_answer, wrong_answers
 from app.gamification.demo_seed.plan import EpisodeScript, SeedPlan, SkillPlan
 from app.gamification.modeling.support_selection.support_order import reason_family, subject_of
@@ -134,6 +139,9 @@ class SeedRunner:
             answer_revealing_state_cleared=True,
             input_handlers_cleared=True,
             idempotency_key=f"{prefix}:withdraw",
+            teardown_receipt=simulated_receipt(
+                status["support_revision_id"], status["manifest_revision_id"]
+            ),
         )
         orchestrator.present_after(episode_id, idempotency_key=f"{prefix}:present-after")
         after = orchestrator.reconstruct(episode_id)["state"]["presentations"][-1]
@@ -196,11 +204,11 @@ class SeedRunner:
                 response = orchestrator.complete_support(
                     episode_id,
                     duration_ms=rng.randint(8_000, 20_000),
-                    steps_viewed=3,
+                    steps_viewed=shown_steps(response),
                     manifest_revision_id=status["manifest_revision_id"],
                     grouped_count=0,
                     group_sizes=(0, 0),
-                    interaction_summary={"completed": True},
+                    interaction_summary={"completed": True, "next_presses": shown_steps(response)},
                     idempotency_key=f"{prefix}:help:{step}:view",
                 )
                 continue
@@ -213,7 +221,7 @@ class SeedRunner:
                 episode_id,
                 constructed_response=answer,
                 response_time_ms=rng.randint(5_000, 20_000),
-                interaction_summary={},
+                interaction_summary=supported_summary(flow),
                 idempotency_key=f"{prefix}:help:{step}",
             )
         raise RuntimeError("HELP_LOOP_DID_NOT_END")
