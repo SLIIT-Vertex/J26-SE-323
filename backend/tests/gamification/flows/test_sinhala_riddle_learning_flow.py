@@ -2,7 +2,7 @@ import pytest
 
 from app.gamification.application.learning_flow_orchestration import LearningFlowOrchestrationError
 from app.gamification.content import sinhala_riddles as r
-from tests.gamification.sinhala_flow_helpers import play, state, world
+from tests.gamification.helpers.sinhala_flow_helpers import play, state, world
 
 
 def wrong(record):

@@ -73,6 +73,15 @@ from app.gamification.modeling.support_selection.selection import (
 )
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.helpers.fixtures import (
+    DECISION_ID,
+    EPISODE_ID,
+    LEARNER_ID,
+    NOW,
+    SESSION_ID,
+    SKILL_CODE,
+    seed_complete_synthetic_episode,
+)
 from tests.gamification.modeling.independence_gain.test_measurement import valid_input
 from tests.gamification.modeling.misconception_inference.test_inference import (
     inference_input as model1_input,
@@ -85,16 +94,6 @@ from tests.gamification.modeling.support_selection.test_selection import (
 )
 from tests.gamification.modeling.support_selection.test_selection import (
     decide as model2_decide,
-)
-
-from .fixtures import (
-    DECISION_ID,
-    EPISODE_ID,
-    LEARNER_ID,
-    NOW,
-    SESSION_ID,
-    SKILL_CODE,
-    seed_complete_synthetic_episode,
 )
 
 BACKEND_ROOT = Path(__file__).parents[2]

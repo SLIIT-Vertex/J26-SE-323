@@ -18,9 +18,10 @@ from app.gamification.content.number_world import (
     validate_constructed_response,
 )
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
+from app.gamification.modeling.support_selection.support_order import credited_support
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
-from tests.gamification.support_loop_helpers import finish_help
+from tests.gamification.helpers.support_loop_helpers import finish_help
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000731")
 
@@ -200,14 +201,11 @@ def test_future_episode_starts_with_support_that_previously_led_to_independent_s
         flow,
         _open(flow, skill, key_suffix="learn-preference"),
     )
-    # The visual demonstration is only watched; the next help was answered correctly, then the
-    # fresh item was answered alone, so that help is the one learned.
-    learned = [
-        row["scaffold_type"]
-        for row in learned_from["support_loop"]["rounds"]
-        if row["outcome"] == "succeeded"
-    ]
-    assert len(learned) == 1
+    # Watching the visual demonstration led straight to withdrawal and the fresh item was
+    # answered alone, so the demonstration is the help that is learned.
+    winner, _failed = credited_support(learned_from)
+    assert winner is not None
+    learned = [winner]
 
     opened = _open(flow, skill, key_suffix="reuse-preference")
     episode_id = UUID(opened["episode_id"])

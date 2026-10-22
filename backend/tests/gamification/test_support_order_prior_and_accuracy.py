@@ -4,8 +4,12 @@ from uuid import uuid4
 
 import pytest
 
-from app.gamification.application.research_accuracy import accuracy_report, wilson
-from app.gamification.application.research_glossary import STATUS_NAMES, plain_status
+from app.gamification.application.research_dashboard.accuracy import (
+    accuracy_report,
+    model_check,
+    wilson,
+)
+from app.gamification.application.research_dashboard.glossary import STATUS_NAMES, plain_status
 from app.gamification.infrastructure.gateways.research_learning_state import read_learning_state
 from app.gamification.modeling.misconception_inference.learner_prior import (
     apply_learner_prior,
@@ -205,7 +209,7 @@ def test_glossary_covers_every_fair_test_exclusion_written_by_the_meter():
     import ast
     import inspect
 
-    from app.gamification.application.research_glossary import EXCLUSIONS
+    from app.gamification.application.research_dashboard.glossary import EXCLUSIONS
     from app.gamification.modeling.independence_gain import episode_measurement
 
     tree = ast.parse(inspect.getsource(episode_measurement))
@@ -239,3 +243,28 @@ def test_learning_state_can_request_focus_help_when_confusion_is_uncertain():
         Provider(), learner_id=uuid4(), skill_id="MAT-NUM", session_id="current", at=now
     )
     assert reading["state"] == "disengaged" and reading["status"] == "available"
+
+
+def test_model_check_passes_only_when_the_low_end_beats_the_reference():
+    def check(values, reference, reference_count=None):
+        return model_check(
+            "q",
+            "r",
+            values,
+            reference=reference,
+            reference_label="x",
+            reference_count=reference_count,
+        )["status"]
+
+    assert check([1] * 19, 0.5) == "not_enough_data"
+    assert check([1] * 18 + [0] * 2, 0.5) == "passing"
+    assert check([1] * 10 + [0] * 10, 0.5) == "not_passing"
+    assert check([1] * 20, None) == "not_enough_data"
+    assert check([1] * 20, 0.2, reference_count=5) == "not_enough_data"
+    # Guessing between two reasons is 50%, so twenty confirmed reasons pass.
+    report = accuracy_report([run(i) for i in range(20)])
+    misconception, support, gain = report["models"]
+    assert misconception["check"]["reference"] == 0.5
+    assert misconception["check"]["status"] == "passing"
+    assert support["check"]["status"] == "not_enough_data"
+    assert gain["kind"] == "measurement" and "check" not in gain

@@ -10,7 +10,7 @@ from app.gamification.application.event_ledger import (
 )
 from app.gamification.domain import AdaptiveEpisode, EpisodePhase, EpisodeTransitionError
 from app.gamification.domain.types import EpisodeId, SkillId
-from tests.gamification.research_contract_fixtures import (
+from tests.gamification.helpers.research_contract_fixtures import (
     AT,
     CONTAMINATED_PROBE,
     DUPLICATE_EVENTS,

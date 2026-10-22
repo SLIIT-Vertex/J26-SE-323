@@ -3,10 +3,13 @@
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from app.gamification.application.research_accuracy import accuracy_report, present_simulation
-from app.gamification.application.research_dashboard import ResearchDashboardService
-from app.gamification.application.research_history import model_history
-from app.gamification.application.research_play_status import IDLE_TIMEOUT, play_status
+from app.gamification.application.research_dashboard.accuracy import (
+    accuracy_report,
+    present_simulation,
+)
+from app.gamification.application.research_dashboard.dashboard import ResearchDashboardService
+from app.gamification.application.research_dashboard.history import model_history
+from app.gamification.application.research_dashboard.play_status import IDLE_TIMEOUT, play_status
 
 NOW = datetime(2026, 10, 21, 12, 0, tzinfo=UTC)
 LEARNER = UUID("00000000-0000-4000-8000-0000000000aa")

@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app.gamification.application.engine.area_flow import _presentations
 from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrator,
     LocalProbeGateway,
     RecordingEvidencePublisher,
 )
+from app.gamification.application.support_rounds import SupportRoundService
 from app.gamification.demo_seed import answers
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
@@ -80,32 +82,98 @@ def wrong_answer(flow, record: Mapping[str, object]) -> dict[str, object]:
         raise AssertionError(f"no wrong answer found for {record['skill_id']}") from error
 
 
-def watch_demonstrations(
-    orchestrator, episode_id: UUID, response: Mapping[str, object]
-) -> Mapping[str, object]:
-    """Press next through any watch-only visual demonstration, so an answerable round is open."""
+def skip_watch_only_help(game_flow) -> None:
+    """Drop visual guidance from this flow's help.
 
-    for step in range(8):
+    A visual demonstration is only watched, and watching it goes straight to withdrawal, so a
+    test of the answerable rounds opens its episode without one.
+    """
+
+    builders = dict(game_flow._support_rounds._builders)
+    builders.pop("visual_guidance", None)
+    game_flow._support_rounds = SupportRoundService(builders)
+
+
+def withdraw_and_present_after(
+    orchestrator, episode_id: UUID, status: Mapping[str, object]
+) -> Mapping[str, object]:
+    """Remove the finished help and show the next fresh unsupported item."""
+
+    orchestrator.withdraw_support(
+        episode_id,
+        request_id=uuid4(),
+        support_revision_id=status["support_revision_id"],
+        manifest_revision_id=status["manifest_revision_id"],
+        all_support_removed=True,
+        answer_revealing_state_cleared=True,
+        input_handlers_cleared=True,
+        idempotency_key=f"withdraw:{uuid4()}",
+    )
+    return orchestrator.present_after(episode_id, idempotency_key=f"after:{uuid4()}")
+
+
+def fresh_item(orchestrator, episode_id: UUID) -> Mapping[str, object]:
+    """The unsupported item on screen: the measured after item or a follow-up practice item."""
+
+    return _presentations(orchestrator.reconstruct(episode_id)["state"])[-1]
+
+
+def walk_every_help(
+    orchestrator,
+    episode_id: UUID,
+    response: Mapping[str, object],
+    *,
+    answer: Callable[[object, Mapping[str, object]], dict[str, object]] = wrong_answer,
+) -> list[Mapping[str, object]]:
+    """Every help payload the child is shown, across the episode and its follow-ups.
+
+    Each help is watched or answered with ``answer``; each finished help is withdrawn and the
+    fresh item that follows is answered with ``answer`` too.
+    """
+
+    game_flow = orchestrator._adaptive_flow(episode_id)
+    shown: list[Mapping[str, object]] = []
+    for step in range(64):
         status = response.get("support_round")
         support = response.get("support")
-        if (
-            not isinstance(status, Mapping)
-            or not isinstance(support, Mapping)
-            or status["stage_kind"] != "view"
-            or support["scaffold_type"] != "visual_guidance"
-        ):
-            return response
-        response = orchestrator.complete_support(
-            episode_id,
-            duration_ms=100,
-            steps_viewed=1,
-            manifest_revision_id=status["manifest_revision_id"],
-            grouped_count=0,
-            group_sizes=(0, 0),
-            interaction_summary={"completed": True},
-            idempotency_key=f"watch:{step}:{episode_id}",
+        if support is None:
+            if not isinstance(status, Mapping) or not status["withdrawal_allowed"]:
+                return shown
+            presented = withdraw_and_present_after(orchestrator, episode_id, status)
+            if presented.get("manifest") is None:
+                return shown
+            response = orchestrator.submit_after(
+                episode_id,
+                option_id=None,
+                constructed_response=answer(game_flow, fresh_item(orchestrator, episode_id)),
+                response_time_ms=200,
+                idempotency_key=f"fresh:{step}:{uuid4()}",
+            )
+            continue
+        shown.append(support)
+        if status["stage_kind"] == "view":
+            response = orchestrator.complete_support(
+                episode_id,
+                duration_ms=100,
+                steps_viewed=1,
+                manifest_revision_id=status["manifest_revision_id"],
+                grouped_count=0,
+                group_sizes=(0, 0),
+                interaction_summary={"completed": True},
+                idempotency_key=f"view:{step}:{uuid4()}",
+            )
+            continue
+        current = game_flow._support_rounds.current_item(
+            orchestrator.reconstruct(episode_id)["state"]
         )
-    return response
+        response = orchestrator.submit_supported(
+            episode_id,
+            constructed_response=answer(game_flow, current),
+            response_time_ms=200,
+            interaction_summary={"move_count": 1},
+            idempotency_key=f"help:{step}:{uuid4()}",
+        )
+    raise AssertionError("the help never ended")
 
 
 def finish_help(orchestrator, episode_id: UUID, shown: Mapping[str, object]) -> dict[str, str]:

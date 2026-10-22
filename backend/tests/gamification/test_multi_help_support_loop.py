@@ -11,11 +11,15 @@ from app.gamification.infrastructure.db.models import (
     LearningFlowIdempotencyReceiptModel,
     LearningFlowSupportRoundModel,
 )
-from tests.gamification.support_loop_helpers import (
+from tests.gamification.helpers.support_loop_helpers import (
     correct_answer,
+    finish_help,
     flow_for,
+    fresh_item,
     orchestrator_with_learner,
-    watch_demonstrations,
+    skip_watch_only_help,
+    walk_every_help,
+    withdraw_and_present_after,
     wrong_answer,
 )
 
@@ -23,7 +27,13 @@ AREA = "G5-AREA-MAT-01"
 SKILL = "G5-MAT-NUM-REPRESENTED-01"
 
 
-def _failed_episode(*, condition: str = "proposed", area: str = AREA, skill: str = SKILL):
+def _failed_episode(
+    *,
+    condition: str = "proposed",
+    area: str = AREA,
+    skill: str = SKILL,
+    answerable: bool = True,
+):
     learner = uuid4()
     orchestrator, session = orchestrator_with_learner(learner)
     opened = orchestrator.open_episode(
@@ -40,6 +50,9 @@ def _failed_episode(*, condition: str = "proposed", area: str = AREA, skill: str
     )
     episode_id = UUID(str(opened["episode_id"]))
     game_flow = flow_for(orchestrator, area)
+    # Most of these tests are about answerable rounds; a visual demonstration is only watched.
+    if answerable:
+        skip_watch_only_help(game_flow)
     state = orchestrator.reconstruct(episode_id)["state"]
     before = next(row for row in state["presentations"] if row["role"] == "unsupported_before")
     response = orchestrator.submit_before(
@@ -50,8 +63,6 @@ def _failed_episode(*, condition: str = "proposed", area: str = AREA, skill: str
         interaction_summary={"attempt_count": 1, "move_count": 1},
         idempotency_key=f"before:{uuid4()}",
     )
-    # These tests are about answerable rounds; a maths visual demonstration is only watched.
-    response = watch_demonstrations(orchestrator, episode_id, response)
     return orchestrator, session, game_flow, episode_id, response
 
 
@@ -270,49 +281,16 @@ def test_model3_and_model2_history_use_only_the_fresh_withdrawn_outcome():
     assert update["support_types_used"] == final["support_loop"]["types_used"]
 
 
-def _walk_rounds(orchestrator, game_flow, episode_id, response):
-    """Every help round of a baseline episode, opened by answering each one wrongly."""
-
-    seen = []
-    calls = 0
-    while not response["support_round"]["withdrawal_allowed"]:
-        calls += 1
-        assert calls <= 16
-        seen.append(response["support"])
-        status = response["support_round"]
-        if status["stage_kind"] == "view":
-            response = orchestrator.complete_support(
-                episode_id,
-                duration_ms=100,
-                steps_viewed=1,
-                manifest_revision_id=status["manifest_revision_id"],
-                grouped_count=0,
-                group_sizes=(0, 0),
-                interaction_summary={"completed": True},
-                idempotency_key=f"view:{calls}:{uuid4()}",
-            )
-            continue
-        current = _current_record(orchestrator, game_flow, episode_id)
-        response = orchestrator.submit_supported(
-            episode_id,
-            constructed_response=wrong_answer(game_flow, current),
-            response_time_ms=200,
-            interaction_summary={"move_count": 1},
-            idempotency_key=f"wrong:{calls}:{uuid4()}",
-        )
-    return seen
-
-
 @pytest.mark.parametrize(
     ("area", "skill"),
     [(AREA, SKILL), ("G5-AREA-ENG-12", "G5-ENG-FAMILY-BILINGUAL-01")],
 )
 def test_help_stages_show_the_answer_and_scored_items_do_not(area, skill):
-    orchestrator, _session, game_flow, episode_id, response = _failed_episode(
-        condition="baseline", area=area, skill=skill
+    orchestrator, _session, _game_flow, episode_id, response = _failed_episode(
+        condition="baseline", area=area, skill=skill, answerable=False
     )
     maths = area.startswith("G5-AREA-MAT-")
-    for support in _walk_rounds(orchestrator, game_flow, episode_id, response):
+    for support in walk_every_help(orchestrator, episode_id, response):
         manifest = support["game_manifest"]
         if manifest["stage_kind"] == "view":
             # A demonstration arrives solved: a worked example, or the child's own board.
@@ -347,3 +325,93 @@ def test_family_words_answer_reads_as_word_pairs():
     # Words the child reads on the board, never opaque tokens.
     assert all(" → " in line for line in answer["lines"])
     assert not any(mark.startswith(("e-", "s-")) for mark in answer["marks"])
+
+
+def test_watched_visual_guidance_goes_straight_to_withdrawal():
+    orchestrator, _session, _game_flow, episode_id, shown = _failed_episode(
+        condition="baseline", answerable=False
+    )
+    status = shown["support_round"]
+    assert shown["support"]["scaffold_type"] == "visual_guidance"
+    assert status["stage_kind"] == "view"
+
+    watched = orchestrator.complete_support(
+        episode_id,
+        duration_ms=100,
+        steps_viewed=1,
+        manifest_revision_id=status["manifest_revision_id"],
+        grouped_count=0,
+        group_sizes=(0, 0),
+        interaction_summary={"completed": True},
+        idempotency_key=f"view:{uuid4()}",
+    )
+
+    # The demonstration already showed the answer: no further help before the child tries alone.
+    assert watched["support"] is None
+    assert watched["support_round"]["withdrawal_allowed"] is True
+    assert watched["support_round"]["another_round_required"] is False
+    loop = orchestrator.reconstruct(episode_id)["state"]["support_loop"]
+    assert loop["types_used"] == ["visual_guidance"]
+    assert loop["stop_reason"] == "support_viewed"
+
+
+def test_failed_after_item_opens_the_next_help_and_keeps_the_first_measurement():
+    orchestrator, session, game_flow, episode_id, shown = _failed_episode(
+        condition="baseline", answerable=False
+    )
+    status = shown["support_round"]
+    watched = orchestrator.complete_support(
+        episode_id,
+        duration_ms=100,
+        steps_viewed=1,
+        manifest_revision_id=status["manifest_revision_id"],
+        grouped_count=0,
+        group_sizes=(0, 0),
+        interaction_summary={"completed": True},
+        idempotency_key=f"view:{uuid4()}",
+    )
+    withdraw_and_present_after(orchestrator, episode_id, watched["support_round"])
+    after = fresh_item(orchestrator, episode_id)
+    failed = orchestrator.submit_after(
+        episode_id,
+        option_id=None,
+        constructed_response=wrong_answer(game_flow, after),
+        response_time_ms=300,
+        idempotency_key=f"after:{uuid4()}",
+    )
+
+    measured = orchestrator.reconstruct(episode_id)["state"]
+    order = measured["support_loop"]["order"]
+    # The phone is sent the next help; the episode itself is measured and complete.
+    assert failed["status"] == "support_active"
+    assert failed["support"]["scaffold_type"] == order[1]
+    assert failed["support_round"]["withdrawal_allowed"] is False
+    assert measured["status"] == "completed"
+    assert measured["measurement"]["after_presentation_id"] == after["presentation_id"]
+    assert measured["support_loop"]["types_used"] == ["visual_guidance"]
+    assert measured["follow_up"]["support_loop"]["types_used"] == [order[1]]
+
+    done = finish_help(orchestrator, episode_id, failed)
+    presented = withdraw_and_present_after(orchestrator, episode_id, {**done})
+    practice = fresh_item(orchestrator, episode_id)
+    assert presented["manifest"]["presentation_id"] == practice["presentation_id"]
+    assert presented["manifest"]["measurement_role"] == "unsupported_after"
+    assert practice["revision_id"] not in {row["revision_id"] for row in measured["presentations"]}
+    passed = orchestrator.submit_after(
+        episode_id,
+        option_id=None,
+        constructed_response=correct_answer(game_flow, practice),
+        response_time_ms=300,
+        idempotency_key=f"practice:{uuid4()}",
+    )
+
+    final = orchestrator.reconstruct(episode_id)["state"]
+    assert passed["status"] == "completed"
+    assert passed["support"] is None
+    assert passed["server_score"]["measurement_role"] == "follow_up_practice"
+    assert final["follow_up"]["finish_reason"] == "independent_success"
+    # Follow-up practice never touches Model 3, the reward or the durable round table.
+    assert final["measurement"] == measured["measurement"]
+    assert final["reward"] == measured["reward"]
+    assert final["attempts"] == measured["attempts"]
+    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == 1

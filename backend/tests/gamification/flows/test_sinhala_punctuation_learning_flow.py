@@ -4,7 +4,7 @@ import pytest
 
 from app.gamification.application.learning_flow_orchestration import LearningFlowOrchestrationError
 from app.gamification.content import sinhala_punctuation as p
-from tests.gamification.sinhala_flow_helpers import play, state, world
+from tests.gamification.helpers.sinhala_flow_helpers import play, state, world
 
 OPEN_SKILLS = [s for s, skill in p.SKILLS.items() if not skill.review_blocked]
 

@@ -15,7 +15,11 @@ from app.gamification.content.addition_adventure import ATOMIC_SKILLS, MISCONCEP
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
-from tests.gamification.support_loop_helpers import finish_help, watch_demonstrations, wrong_answer
+from tests.gamification.helpers.support_loop_helpers import (
+    finish_help,
+    skip_watch_only_help,
+    wrong_answer,
+)
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000732")
 
@@ -174,6 +178,8 @@ def test_a_second_failed_attempt_strengthens_help_inside_the_episode(service):
     episode_id = UUID(opened["episode_id"])
     before = flow.reconstruct(episode_id)["state"]["presentations"][0]
     wrong = next(option for option, _ in before["options"] if option != before["correct_option_id"])
+    # Watching a visual demonstration goes straight to withdrawal; this test needs an answerable round.
+    skip_watch_only_help(flow._area_flows["G5-AREA-MAT-02"])
 
     response = flow.submit_before(
         episode_id,
@@ -182,8 +188,6 @@ def test_a_second_failed_attempt_strengthens_help_inside_the_episode(service):
         interaction_summary={"attempt_count": 2},
         idempotency_key="addition-second-failed-attempt",
     )
-    # A maths visual demonstration is watched, not answered; the answerable help comes next.
-    response = watch_demonstrations(flow, episode_id, response)
     first = response["support"]["scaffold_type"]
     current = flow._area_flows["G5-AREA-MAT-02"]._support_rounds.current_item(
         flow.reconstruct(episode_id)["state"]

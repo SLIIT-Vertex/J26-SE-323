@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 from app import main
 from app.config import get_settings
 from app.gamification.api.learning_flow_router import get_learning_flow_orchestrator
-from app.gamification.application.research_dashboard import ResearchDashboardService
+from app.gamification.application.research_dashboard.dashboard import ResearchDashboardService
 from app.gamification.demo_seed.plan import build_plan
 from app.gamification.demo_seed.runner import SeedRunner
 from app.gamification.infrastructure.db.research_dashboard_reader import (
@@ -19,7 +19,7 @@ from app.gamification.infrastructure.db.research_dashboard_reader import (
 from app.shared.database.base import Base
 from app.shared.database.session import get_db
 from app.shared.learner.model import LearnerModel
-from tests.gamification.support_loop_helpers import wrong_answer
+from tests.gamification.helpers.support_loop_helpers import wrong_answer
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000721")
 RESEARCHER = {"X-Dev-Principal": "NOT_FOR_PRODUCTION", "X-Dev-Role": "researcher"}

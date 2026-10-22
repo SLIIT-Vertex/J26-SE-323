@@ -13,7 +13,11 @@ from app.gamification.content.division_adventure import correct_response
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
-from tests.gamification.support_loop_helpers import finish_help, wrong_answer
+from tests.gamification.helpers.support_loop_helpers import (
+    finish_help,
+    skip_watch_only_help,
+    wrong_answer,
+)
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000758")
 
@@ -65,8 +69,13 @@ def test_division_episode_reuses_one_id_and_withdraws_answer_state_before_retry(
     state = flow.reconstruct(episode)["state"]
     wrong_after = _make_wrong(_bound_response(state, "unsupported_after"))
     final = flow.submit_after(episode, option_id=None, constructed_response=wrong_after, response_time_ms=750, idempotency_key="answer-division-after")
-    assert final["status"] == "completed"
-    assert flow.reconstruct(episode)["state"]["withdrawal"]["answer_revealing_state_cleared"] is True
+    # Measured and complete; the child is then given the next help on the same episode id.
+    assert final["episode_id"] == opened["episode_id"]
+    assert final["status"] == "support_active"
+    state = flow.reconstruct(episode)["state"]
+    assert state["status"] == "completed"
+    assert state["withdrawal"]["answer_revealing_state_cleared"] is True
+    assert final["support"]["scaffold_type"] not in state["support_loop"]["types_used"]
     session.close()
 
 
@@ -79,6 +88,8 @@ def test_worked_example_round_shows_a_full_trace_of_a_different_problem():
     session.commit()
     flow = LearningFlowOrchestrator(SqlAlchemyLearningFlowStore(session), probe_gateway=LocalProbeGateway(), evidence_publisher=RecordingEvidencePublisher())
     game_flow = flow._area_flows["G5-AREA-MAT-08"]
+    # Watching the visual demonstration goes straight to withdrawal; this test walks the answerable rounds.
+    skip_watch_only_help(game_flow)
     opened = flow.open_episode(learner_id=LEARNER, session_id=uuid4(), grade=5, medium="si", condition="baseline", environment="test", allow_draft=True, area_id="G5-AREA-MAT-08", atomic_skill_id="G5-MAT-DIV-REMAINDER-01", idempotency_key="open-worked")
     episode = UUID(opened["episode_id"])
     state = flow.reconstruct(episode)["state"]

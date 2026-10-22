@@ -38,7 +38,7 @@ from app.gamification.application.baseline_policy import (
     ConventionalBaselinePolicy,
 )
 from app.gamification.domain.types import ExperimentMode
-from tests.gamification.research_contract_fixtures import (
+from tests.gamification.helpers.research_contract_fixtures import (
     AT,
     EPISODE_ID,
     LEARNER_ID,
