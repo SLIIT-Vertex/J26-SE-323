@@ -20,6 +20,7 @@ SKIPPED_DIRECTORY_NAMES = {
     "coverage",
     "dist",
     "node_modules",
+    "private-notes",
     "venv",
 }
 GENERATED_WEB_COPIES = {
