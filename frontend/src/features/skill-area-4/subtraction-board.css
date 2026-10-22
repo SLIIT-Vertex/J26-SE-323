@@ -1,0 +1,133 @@
+/* The column subtraction board: labelled rows, a borrow button per column, a number pad. */
+.sub-board {
+	display: grid;
+	gap: 0.7rem;
+}
+
+.sub-guide {
+	display: grid;
+	gap: 0.25rem;
+	margin: 0;
+	border-radius: 14px;
+	background: #fff6d9;
+	padding: 0.6rem 0.8rem 0.6rem 1.8rem;
+	font-size: 0.92rem;
+	line-height: 1.4;
+}
+
+.sub-board .subtraction-table {
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: inset 0 0 0 2px #eadfc4;
+}
+
+.sub-board .subtraction-table thead th {
+	background: #4f46e5;
+	color: #fff;
+	padding: 0.45rem 0.2rem;
+	font-size: clamp(0.78rem, 3.2vw, 0.95rem);
+}
+
+.sub-board .subtraction-table tbody th {
+	width: 26%;
+	padding: 0.3rem;
+	text-align: left;
+	font-size: clamp(0.68rem, 2.8vw, 0.85rem);
+	color: #5b6475;
+}
+
+.sub-board .minuend-row td,
+.sub-board .subtrahend-row td {
+	font-size: clamp(1.5rem, 7vw, 2rem);
+	font-weight: 800;
+}
+
+.sub-board .subtrahend-row td {
+	border-bottom: 3px solid #2e2a45;
+}
+
+/* A borrowed column: the new value above, the old digit crossed out below it. */
+.sub-board .minuend-row td {
+	position: relative;
+}
+
+.sub-board .minuend-row .exchange-token {
+	display: block;
+	color: #c2410c;
+	font-size: 0.75em;
+	line-height: 1;
+}
+
+.sub-board .minuend-row s {
+	display: block;
+	color: #9ca3af;
+	font-size: 0.7em;
+}
+
+.sub-board .borrow-button {
+	width: 100%;
+	border: 2px dashed #c2410c;
+	border-radius: 12px;
+	background: #fff7ed;
+	color: #9a3412;
+	font-size: clamp(0.66rem, 2.7vw, 0.8rem);
+	font-weight: 800;
+	line-height: 1.1;
+}
+
+.sub-board .result-digit {
+	width: 100%;
+	border: 3px solid #c7d2fe;
+	border-radius: 12px;
+	background: #fff;
+	text-align: center;
+	font-size: clamp(1.5rem, 7vw, 2rem);
+	font-weight: 800;
+	caret-color: transparent;
+}
+
+.sub-board .result-digit[data-active="true"] {
+	border-color: #4f46e5;
+	box-shadow: 0 0 0 4px rgb(79 70 229 / 0.2);
+}
+
+.sub-pad {
+	display: grid;
+	grid-template-columns: repeat(6, minmax(0, 1fr));
+	gap: 0.4rem;
+}
+
+.sub-pad button {
+	min-height: 52px;
+	border: 0;
+	border-radius: 14px;
+	background: #eef0ff;
+	color: #312e81;
+	font-size: 1.35rem;
+	font-weight: 800;
+}
+
+.sub-pad button:active {
+	transform: scale(0.95);
+}
+
+.sub-pad .sub-pad-erase {
+	background: #fde2e2;
+	color: #9f1239;
+}
+
+.sub-undo {
+	justify-self: start;
+	border: 2px solid currentColor;
+	border-radius: 999px;
+	background: #fff;
+	padding: 0.35rem 0.9rem;
+	font-weight: 800;
+}
+
+fieldset.sub-pad {
+	margin: 0;
+	border: 0;
+	padding: 0;
+	min-inline-size: 0;
+}

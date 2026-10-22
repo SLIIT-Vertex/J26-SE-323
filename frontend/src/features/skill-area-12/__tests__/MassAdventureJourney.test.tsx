@@ -20,6 +20,27 @@ describe("Mass Adventure", () => {
 		expect(host.textContent).toContain("තරාදිය සමබරයි");
 		expect(host.querySelector(".right-pan")?.getAttribute("aria-label")).toContain("සම්මත බර තැටිය");
 	});
+	it("shows the five scale photographs for the correct-scale activity", async () => {
+		await act(async () => root.render(
+			<MassActivity
+				game={{
+					response_kind: "mass_instrument",
+					object_id: "small-parcel",
+					instrument_types: ["two_pan_balance", "spring_balance", "dial_scale", "digital_scale", "platform_scale"],
+				}}
+				onResponse={() => undefined}
+			/>,
+		));
+		expect([...host.querySelectorAll(".instrument-icon")].map((node) => node.getAttribute("src"))).toEqual([
+			"/curriculum/game/G5-AREA-MAT-12/01-two-pan-balance.png",
+			"/curriculum/game/G5-AREA-MAT-12/02-spring-balance.png",
+			"/curriculum/game/G5-AREA-MAT-12/03-dial-scale.png",
+			"/curriculum/game/G5-AREA-MAT-12/04-digital-scale.png",
+			"/curriculum/game/G5-AREA-MAT-12/05-electronic-platform-scale.png",
+		]);
+		expect(host.textContent).toContain("තැටි දෙකේ තරාදිය");
+		expect(host.textContent).toContain("ඉලෙක්ට්‍රොනික වේදිකා තරාදිය");
+	});
 	it("adds and removes standard masses while emitting complete evidence", async () => {
 		const onResponse = vi.fn();
 		await act(async () => root.render(<MassActivity game={{ response_kind: "mass_balance", target_mass_g: 1000, available_masses_g: [500] }} onResponse={onResponse} />));

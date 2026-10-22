@@ -15,21 +15,23 @@ import type {
 	SupportView,
 	TransitTerminalWorkedExample,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	picture,
+	VEHICLE_PICTURES,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./transit-terminal-quest.css";
 import { TRANSPORT_SKILL } from "./manifest";
-import {
-	VEHICLE_MARKS,
-	type TicketLink,
-	transportMappingResponse,
-} from "./transitTerminalLogic";
+import { transportMappingResponse } from "./transitTerminalLogic";
 
 type Step =
 	| "games"
@@ -294,7 +296,10 @@ export function TransitTerminalQuest({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={1}
 							currentActivity={1}
 							completedActivities={completed ? 1 : 0}
@@ -400,91 +405,38 @@ export function TransitTerminalQuest({
 	);
 }
 
-type Row = Record<string, unknown>;
 export function TicketBoard({
 	game,
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const sources = game.words as Row[];
-	const targets = game.vehicles as Row[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<TicketLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
-		);
-		const next = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
+	return (
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-09")}
+			theme="sky"
+			sources={game.words as Record<string, unknown>[]}
+			sourceKey="word_token"
+			targets={game.vehicles as Record<string, unknown>[]}
+			targetKey="vehicle_token"
+			target={(row) => ({
+				picture: { emoji: picture(VEHICLE_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each word onto its vehicle."
+			build={(links, tokens, trace) =>
 				transportMappingResponse(
 					String(game.command_token),
-					next,
-					sources.map((row) => String(row.word_token)),
-					nextTrace,
-				),
-			);
-	};
-	return (
-		<section className="ticket-board">
-			<div className="ticket-rail">
-				{sources.map((row) => {
-					const id = String(row.word_token);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="vehicle-grid">
-				{targets.map((row) => {
-					const id = String(row.vehicle_token);
-					const linked = links.find((entry) => entry.target === id);
-					const label = linked
-						? String(
-								sources.find(
-									(entry) => String(entry.word_token) === linked.source,
-								)?.text_en ?? "",
-							)
-						: "Choose a word";
-					return (
-						<button
-							className="vehicle-card"
-							key={id}
-							disabled={!selected}
-							onClick={() => place(id)}
-						>
-							<span className="vehicle-mark" aria-hidden="true">
-								{VEHICLE_MARKS[Number(row.renderer_variant)] ?? "🚐"}
-							</span>
-							<span>{label}</span>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
+
 function TransportSupport({
 	support,
 	stage,

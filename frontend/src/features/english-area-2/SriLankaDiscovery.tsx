@@ -15,13 +15,16 @@ import type {
 	SriLankaDiscoveryWorkedExample,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { wordPicture } from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import { SRI_LANKA_SKILLS } from "./manifest";
 import { groupingResponse, mappingResponse } from "./sriLankaDiscoveryLogic";
 import "./sri-lanka-discovery.css";
@@ -314,7 +317,10 @@ export function SriLankaDiscovery({
 				<section className="sld-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={3}
 							currentActivity={index + 1}
 							completedActivities={completed.length}
@@ -420,7 +426,7 @@ export function DiscoveryActivity({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	if (game.response_kind === "semantic_grouping")
 		return <GroupingBoard game={game} onResponse={onResponse} />;
@@ -432,94 +438,48 @@ function MappingBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const isLabel = game.response_kind === "semantic_label_mapping";
-	const sources = (isLabel ? game.labels : game.exemplars) as NamedRow[];
-	const destinations = (
-		isLabel ? game.destinations : game.categories
-	) as NamedRow[];
-	const sourceKey = isLabel ? "label_id" : "exemplar_id";
-	const destinationKey = isLabel ? "destination_id" : "category_id";
-	const [selected, setSelected] = useState<string | null>(null);
-	const [placements, setPlacements] = useState<
-		Array<{ sequence: number; sourceId: string; destinationId: string }>
-	>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const chooseDestination = (destinationId: string) => {
-		if (!selected) return;
-		const existing = placements.find(
-			(row) => row.destinationId === destinationId || row.sourceId === selected,
-		);
-		const next = placements.filter(
-			(row) => row.destinationId !== destinationId && row.sourceId !== selected,
-		);
-		next.push({ sequence: next.length + 1, sourceId: selected, destinationId });
-		const nextTrace = [
-			...trace,
-			`${existing ? "replace" : "place"}:${selected}:${destinationId}`,
-		];
-		setPlacements(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
-				mappingResponse(
-					game.response_kind as
-						| "semantic_label_mapping"
-						| "category_exemplar_mapping",
-					String(game.command_token),
-					next,
-					sources.map((row) => String(row[sourceKey])),
-					nextTrace,
-				),
-			);
-	};
+	const kind = game.response_kind as
+		| "semantic_label_mapping"
+		| "category_exemplar_mapping";
 	return (
-		<section
-			className="sld-board mapping-board"
-			aria-label="Match the English cards"
-		>
-			<div className="sld-source-rail">
-				{sources.map((row) => {
-					const id = String(row[sourceKey]);
-					const used = placements.some((entry) => entry.sourceId === id);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							aria-pressed={selected === id}
-							onClick={() => setSelected(id)}
-							disabled={used && selected !== id}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="sld-destinations">
-				{destinations.map((row) => {
-					const id = String(row[destinationKey]);
-					const placed = placements.find((entry) => entry.destinationId === id);
-					const source = sources.find(
-						(entry) => String(entry[sourceKey]) === placed?.sourceId,
-					);
-					return (
-						<button
-							key={id}
-							className="sld-destination"
-							onClick={() => chooseDestination(id)}
-							disabled={!selected}
-						>
-							<strong>{String(row.text_si ?? row.text_en)}</strong>
-							<span>
-								{source ? String(source.text_en) : "Tap after choosing a card"}
-							</span>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			theme="market"
+			scene={sceneFor("G5-AREA-ENG-02")}
+			sources={(isLabel ? game.labels : game.exemplars) as NamedRow[]}
+			sourceKey={isLabel ? "label_id" : "exemplar_id"}
+			targets={(isLabel ? game.destinations : game.categories) as NamedRow[]}
+			targetKey={isLabel ? "destination_id" : "category_id"}
+			target={(row) =>
+				isLabel
+					? { label: String(row.text_si) }
+					: {
+							label: String(row.text_en),
+							picture: { emoji: wordPicture(row.text_en) ?? "🇱🇰" },
+						}
+			}
+			instruction={
+				isLabel
+					? "Drag each English word to its Sinhala meaning."
+					: "Drag each example to its national symbol."
+			}
+			build={(links, tokens, trace) =>
+				mappingResponse(
+					kind,
+					String(game.command_token),
+					links.map((link) => ({
+						sequence: link.sequence,
+						sourceId: link.source,
+						destinationId: link.target,
+					})),
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 
@@ -528,85 +488,43 @@ function GroupingBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const members = game.members as NamedRow[];
 	const groups = game.groups as NamedRow[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [assignments, setAssignments] = useState<Record<string, string[]>>(() =>
-		Object.fromEntries(groups.map((group) => [String(group.group_id), []])),
-	);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (groupId: string) => {
-		if (!selected) return;
-		const next = Object.fromEntries(
-			Object.entries(assignments).map(([id, values]) => [
-				id,
-				values.filter((value) => value !== selected),
-			]),
-		);
-		next[groupId] = [...next[groupId], selected];
-		const nextTrace = [...trace, `group:${selected}:${groupId}`];
-		setAssignments(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (Object.values(next).flat().length === members.length)
-			onResponse(
+	return (
+		<TokenBoard
+			theme="market"
+			layout="bins"
+			scene={sceneFor("G5-AREA-ENG-02")}
+			sources={members}
+			sourceKey="member_id"
+			targets={groups}
+			targetKey="group_id"
+			target={(row) => ({
+				label: String(row.text_en),
+				capacity: members.length,
+				picture: { emoji: wordPicture(row.text_en) ?? "🧺" },
+			})}
+			instruction="Sort each word into its group."
+			build={(links, tokens, trace) =>
 				groupingResponse(
 					String(game.command_token),
-					next,
-					members.map((row) => String(row.member_id)),
-					nextTrace,
-				),
-			);
-	};
-	const assigned = Object.values(assignments).flat();
-	return (
-		<section
-			className="sld-board grouping-board"
-			aria-label="Sort the English words"
-		>
-			<div className="sld-source-rail">
-				{members.map((row) => {
-					const id = String(row.member_id);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							aria-pressed={selected === id}
-							disabled={assigned.includes(id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="sld-group-grid">
-				{groups.map((group) => {
-					const id = String(group.group_id);
-					return (
-						<button
-							className="sld-group"
-							key={id}
-							disabled={!selected}
-							onClick={() => place(id)}
-						>
-							<strong>{String(group.text_en)}</strong>
-							<span>
-								{assignments[id]
-									.map((member) =>
-										String(
-											members.find((row) => row.member_id === member)?.text_en,
-										),
-									)
-									.join(" · ") || "Choose a word"}
-							</span>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+					Object.fromEntries(
+						groups.map((group) => [
+							String(group.group_id),
+							links
+								.filter((link) => link.target === String(group.group_id))
+								.sort((a, b) => a.sequence - b.sequence)
+								.map((link) => link.source),
+						]),
+					),
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 

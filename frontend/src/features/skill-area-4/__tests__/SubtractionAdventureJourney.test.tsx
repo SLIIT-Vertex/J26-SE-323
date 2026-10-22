@@ -1,8 +1,12 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	exchangeLabel,
+	SUBTRACTION_CHAPTERS,
+	SUBTRACTION_SKILLS,
+} from "../manifest";
 import { SubtractionMechanic } from "../SubtractionAdventureJourney";
-import { SUBTRACTION_CHAPTERS, SUBTRACTION_SKILLS, exchangeLabel } from "../manifest";
 
 function change(input: HTMLInputElement, value: string) {
 	const setter = Object.getOwnPropertyDescriptor(
@@ -70,16 +74,11 @@ describe("Subtraction Adventure", () => {
 		for (const control of host.querySelectorAll<HTMLElement>(".touch-target")) {
 			expect(control.style.minHeight || "48px").toBeTruthy();
 		}
-		await act(async () => {
-			host.querySelector<HTMLButtonElement>('.exchange-source[data-place="tens"]')?.click();
-		});
+		// One button on the ones column borrows 1 from the tens.
 		await act(async () => {
 			host
-				.querySelector<HTMLButtonElement>('.exchange-destination[data-place="ones"]')
+				.querySelector<HTMLButtonElement>('.borrow-button[data-place="ones"]')
 				?.click();
-		});
-		await act(async () => {
-			host.querySelector<HTMLButtonElement>(".exchange-apply")?.click();
 		});
 		const fields = host.querySelectorAll<HTMLInputElement>(".result-digit");
 		await act(async () => change(fields[0], "3"));
@@ -94,7 +93,9 @@ describe("Subtraction Adventure", () => {
 			expect.objectContaining({ digitEntries: 1 }),
 		);
 		expect(
-			[...host.querySelectorAll(".exchange-token")].map((node) => node.textContent),
+			[...host.querySelectorAll(".exchange-token")].map(
+				(node) => node.textContent,
+			),
 		).toEqual(["7", "15"]);
 	});
 
@@ -130,7 +131,8 @@ describe("Subtraction Adventure", () => {
 				await act(async () => change(fields[index], value));
 			}
 		}
-		const finalResult = host.querySelector<HTMLInputElement>(".expanded-result");
+		const finalResult =
+			host.querySelector<HTMLInputElement>(".expanded-result");
 		expect(finalResult).not.toBeNull();
 		await act(async () => change(finalResult as HTMLInputElement, "5322"));
 		expect(onChange).toHaveBeenLastCalledWith(
@@ -165,11 +167,17 @@ describe("Subtraction Adventure", () => {
 		expect(host.querySelector("img")?.alt).toBe("");
 		expect(host.querySelector(".result-digit")).toBeNull();
 		await act(async () => {
-			host.querySelector<HTMLButtonElement>('[data-source="first"] .story-minuend')?.click();
+			host
+				.querySelector<HTMLButtonElement>(
+					'[data-source="first"] .story-minuend',
+				)
+				?.click();
 		});
 		await act(async () => {
 			host
-				.querySelector<HTMLButtonElement>('[data-source="second"] .story-subtrahend')
+				.querySelector<HTMLButtonElement>(
+					'[data-source="second"] .story-subtrahend',
+				)
 				?.click();
 		});
 		const digits = host.querySelectorAll<HTMLInputElement>(".result-digit");

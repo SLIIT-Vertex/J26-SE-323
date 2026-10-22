@@ -475,7 +475,7 @@ function MappingBoard({
 				instruction={
 					vocabulary
 						? "Drag each word to the matching plant-part picture."
-						: "Follow each purple line to a plant part. Drag its name into the empty label."
+						: "Look at each number on the plant. Drag the part's name into its numbered box."
 				}
 				cards={sources.map((row) => ({
 					id: String(row[sourceKey]),

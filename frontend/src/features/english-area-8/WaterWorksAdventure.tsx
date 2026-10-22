@@ -15,21 +15,23 @@ import type {
 	SupportView,
 	WaterWorksWorkedExample,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	picture,
+	WATER_PICTURES,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./water-works-adventure.css";
 import { WATER_STAGES } from "./manifest";
-import {
-	SCENE_MARKS,
-	type WaterLink,
-	waterActionResponse,
-} from "./waterWorksLogic";
+import { waterActionResponse } from "./waterWorksLogic";
 
 type Step =
 	| "games"
@@ -294,7 +296,10 @@ export function WaterWorksAdventure({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={1}
 							currentActivity={1}
 							completedActivities={completed ? 1 : 0}
@@ -399,91 +404,33 @@ export function WaterWorksAdventure({
 	);
 }
 
-type Row = Record<string, unknown>;
 export function WaterBoard({
 	game,
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const sources = game.actions as Row[];
-	const targets = game.scenes as Row[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<WaterLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
-		);
-		const next = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "route"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
-				waterActionResponse(
-					String(game.command_token),
-					next,
-					sources.map((row) => String(row.action_token)),
-					nextTrace,
-				),
-			);
-	};
 	return (
-		<section className="water-board">
-			<div className="droplet-rail">
-				{sources.map((row) => {
-					const id = String(row.action_token);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="scene-grid">
-				{targets.map((row) => {
-					const id = String(row.scene_token);
-					const linked = links.find((entry) => entry.target === id);
-					const label = linked
-						? String(
-								sources.find(
-									(entry) => String(entry.action_token) === linked.source,
-								)?.text_en ?? "",
-							)
-						: "Choose a word";
-					return (
-						<button
-							className="scene-card"
-							key={id}
-							disabled={!selected}
-							onClick={() => place(id)}
-						>
-							<span className="scene-mark" aria-hidden="true">
-								{SCENE_MARKS[Number(row.renderer_variant)] ?? "💧"}
-							</span>
-							<span>{label}</span>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-08")}
+			theme="sky"
+			sources={game.actions as Record<string, unknown>[]}
+			sourceKey="action_token"
+			targets={game.scenes as Record<string, unknown>[]}
+			targetKey="scene_token"
+			target={(row) => ({
+				picture: { emoji: picture(WATER_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each water word onto the picture that shows it."
+			build={(links, tokens, trace) =>
+				waterActionResponse(String(game.command_token), links, tokens, trace)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
+
 function WaterSupport({
 	support,
 	stage,

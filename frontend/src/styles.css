@@ -4920,3 +4920,38 @@ p {
 	letter-spacing: 0;
 	text-transform: none;
 }
+
+/* Smallest phones (< 360 px): six place-value columns need 6 × 48 px tap targets, and at 320 px
+   the shell and surface padding leave only ~44 px per column. Only on this screen, the shell
+   gutter narrows to 8 px and the place-value board spans the surface's inner padding, so each
+   column reaches about 49 px without the buttons looking any bigger. Wider phones are unchanged. */
+@media (max-width: 359px) {
+	.mobile-shell:has(.number-world .place-value-board) {
+		padding-inline: 8px;
+	}
+	.mobile-shell .number-world .game-play-surface .place-value-board.manipulation-board {
+		box-sizing: border-box;
+		width: calc(100% + 2 * clamp(12px, 2.5vw, 20px));
+		margin-inline: calc(-1 * clamp(12px, 2.5vw, 20px));
+		padding-inline: 0;
+		border-inline-width: 0;
+		border-radius: 0;
+	}
+	.place-value-board .place-value-table-frame {
+		padding-inline: 0;
+		border-radius: 0;
+	}
+	.place-value-board .place-value-table {
+		border-inline-width: 1px;
+	}
+	.place-value-board .place-value-table th,
+	.place-value-board .place-value-table td {
+		border-inline-width: 1px;
+	}
+	.place-value-board .place-value-question-number,
+	.place-value-board .place-value-target,
+	.place-value-board .place-value-selection-hint,
+	.place-value-board .place-value-selection-summary {
+		padding-inline: 12px;
+	}
+}

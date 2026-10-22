@@ -14,20 +14,23 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	GARMENT_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./rainbow-wardrobe.css";
 import { WARDROBE_SKILL, WARDROBE_STAGES } from "./manifest";
-import {
-	type WardrobeLink,
-	wardrobeMappingResponse,
-} from "./rainbowWardrobeLogic";
+import { wardrobeMappingResponse } from "./rainbowWardrobeLogic";
 
 type Step =
 	| "games"
@@ -37,8 +40,6 @@ type Step =
 	| "feedback"
 	| "result";
 type Game = Record<string, unknown>;
-type Word = { word_token: string; text_en: string };
-type Garment = { garment_token: string; renderer_variant: number };
 
 export function RainbowWardrobeQuest({
 	api,
@@ -302,7 +303,10 @@ export function RainbowWardrobeQuest({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={1}
 							currentActivity={1}
 							completedActivities={0}
@@ -429,91 +433,31 @@ function WardrobeActivity({
 	game,
 	onResponse,
 }: {
-	game: Game;
-	onResponse(value: ConstructedResponse): void;
+	game: Record<string, unknown>;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const words = game.words as Word[];
-	const garments = game.garments as Garment[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<WardrobeLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const emit = (nextLinks: WardrobeLink[], nextTrace: string[]) =>
-		onResponse(
-			wardrobeMappingResponse(
-				String(game.command_token),
-				nextLinks,
-				words.map((word) => word.word_token),
-				nextTrace,
-			),
-		);
-	const place = (target: string) => {
-		if (!selected) return;
-		const filtered = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		const next = [
-			...filtered,
-			{ sequence: filtered.length + 1, source: selected, target },
-		];
-		const nextTrace = [
-			...trace,
-			`${links.some((link) => link.target === target) ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		emit(next, nextTrace);
-	};
 	return (
-		<section>
-			<p className="wardrobe-hint">
-				Tap an English word, then tap the matching garment.
-			</p>
-			<div className="wardrobe-word-bank">
-				{words.map((word) => (
-					<button
-						className="wardrobe-word"
-						data-opaque-token={word.word_token}
-						key={word.word_token}
-						aria-pressed={selected === word.word_token}
-						disabled={links.some((link) => link.source === word.word_token)}
-						onClick={() => {
-							setSelected(word.word_token);
-							setTrace((old) => [...old, `select:${word.word_token}`]);
-						}}
-					>
-						{word.text_en}
-					</button>
-				))}
-			</div>
-			<div className="wardrobe-rail">
-				{garments.map((garment) => {
-					const link = links.find(
-						(item) => item.target === garment.garment_token,
-					);
-					const word = words.find((item) => item.word_token === link?.source);
-					return (
-						<button
-							className="wardrobe-target"
-							data-opaque-token={garment.garment_token}
-							data-selected={Boolean(word)}
-							key={garment.garment_token}
-							aria-label={
-								word ? `Matched to ${word.text_en}` : "Unmatched garment shape"
-							}
-							onClick={() => place(garment.garment_token)}
-						>
-							<span
-								className="garment-glyph"
-								data-variant={garment.renderer_variant}
-								aria-hidden="true"
-							/>
-							<strong>{word?.text_en ?? "?"}</strong>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-07")}
+			theme="market"
+			sources={game.words as Record<string, unknown>[]}
+			sourceKey="word_token"
+			targets={game.garments as Record<string, unknown>[]}
+			targetKey="garment_token"
+			target={(row) => ({
+				picture: { emoji: picture(GARMENT_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each clothes word onto its picture."
+			build={(links, tokens, trace) =>
+				wardrobeMappingResponse(
+					String(game.command_token),
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 

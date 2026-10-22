@@ -16,6 +16,14 @@ import type {
 } from "../mobile-learning-flow/api/generated";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	COMMAND_ACTIONS,
+	picture,
+	SITUATION_PICTURES,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { SequenceBoard } from "../mobile-learning-flow/phaser-board/SequenceBoard";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
@@ -28,7 +36,6 @@ import {
 	contextLinkResponse,
 	functionSortResponse,
 	questionSequenceResponse,
-	type StudioLink,
 } from "./classroomLanguageLogic";
 
 const SKILLS = [
@@ -454,240 +461,134 @@ function incomplete(response: ConstructedResponse) {
 	}
 }
 
+const HEADING_PICTURES: Record<string, string> = {
+	"Polite Forms": "🙏",
+	"Simple Commands": "📣",
+	Request: "🙋",
+	Praising: "👏",
+	"Simple Question Forms": "❓",
+	Greetings: "👋",
+	Wishes: "🎉",
+};
+
 function StudioBoard({
 	game,
 	onResponse,
 }: {
 	game: Game;
-	onResponse(response: ConstructedResponse): void;
+	onResponse(response: ConstructedResponse | null): void;
 }) {
-	const [selected, setSelected] = useState<string | null>(null),
-		[links, setLinks] = useState<StudioLink[]>([]),
-		[trace, setTrace] = useState<string[]>([]);
-	if (game.response_kind === "classroom_command_action")
-		return <CommandBoard game={game} onResponse={onResponse} />;
-	if (game.response_kind === "classroom_question_sequence")
-		return <QuestionBoard game={game} onResponse={onResponse} />;
-	const context = game.response_kind === "classroom_context_expression_links";
-	const sources = (context ? game.situations : game.expressions) as Row[],
-		targets = (context ? game.expressions : game.heading_zones) as Row[];
-	const sourceKey = context ? "situation_token" : "expression_token",
-		targetKey = context ? "expression_token" : "heading_token";
-	const place = (target: string) => {
-		if (!selected) return;
-		const remaining = links.filter(
-				(link) => link.source !== selected && link.target !== target,
-			),
-			next = [
-				...remaining,
-				{ sequence: remaining.length + 1, source: selected, target },
-			],
-			nextTrace = [
-				...trace,
-				links.some((link) => link.source === selected)
-					? `replace:${target}`
-					: `place:${target}`,
-			];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		onResponse(
-			context
-				? contextLinkResponse(
-						String(game.command_token),
-						next,
-						sources.map((row) => String(row[sourceKey])),
-						nextTrace,
-					)
-				: functionSortResponse(
-						String(game.command_token),
-						next,
-						sources.map((row) => String(row[sourceKey])),
-						nextTrace,
-					),
-		);
-	};
-	return (
-		<section className="cll-board">
-			{selected && <p className="cll-dock">Selected card ready</p>}
-			<div className="cll-tray">
-				{sources.map((row, index) => (
-					<button
-						data-opaque-token={String(row[sourceKey])}
-						key={String(row[sourceKey])}
-						aria-pressed={selected === row[sourceKey]}
-						onClick={() => setSelected(String(row[sourceKey]))}
-					>
-						{context ? (
-							<SituationCue
-								variant={Number(row.renderer_variant)}
-								index={index}
-							/>
-						) : (
-							String(row.text_en)
-						)}
-					</button>
-				))}
-			</div>
-			<div className="cll-portals">
-				{targets.map((row) => (
-					<button
-						data-opaque-token={String(row[targetKey])}
-						key={String(row[targetKey])}
-						onClick={() => place(String(row[targetKey]))}
-					>
-						<strong>{String(row.text_en)}</strong>
-						<small>
-							{links.some((link) => link.target === row[targetKey])
-								? "✓ placed"
-								: "tap to place"}
-						</small>
-					</button>
-				))}
-			</div>
-		</section>
-	);
-}
-
-function CommandBoard({
-	game,
-	onResponse,
-}: {
-	game: Game;
-	onResponse(response: ConstructedResponse): void;
-}) {
-	const controls = game.action_controls as Row[];
-	const [selected, setSelected] = useState<number | null>(null);
-	return (
-		<section className="cll-command">
-			<h2>{String(game.command_text)}</h2>
-			<p>Move the character below.</p>
-			<div
-				className="cll-character"
-				data-pose={selected ?? -1}
-				role="img"
-				aria-label="Classroom character"
-			>
-				<i />
-				<b />
-				<b />
-			</div>
-			<div className="cll-controls">
-				{controls.map((control, index) => (
-					<button
-						data-opaque-token={String(control.action_token)}
-						key={String(control.action_token)}
-						onClick={() => {
-							setSelected(Number(control.renderer_variant));
-							onResponse(
-								commandActionResponse(
-									String(game.command_token),
-									String(game.actor_token),
-									String(control.action_token),
-									String(control.state_token),
-									[`act:${String(control.action_token)}`],
-								),
-							);
-						}}
-					>
-						Scene action {index + 1}
-					</button>
-				))}
-			</div>
-		</section>
-	);
-}
-
-function QuestionBoard({
-	game,
-	onResponse,
-}: {
-	game: Game;
-	onResponse(response: ConstructedResponse): void;
-}) {
-	const chunks = game.chunks as Row[],
-		all = chunks.map((row) => String(row.chunk_token));
-	const [ordered, setOrdered] = useState<string[]>([]);
-	const choose = (token: string) => {
-		if (ordered.includes(token)) return;
-		const next = [...ordered, token];
-		setOrdered(next);
-		onResponse(
-			questionSequenceResponse(
-				String(game.command_token),
-				String(game.prompt_token),
-				next,
-				all,
-				game.placeholder_token == null ? null : String(game.placeholder_token),
-				next.map((value) => `slot:${value}`),
-			),
-		);
-	};
-	return (
-		<section className="cll-question">
-			<p className="cll-frame">
-				Build the printed question · {Number(game.required_slot_count)} tiles
-			</p>
-			<div className="cll-slots">
-				{Array.from(
-					{ length: Number(game.required_slot_count) },
-					(_, index) => (
-						<span key={`slot-${all[index]}`}>
-							{ordered[index]
-								? String(
-										chunks.find((row) => row.chunk_token === ordered[index])
-											?.text_en,
-									)
-								: "…"}
-						</span>
-					),
-				)}
-			</div>
-			<div className="cll-tiles">
-				{chunks.map((row) => (
-					<button
-						key={String(row.chunk_token)}
-						disabled={ordered.includes(String(row.chunk_token))}
-						onClick={() => choose(String(row.chunk_token))}
-					>
-						{String(row.text_en)}
-					</button>
-				))}
-			</div>
-			<button
-				className="cll-clear"
-				onClick={() => {
-					setOrdered([]);
-					onResponse(
-						questionSequenceResponse(
-							String(game.command_token),
-							String(game.prompt_token),
-							[],
-							all,
-							game.placeholder_token == null
-								? null
-								: String(game.placeholder_token),
-							["clear:all"],
-						),
+	const scene = sceneFor("G5-AREA-ENG-17");
+	const command = String(game.command_token);
+	if (game.response_kind === "classroom_command_action") {
+		const controls = game.action_controls as Row[];
+		return (
+			<TokenBoard
+				theme="meadow"
+				scene={scene}
+				sources={[{ token: "command", text_en: String(game.command_text) }]}
+				sourceKey="token"
+				targets={controls}
+				targetKey="action_token"
+				target={(row) => {
+					const action = COMMAND_ACTIONS[Number(row.renderer_variant)];
+					return {
+						label: action?.label,
+						picture: { emoji: action?.emoji ?? "❔" },
+					};
+				}}
+				instruction="Read the command. Drag it onto the action that shows it."
+				build={(links, _tokens, trace) => {
+					const control = controls.find(
+						(row) => String(row.action_token) === links[0]?.target,
+					);
+					return commandActionResponse(
+						command,
+						String(game.actor_token),
+						String(control?.action_token),
+						String(control?.state_token),
+						trace,
 					);
 				}}
-			>
-				Clear tiles
-			</button>
-		</section>
-	);
-}
-
-function SituationCue({ variant, index }: { variant: number; index: number }) {
+				onResponse={onResponse}
+			/>
+		);
+	}
+	if (game.response_kind === "classroom_question_sequence")
+		return (
+			<SequenceBoard
+				theme="meadow"
+				scene={scene}
+				chunks={game.chunks as Row[]}
+				chunkKey="chunk_token"
+				slotCount={Number(game.required_slot_count)}
+				instruction="Put the word tiles in order to make the question."
+				build={(ordered, all, trace) =>
+					questionSequenceResponse(
+						command,
+						String(game.prompt_token),
+						ordered,
+						all,
+						game.placeholder_token == null
+							? null
+							: String(game.placeholder_token),
+						trace,
+					)
+				}
+				onResponse={onResponse}
+			/>
+		);
+	if (game.response_kind === "classroom_context_expression_links") {
+		const situations = game.situations as Row[];
+		return (
+			<TokenBoard
+				theme="meadow"
+				scene={scene}
+				sources={game.expressions as Row[]}
+				sourceKey="expression_token"
+				targets={situations}
+				targetKey="situation_token"
+				target={(row) => ({
+					picture: { emoji: picture(SITUATION_PICTURES, row.renderer_variant) },
+				})}
+				instruction="What would you say? Drag each phrase onto its moment."
+				build={(links, _tokens, trace) =>
+					contextLinkResponse(
+						command,
+						// The answer pairs each situation with its phrase.
+						links.map((link) => ({
+							...link,
+							source: link.target,
+							target: link.source,
+						})),
+						situations.map((row) => String(row.situation_token)),
+						trace,
+					)
+				}
+				onResponse={onResponse}
+			/>
+		);
+	}
+	const expressions = game.expressions as Row[];
 	return (
-		<span
-			className="cll-situation"
-			data-v={variant}
-			role="img"
-			aria-label={`Classroom situation ${index + 1}`}
-		>
-			<i />
-			<b />
-		</span>
+		<TokenBoard
+			theme="meadow"
+			layout="bins"
+			scene={scene}
+			sources={expressions}
+			sourceKey="expression_token"
+			targets={game.heading_zones as Row[]}
+			targetKey="heading_token"
+			target={(row) => ({
+				label: String(row.text_en),
+				capacity: expressions.length,
+				picture: { emoji: HEADING_PICTURES[String(row.text_en)] ?? "💬" },
+			})}
+			instruction="Drag each phrase under the lesson heading where it belongs."
+			build={(links, tokens, trace) =>
+				functionSortResponse(command, links, tokens, trace)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }

@@ -115,15 +115,15 @@ function round(
 
 async function linkEveryWord(host: HTMLElement) {
 	const words = [
-		...host.querySelectorAll<HTMLButtonElement>(".chunk-rail button"),
+		...host.querySelectorAll<HTMLButtonElement>(".phaser-board-mirror-cards button"),
 	];
 	for (const word of words) {
 		await act(async () => word.click());
 		const target = [
-			...host.querySelectorAll<HTMLButtonElement>(".food-target"),
+			...host.querySelectorAll<HTMLButtonElement>(".phaser-board-mirror-targets button"),
 		].find(
 			(button) =>
-				!button.disabled && button.textContent?.includes("Choose a word"),
+				!button.disabled && button.textContent?.includes("empty"),
 		);
 		await act(async () => target?.click());
 	}
@@ -232,7 +232,7 @@ describe("Island Food Festival multi-help round", () => {
 			host.querySelector(".support-round-frame .food-board"),
 		).not.toBeNull();
 		expect(
-			host.querySelectorAll(".support-round-frame .chunk-rail button"),
+			host.querySelectorAll(".support-round-frame .phaser-board-mirror-cards button"),
 		).toHaveLength(4);
 
 		await linkEveryWord(host);
@@ -251,10 +251,10 @@ describe("Island Food Festival multi-help round", () => {
 			"Simpler version",
 		);
 		expect(
-			host.querySelectorAll(".support-round-frame .chunk-rail button"),
+			host.querySelectorAll(".support-round-frame .phaser-board-mirror-cards button"),
 		).toHaveLength(1);
 		expect(
-			host.querySelectorAll(".support-round-frame .food-target"),
+			host.querySelectorAll(".support-round-frame .phaser-board-mirror-targets button"),
 		).toHaveLength(2);
 		expect(api.withdrawSupport).not.toHaveBeenCalled();
 
@@ -281,6 +281,6 @@ describe("Island Food Festival multi-help round", () => {
 		// Every trace of help is gone; the fresh item is unsupported.
 		expect(host.querySelector(".support-round-frame")).toBeNull();
 		expect(host.querySelector(".support-round-tag")).toBeNull();
-		expect(host.querySelectorAll(".chunk-rail button")).toHaveLength(4);
+		expect(host.querySelectorAll(".phaser-board-mirror-cards button")).toHaveLength(4);
 	});
 });

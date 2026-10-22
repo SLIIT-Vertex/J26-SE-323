@@ -50,7 +50,7 @@ export const SUBTRACTION_CHAPTERS: Array<{
 	},
 	{
 		id: "regrouping_workshop",
-		title: "ගෙන ඒමේ හුවමාරු වැඩමුළුව",
+		title: "ණයට ගැනීමේ වැඩමුළුව",
 		asset: "/curriculum/game/G5-AREA-MAT-02/carrying-crane.png",
 		difficulty: "මධ්‍යම",
 	},

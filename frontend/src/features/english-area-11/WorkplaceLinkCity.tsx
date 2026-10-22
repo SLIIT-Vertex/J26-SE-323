@@ -14,18 +14,24 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	picture,
+	WORKER_PICTURES,
+	WORKPLACE_PICTURES,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./workplace-link-city.css";
 import { WORK_SKILLS } from "./manifest";
 import {
-	type CityLink,
 	occupationPlaceResponse,
 	workVocabularyResponse,
 } from "./workplaceLinkLogic";
@@ -38,20 +44,8 @@ type Step =
 	| "feedback"
 	| "result";
 type Game = Record<string, unknown>;
-type Word = { word_token: string; text_en: string };
-type Representation = {
-	representation_token: string;
-	renderer_variant: number;
-};
-type Occupation = { occupation_token: string; text_en: string };
-type Place = {
-	place_token: string;
-	text_en: string;
-	renderer_variant: number;
-	capacity: number;
-};
-const CUES = ["🌾", "🐟", "📚", "❤", "⚡", "🧱", "🪚"] as const;
-const PLACE_MARKS = ["🌾", "🐟", "🏫", "🏥", "🏙️", "🛠️"] as const;
+const _CUES = ["🌾", "🐟", "📚", "❤", "⚡", "🧱", "🪚"] as const;
+const _PLACE_MARKS = ["🌾", "🐟", "🏫", "🏥", "🏙️", "🛠️"] as const;
 
 export function WorkplaceLinkCity({
 	api,
@@ -339,7 +333,10 @@ export function WorkplaceLinkCity({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={2}
 							currentActivity={index + 1}
 							completedActivities={completed.length}
@@ -454,108 +451,30 @@ function incomplete(response: ConstructedResponse) {
 			? response.unlinked_occupation_tokens.length > 0
 			: true;
 }
-function WorkerGlyph({ variant }: { variant: number }) {
-	return (
-		<span className="neutral-worker" aria-hidden="true">
-			<span>{CUES[variant] ?? "●"}</span>
-		</span>
-	);
-}
-
-function CityActivity({
-	game,
-	onResponse,
-}: {
-	game: Game;
-	onResponse(value: ConstructedResponse): void;
-}) {
-	if (game.response_kind === "work_vocabulary_mapping")
-		return <VocabularyBoard game={game} onResponse={onResponse} />;
-	return <RouteBoard game={game} onResponse={onResponse} />;
-}
-
 function VocabularyBoard({
 	game,
 	onResponse,
 }: {
 	game: Game;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const words = game.words as Word[];
-	const representations = game.representations as Representation[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<CityLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const filtered = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		const next = [
-			...filtered,
-			{ sequence: filtered.length + 1, source: selected, target },
-		];
-		const nextTrace = [
-			...trace,
-			`${links.length === filtered.length ? "place" : "replace"}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		onResponse(
-			workVocabularyResponse(
-				String(game.command_token),
-				next,
-				words.map((word) => word.word_token),
-				nextTrace,
-			),
-		);
-	};
 	return (
-		<section>
-			<p className="city-instruction">
-				Tap a badge, then the matching neutral worker card.
-			</p>
-			<div className="badge-tray">
-				{words.map((word) => (
-					<button
-						className="work-label"
-						data-opaque-token={word.word_token}
-						key={word.word_token}
-						aria-pressed={selected === word.word_token}
-						disabled={links.some((link) => link.source === word.word_token)}
-						onClick={() => setSelected(word.word_token)}
-					>
-						{word.text_en}
-					</button>
-				))}
-			</div>
-			<div className="work-card-grid">
-				{representations.map((representation) => {
-					const link = links.find(
-						(item) => item.target === representation.representation_token,
-					);
-					const word = words.find((item) => item.word_token === link?.source);
-					return (
-						<button
-							className="work-card"
-							data-opaque-token={representation.representation_token}
-							data-selected={Boolean(word)}
-							key={representation.representation_token}
-							aria-label={
-								word
-									? `Matched to ${word.text_en}`
-									: "Unmatched neutral worker card"
-							}
-							onClick={() => place(representation.representation_token)}
-						>
-							<WorkerGlyph variant={representation.renderer_variant} />
-							<strong>{word?.text_en ?? "?"}</strong>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			theme="sky"
+			scene={sceneFor("G5-AREA-ENG-11")}
+			sources={game.words as Record<string, unknown>[]}
+			sourceKey="word_token"
+			targets={game.representations as Record<string, unknown>[]}
+			targetKey="representation_token"
+			target={(row) => ({
+				picture: { emoji: picture(WORKER_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each job badge onto the worker."
+			build={(links, tokens, trace) =>
+				workVocabularyResponse(String(game.command_token), links, tokens, trace)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 
@@ -564,113 +483,45 @@ function RouteBoard({
 	onResponse,
 }: {
 	game: Game;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const occupations = game.occupations as Occupation[];
-	const places = game.places as Place[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<CityLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const emit = (next: CityLink[], nextTrace: string[]) =>
-		onResponse(
-			occupationPlaceResponse(
-				String(game.command_token),
-				next,
-				occupations.map((row) => row.occupation_token),
-				nextTrace,
-			),
-		);
-	const connect = (target: string) => {
-		if (!selected) return;
-		const filtered = links.filter((link) => link.source !== selected);
-		const next = [
-			...filtered,
-			{ sequence: filtered.length + 1, source: selected, target },
-		];
-		const nextTrace = [
-			...trace,
-			`${filtered.length === links.length ? "link" : "replace"}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		emit(next, nextTrace);
-	};
-	const clear = () => {
-		const nextTrace = [...trace, "clear:all"];
-		setLinks([]);
-		setSelected(null);
-		setTrace(nextTrace);
-		emit([], nextTrace);
-	};
 	return (
-		<section>
-			<p className="city-instruction">
-				Connect the pairs from this lesson. A hub may accept more than one
-				route.
-			</p>
-			<div className="occupation-tray">
-				{occupations.map((row) => (
-					<button
-						className="work-label"
-						data-opaque-token={row.occupation_token}
-						key={row.occupation_token}
-						aria-pressed={selected === row.occupation_token}
-						disabled={links.some(
-							(link) => link.source === row.occupation_token,
-						)}
-						onClick={() => setSelected(row.occupation_token)}
-					>
-						{row.text_en}
-					</button>
-				))}
-			</div>
-			<div className="route-hubs">
-				{places.map((hub) => {
-					const count = links.filter(
-						(link) => link.target === hub.place_token,
-					).length;
-					const slots = Array.from(
-						{ length: hub.capacity },
-						(_, slot) => slot + 1,
-					);
-					return (
-						<button
-							className="place-hub"
-							data-opaque-token={hub.place_token}
-							data-count={count}
-							key={hub.place_token}
-							onClick={() => connect(hub.place_token)}
-						>
-							<span className="place-mark" aria-hidden="true">
-								{PLACE_MARKS[hub.renderer_variant] ?? "🏢"}
-							</span>
-							<strong>{hub.text_en}</strong>
-							<span
-								className="capacity-meter"
-								role="img"
-								aria-label={`${count} of ${hub.capacity} lesson links added`}
-							>
-								{slots.map((slot) => (
-									<i
-										data-filled={slot <= count}
-										key={`${hub.place_token}-slot-${slot}`}
-									/>
-								))}
-							</span>
-						</button>
-					);
-				})}
-			</div>
-			<button
-				className="clear-links"
-				disabled={links.length === 0}
-				onClick={clear}
-			>
-				Clear links
-			</button>
-		</section>
+		<TokenBoard
+			theme="sky"
+			scene={sceneFor("G5-AREA-ENG-11")}
+			sources={game.occupations as Record<string, unknown>[]}
+			sourceKey="occupation_token"
+			targets={game.places as Record<string, unknown>[]}
+			targetKey="place_token"
+			target={(row) => ({
+				label: String(row.text_en),
+				capacity: Number(row.capacity ?? 1),
+				picture: { emoji: picture(WORKPLACE_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each worker to the place where they work."
+			build={(links, tokens, trace) =>
+				occupationPlaceResponse(
+					String(game.command_token),
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
+}
+
+function CityActivity({
+	game,
+	onResponse,
+}: {
+	game: Game;
+	onResponse(value: ConstructedResponse | null): void;
+}) {
+	if (game.response_kind === "work_vocabulary_mapping")
+		return <VocabularyBoard game={game} onResponse={onResponse} />;
+	return <RouteBoard game={game} onResponse={onResponse} />;
 }
 
 function CitySupport({

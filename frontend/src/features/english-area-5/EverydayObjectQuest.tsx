@@ -15,17 +15,23 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	OBJECT_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { SequenceBoard } from "../mobile-learning-flow/phaser-board/SequenceBoard";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./everyday-object-quest.css";
 import {
-	type ObjectLink,
 	objectMappingResponse,
 	objectNameResponse,
 } from "./everydayObjectLogic";
@@ -325,7 +331,10 @@ export function EverydayObjectQuest({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={3}
 							currentActivity={index + 1}
 							completedActivities={completed.length}
@@ -429,7 +438,7 @@ export function EverydayObjectQuest({
 }
 
 type Row = Record<string, unknown>;
-function ObjectGlyph({ variant }: { variant: number }) {
+function _ObjectGlyph({ variant }: { variant: number }) {
 	return (
 		<span className="object-icon" aria-hidden="true">
 			{GLYPHS[variant] ?? "🔷"}
@@ -441,7 +450,7 @@ export function ObjectActivity({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	return game.response_kind === "object_name_sequence" ? (
 		<NameBuilder game={game} onResponse={onResponse} />
@@ -454,163 +463,87 @@ function MappingBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const vocabulary = game.response_kind === "object_vocabulary_mapping";
-	const sources = (vocabulary ? game.words : game.entries) as Row[];
-	const targets = (vocabulary ? game.objects : game.zones) as Row[];
-	const sourceKey = vocabulary ? "word_token" : "entry_token";
-	const targetKey = vocabulary ? "object_token" : "zone_token";
 	const kind = game.response_kind as
 		| "object_vocabulary_mapping"
 		| "lesson_place_sort";
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<ObjectLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) =>
-				link.source === selected || (vocabulary && link.target === target),
-		);
-		const next = links.filter(
-			(link) =>
-				link.source !== selected && (!vocabulary || link.target !== target),
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
+	const entries = (vocabulary ? game.words : game.entries) as Row[];
+	return (
+		<TokenBoard
+			theme="meadow"
+			layout={vocabulary ? "grid" : "bins"}
+			scene={sceneFor("G5-AREA-ENG-05")}
+			sources={entries}
+			sourceKey={vocabulary ? "word_token" : "entry_token"}
+			sourcePicture={(row) =>
+				vocabulary
+					? undefined
+					: { emoji: picture(OBJECT_PICTURES, row.renderer_variant) }
+			}
+			targets={(vocabulary ? game.objects : game.zones) as Row[]}
+			targetKey={vocabulary ? "object_token" : "zone_token"}
+			target={(row) =>
+				vocabulary
+					? {
+							picture: {
+								emoji: picture(OBJECT_PICTURES, row.renderer_variant),
+							},
+						}
+					: {
+							label: String(row.display_en),
+							capacity: entries.length,
+							picture: { emoji: Number(row.zone_variant) === 0 ? "🏫" : "🏠" },
+						}
+			}
+			instruction={
+				vocabulary
+					? "Drag each word onto the thing it names."
+					: "Where does each thing belong? Drag it to the classroom or home."
+			}
+			build={(links, tokens, trace) =>
 				objectMappingResponse(
 					kind,
 					String(game.command_token),
-					next,
-					sources.map((row) => String(row[sourceKey])),
-					nextTrace,
-				),
-			);
-	};
-	return (
-		<section className="object-board">
-			<div className="object-word-rail">
-				{sources.map((row) => {
-					const id = String(row[sourceKey]);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className={vocabulary ? "object-workbench" : "room-zones"}>
-				{targets.map((row) => {
-					const id = String(row[targetKey]);
-					const linked = links.filter((entry) => entry.target === id);
-					const labels = linked.map((link) =>
-						String(
-							sources.find((entry) => String(entry[sourceKey]) === link.source)
-								?.text_en ?? "",
-						),
-					);
-					return (
-						<button
-							className={vocabulary ? "object-target" : "room-zone"}
-							key={id}
-							disabled={!selected}
-							onClick={() => place(id)}
-						>
-							{vocabulary ? (
-								<ObjectGlyph variant={Number(row.renderer_variant)} />
-							) : (
-								<strong>{String(row.display_en)}</strong>
-							)}
-							<span>
-								{labels.length ? labels.join(" · ") : "Choose a word"}
-							</span>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
+
 function NameBuilder({
 	game,
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const chunks = game.chunks as Row[];
-	const [ordered, setOrdered] = useState<string[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const add = (token: string) => {
-		if (ordered.includes(token)) return;
-		const next = [...ordered, token];
-		const nextTrace = [...trace, `slot:${token}:${next.length}`];
-		setOrdered(next);
-		setTrace(nextTrace);
-		if (next.length === chunks.length)
-			onResponse(
+	return (
+		<SequenceBoard
+			theme="meadow"
+			scene={sceneFor("G5-AREA-ENG-05")}
+			chunks={game.chunks as Row[]}
+			chunkKey="chunk_token"
+			picture={{ emoji: picture(OBJECT_PICTURES, game.renderer_variant) }}
+			instruction="Put the words in order to name this thing."
+			build={(ordered, _all, trace) =>
 				objectNameResponse(
 					String(game.command_token),
 					String(game.object_token),
-					next,
-					nextTrace,
-				),
-			);
-	};
-	const remove = (token: string) => {
-		const next = ordered.filter((value) => value !== token);
-		setOrdered(next);
-		setTrace((value) => [...value, `remove:${token}`]);
-	};
-	return (
-		<section className="name-builder">
-			<ObjectGlyph variant={Number(game.renderer_variant)} />
-			<div className="phrase-slots">
-				{Array.from({ length: chunks.length }, (_, index) => {
-					const token = ordered[index];
-					const row = chunks.find((entry) => entry.chunk_token === token);
-					return (
-						<button
-							key={`slot-${String(chunks[index]?.chunk_token)}`}
-							disabled={!token}
-							onClick={() => token && remove(token)}
-						>
-							{row ? String(row.text_en) : `Word ${index + 1}`}
-						</button>
-					);
-				})}
-			</div>
-			<div className="chunk-rail">
-				{chunks.map((row) => {
-					const token = String(row.chunk_token);
-					return (
-						<button
-							key={token}
-							disabled={ordered.includes(token)}
-							onClick={() => add(token)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-		</section>
+					ordered,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
+
 function ObjectSupport({
 	support,
 	stage,

@@ -14,21 +14,28 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	PLACE_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { SequenceBoard } from "../mobile-learning-flow/phaser-board/SequenceBoard";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./blueprint-quest.css";
 import {
 	groupResponse,
-	type Link,
 	sequenceResponse,
 	vocabularyResponse,
 } from "./blueprintLogic";
+
 const SKILLS = [
 	{ id: "G5-ENG-PLACE-VOCAB-01", name: "Place Card Explorer", icon: "🏫" },
 	{ id: "G5-ENG-PLACE-GROUP-02", name: "Blueprint Zone Sort", icon: "📐" },
@@ -297,7 +304,10 @@ export function SchoolHomeBlueprintQuest({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={3}
 							currentActivity={index + 1}
 							completedActivities={done.length}
@@ -421,7 +431,7 @@ function Board({
 	onResponse,
 }: {
 	game: Game;
-	onResponse(r: ConstructedResponse): void;
+	onResponse(r: ConstructedResponse | null): void;
 }) {
 	return game.response_kind === "place_name_sequence" ? (
 		<Sequence game={game} onResponse={onResponse} />
@@ -434,148 +444,75 @@ function MappingBoard({
 	onResponse,
 }: {
 	game: Game;
-	onResponse(r: ConstructedResponse): void;
+	onResponse(r: ConstructedResponse | null): void;
 }) {
-	const vocab = game.response_kind === "place_vocabulary_mapping",
-		sources = (vocab ? game.words : game.entries) as Row[],
-		targets = (vocab ? game.scenes : game.headings) as Row[],
-		sk = vocab ? "word_token" : "entry_token",
-		tk = vocab ? "scene_token" : "heading_token";
-	const [selected, setSelected] = useState<string | null>(null),
-		[links, setLinks] = useState<Link[]>([]),
-		[trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const f = links.filter(
-				(x) => x.source !== selected && (vocab ? x.target !== target : true),
-			),
-			n = [...f, { sequence: f.length + 1, source: selected, target }],
-			t = [...trace, `place:${target}`];
-		setLinks(n);
-		setTrace(t);
-		setSelected(null);
-		onResponse(
-			vocab
-				? vocabularyResponse(
-						String(game.command_token),
-						n,
-						sources.map((x) => String(x[sk])),
-						t,
-					)
-				: groupResponse(
-						String(game.command_token),
-						n,
-						sources.map((x) => String(x[sk])),
-						t,
-					),
-		);
-	};
+	const vocab = game.response_kind === "place_vocabulary_mapping";
 	return (
-		<section className="bp-board">
-			<p>
-				{vocab
-					? "Tap a word, then its code-built card."
-					: "Put each word under the heading where it appears in this lesson."}
-			</p>
-			<div className="bp-tray">
-				{sources.map((x) => (
-					<button
-						data-opaque-token={String(x[sk])}
-						disabled={links.some((y) => y.source === x[sk])}
-						aria-pressed={selected === x[sk]}
-						key={String(x[sk])}
-						onClick={() => setSelected(String(x[sk]))}
-					>
-						{String(x.text_en)}
-					</button>
-				))}
-			</div>
-			<div className="bp-zones">
-				{targets.map((x) => (
-					<button
-						data-opaque-token={String(x[tk])}
-						key={String(x[tk])}
-						onClick={() => place(String(x[tk]))}
-					>
-						{vocab ? (
-							<Glyph variant={Number(x.renderer_variant)} />
-						) : (
-							<>
-								<strong>{String(x.text_en)}</strong>
-								<small>
-									{links.filter((y) => y.target === x[tk]).length}/
-									{String(x.capacity)}
-								</small>
-							</>
-						)}
-					</button>
-				))}
-			</div>
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-14")}
+			theme="sky"
+			layout={vocab ? "grid" : "bins"}
+			sources={(vocab ? game.words : game.entries) as Row[]}
+			sourceKey={vocab ? "word_token" : "entry_token"}
+			targets={(vocab ? game.scenes : game.headings) as Row[]}
+			targetKey={vocab ? "scene_token" : "heading_token"}
+			target={(row) =>
+				vocab
+					? {
+							picture: { emoji: picture(PLACE_PICTURES, row.renderer_variant) },
+						}
+					: {
+							label: String(row.text_en),
+							capacity: Number(row.capacity ?? 4),
+							picture: {
+								emoji: String(row.text_en).includes("School") ? "🏫" : "🏠",
+							},
+						}
+			}
+			instruction={
+				vocab
+					? "Drag each word onto the place it names."
+					: "Drag each word under its lesson heading."
+			}
+			build={(links, tokens, trace) =>
+				(vocab ? vocabularyResponse : groupResponse)(
+					String(game.command_token),
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
+
 function Sequence({
 	game,
 	onResponse,
 }: {
 	game: Game;
-	onResponse(r: ConstructedResponse): void;
+	onResponse(r: ConstructedResponse | null): void;
 }) {
-	const chunks = game.chunks as Row[],
-		all = chunks.map((x) => String(x.chunk_token)),
-		slots = ["first", "second", "third", "fourth"].slice(
-			0,
-			Number(game.slot_count),
-		),
-		[ordered, setOrdered] = useState<string[]>([]),
-		[trace, setTrace] = useState<string[]>([]);
-	const add = (t: string) => {
-		if (ordered.includes(t)) return;
-		const n = [...ordered, t],
-			tr = [...trace, `slot:${n.length}`];
-		setOrdered(n);
-		setTrace(tr);
-		onResponse(
-			sequenceResponse(
-				String(game.command_token),
-				String(game.place_token),
-				n,
-				all,
-				tr,
-			),
-		);
-	};
 	return (
-		<section className="bp-board">
-			<Glyph variant={Number(game.renderer_variant)} />
-			<div className="bp-slots">
-				{slots.map((slot, i) => (
-					<span key={slot}>
-						{(chunks.find((x) => x.chunk_token === ordered[i])
-							?.text_en as string) ?? "…"}
-					</span>
-				))}
-			</div>
-			<div className="bp-tray">
-				{chunks.map((x) => (
-					<button
-						disabled={ordered.includes(String(x.chunk_token))}
-						key={String(x.chunk_token)}
-						onClick={() => add(String(x.chunk_token))}
-					>
-						{String(x.text_en)}
-					</button>
-				))}
-			</div>
-		</section>
-	);
-}
-function Glyph({ variant }: { variant: number }) {
-	return (
-		<span className="bp-glyph" data-v={variant} aria-hidden="true">
-			<i />
-			<i />
-			<b />
-		</span>
+		<SequenceBoard
+			scene={sceneFor("G5-AREA-ENG-14")}
+			theme="sky"
+			chunks={game.chunks as Row[]}
+			chunkKey="chunk_token"
+			slotCount={Number(game.slot_count)}
+			picture={{ emoji: picture(PLACE_PICTURES, game.renderer_variant) }}
+			instruction="Put the words in order to name this place."
+			build={(ordered, all, trace) =>
+				sequenceResponse(
+					String(game.command_token),
+					String(game.place_token),
+					ordered,
+					all,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }

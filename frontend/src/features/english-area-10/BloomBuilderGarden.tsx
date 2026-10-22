@@ -14,16 +14,22 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	FLOWER_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./bloom-builder-garden.css";
-import { type BloomLink, flowerMappingResponse } from "./bloomBuilderLogic";
+import { flowerMappingResponse } from "./bloomBuilderLogic";
 import { BLOOM_SKILL, BLOOM_STAGES } from "./manifest";
 
 type Step =
@@ -34,8 +40,6 @@ type Step =
 	| "feedback"
 	| "result";
 type Game = Record<string, unknown>;
-type Word = { word_token: string; text_en: string };
-type Flower = { flower_token: string; renderer_variant: number };
 
 export function BloomBuilderGarden({
 	api,
@@ -286,7 +290,10 @@ export function BloomBuilderGarden({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={1}
 							currentActivity={1}
 							completedActivities={0}
@@ -419,165 +426,36 @@ function StageStrip({ active }: { active?: string }) {
 	);
 }
 
-function FlowerGlyph({ variant }: { variant: number }) {
-	return (
-		<span className="flower-glyph" data-variant={variant} aria-hidden="true">
-			<span />
-		</span>
-	);
-}
-
 function BloomActivity({
 	game,
 	onResponse,
 }: {
-	game: Game;
-	onResponse(value: ConstructedResponse): void;
+	game: Record<string, unknown>;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const words = game.words as Word[];
-	const flowers = game.flowers as Flower[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<BloomLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const [detail, setDetail] = useState<Flower | null>(null);
-	const [detailCount, setDetailCount] = useState(0);
-	const closeRef = useRef<HTMLButtonElement | null>(null);
-	useEffect(() => {
-		if (detail) closeRef.current?.focus();
-	}, [detail]);
-	const emit = (
-		nextLinks: BloomLink[],
-		nextTrace: string[],
-		count = detailCount,
-	) =>
-		onResponse(
-			flowerMappingResponse(
-				String(game.command_token),
-				nextLinks,
-				words.map((word) => word.word_token),
-				nextTrace,
-				count,
-			),
-		);
-	const place = (target: string) => {
-		if (!selected) return;
-		const filtered = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		const replacing = links.some(
-			(link) => link.target === target || link.source === selected,
-		);
-		const next = [
-			...filtered,
-			{ sequence: filtered.length + 1, source: selected, target },
-		];
-		const nextTrace = [
-			...trace,
-			`${replacing ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		emit(next, nextTrace);
-	};
-	const openDetail = (flower: Flower) => {
-		const count = detailCount + 1;
-		const nextTrace = [...trace, `detail-open:${flower.flower_token}`];
-		setDetail(flower);
-		setDetailCount(count);
-		setTrace(nextTrace);
-		emit(links, nextTrace, count);
-	};
 	return (
-		<section>
-			<p className="bloom-hint">
-				Tap a seed packet, then its flower. Use the magnifier to inspect
-				structure.
-			</p>
-			<div className="seed-packet-tray">
-				{words.map((word) => (
-					<button
-						className="seed-packet"
-						data-opaque-token={word.word_token}
-						key={word.word_token}
-						aria-pressed={selected === word.word_token}
-						disabled={links.some((link) => link.source === word.word_token)}
-						onClick={() => {
-							setSelected(word.word_token);
-							setTrace((old) => [...old, `select:${word.word_token}`]);
-						}}
-					>
-						{word.text_en}
-					</button>
-				))}
-			</div>
-			<div className="garden-bed">
-				{flowers.map((flower) => {
-					const link = links.find(
-						(item) => item.target === flower.flower_token,
-					);
-					const word = words.find((item) => item.word_token === link?.source);
-					return (
-						<div
-							className="flower-target"
-							data-selected={Boolean(word)}
-							key={flower.flower_token}
-						>
-							<button
-								className="flower-detail-button"
-								aria-label="Enlarge flower structure"
-								onClick={() => openDetail(flower)}
-							>
-								🔎
-							</button>
-							<button
-								className="flower-target-hit"
-								data-opaque-token={flower.flower_token}
-								aria-label={
-									word
-										? `Matched to ${word.text_en}`
-										: "Unmatched flower structure"
-								}
-								onClick={() => place(flower.flower_token)}
-							>
-								<FlowerGlyph variant={flower.renderer_variant} />
-								<strong>{word?.text_en ?? "?"}</strong>
-							</button>
-						</div>
-					);
-				})}
-			</div>
-			{detail && (
-				<div
-					className="flower-detail"
-					role="dialog"
-					aria-modal="true"
-					aria-label="Flower structure detail"
-				>
-					<div className="flower-detail-card">
-						<h2>Look closely</h2>
-						<FlowerGlyph variant={detail.renderer_variant} />
-						<p>
-							Notice petal arrangement, centre shape, and whether blooms form a
-							cluster. Colour is not the only clue.
-						</p>
-						<button
-							ref={closeRef}
-							className="caq-primary"
-							onClick={() => {
-								setTrace((old) => [
-									...old,
-									`detail-close:${detail.flower_token}`,
-								]);
-								setDetail(null);
-							}}
-						>
-							Close detail
-						</button>
-					</div>
-				</div>
-			)}
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-10")}
+			theme="meadow"
+			sources={game.words as Record<string, unknown>[]}
+			sourceKey="word_token"
+			targets={game.flowers as Record<string, unknown>[]}
+			targetKey="flower_token"
+			target={(row) => ({
+				picture: { emoji: picture(FLOWER_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each flower name onto its flower."
+			build={(links, tokens, trace) =>
+				flowerMappingResponse(
+					String(game.command_token),
+					links,
+					tokens,
+					trace,
+					0,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 

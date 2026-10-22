@@ -1,5 +1,5 @@
 // biome-ignore-all lint/a11y/useButtonType: application controls, no forms.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
@@ -16,6 +16,12 @@ import type {
 } from "../mobile-learning-flow/api/generated";
 import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { PhaserBoard } from "../mobile-learning-flow/phaser-board/PhaserBoard";
+import {
+	INFORMATION_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
@@ -23,11 +29,7 @@ import {
 } from "../mobile-learning-flow/useSupportRound";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./information-station.css";
-import {
-	bilingualResponse,
-	type Link,
-	objectResponse,
-} from "./informationLogic";
+import { bilingualResponse, objectResponse } from "./informationLogic";
 
 const SKILLS = [
 	{ id: "G5-ENG-INFO-BILINGUAL-01", name: "Word Signal Bridge", icon: "🔤" },
@@ -429,85 +431,48 @@ function StationBoard({
 		sources = (bilingual ? game.english_words : game.words) as Row[],
 		targets = (bilingual ? game.sinhala_words : game.objects) as Row[],
 		sk = bilingual ? "english_token" : "word_token",
-		tk = bilingual ? "sinhala_token" : "object_token",
-		[selected, setSelected] = useState<string | null>(null),
-		[links, setLinks] = useState<Link[]>([]),
-		[trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const f = links.filter((x) => x.source !== selected && x.target !== target),
-			n = [...f, { sequence: f.length + 1, source: selected, target }],
-			t = [...trace, `place:${target}`];
-		setLinks(n);
-		setTrace(t);
-		setSelected(null);
-		onResponse(
-			bilingual
-				? bilingualResponse(
-						String(game.command_token),
-						n,
-						sources.map((x) => String(x[sk])),
-						t,
-					)
-				: objectResponse(
-						String(game.command_token),
-						n,
-						sources.map((x) => String(x[sk])),
-						t,
-					),
-		);
-	};
-	return (
-		<section className="is-board">
-			<div className="is-tray">
-				{sources.map((x) => (
-					<button
-						data-opaque-token={String(x[sk])}
-						key={String(x[sk])}
-						disabled={links.some((y) => y.source === x[sk])}
-						aria-pressed={selected === x[sk]}
-						onClick={() => setSelected(String(x[sk]))}
-					>
-						{String(x.text_en)}
-					</button>
-				))}
-			</div>
-			<div className="is-targets">
-				{targets.map((x, i) => (
-					<button
-						data-opaque-token={String(x[tk])}
-						key={String(x[tk])}
-						onClick={() => place(String(x[tk]))}
-					>
-						{bilingual ? (
-							<>
-								<strong>{String(x.text_si)}</strong>
-								<small>
-									{links.some((y) => y.target === x[tk])
-										? "✓ linked"
-										: "tap to link"}
-								</small>
-							</>
-						) : (
-							<ObjectGlyph variant={Number(x.renderer_variant)} index={i} />
-						)}
-					</button>
-				))}
-			</div>
-		</section>
+		tk = bilingual ? "sinhala_token" : "object_token";
+	const cards = useMemo(
+		() => sources.map((x) => ({ id: String(x[sk]), label: String(x.text_en) })),
+		[sources, sk],
 	);
-}
-function ObjectGlyph({ variant, index }: { variant: number; index: number }) {
+	const places = useMemo(
+		() =>
+			targets.map((x) =>
+				bilingual
+					? { id: String(x[tk]), label: String(x.text_si) }
+					: {
+							id: String(x[tk]),
+							picture: {
+								emoji: picture(INFORMATION_PICTURES, x.renderer_variant),
+							},
+						},
+			),
+		[targets, tk, bilingual],
+	);
+	const tokens = sources.map((x) => String(x[sk]));
 	return (
-		<span
-			className="is-object"
-			data-v={variant}
-			role="img"
-			aria-label={`Information object card ${index + 1}`}
-		>
-			<i />
-			<i />
-			<b />
-		</span>
+		<PhaserBoard
+			scene={sceneFor("G5-AREA-ENG-15")}
+			layout="grid"
+			theme="sky"
+			cards={cards}
+			targets={places}
+			instruction={
+				bilingual
+					? "Drag each English word to its Sinhala word."
+					: "Drag each word onto its picture."
+			}
+			onChange={(state) =>
+				onResponse(
+					(bilingual ? bilingualResponse : objectResponse)(
+						String(game.command_token),
+						state.links,
+						tokens,
+						state.trace,
+					),
+				)
+			}
+		/>
 	);
 }

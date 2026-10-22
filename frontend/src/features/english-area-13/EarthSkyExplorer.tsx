@@ -14,20 +14,22 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	EARTH_SKY_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./earth-sky-explorer.css";
-import {
-	type ExplorerLink,
-	bilingualResponse,
-	sceneResponse,
-} from "./earthSkyLogic";
+import { bilingualResponse, sceneResponse } from "./earthSkyLogic";
 import { EARTH_SKY_SKILLS } from "./manifest";
 
 type Step =
@@ -326,7 +328,10 @@ export function EarthSkyExplorer({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={2}
 							currentActivity={index + 1}
 							completedActivities={completed.length}
@@ -460,78 +465,21 @@ function BridgeBoard({
 	game: Game;
 	onResponse(value: ConstructedResponse): void;
 }) {
-	const sources = game.english_words as TokenRow[];
-	const targets = game.sinhala_words as TokenRow[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<ExplorerLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const connect = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
-		);
-		const filtered = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		const next = [
-			...filtered,
-			{ sequence: filtered.length + 1, source: selected, target },
-		];
-		const nextTrace = [...trace, `${old ? "replace" : "link"}:${target}`];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		onResponse(
-			bilingualResponse(
-				String(game.command_token),
-				next,
-				sources.map((row) => String(row.english_token)),
-				nextTrace,
-			),
-		);
-	};
 	return (
-		<section className="es-board">
-			<p className="es-instruction">
-				Tap an English signal, then its Sinhala lesson word.
-			</p>
-			<div className="es-token-grid">
-				{sources.map((row) => (
-					<button
-						className="es-word"
-						data-opaque-token={String(row.english_token)}
-						key={String(row.english_token)}
-						aria-pressed={selected === row.english_token}
-						disabled={links.some((link) => link.source === row.english_token)}
-						onClick={() => setSelected(String(row.english_token))}
-					>
-						{String(row.text_en)}
-					</button>
-				))}
-			</div>
-			{selected && (
-				<p className="es-selected" role="status">
-					Signal selected · choose a Sinhala word
-				</p>
-			)}
-			<div className="es-token-grid es-si">
-				{targets.map((row) => {
-					const link = links.find((item) => item.target === row.sinhala_token);
-					return (
-						<button
-							className="es-word"
-							data-opaque-token={String(row.sinhala_token)}
-							data-linked={Boolean(link)}
-							key={String(row.sinhala_token)}
-							onClick={() => connect(String(row.sinhala_token))}
-						>
-							{String(row.text_si)}
-							<small>{link ? "✓ linked" : "tap to link"}</small>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-13")}
+			theme="sky"
+			sources={game.english_words as TokenRow[]}
+			sourceKey="english_token"
+			targets={game.sinhala_words as TokenRow[]}
+			targetKey="sinhala_token"
+			target={(row) => ({ label: String(row.text_si) })}
+			instruction="Drag each English sky word to its Sinhala word."
+			build={(links, tokens, trace) =>
+				bilingualResponse(String(game.command_token), links, tokens, trace)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 
@@ -542,131 +490,26 @@ function PanoramaBoard({
 	game: Game;
 	onResponse(value: ConstructedResponse): void;
 }) {
-	const words = game.words as TokenRow[];
-	const scenes = game.scenes as TokenRow[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<ExplorerLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const [lens, setLens] = useState<string | null>(null);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
-		);
-		const filtered = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		const next = [
-			...filtered,
-			{ sequence: filtered.length + 1, source: selected, target },
-		];
-		const nextTrace = [...trace, `${old ? "replace" : "place"}:${target}`];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		onResponse(
-			sceneResponse(
-				String(game.command_token),
-				next,
-				words.map((row) => String(row.word_token)),
-				nextTrace,
-			),
-		);
-	};
 	return (
-		<section className="es-board">
-			<p className="es-instruction">
-				Choose a word, inspect each code-built card, then place it.
-			</p>
-			<div className="es-token-grid">
-				{words.map((row) => (
-					<button
-						className="es-word"
-						data-opaque-token={String(row.word_token)}
-						key={String(row.word_token)}
-						aria-pressed={selected === row.word_token}
-						disabled={links.some((link) => link.source === row.word_token)}
-						onClick={() => setSelected(String(row.word_token))}
-					>
-						{String(row.text_en)}
-					</button>
-				))}
-			</div>
-			{selected && (
-				<p className="es-selected" role="status">
-					Word selected · choose an observation card
-				</p>
-			)}
-			<div className="es-panorama">
-				{scenes.map((row, cardIndex) => {
-					const token = String(row.scene_token);
-					const link = links.find((item) => item.target === token);
-					const word = words.find((item) => item.word_token === link?.source);
-					const expanded = lens === token;
-					return (
-						<article
-							className="es-card"
-							data-v={Number(row.renderer_variant)}
-							key={token}
-						>
-							<button
-								className="es-card-target"
-								data-opaque-token={token}
-								data-linked={Boolean(link)}
-								aria-label={`Observation card ${cardIndex + 1}${link ? `, matched to ${String(word?.text_en)}` : ", unmatched"}`}
-								onClick={() => place(token)}
-							>
-								<ScenePrimitive
-									variant={Number(row.renderer_variant)}
-									expanded={expanded}
-								/>
-								<strong>{word ? String(word.text_en) : "?"}</strong>
-							</button>
-							{game.lens_enabled === true && (
-								<button
-									className="es-lens"
-									aria-expanded={expanded}
-									aria-label={`${expanded ? "Close" : "Open"} structural detail for observation card ${cardIndex + 1}`}
-									onClick={() => {
-										setLens(expanded ? null : token);
-										setTrace((current) => [
-											...current,
-											`${expanded ? "lens-close" : "lens-open"}:${token}`,
-										]);
-									}}
-								>
-									⌕ {expanded ? "Close" : "Inspect"}
-								</button>
-							)}
-						</article>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-13")}
+			theme="sky"
+			sources={game.words as TokenRow[]}
+			sourceKey="word_token"
+			targets={game.scenes as TokenRow[]}
+			targetKey="scene_token"
+			target={(row) => ({
+				picture: { emoji: picture(EARTH_SKY_PICTURES, row.renderer_variant) },
+			})}
+			instruction="Drag each word onto the picture it names."
+			build={(links, tokens, trace) =>
+				sceneResponse(String(game.command_token), links, tokens, trace)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 
-function ScenePrimitive({
-	variant,
-	expanded,
-}: {
-	variant: number;
-	expanded: boolean;
-}) {
-	return (
-		<span
-			className="es-scene"
-			data-v={variant}
-			data-expanded={expanded || undefined}
-			aria-hidden="true"
-		>
-			<i />
-			<i />
-			<i />
-			<b />
-		</span>
-	);
-}
 function ExplorerSupport({
 	support,
 	stage,

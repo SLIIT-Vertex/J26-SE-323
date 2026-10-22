@@ -1,14 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type {
-	ConstructedResponse,
-	ChildEpisodeResponse,
-	ExperimentCondition,
-	NumberWorldWorkedExample,
-	PresentationManifest,
-	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdaptiveSupportActivity,
 	SUPPORT_TYPE_LABELS,
@@ -18,10 +8,20 @@ import {
 	type AdventureProgressStage,
 } from "../mobile-learning-flow/AdventureProgress";
 import {
-	AdventureNotice,
 	AdventureBackButton,
+	AdventureNotice,
 	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import type {
+	ChildEpisodeResponse,
+	ConstructedResponse,
+	ExperimentCondition,
+	NumberWorldWorkedExample,
+	PresentationManifest,
+	SupportView,
+} from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	NUMBER_WORLD_ASSET_ROOT,
@@ -457,7 +457,10 @@ export function NumberWorldJourney({
 				</div>
 			)}
 			{step === "support" && support && chapter && (
-				<div className="adventure-play game-play-surface" data-support-visible="true">
+				<div
+					className="adventure-play game-play-surface"
+					data-support-visible="true"
+				>
 					<AdventureProgress stage={progressStage} />
 					{support.game_manifest.schema_version === "support-round-v1" ? (
 						<SupportRoundFrame
@@ -696,23 +699,30 @@ export function Harbour({
 		);
 	};
 	if (skill.endsWith("100000-01")) {
-		// The server sends the number one below the milestone (99 999, or 999 in the simpler
-		// version); the ladder climbs to it.
+		// The server sends the number one below a round milestone (39 999, 7 999, 99 999, or a
+		// shorter one in the simpler version); the ladder climbs to it.
 		const base = Number(game.milestone_base ?? 99_999);
 		const choices = Array.isArray(game.milestone_choices)
 			? game.milestone_choices.map(Number)
 			: [10_000, 100_000, 1_000_000];
 		const spaced = (n: number) =>
 			n.toLocaleString("en-US").replaceAll(",", " ");
+		// The ladder climbs in the same pattern as the question: for 59 999 it shows
+		// 59 + 1 = 60, 599 + 1 = 600, 5 999 + 1 = 6 000, then asks 59 999 + 1.
+		const target = base + 1;
+		let zeros = 0;
+		while (target % 10 ** (zeros + 1) === 0) zeros += 1;
+		const lead = target / 10 ** zeros;
 		const rungs: number[] = [];
-		for (let nine = 9; nine < base; nine = nine * 10 + 9) rungs.push(nine);
+		for (let place = 1; place < zeros; place += 1)
+			rungs.push(lead * 10 ** place - 1);
 		return (
 			<div className="manipulation-board milestone-builder">
 				<p className="milestone-instruction">එක් එක් පේළියේ 1ක් එකතු වන රටාව බලන්න.</p>
 				<div className="milestone-ladder">
-					{rungs.map((nine) => (
-						<span key={nine}>
-							{spaced(nine)} + 1 = {spaced(nine + 1)}
+					{rungs.map((rung) => (
+						<span key={rung}>
+							{spaced(rung)} + 1 = {spaced(rung + 1)}
 						</span>
 					))}
 					<strong>{spaced(base)} + 1 = ?</strong>

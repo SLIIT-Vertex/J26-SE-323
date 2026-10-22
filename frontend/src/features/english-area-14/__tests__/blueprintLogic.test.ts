@@ -4,6 +4,7 @@ import {
 	sequenceResponse,
 	vocabularyResponse,
 } from "../blueprintLogic";
+
 describe("blueprint responses", () => {
 	it("builds mappings", () => {
 		expect(

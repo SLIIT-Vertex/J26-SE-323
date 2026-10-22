@@ -15,20 +15,24 @@ import type {
 	SupportView,
 	WildlifeRangerWorkedExample,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	ANIMAL_PICTURES,
+	picture,
+	wordPicture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import { WILDLIFE_ASSET_ROOT, WILDLIFE_SKILLS } from "./manifest";
 import "./wildlife-ranger.css";
-import {
-	type WildlifeLink,
-	wildlifeMappingResponse,
-} from "./wildlifeRangerLogic";
+import { wildlifeMappingResponse } from "./wildlifeRangerLogic";
 
 type Step =
 	| "games"
@@ -307,7 +311,10 @@ export function WildlifeRangerQuest({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={3}
 							currentActivity={index + 1}
 							completedActivities={completed.length}
@@ -413,128 +420,65 @@ export function WildlifeBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
 	const entries = game.entries as Row[];
-	const targets = game.targets as Row[];
 	const kind = game.response_kind as
 		| "animal_vocabulary_mapping"
 		| "lesson_heading_sort"
 		| "animal_part_labeling";
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<WildlifeLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
-		);
-		const next = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "place"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === entries.length)
-			onResponse(
+	const headings = kind === "lesson_heading_sort";
+	const parts = kind === "animal_part_labeling";
+	return (
+		<TokenBoard
+			theme="meadow"
+			layout={headings ? "bins" : parts ? "hotspots" : "grid"}
+			scene={parts ? undefined : sceneFor("G5-AREA-ENG-04")}
+			background={
+				parts
+					? {
+							image: `${WILDLIFE_ASSET_ROOT}/${String(game.scene_asset)}`,
+							aspect: 1.5,
+						}
+					: undefined
+			}
+			sources={entries}
+			sourceKey="entry_token"
+			targets={game.targets as Row[]}
+			targetKey={headings ? "heading_token" : "target_token"}
+			target={(row) =>
+				headings
+					? {
+							label: String(row.text_en),
+							capacity: entries.length,
+							picture: { emoji: wordPicture(row.text_en) ?? "🐾" },
+						}
+					: parts
+						? {
+								x: Number(row.x_percent),
+								y: Number(row.y_percent),
+								marker: String(row.marker_index),
+							}
+						: { picture: { emoji: picture(ANIMAL_PICTURES, row.sprite_index) } }
+			}
+			instruction={
+				headings
+					? "Drag each animal word under its lesson heading."
+					: parts
+						? "Drag each word to the numbered part of the elephant."
+						: "Drag each word onto its animal."
+			}
+			build={(links, tokens, trace) =>
 				wildlifeMappingResponse(
 					kind,
 					String(game.command_token),
-					next,
-					entries.map((row) => String(row.entry_token)),
-					nextTrace,
-				),
-			);
-	};
-	return (
-		<section className="wildlife-board">
-			<div className="wildlife-word-rail">
-				{entries.map((row) => {
-					const id = String(row.entry_token);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			{kind !== "lesson_heading_sort" && (
-				<div
-					className={`wildlife-scene ${kind === "animal_part_labeling" ? "body-map" : ""}`}
-				>
-					<img
-						src={`${WILDLIFE_ASSET_ROOT}/${String(game.scene_asset)}`}
-						alt="Illustrated animal scene"
-					/>
-					{kind === "animal_part_labeling" &&
-						targets.map((row) => {
-							const id = String(row.target_token);
-							const link = links.find((entry) => entry.target === id);
-							const source = entries.find(
-								(entry) => String(entry.entry_token) === link?.source,
-							);
-							return (
-								<button
-									className="body-marker"
-									style={{
-										left: `${Number(row.x_percent)}%`,
-										top: `${Number(row.y_percent)}%`,
-									}}
-									key={id}
-									disabled={!selected}
-									onClick={() => place(id)}
-									aria-label={`Body-part marker ${Number(row.marker_index)}`}
-								>
-									<strong>{Number(row.marker_index)}</strong>
-									<span>{source ? String(source.text_en) : ""}</span>
-								</button>
-							);
-						})}
-				</div>
-			)}
-			{kind !== "animal_part_labeling" && (
-				<div className="wildlife-targets">
-					{targets.map((row) => {
-						const id = String(row.target_token ?? row.heading_token);
-						const link = links.find((entry) => entry.target === id);
-						const source = entries.find(
-							(entry) => String(entry.entry_token) === link?.source,
-						);
-						const sprite = Number(row.sprite_index ?? 0);
-						return (
-							<button
-								className={`wildlife-target ${kind === "lesson_heading_sort" ? "heading" : ""}`}
-								key={id}
-								disabled={!selected}
-								onClick={() => place(id)}
-							>
-								{kind === "animal_vocabulary_mapping" && (
-									<span
-										className={`animal-sprite sprite-${sprite}`}
-										role="img"
-										aria-label="Animal target"
-									/>
-								)}
-								{kind === "lesson_heading_sort" && (
-									<strong>{String(row.text_en)}</strong>
-								)}
-								<span>{source ? String(source.text_en) : "Choose a word"}</span>
-							</button>
-						);
-					})}
-				</div>
-			)}
-		</section>
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 

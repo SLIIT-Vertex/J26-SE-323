@@ -15,19 +15,18 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./family-word-constellation.css";
-import {
-	type FamilyLink,
-	familyLinkResponse,
-} from "./familyConstellationLogic";
+import { familyLinkResponse } from "./familyConstellationLogic";
 
 type Step =
 	| "games"
@@ -283,7 +282,10 @@ export function FamilyWordConstellation({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={1}
 							currentActivity={1}
 							completedActivities={0}
@@ -421,69 +423,23 @@ function LinkBoard({
 	onResponse,
 }: {
 	game: Record<string, unknown>;
-	onResponse(value: ConstructedResponse): void;
+	onResponse(value: ConstructedResponse | null): void;
 }) {
-	const sources = game.english_words as Row[];
-	const targets = game.sinhala_words as Row[];
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<FamilyLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const place = (target: string) => {
-		if (!selected) return;
-		const old = links.find(
-			(link) => link.source === selected || link.target === target,
-		);
-		const next = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		next.push({ sequence: next.length + 1, source: selected, target });
-		const nextTrace = [
-			...trace,
-			`${old ? "replace" : "link"}:${selected}:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		if (next.length === sources.length)
-			onResponse(
-				familyLinkResponse(
-					String(game.command_token),
-					next,
-					sources.map((row) => String(row.english_token)),
-					nextTrace,
-				),
-			);
-	};
 	return (
-		<section className="link-board">
-			<div className="star-rail">
-				{sources.map((row) => {
-					const id = String(row.english_token);
-					return (
-						<button
-							key={id}
-							className={selected === id ? "selected" : ""}
-							disabled={links.some((link) => link.source === id)}
-							onClick={() => setSelected(id)}
-						>
-							{String(row.text_en)}
-						</button>
-					);
-				})}
-			</div>
-			<div className="sinhala-sheet">
-				{targets.map((row) => {
-					const id = String(row.sinhala_token);
-					const linked = links.find((entry) => entry.target === id);
-					return (
-						<button key={id} disabled={!selected} onClick={() => place(id)}>
-							{String(row.text_si)}
-							<span>{linked ? "linked" : "Choose a word"}</span>
-						</button>
-					);
-				})}
-			</div>
-		</section>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-12")}
+			theme="night"
+			sources={game.english_words as Row[]}
+			sourceKey="english_token"
+			targets={game.sinhala_words as Row[]}
+			targetKey="sinhala_token"
+			target={(row) => ({ label: String(row.text_si) })}
+			instruction="Drag each English family word to its Sinhala word."
+			build={(links, tokens, trace) =>
+				familyLinkResponse(String(game.command_token), links, tokens, trace)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bilingualResponse, objectResponse } from "../informationLogic";
+
 describe("information responses", () => {
 	it("builds bilingual links", () =>
 		expect(

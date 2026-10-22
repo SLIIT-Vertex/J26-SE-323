@@ -1,39 +1,38 @@
 import {
+	type CSSProperties,
 	Fragment,
 	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
-	type CSSProperties,
 } from "react";
-import type {
-	ConstructedResponse,
-	ChildEpisodeResponse,
-	ExperimentCondition,
-	PresentationManifest,
-	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import {
 	AdaptiveSupportActivity,
 	SUPPORT_TYPE_LABELS,
 } from "../mobile-learning-flow/AdaptiveSupportActivity";
 import {
-	adaptiveGameProgressStage,
 	AdventureProgress,
+	adaptiveGameProgressStage,
 } from "../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
 } from "../mobile-learning-flow/AdventureShared";
+import type {
+	ChildEpisodeResponse,
+	ConstructedResponse,
+	ExperimentCondition,
+	PresentationManifest,
+	SupportView,
+} from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../mobile-learning-flow/GameApi";
 import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
 import {
+	resultDigitLabel,
 	SUBTRACTION_CHAPTERS,
 	SUBTRACTION_SKILLS,
-	exchangeLabel,
-	resultDigitLabel,
 	type SubtractionChapter,
 } from "./manifest";
 import {
@@ -42,6 +41,7 @@ import {
 	digitsOf,
 	type Exchange,
 } from "./subtractionLogic";
+import "./subtraction-board.css";
 
 type Step =
 	| "chapters"
@@ -351,13 +351,52 @@ export function SubtractionAdventureJourney({
 		if (completed) advanceSupport(completed);
 	};
 	const advanceSupport = (next: ChildEpisodeResponse) => {
-		if (next.support_round?.withdrawal_allowed) { setPendingWithdrawal({ episodeId: next.episode_id, requestId: crypto.randomUUID(), supportRevisionId: next.support_round.support_revision_id, manifestRevisionId: next.support_round.manifest_revision_id }); setSupport(null); setResponse(null); setStep("withdrawing"); return; }
-		if (next.support) { setSupport(next.support); resetWork(); }
+		if (next.support_round?.withdrawal_allowed) {
+			setPendingWithdrawal({
+				episodeId: next.episode_id,
+				requestId: crypto.randomUUID(),
+				supportRevisionId: next.support_round.support_revision_id,
+				manifestRevisionId: next.support_round.manifest_revision_id,
+			});
+			setSupport(null);
+			setResponse(null);
+			setStep("withdrawing");
+			return;
+		}
+		if (next.support) {
+			setSupport(next.support);
+			resetWork();
+		}
 	};
 	const answerSupport = async () => {
-		const submit = api.answerSupported; const game = support?.game_manifest;
-		if (!submit || !episodeId || !response || !game || game.schema_version !== "support-round-v1" || !game.activity) return; const activity = game.activity;
-		const next = await run(() => submit(episodeId, { constructed_response: { ...response, presentation_id: activity.presentation_id, item_revision_id: activity.revision_id, interaction_version: "constructed-response-v1" }, response_time_ms: Math.max(0, Date.now() - startedAt), interaction_summary: { move_count: evidence.digitEntries } }, crypto.randomUUID()));
+		const submit = api.answerSupported;
+		const game = support?.game_manifest;
+		if (
+			!submit ||
+			!episodeId ||
+			!response ||
+			!game ||
+			game.schema_version !== "support-round-v1" ||
+			!game.activity
+		)
+			return;
+		const activity = game.activity;
+		const next = await run(() =>
+			submit(
+				episodeId,
+				{
+					constructed_response: {
+						...response,
+						presentation_id: activity.presentation_id,
+						item_revision_id: activity.revision_id,
+						interaction_version: "constructed-response-v1",
+					},
+					response_time_ms: Math.max(0, Date.now() - startedAt),
+					interaction_summary: { move_count: evidence.digitEntries },
+				},
+				crypto.randomUUID(),
+			),
+		);
 		if (next) advanceSupport(next);
 	};
 	const advance = () => {
@@ -463,44 +502,73 @@ export function SubtractionAdventureJourney({
 				</div>
 			)}
 			{step === "support" && support && (
-				<div className="adventure-play game-play-surface" data-support-visible="true">
+				<div
+					className="adventure-play game-play-surface"
+					data-support-visible="true"
+				>
 					<AdventureProgress
 						stage={progressStage}
 						activityCount={skills.length}
 					/>
-					{support.game_manifest.schema_version === "support-round-v1" ? <SupportRoundFrame support={support} busy={busy} onViewComplete={() => void finishSupport()} renderActivity={(activity) => <SubtractionMechanic key={activity.revision_id} game={activity.game} reducedMotion={reducedMotion} onChange={record} />}>
-						{support.game_manifest.stage_kind !== "view" && <button type="button" className="primary-action" disabled={busy || !response} onClick={() => void answerSupport()}>තහවුරු කරන්න</button>}
-					</SupportRoundFrame> : <>
-					<p
-						className="support-badge"
-						data-support-type={support.scaffold_type}
-					>
-						උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
-					</p>
-					<h2>{support.title_si}</h2>
-					{support.body_si.map((line) => (
-						<p key={line}>{line}</p>
-					))}
-					{support.game_manifest.schema_version !== "half-set-manifest-v1" &&
-						support.game_manifest.schema_version !==
-							"classroom-action-support-v1" && (
-							<AdaptiveSupportActivity
-								manifest={support.game_manifest}
-								onProgress={(actions, complete) => {
-									setSupportActions(actions);
-									setSupportComplete(complete);
-								}}
-							/>
-						)}
-					<button
-						type="button"
-						className="primary-action"
-						disabled={busy || !supportComplete}
-						onClick={finishSupport}
-					>
-						උදව්ව අවසන් කරන්න
-					</button>
-					</>}
+					{support.game_manifest.schema_version === "support-round-v1" ? (
+						<SupportRoundFrame
+							support={support}
+							busy={busy}
+							onViewComplete={() => void finishSupport()}
+							renderActivity={(activity) => (
+								<SubtractionMechanic
+									key={activity.revision_id}
+									game={activity.game}
+									reducedMotion={reducedMotion}
+									onChange={record}
+								/>
+							)}
+						>
+							{support.game_manifest.stage_kind !== "view" && (
+								<button
+									type="button"
+									className="primary-action"
+									disabled={busy || !response}
+									onClick={() => void answerSupport()}
+								>
+									තහවුරු කරන්න
+								</button>
+							)}
+						</SupportRoundFrame>
+					) : (
+						<>
+							<p
+								className="support-badge"
+								data-support-type={support.scaffold_type}
+							>
+								උදව් වර්ගය: {SUPPORT_TYPE_LABELS[support.scaffold_type]}
+							</p>
+							<h2>{support.title_si}</h2>
+							{support.body_si.map((line) => (
+								<p key={line}>{line}</p>
+							))}
+							{support.game_manifest.schema_version !==
+								"half-set-manifest-v1" &&
+								support.game_manifest.schema_version !==
+									"classroom-action-support-v1" && (
+									<AdaptiveSupportActivity
+										manifest={support.game_manifest}
+										onProgress={(actions, complete) => {
+											setSupportActions(actions);
+											setSupportComplete(complete);
+										}}
+									/>
+								)}
+							<button
+								type="button"
+								className="primary-action"
+								disabled={busy || !supportComplete}
+								onClick={finishSupport}
+							>
+								උදව්ව අවසන් කරන්න
+							</button>
+						</>
+					)}
 				</div>
 			)}
 			{step === "withdrawing" && (
@@ -512,17 +580,29 @@ export function SubtractionAdventureJourney({
 					<h2>උදව් සම්පූර්ණයෙන් ඉවත් කරමින්…</h2>
 				</div>
 			)}
-			{step === "result" && (
-				answeredCorrectly ? (
-					<GameSuccessScreen gameNumber={activeChapterIndex + 1} gameCount={SUBTRACTION_CHAPTERS.length} onContinue={advance} />
+			{step === "result" &&
+				(answeredCorrectly ? (
+					<GameSuccessScreen
+						gameNumber={activeChapterIndex + 1}
+						gameCount={SUBTRACTION_CHAPTERS.length}
+						onContinue={advance}
+					/>
 				) : (
 					<div className="adventure-result" data-answer-result="incorrect">
-						<AdventureProgress stage={progressStage} activityCount={skills.length} />
+						<AdventureProgress
+							stage={progressStage}
+							activityCount={skills.length}
+						/>
 						<h2>{message}</h2>
-						<button type="button" className="primary-action" onClick={() => activeSkillId && void openSkill(activeSkillId)}>නැවත උත්සාහ කරන්න</button>
+						<button
+							type="button"
+							className="primary-action"
+							onClick={() => activeSkillId && void openSkill(activeSkillId)}
+						>
+							නැවත උත්සාහ කරන්න
+						</button>
 					</div>
-				)
-			)}
+				))}
 		</section>
 	);
 }
@@ -548,8 +628,8 @@ export function SubtractionMechanic({
 	const quantities = game.quantities as Quantity[] | undefined;
 	const expanded = game.representation === "expanded";
 	const width = Number(game.width ?? places.length);
-	const [source, setSource] = useState<string | null>(null);
-	const [destination, setDestination] = useState<string | null>(null);
+	// The answer box the number pad writes into; subtraction starts from the ones.
+	const [activeCell, setActiveCell] = useState(places.length - 1);
 	const [exchanges, setExchanges] = useState<Exchange[]>([]);
 	const [digits, setDigits] = useState(places.map(() => ""));
 	const [minuendSource, setMinuendSource] = useState<"first" | "second" | null>(
@@ -670,15 +750,20 @@ export function SubtractionMechanic({
 		);
 	};
 
-	const performExchange = () => {
+	const performExchange = (
+		source: string | null,
+		destination: string | null,
+	) => {
 		if (!source || !destination || !adjacent(places, source, destination)) {
-			setNotice("ඒ තීරු දෙක අතර හුවමාරු කළ නොහැක.");
+			setNotice("ඒ තීරු දෙක අතර ණයට ගත නොහැක.");
 			onChange(null, { invalidExchanges: 1 });
 			return;
 		}
 		const sourceIndex = places.indexOf(source);
 		if (adjusted[sourceIndex] <= 0) {
-			setNotice("ඒ තීරුවෙන් ගෙන ඒමට ඉඩක් නැත.");
+			setNotice(
+				`${labels[sourceIndex]} තීරුව 0 යි; එයින් ණයට ගත නොහැක. පළමුව එහි වම් තීරුවෙන් ණයට ගන්න.`,
+			);
 			onChange(null, { invalidExchanges: 1 });
 			return;
 		}
@@ -691,16 +776,29 @@ export function SubtractionMechanic({
 		];
 		setExchanges(next);
 		setMoving(next[next.length - 1] ?? null);
+		const destinationIndex = places.indexOf(destination);
 		setNotice(
-			reducedMotion
-				? `${labels[sourceIndex]} තැනින් එකක් අඩු වී ${labels[places.indexOf(destination)]} තැනට දහයක් එක් විය.`
-				: "හුවමාරුව සිදු විය.",
+			`${labels[sourceIndex]} තීරුවෙන් 1ක් ණයට ගත්තා: ${labels[sourceIndex]} ${adjusted[sourceIndex]} → ${adjusted[sourceIndex] - 1}, ${labels[destinationIndex]} ${adjusted[destinationIndex]} → ${adjusted[destinationIndex] + 10}.`,
 		);
-		setSource(null);
-		setDestination(null);
 		if (quantities)
 			emitStory(digits, minuendSource, subtrahendSource, { exchanges: 1 });
 		else emitColumn(digits, next, { exchanges: 1 });
+	};
+
+	const enterDigit = (index: number, value: string) => {
+		const next = digits.map((digit, digitIndex) =>
+			digitIndex === index ? value : digit,
+		);
+		setDigits(next);
+		const firstFilled = next.findIndex((digit) => digit !== "");
+		const startedFromOnes =
+			firstFilled === -1 || firstFilled === next.length - 1;
+		if (quantities)
+			emitStory(next, minuendSource, subtrahendSource, {
+				digitEntries: 1,
+				startedFromOnes,
+			});
+		else emitColumn(next, exchanges, { digitEntries: 1, startedFromOnes });
 	};
 
 	return (
@@ -731,7 +829,7 @@ export function SubtractionMechanic({
 									});
 								}}
 							>
-								විශාල සංඛ්‍යාව ලෙස තබන්න
+								⬆ උඩින් තබන්න (විශාල ගණන)
 							</button>
 							<button
 								type="button"
@@ -744,7 +842,7 @@ export function SubtractionMechanic({
 									});
 								}}
 							>
-								කුඩා සංඛ්‍යාව ලෙස තබන්න
+								⬇ යටින් තබන්න (අඩු කරන ගණන)
 							</button>
 						</article>
 					))}
@@ -760,7 +858,7 @@ export function SubtractionMechanic({
 						[
 							["minuend", "අඩු කරන සංඛ්‍යාව"],
 							["subtrahend", "අඩු වන සංඛ්‍යාව"],
-							["adjusted", "හුවමාරුවෙන් පසු"],
+							["adjusted", "ණයට ගැනීමෙන් පසු (අවශ්‍ය නම්)"],
 							["result", "වෙනස"],
 						] as const
 					).map(([row, legend]) => (
@@ -820,11 +918,21 @@ export function SubtractionMechanic({
 				</fieldset>
 			) : (
 				storyReady && (
-					<div className="column-working">
+					<div className="column-working sub-board">
+						<ol className="sub-guide">
+							<li>
+								දකුණේ <b>{labels[labels.length - 1]}</b> තීරුවෙන් පටන් ගන්න.
+							</li>
+							<li>
+								උඩ ඉලක්කම යට ඉලක්කමට වඩා කුඩා නම්, එම තීරුවේ <b>🔁 ණයට ගන්න</b> ඔබන්න.
+							</li>
+							<li>පිළිතුරු කොටුව තෝරා, පහළ අංකය ඔබන්න.</li>
+						</ol>
 						<table className="subtraction-table">
-							<caption>ස්ථාන අගය අඩු කිරීමේ පුවරුව</caption>
+							<caption className="sr-only">ස්ථාන අගය අඩු කිරීමේ පුවරුව</caption>
 							<thead>
 								<tr>
+									<td />
 									{places.map((place, index) => (
 										<th key={place} scope="col">
 											{labels[index]}
@@ -833,125 +941,121 @@ export function SubtractionMechanic({
 								</tr>
 							</thead>
 							<tbody>
-								<tr className="adjusted-digits">
-									{adjusted.map((digit, index) => (
-										<td key={places[index]}>
-											{exchanges.length > 0 &&
-											digit !== minuendDigits[index] ? (
-												<strong
-													className={
-														moving && !reducedMotion
-															? "exchange-token is-moving"
-															: "exchange-token"
+								<tr className="borrow-row">
+									<th scope="row" className="sr-only">
+										ණයට ගැනීම
+									</th>
+									{places.map((place, index) => (
+										<td key={place}>
+											{index > 0 ? (
+												<button
+													type="button"
+													className="touch-target borrow-button"
+													data-place={place}
+													aria-label={`${labels[index - 1]} තීරුවෙන් 1ක් ${labels[index]} තීරුවට ණයට ගන්න`}
+													onClick={() =>
+														performExchange(places[index - 1], place)
 													}
 												>
-													{digit}
-												</strong>
+													🔁 ණයට ගන්න
+												</button>
 											) : null}
 										</td>
 									))}
 								</tr>
-								<tr>
-									{minuendDigits.map((digit, index) => (
-										<td key={places[index]}>
-											<strong>{digit ?? ""}</strong>
-										</td>
-									))}
+								<tr className="minuend-row">
+									<th scope="row">උඩ සංඛ්‍යාව</th>
+									{minuendDigits.map((digit, index) => {
+										const changed =
+											exchanges.length > 0 && adjusted[index] !== digit;
+										return (
+											<td key={places[index]}>
+												{changed ? (
+													<>
+														<strong
+															className={
+																moving && !reducedMotion
+																	? "exchange-token is-moving"
+																	: "exchange-token"
+															}
+														>
+															{adjusted[index]}
+														</strong>
+														<s>
+															<span className="sr-only">පෙර </span>
+															{digit}
+														</s>
+													</>
+												) : (
+													<strong>{digit ?? ""}</strong>
+												)}
+											</td>
+										);
+									})}
 								</tr>
-								<tr>
+								<tr className="subtrahend-row">
+									<th scope="row">− අඩු කරන සංඛ්‍යාව</th>
 									{subtrahendDigits.map((digit, index) => (
 										<td key={places[index]}>
-											{index === 0 ? <span aria-hidden="true">− </span> : null}
 											<strong>{digit ?? ""}</strong>
 										</td>
 									))}
 								</tr>
 								<tr className="result-digits">
+									<th scope="row">පිළිතුර</th>
 									{places.map((place, index) => (
 										<td key={place}>
 											<input
 												className="touch-target result-digit"
 												data-place={place}
-												inputMode="numeric"
+												data-active={activeCell === index || undefined}
+												// The on-screen pad types here; a keyboard still works.
+												inputMode="none"
 												maxLength={2}
 												aria-label={resultDigitLabel(place)}
 												value={digits[index]}
-												onChange={(event) => {
-													const value = event.target.value
-														.replace(/\D/g, "")
-														.slice(0, 1);
-													const next = digits.map((digit, digitIndex) =>
-														digitIndex === index ? value : digit,
-													);
-													setDigits(next);
-													const firstFilled = next.findIndex(
-														(digit) => digit !== "",
-													);
-													const startedFromOnes =
-														firstFilled === -1 ||
-														firstFilled === next.length - 1;
-													if (quantities) {
-														emitStory(next, minuendSource, subtrahendSource, {
-															digitEntries: 1,
-															startedFromOnes,
-														});
-													} else
-														emitColumn(next, exchanges, {
-															digitEntries: 1,
-															startedFromOnes,
-														});
-												}}
+												onFocus={() => setActiveCell(index)}
+												onChange={(event) =>
+													enterDigit(
+														index,
+														event.target.value.replace(/\D/g, "").slice(0, 1),
+													)
+												}
 											/>
 										</td>
 									))}
 								</tr>
 							</tbody>
 						</table>
-						<fieldset className="exchange-controls">
-							<legend>හුවමාරුව තෝරන්න</legend>
-							<div>
-								{places.slice(0, -1).map((place) => (
-									<button
-										key={place}
-										type="button"
-										className="touch-target exchange-source"
-										data-place={place}
-										aria-pressed={source === place}
-										onClick={() => setSource(place)}
-									>
-										{labels[places.indexOf(place)]}
-									</button>
-								))}
-							</div>
-							<div>
-								{places.slice(1).map((place) => (
-									<button
-										key={place}
-										type="button"
-										className="touch-target exchange-destination"
-										data-place={place}
-										aria-pressed={destination === place}
-										onClick={() => setDestination(place)}
-									>
-										{labels[places.indexOf(place)]}
-									</button>
-								))}
-							</div>
+						<fieldset className="sub-pad">
+							<legend className="sr-only">අංක පුවරුව</legend>
+							{[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((value) => (
+								<button
+									type="button"
+									key={value}
+									className="touch-target"
+									onClick={() => {
+										enterDigit(activeCell, String(value));
+										// Then move one column left, the way subtraction goes.
+										setActiveCell((cell) => Math.max(0, cell - 1));
+									}}
+								>
+									{value}
+								</button>
+							))}
 							<button
 								type="button"
-								className="touch-target exchange-apply"
-								aria-label={
-									source && destination
-										? exchangeLabel(source, destination)
-										: "දහය තැනින් එකක් ගෙන එක තැනට දහයක් එක් කරන්න"
-								}
-								onClick={performExchange}
+								className="touch-target sub-pad-erase"
+								aria-label="මකන්න"
+								onClick={() => enterDigit(activeCell, "")}
 							>
-								හුවමාරුව කරන්න
+								⌫
 							</button>
+						</fieldset>
+						{exchanges.length > 0 && (
 							<button
 								type="button"
-								className="touch-target"
+								className="touch-target sub-undo"
 								onClick={() => {
 									setExchanges([]);
 									setMoving(null);
@@ -963,9 +1067,9 @@ export function SubtractionMechanic({
 									else emitColumn(digits, [], { cleared: 1 });
 								}}
 							>
-								හුවමාරුව අහෝසි කරන්න
+								↺ ණයට ගැනීම් අහෝසි කරන්න
 							</button>
-						</fieldset>
+						)}
 						{notice && (
 							<p role="status" className="exchange-status">
 								{notice}

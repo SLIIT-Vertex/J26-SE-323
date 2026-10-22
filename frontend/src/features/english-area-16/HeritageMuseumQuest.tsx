@@ -14,20 +14,22 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../mobile-learning-flow/api/generated";
+import { ContractError } from "../mobile-learning-flow/api/runtime";
 import type { GameApi } from "../mobile-learning-flow/GameApi";
+import {
+	EXHIBIT_PICTURES,
+	picture,
+} from "../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
 import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
 } from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
 import "../mobile-learning-flow/english-game-shared.css";
 import "./heritage-museum.css";
-import {
-	exhibitMappingResponse,
-	type HeritageLink,
-	pastBilingualResponse,
-} from "./heritageLogic";
+import { exhibitMappingResponse, pastBilingualResponse } from "./heritageLogic";
 
 const SKILLS = [
 	{ id: "G5-ENG-PAST-BILINGUAL-01", name: "Museum Word Bridge", icon: "🏷️" },
@@ -321,7 +323,10 @@ export function HeritageMuseumQuest({
 				<section className="caq-play game-play-surface">
 					{step !== "result" && (
 						<AdventureProgress
-							stage={adaptiveGameProgressStage(step, manifest?.measurement_role)}
+							stage={adaptiveGameProgressStage(
+								step,
+								manifest?.measurement_role,
+							)}
 							activityCount={2}
 							currentActivity={skillIndex + 1}
 							completedActivities={completed.length}
@@ -450,136 +455,40 @@ function MuseumBoard({
 	onResponse,
 }: {
 	game: Game;
-	onResponse(response: ConstructedResponse): void;
+	onResponse(response: ConstructedResponse | null): void;
 }) {
 	const bilingual = game.response_kind === "past_bilingual_links";
-	const sources = (bilingual ? game.english_words : game.words) as Row[];
-	const targets = (bilingual ? game.sinhala_words : game.exhibits) as Row[];
-	const sourceKey = bilingual ? "english_token" : "word_token";
-	const targetKey = bilingual ? "sinhala_token" : "exhibit_token";
-	const [selected, setSelected] = useState<string | null>(null);
-	const [links, setLinks] = useState<HeritageLink[]>([]);
-	const [trace, setTrace] = useState<string[]>([]);
-	const [detail, setDetail] = useState<number | null>(null);
-	const place = (target: string) => {
-		if (!selected) return;
-		const remaining = links.filter(
-			(link) => link.source !== selected && link.target !== target,
-		);
-		const next = [
-			...remaining,
-			{ sequence: remaining.length + 1, source: selected, target },
-		];
-		const nextTrace = [
-			...trace,
-			links.some((link) => link.source === selected)
-				? `replace:${target}`
-				: `place:${target}`,
-		];
-		setLinks(next);
-		setTrace(nextTrace);
-		setSelected(null);
-		onResponse(
-			bilingual
-				? pastBilingualResponse(
-						String(game.command_token),
-						next,
-						sources.map((row) => String(row[sourceKey])),
-						nextTrace,
-					)
-				: exhibitMappingResponse(
-						String(game.command_token),
-						next,
-						sources.map((row) => String(row[sourceKey])),
-						nextTrace,
-					),
-		);
-	};
 	return (
-		<section className="hm-board">
-			{selected && <p className="hm-dock">Selected label ready</p>}
-			<div className="hm-tray">
-				{sources.map((row) => (
-					<button
-						data-opaque-token={String(row[sourceKey])}
-						key={String(row[sourceKey])}
-						aria-pressed={selected === row[sourceKey]}
-						onClick={() => setSelected(String(row[sourceKey]))}
-					>
-						{String(row.text_en)}
-					</button>
-				))}
-			</div>
-			<div className="hm-cases">
-				{targets.map((row, index) => (
-					<article key={String(row[targetKey])}>
-						<button
-							className="hm-target"
-							data-opaque-token={String(row[targetKey])}
-							onClick={() => place(String(row[targetKey]))}
-						>
-							{bilingual ? (
-								<>
-									<strong>{String(row.text_si)}</strong>
-									<small>
-										{links.some((link) => link.target === row[targetKey])
-											? "✓ linked"
-											: "tap to link"}
-									</small>
-								</>
-							) : (
-								<ExhibitSymbol
-									variant={Number(row.renderer_variant)}
-									index={index}
-								/>
-							)}
-						</button>
-						{!bilingual && (
-							<button
-								className="hm-lens"
-								aria-label={`Inspect schematic exhibit ${index + 1}`}
-								onClick={() => setDetail(index)}
-							>
-								🔎 Inspect
-							</button>
-						)}
-					</article>
-				))}
-			</div>
-			{detail !== null && (
-				<div
-					className="hm-sheet"
-					role="dialog"
-					aria-modal="true"
-					aria-label="Schematic exhibit detail"
-				>
-					<ExhibitSymbol
-						variant={Number(targets[detail]?.renderer_variant)}
-						index={detail}
-					/>
-					<p>
-						Schematic learning symbol — no date, place, ruler, provenance, or
-						authenticity claim.
-					</p>
-					<button onClick={() => setDetail(null)}>Close detail</button>
-				</div>
-			)}
-		</section>
-	);
-}
-
-function ExhibitSymbol({ variant, index }: { variant: number; index: number }) {
-	return (
-		<span
-			className="hm-symbol"
-			data-v={variant}
-			role="img"
-			aria-label={`Schematic learning exhibit ${index + 1}`}
-		>
-			<i />
-			<i />
-			<b />
-			<b />
-		</span>
+		<TokenBoard
+			scene={sceneFor("G5-AREA-ENG-16")}
+			theme="market"
+			sources={(bilingual ? game.english_words : game.words) as Row[]}
+			sourceKey={bilingual ? "english_token" : "word_token"}
+			targets={(bilingual ? game.sinhala_words : game.exhibits) as Row[]}
+			targetKey={bilingual ? "sinhala_token" : "exhibit_token"}
+			target={(row) =>
+				bilingual
+					? { label: String(row.text_si) }
+					: {
+							picture: {
+								emoji: picture(EXHIBIT_PICTURES, row.renderer_variant),
+							},
+						}
+			}
+			instruction={
+				bilingual
+					? "Drag each museum word to its Sinhala word."
+					: "Drag each label onto its museum exhibit."
+			}
+			build={(links, tokens, trace) =>
+				(bilingual ? pastBilingualResponse : exhibitMappingResponse)(
+					String(game.command_token),
+					links,
+					tokens,
+					trace,
+				)
+			}
+			onResponse={onResponse}
+		/>
 	);
 }
