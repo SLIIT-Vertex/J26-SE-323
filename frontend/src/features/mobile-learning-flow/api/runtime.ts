@@ -18,8 +18,8 @@ import type {
 	EverydayObjectSupportManifest,
 	FamilyConstellationSupportManifest,
 	FractionAdventureSupportManifest,
-	HeritageMuseumSupportManifest,
 	HeldOutcomeSlot,
+	HeritageMuseumSupportManifest,
 	InformationStationSupportManifest,
 	IslandFoodSupportManifest,
 	LearnerStateAction,
@@ -38,6 +38,9 @@ import type {
 	SinhalaDraftItemSlot,
 	SriLankaDiscoverySupportManifest,
 	SubtractionAdventureSupportManifest,
+	SupportAnswer,
+	SupportGuidancePair,
+	SupportLesson,
 	SupportView,
 	TelemetryAcknowledgement,
 	TimeAdventureSupportManifest,
@@ -164,241 +167,261 @@ function parseManifest(value: unknown): PresentationManifest | null {
 							game.schema_version !== "information-station-item-v1" &&
 							game.schema_version !== "heritage-museum-item-v1" &&
 							game.schema_version !== "classroom-language-live-item-v1" &&
-							game.schema_version !== "conversation-street-item-v1"
+							game.schema_version !== "conversation-street-item-v1" &&
+							game.schema_version !== "sinhala-pillam-item-v1" &&
+							game.schema_version !== "sinhala-punctuation-item-v1" &&
+							game.schema_version !== "sinhala-riddle-item-v1"
 						) {
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						}
 						const chapter = text(game.chapter);
 						const allowedChapters =
-							game.schema_version === "number-world-item-v1"
-								? [
-										"place_value_harbour",
-										"firefly_abacus",
-										"kite_workshop",
-										"river_route_rally",
-									]
-								: game.schema_version === "addition-adventure-item-v1"
+							game.schema_version === "sinhala-pillam-item-v1"
+								? ["pillam_friends", "akshara_workshop", "compound_garden"]
+								: game.schema_version === "sinhala-punctuation-item-v1"
 									? [
-											"fruit_catch",
-											"tuk_tuk_journey",
-											"carrying_crane",
-											"market_delivery_planner",
-											"festival_data_detective",
+											"sentence_rail",
+											"small_marks_workshop",
+											"said_and_extra",
+											"short_dash_path",
 										]
-									: game.schema_version === "number-pattern-item-v1"
-										? [
-												"number_step_trail",
-												"multiplication_bridge",
-												"pattern_power_machine",
-											]
-										: game.schema_version === "subtraction-adventure-item-v1"
+									: game.schema_version === "sinhala-riddle-item-v1"
+										? ["clue_path", "clue_bridge", "word_secret_box"]
+										: game.schema_version === "number-world-item-v1"
 											? [
-													"place_value_board",
-													"regrouping_workshop",
-													"difference_story",
+													"place_value_harbour",
+													"firefly_abacus",
+													"kite_workshop",
+													"river_route_rally",
 												]
-											: game.schema_version ===
-													"multiplication-adventure-item-v1"
-												? ["table_explorer", "column_workshop", "story_mission"]
-												: game.schema_version === "time-adventure-item-v1"
+											: game.schema_version === "addition-adventure-item-v1"
+												? [
+														"fruit_catch",
+														"tuk_tuk_journey",
+														"carrying_crane",
+														"market_delivery_planner",
+														"festival_data_detective",
+													]
+												: game.schema_version === "number-pattern-item-v1"
 													? [
-															"time_tools",
-															"twenty_four_hour_mission",
-															"time_journey",
+															"number_step_trail",
+															"multiplication_bridge",
+															"pattern_power_machine",
 														]
-													: game.schema_version === "division-adventure-item-v1"
+													: game.schema_version ===
+															"subtraction-adventure-item-v1"
 														? [
-																"equal_share",
-																"paper_division",
-																"division_story",
+																"place_value_board",
+																"regrouping_workshop",
+																"difference_story",
 															]
 														: game.schema_version ===
-																"distance-adventure-item-v1"
+																"multiplication-adventure-item-v1"
 															? [
-																	"unit_path",
-																	"distance_calculation",
-																	"distance_problems",
+																	"table_explorer",
+																	"column_workshop",
+																	"story_mission",
 																]
-															: game.schema_version ===
-																	"money-adventure-item-v1"
+															: game.schema_version === "time-adventure-item-v1"
 																? [
-																		"money_recognition",
-																		"money_calculation",
-																		"little_shop",
+																		"time_tools",
+																		"twenty_four_hour_mission",
+																		"time_journey",
 																	]
 																: game.schema_version ===
-																		"capacity-adventure-item-v1"
+																		"division-adventure-item-v1"
 																	? [
-																			"water_laboratory",
-																			"litre_machine",
-																			"water_delivery",
+																			"equal_share",
+																			"paper_division",
+																			"division_story",
 																		]
 																	: game.schema_version ===
-																			"roman-adventure-item-v1"
+																			"distance-adventure-item-v1"
 																		? [
-																				"roman_match",
-																				"emoji_count",
-																				"roman_arithmetic",
+																				"unit_path",
+																				"distance_calculation",
+																				"distance_problems",
 																			]
 																		: game.schema_version ===
-																				"shape-adventure-item-v1"
+																				"money-adventure-item-v1"
 																			? [
-																					"shape_table",
-																					"orientation_lab",
-																					"solid_net_match",
+																					"money_recognition",
+																					"money_calculation",
+																					"little_shop",
 																				]
 																			: game.schema_version ===
-																					"classroom-action-item-v1"
+																					"capacity-adventure-item-v1"
 																				? [
-																						"action_mirror",
-																						"classroom_dash",
-																						"come_back",
+																						"water_laboratory",
+																						"litre_machine",
+																						"water_delivery",
 																					]
 																				: game.schema_version ===
-																						"direction-adventure-item-v1"
+																						"roman-adventure-item-v1"
 																					? [
-																							"main_direction_compass",
-																							"secondary_direction_compass",
-																							"place_direction_scene",
+																							"roman_match",
+																							"emoji_count",
+																							"roman_arithmetic",
 																						]
 																					: game.schema_version ===
-																							"decimal-adventure-item-v1"
+																							"shape-adventure-item-v1"
 																						? [
-																								"decimal_reading_match",
-																								"decimal_tenths_shading",
-																								"tenths_fraction_to_decimal",
-																								"decimal_to_tenths_fraction",
+																								"shape_table",
+																								"orientation_lab",
+																								"solid_net_match",
 																							]
 																						: game.schema_version ===
-																								"mass-adventure-item-v1"
+																								"classroom-action-item-v1"
 																							? [
-																									"weighing_station",
-																									"kilogram_machine",
-																									"market_delivery",
+																									"action_mirror",
+																									"classroom_dash",
+																									"come_back",
 																								]
 																							: game.schema_version ===
-																									"sri-lanka-discovery-item-v1"
+																									"direction-adventure-item-v1"
 																								? [
-																										"word_explorer",
-																										"national_gallery",
-																										"community_sort",
+																										"main_direction_compass",
+																										"secondary_direction_compass",
+																										"place_direction_scene",
 																									]
 																								: game.schema_version ===
-																										"plant-explorer-item-v1"
+																										"decimal-adventure-item-v1"
 																									? [
-																											"garden_word_hunt",
-																											"build_a_plant",
-																											"one_or_many",
+																											"decimal_reading_match",
+																											"decimal_tenths_shading",
+																											"tenths_fraction_to_decimal",
+																											"decimal_to_tenths_fraction",
 																										]
 																									: game.schema_version ===
-																											"wildlife-ranger-item-v1"
+																											"mass-adventure-item-v1"
 																										? [
-																												"animal_spotter",
-																												"lesson_trail_sort",
-																												"body_part_detective",
+																												"weighing_station",
+																												"kilogram_machine",
+																												"market_delivery",
 																											]
 																										: game.schema_version ===
-																												"everyday-object-quest-item-v1"
+																												"sri-lanka-discovery-item-v1"
 																											? [
-																													"object_pop",
-																													"two_room_tidy",
-																													"name_builder",
+																													"word_explorer",
+																													"national_gallery",
+																													"community_sort",
 																												]
 																											: game.schema_version ===
-																													"island-food-festival-item-v1"
+																													"plant-explorer-item-v1"
 																												? [
-																														"market_match",
-																														"festival_stall_sort",
-																														"recipe_word_kitchen",
+																														"garden_word_hunt",
+																														"build_a_plant",
+																														"one_or_many",
 																													]
 																												: game.schema_version ===
-																														"water-works-adventure-item-v1"
+																														"wildlife-ranger-item-v1"
 																													? [
-																															"droplet_match",
-																															"pipe_route",
-																															"splash_detective",
+																															"animal_spotter",
+																															"lesson_trail_sort",
+																															"body_part_detective",
 																														]
 																													: game.schema_version ===
-																															"transit-terminal-quest-item-v1"
+																															"everyday-object-quest-item-v1"
 																														? [
-																																"ticket_match",
-																																"departure_board",
-																																"signal_detective",
+																																"object_pop",
+																																"two_room_tidy",
+																																"name_builder",
 																															]
 																														: game.schema_version ===
-																																"rainbow-wardrobe-item-v1"
+																																"island-food-festival-item-v1"
 																															? [
-																																	"rainbow_wardrobe",
+																																	"market_match",
+																																	"festival_stall_sort",
+																																	"recipe_word_kitchen",
 																																]
 																															: game.schema_version ===
-																																	"bloom-builder-garden-item-v1"
+																																	"water-works-adventure-item-v1"
 																																? [
-																																		"seed_packet_match",
-																																		"garden_bed_relay",
-																																		"petal_pattern_detective",
+																																		"droplet_match",
+																																		"pipe_route",
+																																		"splash_detective",
 																																	]
 																																: game.schema_version ===
-																																		"workplace-link-city-item-v1"
+																																		"transit-terminal-quest-item-v1"
 																																	? [
-																																			"job_badge_match",
-																																			"work_route_connector",
-																																			"city_network_challenge",
+																																			"ticket_match",
+																																			"departure_board",
+																																			"signal_detective",
 																																		]
 																																	: game.schema_version ===
-																																			"family-word-constellation-item-v1"
+																																			"rainbow-wardrobe-item-v1"
 																																		? [
-																																				"word_star",
-																																				"constellation",
+																																				"rainbow_wardrobe",
 																																			]
 																																		: game.schema_version ===
-																																				"earth-sky-explorer-item-v1"
+																																				"bloom-builder-garden-item-v1"
 																																			? [
-																																					"skyword_signal_bridge",
-																																					"panorama_label_quest",
-																																					"nature_lens_detective",
+																																					"seed_packet_match",
+																																					"garden_bed_relay",
+																																					"petal_pattern_detective",
 																																				]
 																																			: game.schema_version ===
-																																					"blueprint-quest-item-v1"
+																																					"workplace-link-city-item-v1"
 																																				? [
-																																						"place_card_explorer",
-																																						"blueprint_zone_sort",
-																																						"room_name_workshop",
+																																						"job_badge_match",
+																																						"work_route_connector",
+																																						"city_network_challenge",
 																																					]
 																																				: game.schema_version ===
-																																						"information-station-item-v1"
+																																						"family-word-constellation-item-v1"
 																																					? [
-																																							"word_signal_bridge",
-																																							"information_object_dock",
-																																							"signal_console_challenge",
+																																							"word_star",
+																																							"constellation",
 																																						]
 																																					: game.schema_version ===
-																																							"heritage-museum-item-v1"
+																																							"earth-sky-explorer-item-v1"
 																																						? [
-																																								"museum_word_bridge",
-																																								"exhibit_label_match",
-																																								"curator_lens_challenge",
+																																								"skyword_signal_bridge",
+																																								"panorama_label_quest",
+																																								"nature_lens_detective",
 																																							]
 																																						: game.schema_version ===
-																																								"classroom-language-live-item-v1"
+																																								"blueprint-quest-item-v1"
 																																							? [
-																																									"phrase_portal_sort",
-																																									"command_stage_director",
-																																									"situation_bubble_match",
-																																									"question_tile_studio",
+																																									"place_card_explorer",
+																																									"blueprint_zone_sort",
+																																									"room_name_workshop",
 																																								]
 																																							: game.schema_version ===
-																																									"conversation-street-item-v1"
+																																									"information-station-item-v1"
 																																								? [
-																																										"conversation_matchmaker",
-																																										"dialogue_director",
-																																										"fictional_profile_reply_lab",
-																																										"show_and_tell_conversation",
+																																										"word_signal_bridge",
+																																										"information_object_dock",
+																																										"signal_console_challenge",
 																																									]
-																																								: [
-																																										"equal_share_studio",
-																																										"quarter_orchard",
-																																										"tenths_mosaic",
-																																									];
+																																								: game.schema_version ===
+																																										"heritage-museum-item-v1"
+																																									? [
+																																											"museum_word_bridge",
+																																											"exhibit_label_match",
+																																											"curator_lens_challenge",
+																																										]
+																																									: game.schema_version ===
+																																											"classroom-language-live-item-v1"
+																																										? [
+																																												"phrase_portal_sort",
+																																												"command_stage_director",
+																																												"situation_bubble_match",
+																																												"question_tile_studio",
+																																											]
+																																										: game.schema_version ===
+																																												"conversation-street-item-v1"
+																																											? [
+																																													"conversation_matchmaker",
+																																													"dialogue_director",
+																																													"fictional_profile_reply_lab",
+																																													"show_and_tell_conversation",
+																																												]
+																																											: [
+																																													"equal_share_studio",
+																																													"quarter_orchard",
+																																													"tenths_mosaic",
+																																												];
 						if (!allowedChapters.includes(chapter))
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						return game as PresentationManifest["game"];
@@ -476,6 +499,7 @@ function parseSupport(value: unknown): SupportView | null {
 							prompt_si: parsed.prompt_si,
 							game: parsed.game,
 							returns_to_failed_item: source.returns_to_failed_item,
+							answer: supportAnswer(source.answer),
 						};
 					})();
 		const worked =
@@ -504,6 +528,7 @@ function parseSupport(value: unknown): SupportView | null {
 							game: parsed.game,
 							steps_si: source.steps_si.map(text),
 							solution: object(source.solution) as never,
+							answer: supportAnswer(source.answer),
 						};
 					})();
 		const cues = Array.isArray(game.cues_si) ? game.cues_si.map(text) : null;
@@ -519,8 +544,10 @@ function parseSupport(value: unknown): SupportView | null {
 			!Number.isSafeInteger(stageCount) ||
 			stageCount < 1 ||
 			stageIndex >= stageCount ||
+			// A demonstration shows a worked example, or the child's own board solved (maths
+			// visual guidance); every other stage is played on an activity.
 			(stageKind === "view"
-				? worked === null || activity !== null
+				? worked === null && activity === null
 				: activity === null)
 		)
 			throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
@@ -556,6 +583,8 @@ function parseSupport(value: unknown): SupportView | null {
 				stage_count: stageCount,
 				stage_kind: stageKind as "practice" | "target" | "view",
 				cues_si: cues,
+				guidance: supportGuidance(game.guidance),
+				lesson: supportLesson(game.lesson),
 				activity,
 				worked_example: worked,
 			},
@@ -1039,6 +1068,13 @@ function parseServerScore(value: unknown): ServerScore | null {
 	}
 	if (row.feedback_column != null)
 		parsed.feedback_column = text(row.feedback_column);
+	if (row.feedback_si != null) parsed.feedback_si = text(row.feedback_si);
+	if (row.reveal_key != null) {
+		const key = text(row.reveal_key);
+		if (!/^[a-z_]+$/.test(key))
+			throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
+		parsed.reveal_key = key;
+	}
 	return parsed;
 }
 
@@ -1068,6 +1104,9 @@ const draftTemplates = new Set<DraftTemplateId>([
 	"word_workshop",
 	"story_studio",
 	"eco_explorer",
+	"pillam_journey",
+	"punctuation_journey",
+	"riddle_journey",
 ]);
 
 function rejectAnswerKeys(value: unknown): void {
@@ -1168,7 +1207,8 @@ export function parseDraftMissionRecord(value: unknown): DraftMissionRecord {
 export function parseDraftMissionCatalog(value: unknown): DraftMissionCatalog {
 	rejectAnswerKeys(value);
 	const row = object(value);
-	if (!Array.isArray(row.missions) || row.missions.length !== 55) {
+	// 54 mapped areas: G5-AREA-SIN-16 was retired from the catalogue.
+	if (!Array.isArray(row.missions) || row.missions.length !== 54) {
 		throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 	}
 	return {
@@ -1177,5 +1217,69 @@ export function parseDraftMissionCatalog(value: unknown): DraftMissionCatalog {
 			"grade5-draft-mission-catalog-v1",
 		),
 		missions: row.missions.map((mission) => parseDraftMissionRecord(mission)),
+	};
+}
+
+/** The answer a help stage shows on its board: tinted while playing, filled when solved. */
+function supportAnswer(value: unknown): SupportAnswer | null {
+	if (value == null || typeof value !== "object") return null;
+	const row = value as Record<string, unknown>;
+	if (row.mode !== "tint" && row.mode !== "filled") return null;
+	const strings = (list: unknown) =>
+		Array.isArray(list) ? list.map(text) : [];
+	return {
+		mode: row.mode,
+		lines: strings(row.lines),
+		marks: strings(row.marks),
+	};
+}
+
+function supportGuidance(value: unknown): SupportGuidancePair[] {
+	if (!Array.isArray(value)) return [];
+	return value
+		.filter((pair) => pair && typeof pair === "object")
+		.map((pair) => {
+			const row = pair as Record<string, unknown>;
+			return {
+				question_si: text(row.question_si),
+				answer_si: text(row.answer_si),
+			};
+		});
+}
+
+/** A maths help stage's lesson: steps, the answer, theory, hints and the child's mistake. */
+function supportLesson(value: unknown): SupportLesson | null {
+	if (value == null || typeof value !== "object") return null;
+	const row = value as Record<string, unknown>;
+	const strings = (list: unknown) =>
+		Array.isArray(list) ? list.map(text) : [];
+	const notes = Array.isArray(row.notes)
+		? row.notes
+				.filter((note) => note && typeof note === "object")
+				.map((note) => {
+					const item = note as Record<string, unknown>;
+					return { title_si: text(item.title_si), text_si: text(item.text_si) };
+				})
+		: [];
+	const diagnosis =
+		row.diagnosis && typeof row.diagnosis === "object"
+			? (() => {
+					const item = row.diagnosis as Record<string, unknown>;
+					return {
+						you_did_si: text(item.you_did_si),
+						went_wrong_si: text(item.went_wrong_si),
+					};
+				})()
+			: null;
+	return {
+		title_si: text(row.title_si),
+		notes,
+		steps_si: strings(row.steps_si),
+		answer_si: row.answer_si == null ? null : text(row.answer_si),
+		hints_si: strings(row.hints_si),
+		another_view_si: strings(row.another_view_si),
+		diagnosis,
+		continue_label_si:
+			row.continue_label_si == null ? null : text(row.continue_label_si),
 	};
 }

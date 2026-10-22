@@ -43,7 +43,7 @@ function mission(index: number): DraftMissionRecord {
 function catalog(extra: Record<string, unknown> = {}) {
 	return {
 		package_version: "grade5-draft-mission-catalog-v1",
-		missions: Array.from({ length: 55 }, (_, index) => mission(index)),
+		missions: Array.from({ length: 54 }, (_, index) => mission(index)),
 		...extra,
 	};
 }
@@ -103,7 +103,7 @@ describe("draft mission catalog client", () => {
 		const listed = await client.listDraftMissions();
 		const fetched = await client.fetchDraftMission("G5-AREA-MAT-05");
 
-		expect(listed.missions).toHaveLength(55);
+		expect(listed.missions).toHaveLength(54);
 		expect(fetched.area_id).toBe("G5-AREA-MAT-05");
 		expect(fetched.held_slots[0]?.child_question).toBeNull();
 		expect(request).toHaveBeenNthCalledWith(

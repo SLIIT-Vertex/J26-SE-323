@@ -62,13 +62,13 @@ describe("word drop interaction", () => {
 				/>,
 			),
 		);
-		click(".chunk-rail button");
-		click(".food-target");
+		click(".phaser-board-mirror-cards button");
+		click(".phaser-board-mirror-targets button");
 		expect(changed.mock.lastCall?.[0]).toMatchObject({
 			links: [{ source: "w", target: "b", sequence: 1 }],
 			usedTap: true,
 		});
-		click(".word-drop-reset");
+		click(".phaser-board-reset");
 		expect(changed.mock.lastCall?.[0].links).toEqual([]);
 	});
 	it("clears a completed food answer when reset instead of keeping a stale submission", async () => {
@@ -86,10 +86,10 @@ describe("word drop interaction", () => {
 				/>,
 			),
 		);
-		click(".chunk-rail button");
-		click(".food-target");
+		click(".phaser-board-mirror-cards button");
+		click(".phaser-board-mirror-targets button");
 		expect(response.mock.lastCall?.[0]?.placements).toHaveLength(1);
-		click(".word-drop-reset");
+		click(".phaser-board-reset");
 		expect(response.mock.lastCall?.[0]).toBeNull();
 	});
 	it("uses separate one and three pictures for each plant concept", async () => {
@@ -108,10 +108,13 @@ describe("word drop interaction", () => {
 				/>,
 			),
 		);
-		const pictures = host.querySelectorAll("svg");
-		expect(pictures).toHaveLength(2);
-		expect(pictures[0].getAttribute("aria-label")).toBe("One leaf");
-		expect(pictures[1].getAttribute("aria-label")).toBe("Three leaves");
+		// One leaf and many leaves are two places on the board, each with its own photo.
+		const places = [
+			...host.querySelectorAll(".phaser-board-mirror-targets button"),
+		].map((button) => button.textContent ?? "");
+		expect(places).toHaveLength(2);
+		expect(places[0]).toContain("One");
+		expect(places[1]).toContain("Many");
 		expect(host.textContent).not.toContain("Plant Leaves");
 	});
 });

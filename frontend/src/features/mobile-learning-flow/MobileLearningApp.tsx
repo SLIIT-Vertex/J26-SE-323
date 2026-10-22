@@ -14,10 +14,6 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
-import { SHARED_LEARNER_ID } from "../papers/hooks";
-import { PapersApp } from "../papers/PapersApp";
-import { go, usePapersRoute } from "../papers/router";
 import { CameraConsentCard } from "../learner-state/game/CameraConsentCard";
 import { CameraStatusBadge } from "../learner-state/game/CameraStatusBadge";
 import type { CameraProblem } from "../learner-state/game/cameraText";
@@ -29,6 +25,10 @@ import {
 	type PromptMemory,
 	type SupportPrompt,
 } from "../learner-state/game/supportPrompts";
+import { useGameVisualFeatures } from "../learner-state/game/useGameVisualFeatures";
+import { SHARED_LEARNER_ID } from "../papers/hooks";
+import { PapersApp } from "../papers/PapersApp";
+import { go, usePapersRoute } from "../papers/router";
 import { ResearchButton } from "../research-dashboard/ResearchButton";
 import { isResearchMode } from "../research-dashboard/researchMode";
 import {
@@ -50,7 +50,6 @@ import {
 } from "./api/learningFlowClient";
 import { FixtureRoundPlayer } from "./FixtureRoundPlayer";
 import { ENGLISH_LEARNING_AREAS, learningAreaName } from "./learningAreas";
-
 
 type LazyNamedComponent<Module, Name extends keyof Module> =
 	Module[Name] extends ComponentType<infer Props>
@@ -202,6 +201,18 @@ const ClassroomLanguageLive = lazyNamed(
 	() => import("../english-area-17/ClassroomLanguageLive"),
 	"ClassroomLanguageLive",
 );
+const RiddleJourney = lazyNamed(
+	() => import("../sinhala-area-3/RiddleJourney"),
+	"RiddleJourney",
+);
+const PunctuationJourney = lazyNamed(
+	() => import("../sinhala-area-2/PunctuationJourney"),
+	"PunctuationJourney",
+);
+const PillamJourney = lazyNamed(
+	() => import("../sinhala-area-1/PillamJourney"),
+	"PillamJourney",
+);
 const ConversationStreet = lazyNamed(
 	() => import("../english-area-18/ConversationStreet"),
 	"ConversationStreet",
@@ -260,7 +271,10 @@ type Screen =
 	| "information-station"
 	| "heritage-museum"
 	| "classroom-language-live"
-	| "conversation-street";
+	| "conversation-street"
+	| "pillam-journey"
+	| "punctuation-journey"
+	| "riddle-journey";
 
 const GAME_SCREENS = new Set<Screen>([
 	"draft-player",
@@ -299,6 +313,9 @@ const GAME_SCREENS = new Set<Screen>([
 	"heritage-museum",
 	"classroom-language-live",
 	"conversation-street",
+	"pillam-journey",
+	"punctuation-journey",
+	"riddle-journey",
 ]);
 
 type SyncState = "synced" | "pending" | "offline" | "conflict";
@@ -342,9 +359,9 @@ const FIXTURE_LOOPS: Partial<Record<string, DraftTemplateId>> = {
 	"G5-AREA-MAT-14": "pattern_temple",
 	"G5-AREA-MAT-15": "market_mission",
 	"G5-AREA-MAT-16": "word_workshop",
-	"G5-AREA-SIN-01": "word_workshop",
-	"G5-AREA-SIN-02": "word_workshop",
-	"G5-AREA-SIN-03": "word_workshop",
+	"G5-AREA-SIN-01": "pillam_journey",
+	"G5-AREA-SIN-02": "punctuation_journey",
+	"G5-AREA-SIN-03": "riddle_journey",
 	"G5-AREA-SIN-04": "word_workshop",
 	"G5-AREA-SIN-05": "word_workshop",
 	"G5-AREA-SIN-06": "word_workshop",
@@ -357,7 +374,6 @@ const FIXTURE_LOOPS: Partial<Record<string, DraftTemplateId>> = {
 	"G5-AREA-SIN-13": "story_studio",
 	"G5-AREA-SIN-14": "word_workshop",
 	"G5-AREA-SIN-15": "word_workshop",
-	"G5-AREA-SIN-16": "word_workshop",
 	"G5-AREA-SIN-17": "word_workshop",
 	"G5-AREA-SIN-18": "word_workshop",
 	"G5-AREA-SIN-19": "word_workshop",
@@ -410,6 +426,9 @@ const DRAFT_TEMPLATE_LABELS = {
 	word_workshop: "Word Workshop",
 	story_studio: "Story Studio",
 	eco_explorer: "Eco Explorer",
+	pillam_journey: "Pillam Journey",
+	punctuation_journey: "Punctuation Journey",
+	riddle_journey: "Riddle Journey",
 } as const;
 const labels: Record<SyncState, string> = {
 	synced: "සමමුහුර්තයි",
@@ -474,7 +493,9 @@ export function MobileLearningApp({
 	const [cameraConsent, setCameraConsent] = useState(false);
 	const [cameraConsentSaving, setCameraConsentSaving] = useState(false);
 	const [cameraConsentFailed, setCameraConsentFailed] = useState(false);
-	const [cameraProblem, setCameraProblem] = useState<CameraProblem | null>(null);
+	const [cameraProblem, setCameraProblem] = useState<CameraProblem | null>(
+		null,
+	);
 	// Learner-state camera: only with the guardian's consent, and only while a mathematics game
 	// screen is open. Frames stay on the device; only 11 numbers go with each answer.
 	const cameraEnabled =
@@ -490,7 +511,9 @@ export function MobileLearningApp({
 	const visualFeatures = useRef(camera.visualFeatures);
 	visualFeatures.current = camera.visualFeatures;
 	// Gentle learner-state prompts after scored answers (off in silent mode).
-	const [supportPrompt, setSupportPrompt] = useState<SupportPrompt | null>(null);
+	const [supportPrompt, setSupportPrompt] = useState<SupportPrompt | null>(
+		null,
+	);
 	const promptMemory = useRef<PromptMemory>(NO_PROMPT_YET);
 	const reactToLearnerState = useCallback((action: LearnerStateAction) => {
 		if (!learnerStatePromptsEnabled()) return;
@@ -670,6 +693,18 @@ export function MobileLearningApp({
 		}
 		if (areaId === "G5-AREA-ENG-17") {
 			setScreen("classroom-language-live");
+			return;
+		}
+		if (areaId === "G5-AREA-SIN-01") {
+			setScreen("pillam-journey");
+			return;
+		}
+		if (areaId === "G5-AREA-SIN-02") {
+			setScreen("punctuation-journey");
+			return;
+		}
+		if (areaId === "G5-AREA-SIN-03") {
+			setScreen("riddle-journey");
 			return;
 		}
 		if (areaId === "G5-AREA-ENG-18") {
@@ -884,7 +919,9 @@ export function MobileLearningApp({
 					</div>
 				)}
 				{screen === "mindy" && <TutorDemo embedded />}
-				{screen === "rewards" && <RewardsHub onBack={() => setScreen("home")} />}
+				{screen === "rewards" && (
+					<RewardsHub onBack={() => setScreen("home")} />
+				)}
 				{screen === "account" && (
 					<Account
 						name={learnerName}
@@ -1264,6 +1301,36 @@ export function MobileLearningApp({
 						onFailure={safeFailure}
 					/>
 				)}
+				{screen === "pillam-journey" && (
+					<PillamJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "punctuation-journey" && (
+					<PunctuationJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
+				{screen === "riddle-journey" && (
+					<RiddleJourney
+						api={api}
+						learnerId={learnerId}
+						condition={engineeringCondition}
+						reducedMotion={reducedMotion}
+						onBack={() => setScreen("learn")}
+						onFailure={safeFailure}
+					/>
+				)}
 				{screen === "conversation-street" && (
 					<ConversationStreet
 						api={api}
@@ -1284,9 +1351,7 @@ export function MobileLearningApp({
 					/>
 				)}
 			</Suspense>
-			{["home", "learn", "practice", "mindy", "progress"].includes(
-				screen,
-			) && (
+			{["home", "learn", "practice", "mindy", "progress"].includes(screen) && (
 				<BottomNavigation
 					active={screen}
 					onNavigate={(destination) => {
@@ -1740,7 +1805,6 @@ function ProfileSetup({
 	);
 }
 
-
 const FEATURED_GAMES = [
 	...Array.from({ length: 16 }, (_, index) => {
 		const areaId = `G5-AREA-MAT-${String(index + 1).padStart(2, "0")}`;
@@ -1770,7 +1834,9 @@ function HomeScreen({
 	onProgress(): void;
 	onRewards(): void;
 }) {
-	const [featuredGame] = useState(() => FEATURED_GAMES[Math.floor(Math.random() * FEATURED_GAMES.length)]);
+	const [featuredGame] = useState(
+		() => FEATURED_GAMES[Math.floor(Math.random() * FEATURED_GAMES.length)],
+	);
 	const [notificationsOpen, setNotificationsOpen] = useState(false);
 	const [hasUnread, setHasUnread] = useState(true);
 	return (
@@ -1807,7 +1873,9 @@ function HomeScreen({
 					</span>
 					<div>
 						<strong>අද මෙහෙයුම සූදානම්!</strong>
-						<p>{featuredGame.title} — {featuredGame.subject} ක්‍රීඩාවක් ඔබ බලා සිටී.</p>
+						<p>
+							{featuredGame.title} — {featuredGame.subject} ක්‍රීඩාවක් ඔබ බලා සිටී.
+						</p>
 					</div>
 					<button
 						type="button"
@@ -1856,7 +1924,12 @@ function HomeScreen({
 				</p>
 				<h2>{featuredGame.title}</h2>
 				<p>ක්‍රීඩාවක් සමඟ අද අලුත් දෙයක් ඉගෙන ගනිමු.</p>
-				<button className="primary-action" type="button" onClick={() => onMission(featuredGame.areaId)} data-area-id={featuredGame.areaId}>
+				<button
+					className="primary-action"
+					type="button"
+					onClick={() => onMission(featuredGame.areaId)}
+					data-area-id={featuredGame.areaId}
+				>
 					අභියෝගය අරඹමු <AppIcon name="arrow" size={18} />
 				</button>
 			</article>
@@ -2006,14 +2079,39 @@ function SubjectPageHeader({
 	);
 }
 
+// Sinhala areas with a dedicated durable game. They are playable without the researcher-only
+// draft-mission catalogue, the way the English games are.
+const DEDICATED_SINHALA_AREAS = {
+	"G5-AREA-SIN-01": "pillam_journey",
+	"G5-AREA-SIN-02": "punctuation_journey",
+	"G5-AREA-SIN-03": "riddle_journey",
+} as const satisfies Record<string, DraftTemplateId>;
+
 function missionsForSubject(
 	subject: SubjectCode,
 	missions: DraftMissionRecord[],
 ) {
-	return missions
-		.filter((mission) => mission.area_id.includes(`-${subject}-`))
-		.slice()
-		.sort((left, right) => left.area_id.localeCompare(right.area_id));
+	const listed = missions.filter((mission) =>
+		mission.area_id.includes(`-${subject}-`),
+	);
+	const dedicated: DraftMissionRecord[] =
+		subject === "SIN"
+			? Object.entries(DEDICATED_SINHALA_AREAS)
+					.filter(
+						([areaId]) => !listed.some((mission) => mission.area_id === areaId),
+					)
+					.map(([areaId, templateId]) => ({
+						area_id: areaId,
+						cited_node_id: "",
+						template_id: templateId,
+						outcome_slots: [],
+						draft_item_slots: [],
+						held_slots: [],
+					}))
+			: [];
+	return [...listed, ...dedicated].sort((left, right) =>
+		left.area_id.localeCompare(right.area_id),
+	);
 }
 
 function GamesHome({
@@ -2666,7 +2764,10 @@ function Account({
 			</div>
 
 			{editing && (
-				<section className="profile-edit-panel" aria-labelledby="profile-edit-title">
+				<section
+					className="profile-edit-panel"
+					aria-labelledby="profile-edit-title"
+				>
 					<div className="profile-edit-heading">
 						<div>
 							<p className="eyebrow">පුද්ගලීකරණය</p>
@@ -2812,7 +2913,11 @@ function BottomNavigation({
 	active: string;
 	onNavigate(destination: TabDestination): void;
 }) {
-	const tabs: Array<{ id: TabDestination; label: string; icon: NavigationIconName }> = [
+	const tabs: Array<{
+		id: TabDestination;
+		label: string;
+		icon: NavigationIconName;
+	}> = [
 		{ id: "home", label: "මුල් පිටුව", icon: "home" },
 		{ id: "learn", label: "ක්‍රීඩා", icon: "game" },
 		{ id: "practice", label: "පුහුණුව", icon: "document" },
@@ -2824,7 +2929,12 @@ function BottomNavigation({
 			className="bottom-navigation"
 			aria-label="ප්‍රධාන මෙනුව"
 			style={
-				{ "--active-tab": Math.max(0, tabs.findIndex((tab) => tab.id === active)) } as CSSProperties
+				{
+					"--active-tab": Math.max(
+						0,
+						tabs.findIndex((tab) => tab.id === active),
+					),
+				} as CSSProperties
 			}
 		>
 			<span className="nav-selection" aria-hidden="true" />

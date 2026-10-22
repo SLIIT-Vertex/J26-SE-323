@@ -1,0 +1,115 @@
+{
+ "episode_id": "4d0a1c87-fc90-40f8-b6ac-71bc3f761c7e",
+ "status": "support_active",
+ "manifest": null,
+ "support": {
+  "scaffold_id": "G5-MAT-C06-L01-O01:visual_guidance",
+  "revision_id": "G5-MAT-C06-L01-O01:visual_guidance:round-1@v1",
+  "scaffold_type": "visual_guidance",
+  "english_tag_key": "VISUAL_GUIDANCE",
+  "title_si": "දෘශ්‍ය මඟ පෙන්වීම",
+  "body_si": [
+   "ඔබේ ප්‍රශ්නය විසඳන හැටි බලන්න. ඉස්මතු කළ කොටස් පිළිතුරයි."
+  ],
+  "visual_alt_text_si": null,
+  "maximum_steps": 1,
+  "game_manifest": {
+   "schema_version": "support-round-v1",
+   "activity_id": "addition_adventure",
+   "revision_id": "G5-MAT-C06-L01-O01:visual_guidance:round-1@v1:manifest",
+   "deterministic_seed": 2725042482,
+   "skill_id": "G5-MAT-C06-L01-O01",
+   "scaffold_type": "visual_guidance",
+   "english_tag_key": "VISUAL_GUIDANCE",
+   "renderer_id": "addition_adventure:visual_guidance",
+   "parallel_example_id": "G5-MAT-C06-L01-O01:visual_guidance",
+   "parallel_example_version": "v1",
+   "parallel_values": [],
+   "required_actions": 1,
+   "round_number": 1,
+   "stage_index": 0,
+   "stage_count": 1,
+   "stage_kind": "view",
+   "cues_si": [
+    "ඔබේ ප්‍රශ්නය විසඳන හැටි බලන්න. ඉස්මතු කළ කොටස් පිළිතුරයි."
+   ],
+   "guidance": [],
+   "lesson": {
+    "title_si": "බලන්න: මෙසේ කරයි",
+    "notes": [],
+    "steps_si": [
+     "සංඛ්‍යා එක යට එක ලියන්න — එකක එකක යටට, දහය දහය යටට.",
+     "එකක තීරුව: 7 + 3 = 10 → 0 ලියා 1 ක් දහය තීරුවට ගෙන යන්න.",
+     "දහය තීරුව: 9 + 2 + ගෙන ආ 1 = 12 (12 දහය = 12 × 10 = 120) → 2 ලියා 1 ක් සියය තීරුවට ගෙන යන්න.",
+     "සියය තීරුව: 5 + 0 + ගෙන ආ 1 = 6 (6 සියය = 6 × 100 = 600) → 6 ලියන්න.",
+     "දහස තීරුව: 4 + 3 = 7 (7 දහස = 7 × 1 000 = 7 000) → 7 ලියන්න."
+    ],
+    "answer_si": "4 597 + 3 023 = 7 620",
+    "hints_si": [],
+    "another_view_si": [
+     "4 597 = 4000 + 500 + 90 + 7",
+     "3 023 = 3000 + 20 + 3",
+     "එකම ස්ථානයේ කොටස් එකට එකතු කරන්න."
+    ],
+    "diagnosis": null,
+    "continue_label_si": "ඊළඟ"
+   },
+   "activity": {
+    "presentation_id": "007c5ce3-c288-42e2-adbd-e927afd3c39f",
+    "revision_id": "G5-MAT-C06-L01-O01:B:60f616e6c7ca@v1",
+    "skill_id": "G5-MAT-C06-L01-O01",
+    "prompt_si": "4597 + 3023 නිවැරදිව එකතු කරන්න.",
+    "game": {
+     "schema_version": "addition-adventure-item-v1",
+     "skill_id": "G5-MAT-C06-L01-O01",
+     "chapter": "carrying_crane",
+     "addends": [
+      4597,
+      3023
+     ],
+     "addend_count": 2,
+     "columns": [
+      "දහස්",
+      "සිය",
+      "දහය",
+      "එක"
+     ]
+    },
+    "returns_to_failed_item": false,
+    "answer": {
+     "mode": "filled",
+     "lines": [],
+     "marks": [
+      "2",
+      "7620"
+     ]
+    }
+   },
+   "worked_example": null
+  }
+ },
+ "reward": null,
+ "server_score": {
+  "earned_score": "0",
+  "maximum_score": "1",
+  "scoring_version": "g5-mat-addition-scoring-v1",
+  "server_authoritative": true,
+  "measurement_role": "unsupported_before",
+  "correct": false,
+  "attempt_id": "4a95d2be-59ba-4d42-8a54-e9a9665f6c46",
+  "presentation_id": "5c854959-0373-4d20-aa46-3a8e47e23a36",
+  "item_revision_id": "G5-MAT-C06-L01-O01:B:60f616e6c7ca@v1"
+ },
+ "learner_state_action": null,
+ "support_round": {
+  "round_number": 1,
+  "scaffold_type": "visual_guidance",
+  "english_tag_key": "VISUAL_GUIDANCE",
+  "stage_kind": "view",
+  "previous_attempt_correct": null,
+  "another_round_required": false,
+  "withdrawal_allowed": false,
+  "support_revision_id": "G5-MAT-C06-L01-O01:visual_guidance:round-1@v1",
+  "manifest_revision_id": "G5-MAT-C06-L01-O01:visual_guidance:round-1@v1:manifest"
+ }
+}

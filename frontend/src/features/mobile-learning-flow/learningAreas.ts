@@ -32,7 +32,6 @@ export const LEARNING_AREA_NAMES: Record<string, string> = {
 	"G5-AREA-SIN-13": "ආරාධනා පත්‍ර",
 	"G5-AREA-SIN-14": "ස්ත්‍රී ලිංග හා පුරුෂ ලිංග පද",
 	"G5-AREA-SIN-15": "ඒකවචන හා බහුවචන පද",
-	"G5-AREA-SIN-16": "අක්ෂර වින්‍යාසය",
 	"G5-AREA-SIN-17": "න, ණ යෙදීම",
 	"G5-AREA-SIN-18": "ල, ළ යෙදීම",
 	"G5-AREA-SIN-19": "ස, ශ, ෂ යෙදීම",
@@ -82,7 +81,10 @@ export const ENGLISH_LEARNING_AREAS: Array<{
 	{ areaId: "G5-AREA-ENG-15", title: "Man & Information" },
 	{ areaId: "G5-AREA-ENG-16", title: "Our Past" },
 	{ areaId: "G5-AREA-ENG-17", title: "Classroom Language" },
-	{ areaId: "G5-AREA-ENG-18", title: "Useful Expressions & Conversation Language" },
+	{
+		areaId: "G5-AREA-ENG-18",
+		title: "Useful Expressions & Conversation Language",
+	},
 ];
 
 for (const area of ENGLISH_LEARNING_AREAS) {
