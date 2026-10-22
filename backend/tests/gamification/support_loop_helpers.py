@@ -80,6 +80,34 @@ def wrong_answer(flow, record: Mapping[str, object]) -> dict[str, object]:
         raise AssertionError(f"no wrong answer found for {record['skill_id']}") from error
 
 
+def watch_demonstrations(
+    orchestrator, episode_id: UUID, response: Mapping[str, object]
+) -> Mapping[str, object]:
+    """Press next through any watch-only visual demonstration, so an answerable round is open."""
+
+    for step in range(8):
+        status = response.get("support_round")
+        support = response.get("support")
+        if (
+            not isinstance(status, Mapping)
+            or not isinstance(support, Mapping)
+            or status["stage_kind"] != "view"
+            or support["scaffold_type"] != "visual_guidance"
+        ):
+            return response
+        response = orchestrator.complete_support(
+            episode_id,
+            duration_ms=100,
+            steps_viewed=1,
+            manifest_revision_id=status["manifest_revision_id"],
+            grouped_count=0,
+            group_sizes=(0, 0),
+            interaction_summary={"completed": True},
+            idempotency_key=f"watch:{step}:{episode_id}",
+        )
+    return response
+
+
 def finish_help(orchestrator, episode_id: UUID, shown: Mapping[str, object]) -> dict[str, str]:
     """Answer each help round correctly until the server allows withdrawal.
 

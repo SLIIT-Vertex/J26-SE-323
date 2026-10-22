@@ -327,11 +327,36 @@ _ENGLISH_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
 )
 
-_SUBJECT_PATTERNS = {"MAT": _MATHEMATICS_PATTERNS, "ENG": _ENGLISH_PATTERNS}
-_SUBJECT_OVERRIDES: dict[str, dict[str, str]] = {"MAT": _MATHEMATICS_OVERRIDES, "ENG": {}}
+# Sinhala packages deliver the three original game types in their authored order. Their labels
+# name an orthographic or punctuation confusion; the families below only choose the first help.
+SINHALA_ORDER: tuple[SupportType, ...] = (
+    "visual_guidance",
+    "worked_parallel_example",
+    "step_by_step_guidance",
+)
+_SINHALA_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("unclear", ("unknown_or_other",)),
+    ("procedure", ("missing", "extra", "reversed", "incomplete")),
+    ("relation", ("association", "confusion", "choice", "versus")),
+    ("representation", ("name", "allograph", "boundary", "span", "division")),
+)
+# A Sinhala relation-type confusion is answered first by a solved parallel example.
+SUBJECT_LEAD_BY_REASON: dict[str, dict[str, SupportType]] = {
+    "SIN": {
+        "representation": "visual_guidance",
+        "procedure": "step_by_step_guidance",
+        "relation": "worked_parallel_example",
+        "prerequisite": "visual_guidance",
+        "unclear": "visual_guidance",
+    }
+}
+
+_SUBJECT_PATTERNS = {"MAT": _MATHEMATICS_PATTERNS, "ENG": _ENGLISH_PATTERNS, "SIN": _SINHALA_PATTERNS}
+_SUBJECT_OVERRIDES: dict[str, dict[str, str]] = {"MAT": _MATHEMATICS_OVERRIDES, "ENG": {}, "SIN": {}}
 SUBJECT_ORDERS: dict[str, tuple[SupportType, ...]] = {
     "MAT": MATHEMATICS_ORDER,
     "ENG": ENGLISH_ORDER,
+    "SIN": SINHALA_ORDER,
 }
 
 
@@ -400,6 +425,9 @@ def credited_support(state: Mapping[str, object]) -> tuple[str | None, tuple[str
         )
         if loop.get("stop_reason") == "order_exhausted":
             winner = None
+        # A loop that ended on a watched demonstration credits that demonstration.
+        if winner is None and loop.get("stop_reason") == "support_viewed" and rounds:
+            winner = rounds[-1].get("scaffold_type")
         return (winner if winner in SUPPORT_TYPES else None), failed
     used = _types_used(state)
     return (used[0] if len(used) == 1 else None), ()
@@ -561,7 +589,7 @@ def choose_support_order(
         >= preference_threshold
     ):
         ranking = state_ranking
-    lead = LEAD_BY_REASON[family]
+    lead = SUBJECT_LEAD_BY_REASON.get(subject, LEAD_BY_REASON)[family]
     mode = "model1_reason_lead"
     if lead not in available:
         lead, mode = available[0], "model1_reason_lead_unrenderable_fallback"

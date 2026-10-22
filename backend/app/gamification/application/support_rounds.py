@@ -101,12 +101,25 @@ class SupportRoundService:
         return self.status(state, previous_attempt_correct=False, another_round=opened)
 
     def record_view_complete(
-        self, state: dict[str, object], manifest_revision_id: str, at: datetime
+        self,
+        state: dict[str, object],
+        manifest_revision_id: str,
+        at: datetime,
+        next_context: ContextFactory | None = None,
     ) -> dict[str, object]:
         current = self._current_round(state)
         stage = current["stages"][current["stage_index"]]
         if stage["kind"] != "view" or manifest_revision_id != current["manifest_revision_id"]:
             raise SupportRoundError("INVALID_SUPPORT_COMPLETION")
+        if current["stage_index"] == len(current["stages"]) - 1:
+            # A demonstration-only round (mathematics visual guidance) has nothing to answer.
+            # Watching it closes the round and the next type in the order opens; with none
+            # left, the loop ends and the after item measures what the demonstration taught.
+            self._close(state, current, "viewed", at)
+            opened = next_context is not None and self._open_next(state, next_context, at)
+            if not opened:
+                self._stop(state, "support_viewed", at)
+            return self.status(state, previous_attempt_correct=None, another_round=opened)
         current["stage_index"] += 1
         self._event(state, "support_stage_advanced", at, current)
         return self.status(state, previous_attempt_correct=None)
@@ -193,6 +206,7 @@ class SupportRoundService:
                 "stage_kind": stage["kind"],
                 "cues_si": list(stage["cues_si"]),
                 "guidance": list(stage.get("guidance") or ()),
+                "lesson": stage.get("lesson"),
                 "activity": public_activity,
                 "worked_example": worked,
             },
@@ -213,8 +227,11 @@ class SupportRoundService:
                 "english_tag_key": row["english_tag_key"],
                 "order_position": loop["order"].index(row["scaffold_type"]),
                 "outcome": row["outcome"],
+                # A watched demonstration was never answered, so it has no supported result.
                 "supported_correct": (
-                    None if row["outcome"] is None else row["outcome"] == "succeeded"
+                    None
+                    if row["outcome"] in {None, "viewed"}
+                    else row["outcome"] == "succeeded"
                 ),
                 "opened_at": row["opened_at"],
                 "closed_at": row["closed_at"],
@@ -272,7 +289,8 @@ class SupportRoundService:
             "displayed": True,
             "fully_withdrawn": False,
             # A worked example shows a full solution; withdrawal must clear it either way.
-            "answer_revealing": plan.scaffold_type == "worked_parallel_example",
+            "answer_revealing": plan.scaffold_type == "worked_parallel_example"
+            or any(stage.kind == "view" and stage.item is not None for stage in plan.stages),
             "manifest_revision_id": current["manifest_revision_id"],
         }
         state["status"] = "support_active"
@@ -294,7 +312,9 @@ class SupportRoundService:
         assert isinstance(exposure, dict)
         exposure["completed_at"] = at.isoformat()
         # The supported result is kept for audit only; it is never a reward.
-        state["supported_correctness"] = reason == "supported_success"
+        state["supported_correctness"] = (
+            None if reason == "support_viewed" else reason == "supported_success"
+        )
         state["status"] = "support_complete"
         SupportRoundService._event(state, "support_loop_stopped", at, None, reason=reason)
 

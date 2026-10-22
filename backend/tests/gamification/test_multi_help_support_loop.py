@@ -15,6 +15,7 @@ from tests.gamification.support_loop_helpers import (
     correct_answer,
     flow_for,
     orchestrator_with_learner,
+    watch_demonstrations,
     wrong_answer,
 )
 
@@ -49,6 +50,8 @@ def _failed_episode(*, condition: str = "proposed", area: str = AREA, skill: str
         interaction_summary={"attempt_count": 1, "move_count": 1},
         idempotency_key=f"before:{uuid4()}",
     )
+    # These tests are about answerable rounds; a maths visual demonstration is only watched.
+    response = watch_demonstrations(orchestrator, episode_id, response)
     return orchestrator, session, game_flow, episode_id, response
 
 
@@ -82,8 +85,10 @@ def test_wrong_supported_answer_opens_next_server_type_once_and_is_idempotent():
     assert advanced["support"]["scaffold_type"] != first
     state = orchestrator.reconstruct(episode_id)["state"]
     used = state["support_loop"]["types_used"]
-    assert len(used) == len(set(used)) == 2
-    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == 2
+    # A watched visual demonstration comes before the first answerable round.
+    watched = sum(row["outcome"] == "viewed" for row in state["support_loop"]["rounds"])
+    assert len(used) == len(set(used)) == 2 + watched
+    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == 2 + watched
 
 
 def test_withdrawal_only_after_supported_success_and_public_payload_has_no_current_answer():
@@ -146,7 +151,8 @@ def test_failed_next_type_selection_rolls_back_score_round_state_and_receipt():
     state_before = orchestrator.reconstruct(episode_id)["state"]
     current = game_flow._support_rounds.current_item(state_before)
     builders = dict(game_flow._support_rounds._builders)
-    next_type = state_before["support_loop"]["order"][1]
+    order = state_before["support_loop"]["order"]
+    next_type = order[order.index(state_before["support_loop"]["rounds"][-1]["scaffold_type"]) + 1]
 
     class FailingBuilder:
         scaffold_type = next_type
@@ -167,7 +173,8 @@ def test_failed_next_type_selection_rolls_back_score_round_state_and_receipt():
         )
 
     assert orchestrator.reconstruct(episode_id)["state"] == state_before
-    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == 1
+    rounds_before = len(state_before["support_loop"]["rounds"])
+    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == rounds_before
     assert session.get(LearningFlowIdempotencyReceiptModel, key) is None
 
 
@@ -304,16 +311,25 @@ def test_help_stages_show_the_answer_and_scored_items_do_not(area, skill):
     orchestrator, _session, game_flow, episode_id, response = _failed_episode(
         condition="baseline", area=area, skill=skill
     )
+    maths = area.startswith("G5-AREA-MAT-")
     for support in _walk_rounds(orchestrator, game_flow, episode_id, response):
         manifest = support["game_manifest"]
         if manifest["stage_kind"] == "view":
-            # The worked example arrives solved; the child only watches.
-            assert manifest["worked_example"]["answer"]["mode"] == "filled"
-            assert manifest["worked_example"]["answer"]["lines"]
+            # A demonstration arrives solved: a worked example, or the child's own board.
+            board = manifest["worked_example"] or manifest["activity"]
+            answer = board["answer"]
+            assert answer["mode"] == "filled"
         else:
             answer = manifest["activity"]["answer"]
             assert answer["mode"] == "tint"
-            assert answer["lines"] and answer["marks"]
+        assert answer["marks"]
+        if maths:
+            # Maths says its answer in words in the lesson (or guided questions), never as raw
+            # payload lines.
+            assert answer["lines"] == []
+            assert manifest["lesson"] or manifest["guidance"]
+        else:
+            assert answer["lines"]
         if manifest["scaffold_type"] == "step_by_step_guidance":
             assert manifest["guidance"]
             assert all(pair["answer_si"] for pair in manifest["guidance"])
