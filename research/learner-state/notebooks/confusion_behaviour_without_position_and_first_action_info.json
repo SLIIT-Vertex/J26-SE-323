@@ -1,0 +1,13 @@
+{
+  "features": [
+    "correct",
+    "bottom_hint",
+    "hint_count",
+    "attempt_count",
+    "ms_first_response",
+    "overlap_time",
+    "original",
+    "bottom_hint_missing"
+  ],
+  "threshold": 0.78
+}

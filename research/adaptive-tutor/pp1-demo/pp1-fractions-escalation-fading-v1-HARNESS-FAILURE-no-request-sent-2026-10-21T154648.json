@@ -1,0 +1,69 @@
+{
+  "scenario_id": "pp1-fractions-escalation-fading-v1",
+  "run_at": "2026-10-21T15:46:48+00:00",
+  "provider": "gemini",
+  "provider_label": "google-gemini gemini-3.1-flash-lite",
+  "gemini_thinking_level": "LOW",
+  "database": "sqlite",
+  "learner": "synthetic demo learner",
+  "question": "Why is 1/2 equal to 2/4?",
+  "language": "en",
+  "notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+  "provider_call_count": 1,
+  "provider_call_limit": 7,
+  "stopped_early": "first Gemini call did not generate a draft (UNEXPECTED_PROVIDER_FAILURE)",
+  "steps": [
+    {
+      "step": "question",
+      "http_seconds": 4.073,
+      "provider_calls": [
+        {
+          "seconds": 0.012,
+          "outcome": "RuntimeError"
+        }
+      ],
+      "status": "DELIVERY_NOT_AUTHORIZED",
+      "skill": "MAT-FRC",
+      "skill_mapping_status": "MATCHED",
+      "assistance_level": "L0",
+      "controller_reason_codes": [
+        "PRE_INTERACTION"
+      ],
+      "delivery_authorized": false,
+      "response_text": null,
+      "experimental_generation_status": "PROVIDER_ERROR",
+      "experimental_provider_reason_code": "UNEXPECTED_PROVIDER_FAILURE",
+      "experimental_notice": "EXPERIMENTAL AI RESPONSE — NOT VERIFIED / NOT FOR LEARNERS",
+      "experimental_response_text": null,
+      "context_provenance": [
+        "SKILL_MAPPING: REAL/MATCHED (skill-mapper:e5:d829207ab28e6a5fb3aafb5d4c44111b8146db32:canonical-taxonomy)",
+        "LEARNER: REAL/AVAILABLE (shared-learner:learner-service)",
+        "MASTERY: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-cold-start-mastery-default)",
+        "SUPPORT_NEED: SYNTHETIC/AVAILABLE (adaptive-tutor:experimental-missing-support-need-default)",
+        "ASSESSMENT: REAL/NOT_YET_OBSERVED (adaptive-tutor:assessment-ledger-empty-snapshot)",
+        "ASSISTANCE_HISTORY: REAL/NOT_YET_OBSERVED (adaptive-tutor:interaction-history)"
+      ],
+      "execution_origin": "MIXED",
+      "deterministic_level_checks": null,
+      "expected_level": "L0"
+    }
+  ],
+  "history_events": [
+    {
+      "interaction_sequence": 1,
+      "event_sequence": 1,
+      "event_type": "ASSISTANCE_SELECTED",
+      "status": null,
+      "assistance_level": "L0",
+      "provenance": "RESEARCH_LOCAL"
+    }
+  ],
+  "invariants": {
+    "no_learner_delivery_events": true,
+    "no_verified_response_text": true,
+    "no_delivery_authorized": true,
+    "presentations_match_generated_drafts": true,
+    "levels_match_expected": true,
+    "scenario_completed": false
+  }
+}
