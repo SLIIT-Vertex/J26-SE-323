@@ -1,0 +1,737 @@
+{
+  "schema_version": "sinhala-riddle-source-transcription-v1",
+  "area_id": "G5-AREA-SIN-03",
+  "photographs": [
+    {
+      "identity": "IMG_7486.heic",
+      "sha256": "898d30667d15bad5597219bfd7ad4d524212fb5fab689aef9df4ed8fa863bab3",
+      "riddles": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "heading_printed_si": "4 - තේරවිලි"
+    },
+    {
+      "identity": "IMG_7487.heic",
+      "sha256": "3aed8efae3f1b1bb3018cba808a2d87393b04a483d83cd3d7cad8110eadb3ca9",
+      "riddles": [
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "heading_printed_si": null
+    }
+  ],
+  "lead_printed_si": "1 ශ්‍රේණියේ සිට 5 ශ්‍රේණිය තෙක් නිර්දේශිත තේරවිලි",
+  "bibliographic": {
+    "printed_page_number": null,
+    "book_title": null,
+    "edition": null,
+    "publisher": null,
+    "rights_statement": null,
+    "note": "Section 4 is not a page number. A partly hidden footer tab on IMG_7486 is not readable page evidence."
+  },
+  "restricted_fields": [
+    "printed_answer_si",
+    "illustration"
+  ],
+  "review_issues": [
+    "MIXED_GRADE_COLLECTION: prescribed for Grades 1 to 5; Grade 5 difficulty is not assumed",
+    "SOURCE_IDENTITY: title, edition, publisher, rights and page identity missing",
+    "CURRICULUM_ALIGNMENT: G5-SIN-C01..C04-L05-K02 (p.8), G5-SIN-C01-L05-O02 (p.64, low confidence) and G5-SIN-U27-A02 (p.65, a group activity) are draft links; individual play is an adaptation and measures reading inference only",
+    "CLASSIFICATION: direct/figurative grouping, difficulty and vocabulary familiarity are provisional for every riddle",
+    "DISTRACTORS: answer candidates are drawn from the 23 printed answers and are unreviewed",
+    "POOL_SUFFICIENCY: each subfamily has 5 to 8 riddles; freshness is tracked per learner and measurement becomes unavailable when exhausted"
+  ],
+  "riddles": [
+    {
+      "number": 1,
+      "locator": "IMG_7486.heic#riddle-1",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "සුදු පාටට පෙනෙන්නේ",
+        "වෙල අයිනේ සිටින්නේ"
+      ],
+      "clue_lines_nfc": [
+        "සුදු පාටට පෙනෙන්නේ",
+        "වෙල අයිනේ සිටින්නේ"
+      ],
+      "printed_answer_si": "කොකා",
+      "illustration": {
+        "description_en": "a long-legged white wading bird",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "kokaa",
+      "provisional_classification": "direct_rich",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 2,
+      "locator": "IMG_7486.heic#riddle-2",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "ගේ දොර පිස දමන්නේ",
+        "ගේ මුල්ලේ සිටින්නේ"
+      ],
+      "clue_lines_nfc": [
+        "ගේ දොර පිස දමන්නේ",
+        "ගේ මුල්ලේ සිටින්නේ"
+      ],
+      "printed_answer_si": "කොස්ස",
+      "illustration": {
+        "description_en": "a long-handled broom",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "kossa",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "KEEP_DISTINCT_FROM_IDALA: කොස්ස and ඉදල (21) are different referents"
+      ]
+    },
+    {
+      "number": 3,
+      "locator": "IMG_7486.heic#riddle-3",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "උදැල්ල අරගෙන",
+        "කුඹුරට යනවා"
+      ],
+      "clue_lines_nfc": [
+        "උදැල්ල අරගෙන",
+        "කුඹුරට යනවා"
+      ],
+      "printed_answer_si": "ගොවියා",
+      "illustration": {
+        "description_en": "a person working a field with a hoe",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "goviya",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 4,
+      "locator": "IMG_7486.heic#riddle-4",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "අරිනවා- වහනවා",
+        "රෑට යතුරු දමනවා"
+      ],
+      "clue_lines_nfc": [
+        "අරිනවා- වහනවා",
+        "රෑට යතුරු දමනවා"
+      ],
+      "printed_answer_si": "දොර",
+      "illustration": {
+        "description_en": "a door",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "dora",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "PRINTED_HYPHEN: 'අරිනවා-' printed with an attached hyphen; preserved"
+      ]
+    },
+    {
+      "number": 5,
+      "locator": "IMG_7486.heic#riddle-5",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "ඉර පායන විට පිල් විදහා",
+        "නටනවා"
+      ],
+      "clue_lines_nfc": [
+        "ඉර පායන විට පිල් විදහා",
+        "නටනවා"
+      ],
+      "printed_answer_si": "මොනරා",
+      "illustration": {
+        "description_en": "a peacock with spread feathers",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "monaraa",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 6,
+      "locator": "IMG_7486.heic#riddle-6",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "පිටි දාලා වඩනවා",
+        "පුච්චා රස බලනවා"
+      ],
+      "clue_lines_nfc": [
+        "පිටි දාලා වඩනවා",
+        "පුච්චා රස බලනවා"
+      ],
+      "printed_answer_si": "රොටී",
+      "illustration": {
+        "description_en": "round flat breads",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "roti",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 7,
+      "locator": "IMG_7486.heic#riddle-7",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "සුදු පාටයි",
+        "උසම උසයි",
+        "හිස දල්වයි",
+        "අඳුර නසයි -"
+      ],
+      "clue_lines_nfc": [
+        "සුදු පාටයි",
+        "උසම උසයි",
+        "හිස දල්වයි",
+        "අඳුර නසයි"
+      ],
+      "printed_answer_si": "ඉටිපන්දම",
+      "illustration": {
+        "description_en": "a lit candle",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "itipandama",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "FIGURATIVE: 'හිස දල්වයි' (head burns) describes the flame"
+      ]
+    },
+    {
+      "number": 8,
+      "locator": "IMG_7486.heic#riddle-8",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "උස ම උසයි",
+        "බෙල්ල දිගයි",
+        "ගස්වල දලු",
+        "හිටගෙන කයි -"
+      ],
+      "clue_lines_nfc": [
+        "උස ම උසයි",
+        "බෙල්ල දිගයි",
+        "ගස්වල දලු",
+        "හිටගෙන කයි"
+      ],
+      "printed_answer_si": "ජිරාෆ්",
+      "illustration": {
+        "description_en": "a giraffe",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "jiraaf",
+      "provisional_classification": "direct_rich",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "SPACING_PRINTED: 'උස ම උසයි' with a space; riddle 7 prints 'උසම උසයි'"
+      ]
+    },
+    {
+      "number": 9,
+      "locator": "IMG_7486.heic#riddle-9",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "රෑ අහසේ දිලිසෙන්නේ",
+        "ලොවට එළිය මම දෙන්නේ",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "රෑ අහසේ දිලිසෙන්නේ",
+        "ලොවට එළිය මම දෙන්නේ"
+      ],
+      "printed_answer_si": "හඳ",
+      "illustration": {
+        "description_en": "a crescent moon with a cloud and stars",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "handa",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "TRADITIONAL_LANGUAGE: preserved as a riddle; not a scientific claim that the moon makes light"
+      ]
+    },
+    {
+      "number": 10,
+      "locator": "IMG_7486.heic#riddle-10",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "දාරත් නැති",
+        "මුලුත් නොමැති",
+        "යන්නේ මම",
+        "පෙරළි පෙරළි -"
+      ],
+      "clue_lines_nfc": [
+        "දාරත් නැති",
+        "මුලුත් නොමැති",
+        "යන්නේ මම",
+        "පෙරළි පෙරළි"
+      ],
+      "printed_answer_si": "බෝලය",
+      "illustration": {
+        "description_en": "a ball",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "bolaya",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "BRIEF_SUMMARY_MISMATCH: printed lines say no edges and no corners, not 'no legs or face'"
+      ]
+    },
+    {
+      "number": 11,
+      "locator": "IMG_7486.heic#riddle-11",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "මගේ ඇගේ කූරු ගොඩයි",
+        "පාට පාට මල් විසිරෙයි",
+        "අව්වට වැස්සට දෙකට ම",
+        "මාව උඩින් අරන් දුවයි",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "මගේ ඇගේ කූරු ගොඩයි",
+        "පාට පාට මල් විසිරෙයි",
+        "අව්වට වැස්සට දෙකට ම",
+        "මාව උඩින් අරන් දුවයි"
+      ],
+      "printed_answer_si": "කුඩය",
+      "illustration": {
+        "description_en": "an open umbrella",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "kudaya",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "LETTER_UNCERTAIN: 'කූරු' vs 'කුරු' in line 1 needs review",
+        "FIGURATIVE: ribs and flowers describe the frame and the cloth pattern"
+      ]
+    },
+    {
+      "number": 12,
+      "locator": "IMG_7486.heic#riddle-12",
+      "photograph": "IMG_7486.heic",
+      "printed_lines_si": [
+        "පෙට්ටි ගොඩයි",
+        "රෝද ගොඩයි",
+        "හූ කියමින්",
+        "වේගෙන් යයි -"
+      ],
+      "clue_lines_nfc": [
+        "පෙට්ටි ගොඩයි",
+        "රෝද ගොඩයි",
+        "හූ කියමින්",
+        "වේගෙන් යයි"
+      ],
+      "printed_answer_si": "කෝච්චිය",
+      "illustration": {
+        "description_en": "a train on rails",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "kochchiya",
+      "provisional_classification": "direct_rich",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "SPELLING_PRINTED: 'වේගෙන්' preserved"
+      ]
+    },
+    {
+      "number": 13,
+      "locator": "IMG_7487.heic#riddle-13",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "අව්වයි වැස්සයි",
+        "ඇති විට",
+        "අහස පුරා",
+        "පාට හතයි -"
+      ],
+      "clue_lines_nfc": [
+        "අව්වයි වැස්සයි",
+        "ඇති විට",
+        "අහස පුරා",
+        "පාට හතයි"
+      ],
+      "printed_answer_si": "දේදුන්න",
+      "illustration": {
+        "description_en": "a rainbow with clouds",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "dedunna",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 14,
+      "locator": "IMG_7487.heic#riddle-14",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "බිත්තියෙ ඉන්නවා",
+        "ටක් ටක් ගානවා",
+        "කටු කැරකෙනවා",
+        "කියන්න මගෙ නම -"
+      ],
+      "clue_lines_nfc": [
+        "බිත්තියෙ ඉන්නවා",
+        "ටක් ටක් ගානවා",
+        "කටු කැරකෙනවා",
+        "කියන්න මගෙ නම"
+      ],
+      "printed_answer_si": "ඔරලෝසුව",
+      "illustration": {
+        "description_en": "a wall clock",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "oralosuwa",
+      "provisional_classification": "direct_rich",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 15,
+      "locator": "IMG_7487.heic#riddle-15",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "මලක් උඩ මලක්",
+        "පියාඹන මලක්",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "මලක් උඩ මලක්",
+        "පියාඹන මලක්"
+      ],
+      "printed_answer_si": "සමනලයා",
+      "illustration": {
+        "description_en": "a butterfly",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "samanalayaa",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "FIGURATIVE: the flying flower is a butterfly; literal flower matching would mislead"
+      ]
+    },
+    {
+      "number": 16,
+      "locator": "IMG_7487.heic#riddle-16",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "සුදු පාටට නිල් පාටට",
+        "උදේට හිස් වට්ටියක්",
+        "සුදු පාටින් දිලිසි දිලිසි",
+        "රෑටත් මල් වට්ටියක්",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "සුදු පාටට නිල් පාටට",
+        "උදේට හිස් වට්ටියක්",
+        "සුදු පාටින් දිලිසි දිලිසි",
+        "රෑටත් මල් වට්ටියක්"
+      ],
+      "printed_answer_si": "අහස",
+      "illustration": {
+        "description_en": "clouds and a sun with stars",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "ahasa",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "ILLUSTRATION_VS_ANSWER: the drawing shows clouds and sun; the printed answer is අහස, never 'cloud'"
+      ]
+    },
+    {
+      "number": 17,
+      "locator": "IMG_7487.heic#riddle-17",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "තපස් රකිනවා",
+        "කෙතේ ඉන්නවා",
+        "මාළු සොයනවා",
+        "කියන්න මගේ නම",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "තපස් රකිනවා",
+        "කෙතේ ඉන්නවා",
+        "මාළු සොයනවා",
+        "කියන්න මගේ නම"
+      ],
+      "printed_answer_si": "කොකා",
+      "illustration": {
+        "description_en": "a heron/egret standing",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "kokaa",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "SHARED_ANSWER_WITH_1: riddles 1 and 17 share කොකා; not fresh counterparts",
+        "FIGURATIVE_NO_STEREOTYPE: 'තපස් රකිනවා' describes standing very still; explain without religious stereotyping"
+      ]
+    },
+    {
+      "number": 18,
+      "locator": "IMG_7487.heic#riddle-18",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "උඩහ ගෙදර මම යන කොට",
+        "අඟර දඟර වැලක් තිබුණා",
+        "මල් සුවඳයි ගෙඩි තිත්තයි",
+        "නොතේරුවොත් ටොකු විස්සයි",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "උඩහ ගෙදර මම යන කොට",
+        "අඟර දඟර වැලක් තිබුණා",
+        "මල් සුවඳයි ගෙඩි තිත්තයි",
+        "නොතේරුවොත් ටොකු විස්සයි"
+      ],
+      "printed_answer_si": "කරවිල",
+      "illustration": {
+        "description_en": "bitter gourds",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "karawila",
+      "provisional_classification": "direct_rich",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "PLAYFUL_PENALTY_LINE: 'නොතේරුවොත් ටොකු විස්සයි' is a traditional tease; the game never applies a penalty"
+      ]
+    },
+    {
+      "number": 19,
+      "locator": "IMG_7487.heic#riddle-19",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "ගුලක් බලා රිංගනවා",
+        "ඒක ඇතුළෙ කැරකෙනවා",
+        "ගේ දොර බඩු රැක දෙනවා",
+        "තේරුවොතින් පඩි දෙනවා",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "ගුලක් බලා රිංගනවා",
+        "ඒක ඇතුළෙ කැරකෙනවා",
+        "ගේ දොර බඩු රැක දෙනවා",
+        "තේරුවොතින් පඩි දෙනවා"
+      ],
+      "printed_answer_si": "යතුර",
+      "illustration": {
+        "description_en": "an old key",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "yathura",
+      "provisional_classification": "direct_rich",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": []
+    },
+    {
+      "number": 20,
+      "locator": "IMG_7487.heic#riddle-20",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "දත් තිබුණත් කටක් නැතේ",
+        "සියලු ම දත් උල් ව ඇතේ",
+        "අවුල් ලිහා හැඩ කරතේ",
+        "නැති ගෙදරක් ඇත්ත නැතේ",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "දත් තිබුණත් කටක් නැතේ",
+        "සියලු ම දත් උල් ව ඇතේ",
+        "අවුල් ලිහා හැඩ කරතේ",
+        "නැති ගෙදරක් ඇත්ත නැතේ"
+      ],
+      "printed_answer_si": "පනාව",
+      "illustration": {
+        "description_en": "a comb",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "panaawa",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "LINE_FORM_REVIEW: second line 'සියලු ම දත් උල් ව ඇතේ' needs Sinhala review",
+        "FIGURATIVE: comb 'teeth'"
+      ]
+    },
+    {
+      "number": 21,
+      "locator": "IMG_7487.heic#riddle-21",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "පිරිසිදුකම කරන අගේ",
+        "රැවුල ඉත්තෑ කූරු වගේ",
+        "මිදුල වටේ යන එන කොට",
+        "රැවුල ඇදෙයි පොළොව දිගේ",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "පිරිසිදුකම කරන අගේ",
+        "රැවුල ඉත්තෑ කූරු වගේ",
+        "මිදුල වටේ යන එන කොට",
+        "රැවුල ඇදෙයි පොළොව දිගේ"
+      ],
+      "printed_answer_si": "ඉදල",
+      "illustration": {
+        "description_en": "a rake-like coconut-stick broom",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "idala",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "KEEP_DISTINCT_FROM_KOSSA: never merge with කොස්ස (2)",
+        "FIGURATIVE: the beard is the broom's sticks"
+      ]
+    },
+    {
+      "number": 22,
+      "locator": "IMG_7487.heic#riddle-22",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "නූල් බැඳි අහස් යානාව",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "නූල් බැඳි අහස් යානාව"
+      ],
+      "printed_answer_si": "සරුංගලය",
+      "illustration": {
+        "description_en": "a kite on a string",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "sarungalaya",
+      "provisional_classification": "direct_short",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "SINGLE_LINE"
+      ]
+    },
+    {
+      "number": 23,
+      "locator": "IMG_7487.heic#riddle-23",
+      "photograph": "IMG_7487.heic",
+      "printed_lines_si": [
+        "ගසක නොපිපෙන මල්",
+        "-"
+      ],
+      "clue_lines_nfc": [
+        "ගසක නොපිපෙන මල්"
+      ],
+      "printed_answer_si": "බිම්මල",
+      "illustration": {
+        "description_en": "a mushroom",
+        "answer_revealing": true,
+        "restricted": true
+      },
+      "answer_family": "bimmala",
+      "provisional_classification": "figurative",
+      "classification_status": "provisional_pending_educator_review",
+      "difficulty_review": null,
+      "vocabulary_familiarity_review": null,
+      "review_issues": [
+        "SINGLE_LINE: no additional textual evidence exists; do not demand it",
+        "FIGURATIVE: the 'flower' is a mushroom"
+      ]
+    }
+  ]
+}

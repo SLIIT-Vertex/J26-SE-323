@@ -1,0 +1,17 @@
+{
+  "area_id": "G5-AREA-SIN-03",
+  "package_version": "g5-sin-riddles-draft-v1",
+  "status": "draft",
+  "production_enabled": false,
+  "source_photographs_sha256": {
+    "IMG_7486.heic": "898d30667d15bad5597219bfd7ad4d524212fb5fab689aef9df4ed8fa863bab3",
+    "IMG_7487.heic": "3aed8efae3f1b1bb3018cba808a2d87393b04a483d83cd3d7cad8110eadb3ca9"
+  },
+  "files": {"source-transcription.json": "35e2729fd5e4ed2c4280dc01d3f4831bced839e21d0e1e96687fccd0c5dd29ed"},
+  "atomic_skills": ["G5-SIN-RID-DIRECT-01", "G5-SIN-RID-FIGURATIVE-01"],
+  "atomic_skill_id_status": "provisional_internal_not_official_curriculum_codes",
+  "curriculum_trace": {"links": ["G5-SIN-C01-L05-K02", "G5-SIN-C02-L05-K02", "G5-SIN-C03-L05-K02", "G5-SIN-C04-L05-K02", "G5-SIN-C01-L05-O02", "G5-SIN-U27-A02"], "status": "draft_blocked_pending_review"},
+  "measured_modality": "reading comprehension and inference only",
+  "blocked_reviews": ["source_identity", "usage_rights", "sinhala_language", "educator", "riddle_classification", "curriculum_alignment", "rubric", "distractor_plausibility", "parallel_equivalence", "answer_leakage", "accessibility", "security_privacy", "ethics", "consent_assent", "model_safety", "protocol", "release"],
+  "approvals_recorded": []
+}

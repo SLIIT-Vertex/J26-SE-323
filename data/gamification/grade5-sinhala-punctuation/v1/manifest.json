@@ -1,0 +1,20 @@
+{
+  "area_id": "G5-AREA-SIN-02",
+  "package_version": "g5-sin-punctuation-draft-v1",
+  "status": "draft",
+  "production_enabled": false,
+  "source_photographs_sha256": {
+    "IMG_7484.HEIC": "e080b9ce43b5d39293d67cd8cf2cda6ae7a66263eefad784d2de66ceff8dc786",
+    "IMG_7485.heic": "20c87df0fe233e85e5c1718058c5157554ece9ad9838f52dea5c5bfafb504fe3"
+  },
+  "files": {
+    "source-transcription.json": "9e016b41592d4cb19ae8e6721670fbc82806acd859be80835d062f2f0edee24d"
+  },
+  "atomic_skill_id_status": "provisional_internal_not_official_curriculum_codes",
+  "probe_items": "draft_authored_unreviewed; textbook examples are demonstrations only",
+  "measurement_unavailable": ["G5-SIN-PUNC-ABBREV-01", "G5-SIN-PUNC-LINEBREAK-01"],
+  "content_blocked": ["G5-SIN-PUNC-LINEBREAK-01"],
+  "curriculum_trace": {"links": ["G5-SIN-C03-L01-K03", "G5-SIN-C04-L01-K03", "G5-SIN-C03-L01-O04", "G5-SIN-C04-L01-O02"], "status": "draft_blocked_pending_review"},
+  "blocked_reviews": ["source_identity", "usage_rights", "sinhala_language", "educator", "curriculum_alignment", "rubric", "acceptable_variants", "parallel_equivalence", "answer_leakage", "accessibility", "security_privacy", "model_safety", "ethics", "consent_assent", "protocol", "release"],
+  "approvals_recorded": []
+}
