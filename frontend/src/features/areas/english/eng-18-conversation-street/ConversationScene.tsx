@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CLASSROOM_ASSET_ROOT } from "../english-area-1/manifest";
+import { CLASSROOM_ASSET_ROOT } from "../eng-01-classroom-action-quest/manifest";
 
 /** Phaser presents the characters and mirrors choices; accessible HTML owns input. */
 export function ConversationScene({

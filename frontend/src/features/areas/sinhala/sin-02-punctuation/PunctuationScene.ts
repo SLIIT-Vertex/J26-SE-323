@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import type { SceneBridge } from "../gamification/phaser/bridge/GameEventBridge";
+import type { SceneBridge } from "../../../gamification/phaser/bridge/GameEventBridge";
 
 export type PunctuationSceneModel = {
 	revision: string;

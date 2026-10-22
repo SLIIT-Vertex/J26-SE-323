@@ -1,5 +1,5 @@
 import type Phaser from "phaser";
-import type { SceneBridge } from "../gamification/phaser/bridge/GameEventBridge";
+import type { SceneBridge } from "../../../gamification/phaser/bridge/GameEventBridge";
 
 /** What React asks the scene to draw. React owns the answer; the scene mirrors it. */
 export type PillamSceneModel = {

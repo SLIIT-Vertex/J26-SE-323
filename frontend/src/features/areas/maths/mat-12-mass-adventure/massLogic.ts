@@ -1,4 +1,4 @@
-import type { ConstructedResponse } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 
 export type MassArithmeticResponse = Extract<ConstructedResponse, { kind: "mass_arithmetic" }>;
 export const STANDARD_MASSES_G = [5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000] as const;

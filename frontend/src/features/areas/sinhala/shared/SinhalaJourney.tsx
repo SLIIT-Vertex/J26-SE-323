@@ -6,21 +6,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
+} from "../../../mobile-learning-flow/AdventureShared";
 import type {
 	ChildEpisodeResponse,
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { isSupportRound } from "../mobile-learning-flow/useSupportRound";
+} from "../../../mobile-learning-flow/api/generated";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { isSupportRound } from "../../../mobile-learning-flow/useSupportRound";
 import "./sinhala-journey.css";
 import { SupportTeardownRegistry } from "./teardown";
 

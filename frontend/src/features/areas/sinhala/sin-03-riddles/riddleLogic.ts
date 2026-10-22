@@ -1,4 +1,4 @@
-import type { ConstructedResponse } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 
 export type RiddleGame = {
 	schema_version: "sinhala-riddle-item-v1";

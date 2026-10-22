@@ -1,4 +1,4 @@
-import type { ConstructedResponsePayload } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponsePayload } from "../../../mobile-learning-flow/api/generated";
 
 export function shadingResponse(
 	representation: "circle" | "rectangle",

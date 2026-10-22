@@ -7,18 +7,18 @@ import type {
 	MoneyAdventureWorkedExample,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
+} from "../../../mobile-learning-flow/api/generated";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
 import {
 	adaptiveGameProgressStage,
 	AdventureProgress,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
-import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	canonicalMoneyArithmetic,
 	calculateLineTotals,

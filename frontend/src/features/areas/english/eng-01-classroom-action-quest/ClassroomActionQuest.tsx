@@ -3,25 +3,25 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
+} from "../../../mobile-learning-flow/AdventureShared";
 import type {
 	ClassroomActionWorkedExample,
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/api/generated";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
-} from "../mobile-learning-flow/useSupportRound";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
+} from "../../../mobile-learning-flow/useSupportRound";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
 import {
 	type BodyActionId,
 	bodyStateResponse,
@@ -33,7 +33,7 @@ import {
 	CLASSROOM_ASSET_ROOT,
 	CLASSROOM_SKILLS,
 } from "./manifest";
-import "../mobile-learning-flow/english-game-shared.css";
+import "../../../mobile-learning-flow/english-game-shared.css";
 
 type Step =
 	| "games"

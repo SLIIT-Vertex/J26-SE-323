@@ -1,8 +1,8 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlantActivity } from "../../../english-area-3/PlantExplorerQuest";
-import { FoodActivity } from "../../../english-area-6/IslandFoodFestival";
+import { PlantActivity } from "../../../areas/english/eng-03-plant-explorer/PlantExplorerQuest";
+import { FoodActivity } from "../../../areas/english/eng-06-island-food-festival/IslandFoodFestival";
 import { placeWord, WordDropBoard } from "../WordDropBoard";
 
 vi.mock("phaser", () => ({

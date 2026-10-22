@@ -3,32 +3,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
+} from "../../../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
 	ExperimentCondition,
 	IslandFoodWorkedExample,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/api/generated";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
-} from "../mobile-learning-flow/useSupportRound";
-import "../mobile-learning-flow/english-game-shared.css";
+} from "../../../mobile-learning-flow/useSupportRound";
+import "../../../mobile-learning-flow/english-game-shared.css";
 import "./island-food-festival.css";
 import {
 	WordDropBoard,
 	WordDropMotionContext,
 	type WordDropState,
-} from "../mobile-learning-flow/word-drop/WordDropBoard";
+} from "../../../mobile-learning-flow/word-drop/WordDropBoard";
 import {
 	FOOD_GLYPHS,
 	foodMappingResponse,

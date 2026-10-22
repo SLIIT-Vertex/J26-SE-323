@@ -30,9 +30,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    rendered = json.dumps(build(), ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    contract = build()
     if args.check:
-        return 0 if OUTPUT.exists() and OUTPUT.read_text(encoding="utf-8") == rendered else 1
+        # Compare content, not bytes: key order and formatting do not change the contract.
+        current = json.loads(OUTPUT.read_text(encoding="utf-8")) if OUTPUT.exists() else None
+        return 0 if current == json.loads(json.dumps(contract)) else 1
+    rendered = json.dumps(contract, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     OUTPUT.write_text(rendered, encoding="utf-8", newline="\n")
     return 0
 

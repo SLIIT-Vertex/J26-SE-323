@@ -1,4 +1,4 @@
-import type { ConstructedResponse } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 
 export type WaterLink = { sequence: number; source: string; target: string };
 

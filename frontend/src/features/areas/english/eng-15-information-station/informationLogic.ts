@@ -1,4 +1,4 @@
-import type { ConstructedResponse } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 export type Link = { sequence: number; source: string; target: string };
 const revisions = (t: string[]) =>
 	t.filter((x) => x.startsWith("replace") || x.startsWith("clear")).length;

@@ -1,4 +1,4 @@
-import type { ConstructedResponse } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 
 export type CityLink = { sequence: number; source: string; target: string };
 const revisions = (trace: string[]) =>

@@ -7,7 +7,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { CLASSROOM_ASSET_ROOT } from "../english-area-1/manifest";
+import { CLASSROOM_ASSET_ROOT } from "../eng-01-classroom-action-quest/manifest";
 import { ConversationScene } from "./ConversationScene";
 
 const MotionContext = createContext(false);
@@ -15,25 +15,25 @@ const MotionContext = createContext(false);
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
+} from "../../../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/api/generated";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { SupportRoundPlay } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
-} from "../mobile-learning-flow/useSupportRound";
-import "../mobile-learning-flow/english-game-shared.css";
+} from "../../../mobile-learning-flow/useSupportRound";
+import "../../../mobile-learning-flow/english-game-shared.css";
 import "./conversation-street.css";
 import {
 	type ConversationLink,

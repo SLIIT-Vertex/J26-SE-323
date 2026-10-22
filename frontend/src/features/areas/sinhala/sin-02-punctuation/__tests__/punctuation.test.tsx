@@ -13,7 +13,7 @@ import {
 	removeAt,
 } from "../punctuationLogic";
 
-vi.mock("../../gamification/GameHost", () => ({
+vi.mock("../../../../gamification/GameHost", () => ({
 	PhaserSurface: () => <div />,
 }));
 

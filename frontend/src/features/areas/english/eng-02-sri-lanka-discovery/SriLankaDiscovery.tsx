@@ -3,28 +3,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	AdventureProgress,
 	adaptiveGameProgressStage,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
+} from "../../../mobile-learning-flow/AdventureShared";
 import type {
 	ConstructedResponse,
 	ExperimentCondition,
 	PresentationManifest,
 	SriLankaDiscoveryWorkedExample,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { wordPicture } from "../mobile-learning-flow/phaser-board/pictures";
-import { sceneFor } from "../mobile-learning-flow/phaser-board/scenes";
-import { TokenBoard } from "../mobile-learning-flow/phaser-board/TokenBoard";
-import { SupportRoundPlay } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/api/generated";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { wordPicture } from "../../../mobile-learning-flow/phaser-board/pictures";
+import { sceneFor } from "../../../mobile-learning-flow/phaser-board/scenes";
+import { TokenBoard } from "../../../mobile-learning-flow/phaser-board/TokenBoard";
+import { SupportRoundPlay } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	isSupportRound,
 	useSupportRound,
-} from "../mobile-learning-flow/useSupportRound";
+} from "../../../mobile-learning-flow/useSupportRound";
 import { SRI_LANKA_SKILLS } from "./manifest";
 import { groupingResponse, mappingResponse } from "./sriLankaDiscoveryLogic";
 import "./sri-lanka-discovery.css";

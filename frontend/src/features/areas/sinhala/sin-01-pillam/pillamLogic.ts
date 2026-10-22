@@ -1,4 +1,4 @@
-import type { ConstructedResponse } from "../mobile-learning-flow/api/generated";
+import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 
 /** Card and dock shapes as the server sends them. Nothing here says which one is right. */
 export type SignCard = {
@@ -179,7 +179,7 @@ export function exclusiveBuild(game: PillamGame): boolean {
 export {
 	SupportTeardownRegistry,
 	type TeardownReceipt,
-} from "../sinhala-shared/teardown";
+} from "../shared/teardown";
 
 export const PAPILI_SHAPE_LABEL: Record<"kon" | "vak" | "aeda", string> = {
 	kon: "කොන්",

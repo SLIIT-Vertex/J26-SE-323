@@ -12,18 +12,18 @@ import type {
 	ExperimentCondition,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
+} from "../../../mobile-learning-flow/api/generated";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
 import {
 	AdaptiveSupportActivity,
 	SUPPORT_TYPE_LABELS,
-} from "../mobile-learning-flow/AdaptiveSupportActivity";
+} from "../../../mobile-learning-flow/AdaptiveSupportActivity";
 import {
 	AdventureBackButton,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
-import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/AdventureShared";
+import { SupportRoundFrame } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	MULTIPLICATION_CHAPTERS,
 	MULTIPLICATION_SKILLS,

@@ -2,16 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
 	AdaptiveSupportActivity,
 	SUPPORT_TYPE_LABELS,
-} from "../mobile-learning-flow/AdaptiveSupportActivity";
+} from "../../../mobile-learning-flow/AdaptiveSupportActivity";
 import {
 	AdventureProgress,
 	type AdventureProgressStage,
-} from "../mobile-learning-flow/AdventureProgress";
+} from "../../../mobile-learning-flow/AdventureProgress";
 import {
 	AdventureBackButton,
 	AdventureNotice,
 	GameSuccessScreen,
-} from "../mobile-learning-flow/AdventureShared";
+} from "../../../mobile-learning-flow/AdventureShared";
 import type {
 	ChildEpisodeResponse,
 	ConstructedResponse,
@@ -19,10 +19,10 @@ import type {
 	NumberWorldWorkedExample,
 	PresentationManifest,
 	SupportView,
-} from "../mobile-learning-flow/api/generated";
-import { ContractError } from "../mobile-learning-flow/api/runtime";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
-import { SupportRoundFrame } from "../mobile-learning-flow/SupportRoundFrame";
+} from "../../../mobile-learning-flow/api/generated";
+import { ContractError } from "../../../mobile-learning-flow/api/runtime";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
+import { SupportRoundFrame } from "../../../mobile-learning-flow/SupportRoundFrame";
 import {
 	NUMBER_WORLD_ASSET_ROOT,
 	NUMBER_WORLD_GAMES,

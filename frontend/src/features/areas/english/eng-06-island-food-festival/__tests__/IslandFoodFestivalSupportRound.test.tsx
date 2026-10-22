@@ -5,8 +5,8 @@ import type {
 	ChildEpisodeResponse,
 	EnglishSupportTagKey,
 	SupportType,
-} from "../../mobile-learning-flow/api/generated";
-import type { GameApi } from "../../mobile-learning-flow/GameApi";
+} from "../../../../mobile-learning-flow/api/generated";
+import type { GameApi } from "../../../../mobile-learning-flow/GameApi";
 import { IslandFoodFestival } from "../IslandFoodFestival";
 
 const EPISODE = "00000000-0000-4000-8000-000000000606";

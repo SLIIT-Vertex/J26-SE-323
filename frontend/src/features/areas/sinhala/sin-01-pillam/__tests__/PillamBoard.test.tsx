@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PillamBoard } from "../PillamJourney";
 import type { PillamGame } from "../pillamLogic";
 
-vi.mock("../../gamification/GameHost", () => ({
+vi.mock("../../../../gamification/GameHost", () => ({
 	PhaserSurface: () => <div data-testid="canvas" />,
 }));
 

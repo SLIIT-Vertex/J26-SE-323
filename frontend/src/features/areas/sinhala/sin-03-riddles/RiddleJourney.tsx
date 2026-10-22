@@ -1,15 +1,15 @@
 // biome-ignore-all lint/a11y/useButtonType: mobile application controls, no forms.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PhaserSurface } from "../gamification/GameHost";
-import { SceneBridge } from "../gamification/phaser/bridge/GameEventBridge";
-import type { ExperimentCondition } from "../mobile-learning-flow/api/generated";
-import type { GameApi } from "../mobile-learning-flow/GameApi";
+import { PhaserSurface } from "../../../gamification/GameHost";
+import { SceneBridge } from "../../../gamification/phaser/bridge/GameEventBridge";
+import type { ExperimentCondition } from "../../../mobile-learning-flow/api/generated";
+import type { GameApi } from "../../../mobile-learning-flow/GameApi";
 import {
 	type BoardProps,
 	freshInteraction,
 	type Interaction,
 	SinhalaJourney,
-} from "../sinhala-shared/SinhalaJourney";
+} from "../shared/SinhalaJourney";
 import "./riddle-journey.css";
 import { RiddleReveal } from "./RiddleReveal";
 import type { RiddleSceneCommand, RiddleSceneEvent } from "./RiddleScene";

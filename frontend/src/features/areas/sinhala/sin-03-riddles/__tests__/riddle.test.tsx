@@ -10,7 +10,7 @@ import {
 	toggleSpan,
 } from "../riddleLogic";
 
-vi.mock("../../gamification/GameHost", () => ({
+vi.mock("../../../../gamification/GameHost", () => ({
 	PhaserSurface: () => <div />,
 }));
 
