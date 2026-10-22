@@ -218,6 +218,25 @@ class SqlAlchemyLearningFlowStore:
         ).all()
         return tuple(dict(row.state_json) for row in rows)
 
+    def exposure_history(
+        self, *, learner_id: UUID, skill_ids: tuple[str, ...]
+    ) -> tuple[dict[str, object], ...]:
+        """Every episode of these skills for this learner, whatever its status.
+
+        Exposure is what the learner saw, so abandoned, invalidated and in-progress episodes
+        count as much as completed ones.
+        """
+
+        rows = self.session.scalars(
+            select(LearningFlowEpisodeRunModel)
+            .where(
+                LearningFlowEpisodeRunModel.learner_id == learner_id,
+                LearningFlowEpisodeRunModel.skill_id.in_(skill_ids),
+            )
+            .order_by(LearningFlowEpisodeRunModel.created_at, LearningFlowEpisodeRunModel.episode_id)
+        ).all()
+        return tuple(dict(row.state_json) for row in rows)
+
     def support_rounds(self, episode_id: UUID) -> tuple[dict[str, object], ...]:
         rows = self.session.scalars(
             select(LearningFlowSupportRoundModel)
