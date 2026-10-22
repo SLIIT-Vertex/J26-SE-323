@@ -17,7 +17,9 @@ from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 @lru_cache
 def area_titles():
     return json.loads(
-        (GAMIFICATION_DATA_DIRECTORY / "research-dashboard/area_titles.json").read_text(encoding="utf-8")
+        (GAMIFICATION_DATA_DIRECTORY / "research-dashboard/area_titles.json").read_text(
+            encoding="utf-8"
+        )
     )
 
 
@@ -147,25 +149,122 @@ def explain_model2(state):
     }
 
 
+def _loop(scope):
+    loop = scope.get("support_loop") if isinstance(scope, Mapping) else None
+    return loop if isinstance(loop, Mapping) else None
+
+
+def follow_up(state):
+    """The help given after a failed after-question. It comes after Model 3, so it never changes
+    the measured gain, but the child still saw it."""
+
+    value = state.get("follow_up")
+    return value if isinstance(value, Mapping) else None
+
+
+def help_rounds(state):
+    """Every help round the child saw, in order, as ``(phase, round)``.
+
+    ``measured`` rounds come before the after-question; ``follow_up`` rounds come after a failed
+    one. A game from before the multi-help loop kept its single help only as ``scaffold_exposure``,
+    so that help becomes one measured round.
+    """
+
+    loop = _loop(state)
+    if loop is not None:
+        rows = [("measured", row) for row in loop.get("rounds") or []]
+    elif isinstance(state.get("scaffold_exposure"), Mapping):
+        exposure = state["scaffold_exposure"]
+        supported = state.get("supported_correctness")
+        outcome = (
+            None
+            if not exposure.get("completed_at")
+            else "viewed"
+            if not isinstance(supported, Mapping)
+            else "succeeded"
+            if supported.get("correct")
+            else "failed"
+        )
+        rows = [
+            (
+                "measured",
+                {
+                    "round_number": 1,
+                    "scaffold_type": exposure.get("scaffold_type"),
+                    "outcome": outcome,
+                    "opened_at": exposure.get("presented_at"),
+                    "closed_at": exposure.get("completed_at"),
+                },
+            )
+        ]
+    else:
+        rows = []
+    later = _loop(follow_up(state))
+    if later is not None:
+        rows += [("follow_up", row) for row in later.get("rounds") or []]
+    return rows
+
+
+def help_types_used(state):
+    """Each help type the child saw, measured and follow-up, in the order it was given."""
+
+    return list(dict.fromkeys(str(row.get("scaffold_type")) for _, row in help_rounds(state)))
+
+
+FOLLOW_UP_ENDINGS = {
+    "independent_success": "Right alone on a fresh practice question after the follow-up help.",
+    "order_exhausted": "Every remaining help was tried; the child did not yet manage alone.",
+    "no_fresh_item": "No fresh practice question was left, so the follow-up stopped.",
+}
+
+
+def explain_follow_up(state):
+    later = follow_up(state)
+    if later is None:
+        return None
+    practice = [
+        {"correct": bool(a.get("correct")), "error": a.get("structured_error_code")}
+        for a in later.get("attempts") or []
+        if a.get("role") == "follow_up_practice"
+    ]
+    reason = later.get("finish_reason")
+    return {
+        "status": later.get("status"),
+        "finish_reason": reason,
+        "headline": FOLLOW_UP_ENDINGS.get(str(reason), "The follow-up help is still going on."),
+        "why": "The after-question was wrong, so more help followed. This help comes after the "
+        "fair test: it does not change the independence gain.",
+        "practice": practice,
+    }
+
+
 def explain_rounds(state):
-    loop = state.get("support_loop") or {}
+    rows = help_rounds(state)
     result = []
-    for index, row in enumerate(loop.get("rounds") or []):
+    for position, (stage_phase, row) in enumerate(rows, start=1):
         outcome = row.get("outcome")
+        last_of_phase = position == len(rows) or rows[position][0] != stage_phase
+        next_try = (
+            "The child next tries a fresh practice question alone."
+            if stage_phase == "follow_up"
+            else "The child next tries alone."
+        )
         rule = (
             "The child managed it with help. The help is then removed."
             if outcome == "succeeded"
             else "The child watched how it is done. The help is then removed."
             if outcome == "viewed"
             else "This help was not enough, so the next help was tried."
-            if outcome == "failed" and index < len(loop["rounds"]) - 1
-            else "All available help was tried. The child next tries alone."
+            if outcome == "failed" and not last_of_phase
+            else f"All available help was tried. {next_try}"
             if outcome == "failed"
             else "The child is still trying this help."
         )
         stages = row.get("stages") or []
         result.append(
             {
+                "position": position,
+                "phase": stage_phase,
                 "round_number": row.get("round_number"),
                 "scaffold_type": row.get("scaffold_type"),
                 "name": name(row.get("scaffold_type")),
@@ -251,8 +350,8 @@ def episode_summary(run: Mapping[str, object]) -> dict[str, object]:
     assert isinstance(state, Mapping)
     attempts = {str(row.get("role")): row for row in state.get("attempts") or []}
     model2 = state.get("model2") if isinstance(state.get("model2"), Mapping) else {}
-    loop = state.get("support_loop") if isinstance(state.get("support_loop"), Mapping) else {}
     measurement = state.get("measurement") if isinstance(state.get("measurement"), Mapping) else {}
+    later = follow_up(state)
     events: Sequence[Mapping[str, object]] = state.get("events") or []  # type: ignore[assignment]
     return {
         "episode_id": state.get("episode_id"),
@@ -267,7 +366,8 @@ def episode_summary(run: Mapping[str, object]) -> dict[str, object]:
         "updated_at": run["updated_at"].isoformat() if run.get("updated_at") else None,  # type: ignore[union-attr]
         "before_correct": attempts.get("unsupported_before", {}).get("correct"),
         "after_correct": attempts.get("unsupported_after", {}).get("correct"),
-        "help_types": list(loop.get("types_used") or []),
+        "help_types": help_types_used(state),
+        "follow_up_result": later.get("finish_reason") if later else None,
         "selection_mode": model2.get("support_selection_mode") if model2 else None,
         "first_help": (next(iter(model2.get("support_order") or [None])) if model2 else None),
         "gain": (measurement.get("raw_independence_gain") if measurement else None)
