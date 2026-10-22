@@ -1,0 +1,250 @@
+{
+  "confusion_behaviour": [
+    {
+      "feature": "overlap_time",
+      "gain_share": 0.3185,
+      "mean_abs_contribution": 0.511
+    },
+    {
+      "feature": "ms_first_response",
+      "gain_share": 0.3017,
+      "mean_abs_contribution": 0.4126
+    },
+    {
+      "feature": "hint_count",
+      "gain_share": 0.1274,
+      "mean_abs_contribution": 0.2097
+    },
+    {
+      "feature": "attempt_count",
+      "gain_share": 0.0609,
+      "mean_abs_contribution": 0.1327
+    },
+    {
+      "feature": "original",
+      "gain_share": 0.1322,
+      "mean_abs_contribution": 0.0365
+    },
+    {
+      "feature": "correct",
+      "gain_share": 0.0207,
+      "mean_abs_contribution": 0.0321
+    },
+    {
+      "feature": "bottom_hint",
+      "gain_share": 0.0313,
+      "mean_abs_contribution": 0.0129
+    },
+    {
+      "feature": "bottom_hint_missing",
+      "gain_share": 0.0073,
+      "mean_abs_contribution": 0.002
+    }
+  ],
+  "disengagement_behaviour": [
+    {
+      "feature": "overlap_time",
+      "gain_share": 0.0593,
+      "mean_abs_contribution": 0.0269
+    },
+    {
+      "feature": "hint_count",
+      "gain_share": 0.1357,
+      "mean_abs_contribution": 0.0233
+    },
+    {
+      "feature": "recent_hints",
+      "gain_share": 0.0474,
+      "mean_abs_contribution": 0.0212
+    },
+    {
+      "feature": "recent_accuracy",
+      "gain_share": 0.0499,
+      "mean_abs_contribution": 0.0193
+    },
+    {
+      "feature": "recent_log_rt",
+      "gain_share": 0.0505,
+      "mean_abs_contribution": 0.0192
+    },
+    {
+      "feature": "ms_first_response",
+      "gain_share": 0.0459,
+      "mean_abs_contribution": 0.0169
+    },
+    {
+      "feature": "accuracy_deviation",
+      "gain_share": 0.0388,
+      "mean_abs_contribution": 0.0166
+    },
+    {
+      "feature": "history_confidence",
+      "gain_share": 0.1386,
+      "mean_abs_contribution": 0.0144
+    },
+    {
+      "feature": "hint_deviation",
+      "gain_share": 0.0769,
+      "mean_abs_contribution": 0.0128
+    },
+    {
+      "feature": "attempt_deviation",
+      "gain_share": 0.0482,
+      "mean_abs_contribution": 0.0123
+    },
+    {
+      "feature": "recent_attempts",
+      "gain_share": 0.0333,
+      "mean_abs_contribution": 0.0116
+    },
+    {
+      "feature": "rt_deviation",
+      "gain_share": 0.0315,
+      "mean_abs_contribution": 0.0114
+    },
+    {
+      "feature": "attempt_count",
+      "gain_share": 0.0555,
+      "mean_abs_contribution": 0.0063
+    },
+    {
+      "feature": "correct",
+      "gain_share": 0.0823,
+      "mean_abs_contribution": 0.0037
+    },
+    {
+      "feature": "original",
+      "gain_share": 0.0441,
+      "mean_abs_contribution": 0.0017
+    },
+    {
+      "feature": "bottom_hint",
+      "gain_share": 0.0274,
+      "mean_abs_contribution": 0.0009
+    },
+    {
+      "feature": "bottom_hint_missing",
+      "gain_share": 0.0348,
+      "mean_abs_contribution": 0.0002
+    },
+    {
+      "feature": "baseline_available",
+      "gain_share": 0.0,
+      "mean_abs_contribution": 0.0
+    }
+  ],
+  "confusion_visual": [
+    {
+      "feature": "mean_abs_yaw",
+      "gain_share": 0.1078,
+      "mean_abs_contribution": 0.1837
+    },
+    {
+      "feature": "std_eye_openness",
+      "gain_share": 0.1201,
+      "mean_abs_contribution": 0.1783
+    },
+    {
+      "feature": "std_gaze_ratio",
+      "gain_share": 0.0954,
+      "mean_abs_contribution": 0.1215
+    },
+    {
+      "feature": "mean_eye_openness",
+      "gain_share": 0.0986,
+      "mean_abs_contribution": 0.119
+    },
+    {
+      "feature": "mean_abs_pitch",
+      "gain_share": 0.0928,
+      "mean_abs_contribution": 0.0906
+    },
+    {
+      "feature": "mean_gaze_ratio",
+      "gain_share": 0.0941,
+      "mean_abs_contribution": 0.0812
+    },
+    {
+      "feature": "mean_abs_roll",
+      "gain_share": 0.0911,
+      "mean_abs_contribution": 0.0774
+    },
+    {
+      "feature": "mean_roll",
+      "gain_share": 0.0962,
+      "mean_abs_contribution": 0.0746
+    },
+    {
+      "feature": "mean_pitch",
+      "gain_share": 0.1043,
+      "mean_abs_contribution": 0.0566
+    },
+    {
+      "feature": "mean_yaw",
+      "gain_share": 0.0997,
+      "mean_abs_contribution": 0.0481
+    },
+    {
+      "feature": "face_visibility_ratio",
+      "gain_share": 0.0,
+      "mean_abs_contribution": 0.0
+    }
+  ],
+  "disengagement_visual": [
+    {
+      "feature": "std_eye_openness",
+      "gain_share": 0.1543,
+      "mean_abs_contribution": 0.387
+    },
+    {
+      "feature": "mean_eye_openness",
+      "gain_share": 0.1107,
+      "mean_abs_contribution": 0.3334
+    },
+    {
+      "feature": "std_gaze_ratio",
+      "gain_share": 0.1024,
+      "mean_abs_contribution": 0.2426
+    },
+    {
+      "feature": "mean_abs_pitch",
+      "gain_share": 0.0861,
+      "mean_abs_contribution": 0.2389
+    },
+    {
+      "feature": "mean_abs_roll",
+      "gain_share": 0.0838,
+      "mean_abs_contribution": 0.1973
+    },
+    {
+      "feature": "mean_abs_yaw",
+      "gain_share": 0.0806,
+      "mean_abs_contribution": 0.1692
+    },
+    {
+      "feature": "mean_yaw",
+      "gain_share": 0.0842,
+      "mean_abs_contribution": 0.1651
+    },
+    {
+      "feature": "mean_gaze_ratio",
+      "gain_share": 0.0856,
+      "mean_abs_contribution": 0.1537
+    },
+    {
+      "feature": "mean_pitch",
+      "gain_share": 0.0898,
+      "mean_abs_contribution": 0.1291
+    },
+    {
+      "feature": "mean_roll",
+      "gain_share": 0.0776,
+      "mean_abs_contribution": 0.1273
+    },
+    {
+      "feature": "face_visibility_ratio",
+      "gain_share": 0.0447,
+      "mean_abs_contribution": 0.0022
+    }
+  ]
+}

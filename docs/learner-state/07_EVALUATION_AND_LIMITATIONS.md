@@ -74,6 +74,59 @@ models (confusion: identical; disengagement: ROC-AUC 0.5363 vs 0.5362).
 The variant was chosen because every input becomes producible by MindBridge, not because of its
 test score; the validation scores show the same negligible difference.
 
+### 2.2 Model comparison
+
+To check the choice of XGBoost, each deployed model was compared with Logistic Regression, a
+Random Forest and LightGBM on exactly the same data, features, labels and learner-wise splits
+(`research/learner-state/notebooks/kaggle_model_comparison_cells.py`; results in
+`model_comparison_results.json`). XGBoost used the deployed settings and reproduced the published
+test ROC-AUC of all four models. The other models used common, untuned settings with class
+weighting; missing values were median-imputed for Logistic Regression and the Random Forest. Each
+threshold was chosen on validation (best macro-F1, 0.01–0.99); the test split was used once per
+model.
+
+Test ROC-AUC (PR-AUC in brackets):
+
+| Model | XGBoost (deployed) | Logistic Regression | Random Forest | LightGBM | Test positive rate |
+| --- | --- | --- | --- | --- | --- |
+| Confusion behaviour | 0.760 (0.142) | 0.632 (0.059) | 0.763 (0.152) | 0.759 (0.143) | 4.2% |
+| Disengagement behaviour | 0.534 (0.172) | 0.525 (0.168) | 0.532 (0.171) | 0.534 (0.172) | 15.7% |
+| Confusion visual | 0.576 (0.388) | 0.588 (0.403) | 0.580 (0.384) | 0.551 (0.375) | 32.7% |
+| Disengagement visual | 0.687 (0.139) | 0.768 (0.203) | 0.732 (0.135) | 0.687 (0.123) | 4.9% |
+
+How to read this:
+
+- **Behaviour (4.3 million training rows):** the three tree ensembles perform alike, and Logistic
+  Regression is clearly worse for confusion, so the relationships are non-linear and a tree
+  ensemble is appropriate. XGBoost is as good as the alternatives and additionally handles missing
+  values natively and exports small JSON trees that the backend evaluates without a library.
+- **Disengagement behaviour:** every model is close to chance, so the limit is the data and the
+  proxy label, not the model choice.
+- **Visual (about 5,400 training clips):** simpler models do as well or better. For visual
+  disengagement Logistic Regression reached 0.768 against 0.687 for the deployed XGBoost, which
+  suggests the tree model overfits the small dataset. Replacing that model is future work; it is
+  not changed here, because the evaluation is a single split.
+- These come from one split without confidence intervals. The visual disengagement test set has
+  about 88 positive clips, so differences of about 0.01 are not meaningful.
+
+### 2.3 Feature importance
+
+Importance of each feature in the deployed models, as XGBoost gain and as mean absolute
+contribution to the prediction on test data (`feature_importance_results.json`):
+
+| Model | Most influential features |
+| --- | --- |
+| Confusion behaviour | response timing (`overlap_time`, `ms_first_response`), then `hint_count` and `attempt_count`; `correct` contributes little |
+| Disengagement behaviour | weak and spread out: `overlap_time`, `hint_count` and the learner-history features (recent hints, accuracy and response time) |
+| Confusion visual | `mean_abs_yaw`, `std_eye_openness`, `std_gaze_ratio`, `mean_eye_openness` |
+| Disengagement visual | `std_eye_openness`, `mean_eye_openness`, `std_gaze_ratio`, `mean_abs_pitch` |
+
+`face_visibility_ratio` contributes almost nothing to the visual models, because faces are visible
+in almost every DAiSEE clip; in MindBridge it acts through visual reliability instead
+([`04` §1](04_RELIABILITY_AND_FUSION.md#1-visual-reliability)). In the game adventures `hint_count` and `attempt_count` are
+constant (0 and 1, [`11` §6](11_GAME_INTEGRATION.md#6-behavioural-fields)), so the behaviour models
+mostly see timing and correctness there.
+
 These are **unimodal results on public datasets** with **proxy labels** (§4.1). They are not
 results for MindBridge learners and say nothing about the multimodal pipeline.
 
@@ -81,7 +134,7 @@ Other facts that can be verified from the repository:
 
 | Item | Value | Source |
 | --- | --- | --- |
-| Model type | XGBoost, `binary:logistic`, 300 trees each | model JSON files, notebooks |
+| Model type | XGBoost, `binary:logistic`, 300 trees each; behaviour: depth 6, learning rate 0.05; visual: depth 4, learning rate 0.03 | model JSON files, notebooks |
 | Feature counts | 11 visual, 8 confusion behaviour, 18 disengagement behaviour | `model_loader.py`, checked against model files at load time |
 | End-to-end API behaviour | 200, 404, 409 and 422 responses | `backend/tests/test_learner_state.py` |
 
