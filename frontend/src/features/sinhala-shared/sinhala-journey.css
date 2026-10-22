@@ -1,0 +1,234 @@
+/* Shared Sinhala journeys: cream/purple shared-shell look; every target is at least 48×48 CSS px. */
+.sinhala-journey {
+	--pj-ink: #3b2a63;
+	--pj-purple: #6d4bb3;
+	--pj-cream: #fff8ec;
+	display: grid;
+	gap: 0.9rem;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 640px;
+	min-height: 100dvh;
+	margin: 0 auto;
+	padding: max(12px, env(safe-area-inset-top))
+		max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+		max(16px, env(safe-area-inset-left));
+	color: var(--pj-ink);
+	background: var(--pj-cream);
+	font-family: "Noto Sans Sinhala", "Iskoola Pota", system-ui, sans-serif;
+	overflow-x: hidden;
+}
+.sinhala-journey * {
+	box-sizing: border-box;
+	min-width: 0;
+}
+.pj-header {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+.pj-header h1 {
+	margin: 0;
+	font-size: clamp(1.25rem, 6vw, 1.7rem);
+	line-height: 1.6;
+}
+.pj-header p {
+	margin: 0;
+	color: var(--pj-purple);
+	font-weight: 700;
+}
+.pj-activities {
+	display: grid;
+	gap: 0.7rem;
+}
+.pj-activity-card,
+.pj-card,
+.pj-dock,
+.sinhala-journey .primary-action,
+.sinhala-journey .text-action {
+	min-width: 48px;
+	min-height: 48px;
+	border-radius: 16px;
+	font: inherit;
+	line-height: 1.7;
+}
+.pj-activity-card {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: 0.15rem 0.7rem;
+	padding: 0.8rem 1rem;
+	border: 2px solid #e2d6f6;
+	background: #fff;
+	color: inherit;
+	text-align: start;
+}
+.pj-activity-card > span {
+	grid-row: span 2;
+	font-size: 1.5rem;
+}
+.pj-activity-card small {
+	color: #6a5a8c;
+}
+.pj-play h2,
+.pj-support h2,
+.pj-support h3 {
+	margin: 0;
+	font-size: 1.05rem;
+	line-height: 1.8;
+	overflow-wrap: anywhere;
+}
+.pj-board {
+	display: grid;
+	gap: 0.75rem;
+}
+.pj-canvas {
+	width: 100%;
+	height: min(58dvh, 420px);
+	min-height: 300px;
+	border-radius: 20px;
+	overflow: hidden;
+	touch-action: none;
+}
+.pj-canvas[data-phaser-surface="unavailable"] {
+	display: none;
+}
+.pj-controls {
+	display: grid;
+	gap: 0.6rem;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+.pj-controls legend {
+	padding: 0;
+	font-weight: 700;
+	line-height: 1.7;
+}
+.pj-cards,
+.pj-docks {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+}
+.pj-card,
+.pj-dock {
+	padding: 0.35rem 0.8rem;
+	border: 2px solid var(--pj-purple);
+	background: #fff;
+	color: inherit;
+}
+.pj-card[aria-pressed="true"] {
+	outline: 3px solid var(--pj-purple);
+	outline-offset: 2px;
+	background: #f1e9ff;
+}
+.pj-card[aria-pressed="true"]::after {
+	content: " ✓";
+}
+.pj-dock {
+	flex: 1 1 8rem;
+	border-style: dashed;
+	overflow-wrap: anywhere;
+}
+.sinhala-journey button:focus-visible {
+	outline: 3px solid #1f6feb;
+	outline-offset: 3px;
+}
+.pj-glyph,
+.pj-glyph-inline {
+	font-family: "Noto Sans Sinhala", "Iskoola Pota", sans-serif;
+	line-height: 1.9;
+}
+.pj-glyph {
+	display: inline-block;
+	padding: 0.2em 0.35em;
+	font-size: 2.2rem;
+}
+.pj-glyph-inline {
+	font-size: 1.45rem;
+}
+.pj-target,
+.pj-preview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem 1rem;
+	margin: 0;
+}
+.pj-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 0.6rem;
+}
+.pj-demo,
+.pj-support,
+.pj-feedback,
+.pj-worked {
+	display: grid;
+	gap: 0.7rem;
+	padding: 1rem;
+	border-radius: 20px;
+	background: #fff;
+	border: 2px solid #e2d6f6;
+}
+.pj-demo-board {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.8rem;
+}
+.pj-note {
+	margin: 0;
+	color: #6a5a8c;
+	font-size: 0.9rem;
+}
+.pj-guidance {
+	margin: 0;
+	padding-inline-start: 1.3rem;
+	line-height: 1.8;
+}
+.pj-cue,
+.pj-gentle {
+	margin: 0;
+	line-height: 1.8;
+}
+.pj-offline,
+.pj-status {
+	margin: 0;
+	padding: 0.7rem 1rem;
+	border-radius: 14px;
+	background: #fff3cd;
+}
+.sinhala-journey .sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+	.sinhala-journey,
+	.sinhala-journey * {
+		transition: none;
+		animation: none;
+	}
+}
+.sinhala-journey .pj-demo-text {
+	margin: 0;
+	font-size: 1.35rem;
+	line-height: 1.9;
+	text-align: center;
+	overflow-wrap: anywhere;
+}
+.sinhala-journey .pj-activity-card[data-blocked] {
+	opacity: 0.7;
+}
+.sinhala-journey .pj-activity-card em {
+	grid-column: 2;
+	font-style: normal;
+	color: #6a5a8c;
+}

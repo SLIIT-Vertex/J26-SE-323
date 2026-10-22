@@ -1,0 +1,74 @@
+/* SIN-03 board details; the shell comes from the shared Sinhala journey styles. */
+.riddle-journey .rd-riddle {
+	display: grid;
+	gap: 0.45rem;
+	margin: 0;
+	padding: 0.75rem;
+	border: 2px solid #e2d6f6;
+	border-radius: 18px;
+	background: #fff;
+}
+.riddle-journey .rd-riddle legend {
+	font-weight: 700;
+	line-height: 1.8;
+}
+.riddle-journey .rd-line {
+	min-height: 48px;
+	padding: 0.3rem 0.8rem;
+	border: 2px solid transparent;
+	border-radius: 12px;
+	background: #fbf8ff;
+	color: inherit;
+	font: inherit;
+	font-size: 1.15rem;
+	line-height: 1.9;
+	text-align: start;
+	overflow-wrap: anywhere;
+}
+.riddle-journey .rd-line[aria-pressed="true"] {
+	border-color: #6d4bb3;
+	background: #f1e9ff;
+}
+.riddle-journey .rd-line[aria-pressed="true"]::before {
+	content: "✓ ";
+}
+.riddle-journey .rd-line[data-outlined] {
+	outline: 3px dashed #6d4bb3;
+	outline-offset: 2px;
+}
+.riddle-journey .rd-canvas {
+	height: min(48dvh, 360px);
+}
+.riddle-journey .rd-cards {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.riddle-journey .rd-card {
+	font-size: 1.1rem;
+}
+.riddle-journey .rd-chest {
+	margin: 0;
+	line-height: 1.8;
+}
+.riddle-journey .rd-reveal {
+	display: grid;
+	justify-items: center;
+	gap: 0.3rem;
+	margin: 0.4rem 0;
+	font-size: 1.6rem;
+}
+.riddle-journey .rd-reveal figcaption {
+	font-size: 1.1rem;
+	font-weight: 700;
+}
+.sinhala-journey .pj-demo-riddle p {
+	margin: 0;
+	text-align: center;
+	line-height: 1.9;
+	font-size: 1.15rem;
+}
+.sinhala-journey .pj-demo-riddle .pj-demo-answer {
+	margin-top: 0.5rem;
+	font-weight: 700;
+	font-size: 1.35rem;
+}
