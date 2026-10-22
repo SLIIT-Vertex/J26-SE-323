@@ -13,7 +13,8 @@ FAMILY_NAMES = {
     "procedure": "Missed a step",
     "relation": "Mixed up two ideas",
     "prerequisite": "An earlier skill is missing",
-    "unclear": "Not sure yet",
+    # Model 1 abstained: too little or too uncertain evidence to name a reason.
+    "unclear": "Reason not identified",
 }
 STATUS_NAMES = {
     "completed": "Finished",
@@ -38,6 +39,8 @@ STATUS_NAMES = {
     "supported_success": "Managed it with help",
     "failed": "This help was not enough",
     "order_exhausted": "Every available help was tried",
+    "viewed": "Watched the demonstration",
+    "support_viewed": "Watched the demonstration",
     "valid": "Passed the fair-test checks",
     "invalid": "Left out of the results",
     "not_applicable_no_support": "No help was needed",
@@ -50,7 +53,7 @@ STATUS_NAMES = {
     "confused": "A bit confused",
     "disengaged": "Losing focus",
     "not_available": "No fresh reading",
-    "uncertain": "Not sure yet",
+    "uncertain": "The reading was not clear enough",
     "engaged": "Focused",
     "not_confused": "Calm and focused",
     "request_reengagement_support": "A short success may help bring focus back",
@@ -85,7 +88,8 @@ def reason_name(code: object, subject: str = "MAT") -> str:
     """Readable names for chart labels and recorded mistake summaries."""
     text = str(code or "")
     named = {
-        "unknown_or_other": "Not sure yet",
+        # The mistake matched no known pattern in the area's catalogue.
+        "unknown_or_other": "Reason not identified",
         "wrong_direction": "Used the wrong direction",
         "origin_not_retained": "Forgot the starting place",
         "destination_ignored": "Missed the destination",
@@ -102,7 +106,7 @@ def reason_name(code: object, subject: str = "MAT") -> str:
     if text in named:
         return named[text]
     if not text or text in {"None", "unknown", "other"}:
-        return "Not sure yet"
+        return "Reason not identified"
     if "_vs_" in text:
         return "Mixed up " + text.removesuffix("_confusion").replace("_vs_", " and ").replace(
             "_", " "

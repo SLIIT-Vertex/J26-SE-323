@@ -1,9 +1,8 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import type {
 	GainSeries,
 	HistoryEntry,
 	MisconceptionSeries,
-	ModelChange,
 	SupportSeries,
 } from "./api";
 import {
@@ -16,64 +15,8 @@ import {
 	pct,
 	RunningRateBand,
 	StackedBar100,
-	SymbolTimeline,
-	shortDate,
 } from "./charts";
 import { answerLabel, GameRow, PlayStatus } from "./game-row";
-
-function chipText(change: ModelChange, fallback: string): string {
-	if (change.kind === "confidence")
-		return `Confidence ${pct(change.from)} → ${pct(change.to)}`;
-	if (change.kind === "reason")
-		return `Reason changed: ${change.from} → ${change.to}`;
-	if (change.kind === "first_help") return "First help changed";
-	if (change.kind === "record") return `Record ${change.from} → ${change.to}`;
-	if (change.kind === "learned") return "Learned: credit recorded";
-	if (change.kind === "gain")
-		return change.value ? "Could do it alone" : "Still needed help";
-	return fallback;
-}
-
-function GameCard({ entry }: { entry: HistoryEntry }) {
-	const chips = (entry.changes ?? []).slice(0, 2);
-	const card = useRef<HTMLElement>(null);
-	useEffect(() => {
-		const id = entry.episode_id;
-		if (id) card.current?.scrollIntoView?.({ block: "nearest" });
-	}, [entry.episode_id]);
-	return (
-		<article className="rd-game-card" aria-live="polite" ref={card}>
-			<h4>{entry.game}</h4>
-			<p>{entry.headline}</p>
-			<p>
-				<span className="rd-tick">{entry.game}</span>{" "}
-				<span className="rd-tick">{shortDate(entry.played_at)}</span>{" "}
-				<PlayStatus status={entry.play_status} />
-			</p>
-			<ul className="rd-chips">
-				{chips.length ? (
-					chips.map((change) => (
-						<li className="rd-chip" key={chipText(change, change.kind)}>
-							{change.kind === "first_help" && (
-								<>
-									<HelpMark code={change.from} />
-									<span aria-hidden="true">→</span>
-									<HelpMark code={change.to} />
-								</>
-							)}
-							{(change.kind === "record" || change.kind === "learned") && (
-								<HelpMark code={change.help} />
-							)}
-							<span>{chipText(change, "")}</span>
-						</li>
-					))
-				) : (
-					<li className="rd-chip is-muted">No change</li>
-				)}
-			</ul>
-		</article>
-	);
-}
 
 /** Every help, most to least preferred, from what worked when help was removed. */
 function HelpRanking({
@@ -215,18 +158,14 @@ function ModelTab({
 	large,
 	small,
 	recent,
-	selected,
-	entry,
 }: {
 	title: string;
 	question: string;
 	top?: ReactNode;
 	kpis: ReactNode;
-	large: ReactNode;
+	large?: ReactNode;
 	small: ReactNode;
 	recent: ReactNode;
-	selected: string | null;
-	entry: HistoryEntry | undefined;
 }) {
 	return (
 		<div className="rd-model">
@@ -234,15 +173,14 @@ function ModelTab({
 				<h3>{title}</h3>
 				<p>{question}</p>
 			</header>
-			{top}
 			<ul className="rd-kpis">{kpis}</ul>
-			<div className="rd-model__large">{large}</div>
+			{top}
+			{large && <div className="rd-model__large">{large}</div>}
 			<div className="rd-model__small">{small}</div>
 			<section className="rd-recent" aria-label="Recent games">
 				<h4>Recent games</h4>
 				<ul>{recent}</ul>
 			</section>
-			{selected && entry ? <GameCard entry={entry} /> : null}
 		</div>
 	);
 }
@@ -263,8 +201,6 @@ export function MisconceptionTab({
 		<ModelTab
 			title="Probabilistic Misconception"
 			question="Why did the child get it wrong?"
-			selected={selected}
-			entry={history.find((row) => row.episode_id === selected)}
 			kpis={
 				<>
 					<KpiTile
@@ -390,8 +326,6 @@ export function SupportTab({
 			top={
 				data.preference?.length ? <HelpRanking rows={data.preference} /> : null
 			}
-			selected={selected}
-			entry={history.find((row) => row.episode_id === selected)}
 			kpis={
 				<>
 					<KpiTile label="Help sessions" value={String(data.kpis.sessions)} />
@@ -405,17 +339,6 @@ export function SupportTab({
 						value={String(data.kpis.skills_with_best_help)}
 					/>
 				</>
-			}
-			large={
-				<SymbolTimeline
-					points={data.points.map((point) => ({
-						...point,
-						game: history.find((entry) => entry.episode_id === point.episode_id)
-							?.game,
-					}))}
-					selected={selected}
-					onSelect={onSelect}
-				/>
 			}
 			small={
 				<>
@@ -505,8 +428,6 @@ export function GainTab({
 			title="Independence Gain"
 			question="After help is removed, can the child do it alone?"
 			top={<BeforeAfter grid={data.grid} />}
-			selected={selected}
-			entry={history.find((row) => row.episode_id === selected)}
 			kpis={
 				<>
 					<KpiTile label="Fair tests" value={String(data.kpis.fair_tests)} />
@@ -525,14 +446,16 @@ export function GainTab({
 					onSelect={onSelect}
 				/>
 			}
-			small={<DotStrip
-						title="By game"
-						ariaLabel="Fair tests in date order for each game area."
-						rows={data.by_game.map((row) => ({
-							label: row.game,
-							points: row.points,
-						}))}
-					/>}
+			small={
+				<DotStrip
+					title="By game"
+					ariaLabel="Fair tests in date order for each game area."
+					rows={data.by_game.map((row) => ({
+						label: row.game,
+						points: row.points,
+					}))}
+				/>
+			}
 			recent={data.recent.slice(0, 8).map((row) => {
 				const entry = history.find(
 					(item) => item.episode_id === row.episode_id,

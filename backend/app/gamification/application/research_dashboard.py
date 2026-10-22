@@ -68,6 +68,8 @@ class ResearchDashboardReader(Protocol):
 
     def all_runs(self) -> list[dict[str, object]]: ...
 
+    def run_versions(self) -> tuple[tuple[str, str, str], ...]: ...
+
 
 class ResearchDashboardService:
     def __init__(self, reader: ResearchDashboardReader, *, now=lambda: datetime.now(UTC)) -> None:
@@ -304,18 +306,26 @@ class ResearchDashboardService:
         }
 
     def accuracy(self, learner_id):
-        runs = self._reader.runs(learner_id)
-        key = (
-            str(learner_id),
-            tuple(
-                (str(_state(r).get("episode_id")), str(r["updated_at"]), r["status"]) for r in runs
-            ),
+        # The report follows the database: it is rebuilt whenever any stored game (this child's
+        # or another's, which the population checks use) has changed, and reused only while none
+        # has.
+        versions = getattr(self._reader, "run_versions", None)
+        fingerprint = (
+            versions()
+            if versions
+            else tuple(
+                (str(_state(r).get("episode_id")), str(r["updated_at"]), r["status"])
+                for r in self._reader.all_runs()
+            )
         )
+        key = (str(learner_id), fingerprint)
         cached = _ACCURACY_CACHE.get(key)
-        if cached and monotonic() - cached[0] < 60:
+        if cached:
             return cached[1]
-        result = accuracy_report(runs, all_runs=self._reader.all_runs())
-        # Parameter replays run on this child's stored games, so they stay current.
+        runs = self._reader.runs(learner_id)
+        all_runs = self._reader.all_runs()
+        result = accuracy_report(runs, all_runs=all_runs)
+        result["computed_at"] = self._now().isoformat()
         result["offline"] = replay_report(runs, learner_id)
         result["simulation"] = None
         if SIMULATION_REPORT.exists():

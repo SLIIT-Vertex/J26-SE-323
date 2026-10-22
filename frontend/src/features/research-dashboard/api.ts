@@ -282,6 +282,8 @@ export interface ModelSetting {
 }
 export interface AccuracyReport {
 	generated_at: string;
+	/** When the server last rebuilt the report from the stored games. */
+	computed_at?: string;
 	purpose: string;
 	minimum_sessions?: number;
 	models: {

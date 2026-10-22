@@ -145,7 +145,7 @@ def test_simulated_learners_measure_each_model_against_known_answers():
     data = report(result, assumptions)
 
     assert result.problems == []
-    assert data["cohort"]["sessions"] == 2 * 34 * 2
+    assert data["cohort"]["sessions"] == 2 * 37 * 2
     names = [model["name"] for model in data["models"]]
     assert names == [
         "Probabilistic Misconception",

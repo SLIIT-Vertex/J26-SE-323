@@ -675,7 +675,9 @@ describe("judge-facing research dashboard", () => {
 		]) {
 			await tab(host, label);
 			expect(host.querySelectorAll(".rd-kpi")).toHaveLength(3);
-			expect(host.querySelector(".rd-model__large .is-large")).toBeTruthy();
+			// Contextual Support Selection shows its KPIs and lists, without a timeline.
+			if (label !== "Contextual Support Selection")
+				expect(host.querySelector(".rd-model__large .is-large")).toBeTruthy();
 			expect(host.querySelectorAll(".rd-recent li").length).toBeLessThanOrEqual(
 				8,
 			);
@@ -782,35 +784,6 @@ describe("judge-facing research dashboard", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("shows a newly live point on the next poll", async () => {
-		vi.useFakeTimers();
-		const client = fakeClient();
-		let calls = 0;
-		client.series = vi.fn(async () => {
-			calls += 1;
-			if (calls < 2) return { ...support, points: [] };
-			return {
-				...support,
-				points: [
-					{
-						episode_id: "e-live",
-						at: "2026-10-21T12:00:00Z",
-						first_help: null,
-						outcome: "live" as const,
-					},
-				],
-			};
-		}) as ResearchClient["series"];
-		const { host, root } = await mount(client);
-		await tab(host, "Contextual Support Selection");
-		await act(async () => {
-			await vi.advanceTimersByTimeAsync(1600);
-		});
-		expect(host.querySelector('[data-outcome="live"]')).toBeTruthy();
-		await act(async () => root.unmount());
-		vi.useRealTimers();
-	});
-
 	it("does not call an abandoned game being played now", async () => {
 		const client = fakeClient();
 		client.history = vi.fn(async () => ({
@@ -832,7 +805,6 @@ describe("judge-facing research dashboard", () => {
 		await tab(host, "Contextual Support Selection");
 		expect(host.textContent?.toLowerCase()).not.toContain("being played now");
 		expect(host.textContent).toContain("Stopped partway · not counted");
-		expect(host.querySelector("[data-outcome='abandoned']")).toBeTruthy();
 		await act(async () => root.unmount());
 	});
 

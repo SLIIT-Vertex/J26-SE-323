@@ -8,14 +8,7 @@ import type {
 	Overview,
 	Trace,
 } from "./api";
-import {
-	HELP_STYLE,
-	HelpMark,
-	KpiTile,
-	PlayGrid,
-	pct,
-	WeeklyBars,
-} from "./charts";
+import { HELP_STYLE, HelpMark, KpiTile, pct, WeeklyBars } from "./charts";
 import { answerLabel, GameRow, PlayStatus } from "./game-row";
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
@@ -87,7 +80,6 @@ export function OverviewPanel({
 				{overview.counts.abandoned ?? 0}
 			</p>
 			<WeeklyBars weeks={overview.weeks ?? []} />
-			<PlayGrid cells={[...maths, ...english]} />
 			<section className="rd-recent" aria-label="Recent games">
 				<h4>Recent games</h4>
 				{recent.length ? (
@@ -395,6 +387,18 @@ export function AccuracyPanel({ report }: { report: AccuracyReport }) {
 					Rates include an estimated range when available. Under{" "}
 					{report.minimum_sessions ?? 20} games it is marked as an early sign.
 				</p>
+				{report.computed_at && (
+					<p className="rd-quiet">
+						Calculated from the stored games at{" "}
+						{new Date(report.computed_at).toLocaleTimeString("en-GB", {
+							hour: "2-digit",
+							minute: "2-digit",
+							second: "2-digit",
+							timeZone: "Asia/Colombo",
+						})}
+						; it updates as soon as a game is played.
+					</p>
+				)}
 			</header>
 			<div className="rd-validate-grid">
 				{report.models.map((model) => (
@@ -528,19 +532,6 @@ export function ProfilePanel({ profile }: { profile: LearnerProfile }) {
 						{profile.areas_available.ENG} games tried
 					</dd>
 				</dl>
-			</Card>
-			<Card title="Mistakes seen most often">
-				{profile.mistakes.length ? (
-					<ul>
-						{profile.mistakes.map((row) => (
-							<li key={`${row.title}-${row.reason}`}>
-								{row.title}: {row.reason} ({row.count})
-							</li>
-						))}
-					</ul>
-				) : (
-					<p>No mistakes have been recorded yet.</p>
-				)}
 			</Card>
 		</div>
 	);
