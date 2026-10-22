@@ -12,7 +12,8 @@ import {
 	type SupportSeries,
 	type Trace,
 } from "./api";
-import { GainTab, MisconceptionTab, SupportTab } from "./model-tabs";
+import { GameDetailSheet } from "./GameDetailSheet";
+import { GainTab, MisconceptionTab, SupportTab } from "./ModelTabs";
 import {
 	AccuracyPanel,
 	EmptyStep,
@@ -77,6 +78,8 @@ export function ResearchDashboard({
 		pickedRef.current = id;
 		setPickedState(id);
 	}, []);
+	// The game opened from a model tab, shown in the bottom sheet.
+	const [sheetTrace, setSheetTrace] = useState<Trace | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
 	const dialog = useRef<HTMLDivElement>(null);
@@ -109,6 +112,23 @@ export function ResearchDashboard({
 		}
 		setError(null);
 	}, [client, learnerId, tab]);
+	const sheetModel = HISTORY_TABS[tab];
+	useEffect(() => {
+		setSheetTrace(null);
+		if (!picked || !sheetModel) return;
+		let cancelled = false;
+		void client
+			.trace(picked)
+			.then((traced) => {
+				if (!cancelled) setSheetTrace(traced);
+			})
+			.catch(() => {
+				if (!cancelled) setError("This game's details could not be loaded.");
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [client, picked, sheetModel]);
 	useEffect(() => {
 		let stopped = false;
 		let timer: ReturnType<typeof setTimeout>;
@@ -123,7 +143,7 @@ export function ResearchDashboard({
 						);
 				}
 			}
-			if (!stopped) timer = setTimeout(tick, tab === "accuracy" ? 60000 : 1500);
+			if (!stopped) timer = setTimeout(tick, tab === "accuracy" ? 5000 : 1500);
 		};
 		void tick();
 		return () => {
@@ -286,6 +306,13 @@ export function ResearchDashboard({
 						<EmptyStep text="Checking the recorded games…" />
 					))}
 			</div>
+			{picked && sheetModel && (
+				<GameDetailSheet
+					model={sheetModel}
+					trace={sheetTrace}
+					onClose={() => setPicked(null)}
+				/>
+			)}
 		</div>
 	);
 }

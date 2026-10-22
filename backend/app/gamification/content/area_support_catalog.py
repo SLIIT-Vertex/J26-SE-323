@@ -31,9 +31,16 @@ GAME_SUPPORT_TYPES = ORIGINAL_GAME_SUPPORT_TYPES
 # Mathematics and English areas run the multi-help loop over every type in the shared contract.
 MATHEMATICS_SUPPORT_TYPES = SUPPORT_TYPES
 ENGLISH_SUPPORT_TYPES = SUPPORT_TYPES
+# Riddles get all three original types: visual guidance points at the learner's own clue
+# selections and the riddle's structure, never at the answer.
+RIDDLE_AREA = "G5-AREA-SIN-03"
+_RIDDLE_CONSTRAINT = (
+    "Visual guidance outlines only the learner's selected clue spans and the riddle's lines, never "
+    "the answer card. The worked example uses a different, non-probe riddle. Guided steps ask the "
+    "learner to pick a clue, propose an answer and check the remaining clues."
+)
 VERBAL_RELATION_AREAS = frozenset(
     {
-        "G5-AREA-SIN-03",
         "G5-AREA-SIN-04",
         "G5-AREA-SIN-05",
         "G5-AREA-SIN-06",
@@ -46,6 +53,7 @@ VERBAL_RELATION_AREAS = frozenset(
 INVITATION_AREA = "G5-AREA-SIN-13"
 GameSupportType = SupportType
 SupportRule = Literal[
+    "riddle_inference",
     "visible_structure_and_procedure",
     "highlightable_form",
     "verbal_relation",
@@ -113,6 +121,13 @@ def assignment(area_id: str) -> SupportAssignment:
             eligible_support_types=MATHEMATICS_SUPPORT_TYPES,
             rule="visible_structure_and_procedure",
             rendering_constraint=_STRUCTURE_CONSTRAINT,
+        )
+    if area_id == RIDDLE_AREA:
+        return SupportAssignment(
+            template_id=template_id,
+            eligible_support_types=GAME_SUPPORT_TYPES,
+            rule="riddle_inference",
+            rendering_constraint=_RIDDLE_CONSTRAINT,
         )
     if area_id in VERBAL_RELATION_AREAS:
         return SupportAssignment(
@@ -183,7 +198,7 @@ class AreaSupportCatalog(FrozenModel):
     publication_status: Literal["blocked"]
     authoring_basis: Literal["provisional_development_assumption"]
     review_status: Literal["unreviewed"]
-    rows: tuple[AreaSupportRow, ...] = Field(min_length=55, max_length=55)
+    rows: tuple[AreaSupportRow, ...] = Field(min_length=54, max_length=54)
 
     @model_validator(mode="after")
     def require_every_mapped_area(self) -> AreaSupportCatalog:

@@ -1185,7 +1185,7 @@
       ],
       "outcome_slots": [],
       "publication_status": "blocked",
-      "template_id": "word_workshop"
+      "template_id": "pillam_journey"
     },
     {
       "area_id": "G5-AREA-SIN-02",
@@ -1195,7 +1195,7 @@
       "held_slots": [],
       "outcome_slots": [],
       "publication_status": "blocked",
-      "template_id": "word_workshop"
+      "template_id": "punctuation_journey"
     },
     {
       "area_id": "G5-AREA-SIN-03",
@@ -1496,7 +1496,7 @@
       ],
       "outcome_slots": [],
       "publication_status": "blocked",
-      "template_id": "word_workshop"
+      "template_id": "riddle_journey"
     },
     {
       "area_id": "G5-AREA-SIN-04",
@@ -1615,127 +1615,6 @@
       "development_only": true,
       "draft_item_slots": [],
       "held_slots": [],
-      "outcome_slots": [],
-      "publication_status": "blocked",
-      "template_id": "word_workshop"
-    },
-    {
-      "area_id": "G5-AREA-SIN-16",
-      "cited_node_id": "G5-SIN-C04-L10-O08",
-      "development_only": true,
-      "draft_item_slots": [
-        {
-          "area_match": true,
-          "confidence": "high",
-          "draft_item": true,
-          "item_text": "අක්ෂර වින්‍යාසයේ නිවැරදි භාවිතය ප්‍රදර්ශනය කරයි.",
-          "node_id": "G5-SIN-C04-L10-O08",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked"
-        }
-      ],
-      "held_slots": [
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L01-O01",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "වචන අතර පරතරය තබමින් ලියයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L01-O02",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "විරාම ලක්ෂණ නිවැරදි ව භාවිත කරමින් ලියයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L03-O01",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "චිත්‍රපටයක් නරඹා එහි සිත් ගත් අවස්ථාවක් චිත්‍රයට නඟයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L06-O01",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "සුබ පැතුම් පත් නිර්මාණශීලී ව සකස් කිරීමේ කුසලතාව ප්‍රදර්ශනය කරයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L06-O02",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "තොරතුරුවල සුවිශේෂතා කෙරෙහි අවධානය යොමු කර නිවැරදි ව වගුගත කරයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L06-O03",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "පෞද්ගලික ලිපියක සුවිශේෂතා කෙරෙහි සැලකිලිමත් ව ලිපි ලියයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L06-O04",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "ආරාධනා පත්‍රයක් සකස් කර ඉදිරිපත් කරයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L06-O05",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "ආකෘති පත්‍රයක් නිවැරදි ව සම්පූර්ණ කරයි."
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L07-O01",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "මාතෘකාවකට අදාළ ව වාක්‍ය ලියයි. ජන කවි ක්‍රියාකාරකම 01 පියවර 1 :"
-        },
-        {
-          "child_question": null,
-          "confidence": "low",
-          "draft_item": false,
-          "held": true,
-          "node_id": "G5-SIN-C04-L09-O01",
-          "parent_area_id": "G5-AREA-SIN-16",
-          "publication_status": "blocked",
-          "traced_text": "නිර්මාණශීලී ව ළමා කවි ගොඩනඟයි."
-        }
-      ],
       "outcome_slots": [],
       "publication_status": "blocked",
       "template_id": "word_workshop"

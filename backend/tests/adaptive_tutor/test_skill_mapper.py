@@ -132,6 +132,7 @@ def test_optional_enrichment_adds_passages_without_changing_skill_identity(
     }
 
 
+@pytest.mark.requires_research
 def test_enrichment_catalog_validates_membership_and_provenance() -> None:
     nodes = XlsxSkillTaxonomyCatalog(REPOSITORY_ROOT / "docs/skill_nodes.xlsx").load()
     enrichments = JsonSkillTaxonomyEnrichmentCatalog(
@@ -487,6 +488,7 @@ def test_semantic_relevance_gate_rejects_unsupported_and_off_topic_messages(
     assert off_topic.intent is LearningIntent.OFF_TOPIC
 
 
+@pytest.mark.requires_research
 def test_relevance_resource_is_small_and_valid() -> None:
     examples = JsonSkillRelevanceCatalog(
         REPOSITORY_ROOT / "research/adaptive-tutor/skill-mapper-relevance-v1.json"
@@ -496,6 +498,7 @@ def test_relevance_resource_is_small_and_valid() -> None:
     assert sum(map(len, examples.values())) == 7
 
 
+@pytest.mark.requires_research
 def test_development_and_held_out_evaluation_splits_are_disjoint() -> None:
     development = json.loads(
         (REPOSITORY_ROOT / "research/adaptive-tutor/skill-mapper-development-v1.json").read_text(

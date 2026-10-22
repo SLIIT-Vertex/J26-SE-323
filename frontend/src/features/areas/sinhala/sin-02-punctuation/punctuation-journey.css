@@ -1,0 +1,32 @@
+/* SIN-02 board details; the shell comes from the shared Sinhala journey styles. */
+.punctuation-journey .pu-context {
+	margin: 0;
+	padding: 0.6rem 0.8rem;
+	border-radius: 14px;
+	background: #fff;
+	line-height: 1.8;
+}
+.punctuation-journey .pu-canvas {
+	height: min(52dvh, 380px);
+}
+.punctuation-journey .pu-rail {
+	margin: 0;
+	padding: 0.5rem 0.8rem;
+	border-radius: 12px;
+	background: #fff;
+	font-size: 1.15rem;
+	line-height: 1.9;
+	overflow-wrap: anywhere;
+}
+.punctuation-journey .pu-mark {
+	min-width: 56px;
+	font-size: 1.6rem;
+}
+.punctuation-journey .pu-gaps {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+}
+.punctuation-journey .pu-gap {
+	text-align: start;
+	font-size: 0.95rem;
+}

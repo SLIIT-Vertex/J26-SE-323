@@ -1,0 +1,4 @@
+/* Pillam Journey uses the shared Sinhala journey styles; nothing package-specific yet. */
+.pillam-journey .pj-canvas {
+	min-height: 300px;
+}

@@ -48,6 +48,7 @@ def test_readiness_reports_blocks_without_printing_secrets(monkeypatch) -> None:
     assert not all(item.ready for item in checks)
 
 
+@pytest.mark.requires_research
 def test_unreviewed_fractions_template_is_not_importable() -> None:
     template = (
         Path(__file__).resolve().parents[3]

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 import app.main  # noqa: F401  imports every mapped model, as the API does
 from app.gamification.api.learning_flow_router import get_learning_flow_orchestrator
-from app.gamification.application.research_dashboard import ResearchDashboardService
+from app.gamification.application.research_dashboard.dashboard import ResearchDashboardService
 from app.gamification.demo_seed.plan import build_plan
 from app.gamification.demo_seed.runner import SeedRunner
 from app.gamification.infrastructure.db.research_dashboard_reader import (
@@ -145,7 +145,7 @@ def test_simulated_learners_measure_each_model_against_known_answers():
     data = report(result, assumptions)
 
     assert result.problems == []
-    assert data["cohort"]["sessions"] == 2 * 34 * 2
+    assert data["cohort"]["sessions"] == 2 * 37 * 2
     names = [model["name"] for model in data["models"]]
     assert names == [
         "Probabilistic Misconception",
@@ -199,7 +199,7 @@ def test_model_series_matches_history_counts(world):
 
 
 def test_support_recent_distinguishes_missing_retest_from_wrong_answer():
-    from app.gamification.application.research_history import _support_series
+    from app.gamification.application.research_dashboard.history import _support_series
 
     now = datetime.now(UTC)
     state = {

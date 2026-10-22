@@ -1,0 +1,450 @@
+{
+  "schema_version": "sinhala-pillam-source-transcription-v1",
+  "area_id": "G5-AREA-SIN-01",
+  "source": {
+    "identity": "IMG_7483.heic",
+    "sha256": "1f1a4e092f4fe25c2b1cd5a0200db9e24527ff404609e1d1ee52973283a1eaa1",
+    "media_type": "image/heic",
+    "heading_printed_si": "2 - පිල්ලම් හඳුනාගනිමු.",
+    "heading_section_number": "2",
+    "column_headers_printed_si": [
+      "පිලි නාමය",
+      "පිල්ලම",
+      "නියෝජනය වන ස්වරය",
+      "උදාහරණ"
+    ],
+    "printed_page_number": null,
+    "book_title": null,
+    "edition": null,
+    "publisher": null,
+    "rights_statement": null,
+    "role": "pedagogical_evidence_only"
+  },
+  "recorded_gaps": [
+    "NO_VISIBLE_PAGE_NUMBER_TITLE_EDITION_PUBLISHER_OR_RIGHTS: the photograph shows no printed page number, book title, edition, publisher, or rights statement. Heading number 2 is a section number, not evidence of page 2.",
+    "TEACHER_GUIDE_RELATIONSHIP_UNVERIFIED: the relationship between this photograph and SRC-G5-SIN-TG-01 page 6 (G5-SIN-C03-L01-K01) requires verification.",
+    "SENTENCE_COVERAGE_NOT_ESTABLISHED: the table alone does not establish sentence reading/writing coverage for G5-SIN-C03-L01-K01.",
+    "NEW_MATERIAL_UNREVIEWED: consonants other than the photographed ක/ල/ර/ව, vocabulary, contrast sets, and probe families are draft and need source-backed educator review.",
+    "FONT_RENDERING_REVIEW: font-specific rendering of the two long-e forms (row 13) and the consonant-specific papili (rows 6-11) requires explicit review."
+  ],
+  "discrepancies": [
+    {
+      "row": 13,
+      "field": "examples",
+      "prompt_transcription": "කේ, මේ",
+      "photograph_reading": "කේ, වේ",
+      "resolution": "photograph reading recorded; not silently corrected; Sinhala review required"
+    },
+    {
+      "row": 13,
+      "field": "sign",
+      "note": "two printed visual forms of the long-e sign; one Unicode sign U+0DDA; font-specific, review required"
+    },
+    {
+      "row": 8,
+      "field": "name_spacing",
+      "note": "printed 'ඇද පාපිල්ල' with a space while row 2 prints 'ඇදපිල්ල'; preserved as printed"
+    }
+  ],
+  "content_boundaries": {
+    "contains": [
+      "sign_names",
+      "visual_sign_forms",
+      "represented_vowels",
+      "consonant_specific_forms",
+      "compound_signs"
+    ],
+    "not_contained": [
+      "word_bank",
+      "sentence_exercise",
+      "listening_task",
+      "handwriting_instruction",
+      "answer_guide"
+    ]
+  },
+  "rows": [
+    {
+      "row": 1,
+      "locator": "IMG_7483.heic#table-row-1",
+      "printed_name_si": "ඇලපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DCF"
+      ],
+      "printed_sign_display_si": "◌ා",
+      "printed_vowel_si": "ආ",
+      "printed_examples_si": [
+        "කා"
+      ],
+      "normalized_examples_nfc": [
+        "කා"
+      ],
+      "sign_family": "simple",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 2,
+      "locator": "IMG_7483.heic#table-row-2",
+      "printed_name_si": "කෙටි ඇදපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD0"
+      ],
+      "printed_sign_display_si": "◌ැ",
+      "printed_vowel_si": "ඇ",
+      "printed_examples_si": [
+        "කැ"
+      ],
+      "normalized_examples_nfc": [
+        "කැ"
+      ],
+      "sign_family": "simple",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 3,
+      "locator": "IMG_7483.heic#table-row-3",
+      "printed_name_si": "දික් ඇදපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD1"
+      ],
+      "printed_sign_display_si": "◌ෑ",
+      "printed_vowel_si": "ඈ",
+      "printed_examples_si": [
+        "කෑ"
+      ],
+      "normalized_examples_nfc": [
+        "කෑ"
+      ],
+      "sign_family": "simple",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 4,
+      "locator": "IMG_7483.heic#table-row-4",
+      "printed_name_si": "කෙටි ඉස්පිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD2"
+      ],
+      "printed_sign_display_si": "◌ි",
+      "printed_vowel_si": "ඉ",
+      "printed_examples_si": [
+        "කි"
+      ],
+      "normalized_examples_nfc": [
+        "කි"
+      ],
+      "sign_family": "simple",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 5,
+      "locator": "IMG_7483.heic#table-row-5",
+      "printed_name_si": "දික් ඉස්පිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD3"
+      ],
+      "printed_sign_display_si": "◌ී",
+      "printed_vowel_si": "ඊ",
+      "printed_examples_si": [
+        "කී"
+      ],
+      "normalized_examples_nfc": [
+        "කී"
+      ],
+      "sign_family": "simple",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 6,
+      "locator": "IMG_7483.heic#table-row-6",
+      "printed_name_si": "කෙටි කොන් පාපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD4"
+      ],
+      "printed_sign_display_si": "◌ු",
+      "printed_vowel_si": "උ",
+      "printed_examples_si": [
+        "ලු"
+      ],
+      "normalized_examples_nfc": [
+        "ලු"
+      ],
+      "sign_family": "papili",
+      "review_flags": [
+        "FONT_SPECIFIC_ALLOGRAPH_REVIEW"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 7,
+      "locator": "IMG_7483.heic#table-row-7",
+      "printed_name_si": "කෙටි වක් පාපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD4"
+      ],
+      "printed_sign_display_si": "◌ු",
+      "printed_vowel_si": "උ",
+      "printed_examples_si": [
+        "කු"
+      ],
+      "normalized_examples_nfc": [
+        "කු"
+      ],
+      "sign_family": "papili",
+      "review_flags": [
+        "FONT_SPECIFIC_ALLOGRAPH_REVIEW"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 8,
+      "locator": "IMG_7483.heic#table-row-8",
+      "printed_name_si": "කෙටි ඇද පාපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD4"
+      ],
+      "printed_sign_display_si": "◌ු",
+      "printed_vowel_si": "උ",
+      "printed_examples_si": [
+        "රු"
+      ],
+      "normalized_examples_nfc": [
+        "රු"
+      ],
+      "sign_family": "papili",
+      "review_flags": [
+        "FONT_SPECIFIC_ALLOGRAPH_REVIEW",
+        "PRINTED_SIGN_SHAPE_RESEMBLES_ROW_2"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 9,
+      "locator": "IMG_7483.heic#table-row-9",
+      "printed_name_si": "දික් කොන් පාපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD6"
+      ],
+      "printed_sign_display_si": "◌ූ",
+      "printed_vowel_si": "ඌ",
+      "printed_examples_si": [
+        "ලූ"
+      ],
+      "normalized_examples_nfc": [
+        "ලූ"
+      ],
+      "sign_family": "papili",
+      "review_flags": [
+        "FONT_SPECIFIC_ALLOGRAPH_REVIEW"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 10,
+      "locator": "IMG_7483.heic#table-row-10",
+      "printed_name_si": "දික් වක් පාපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD6"
+      ],
+      "printed_sign_display_si": "◌ූ",
+      "printed_vowel_si": "ඌ",
+      "printed_examples_si": [
+        "කූ"
+      ],
+      "normalized_examples_nfc": [
+        "කූ"
+      ],
+      "sign_family": "papili",
+      "review_flags": [
+        "FONT_SPECIFIC_ALLOGRAPH_REVIEW"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 11,
+      "locator": "IMG_7483.heic#table-row-11",
+      "printed_name_si": "දික් ඇද පාපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD6"
+      ],
+      "printed_sign_display_si": "◌ූ",
+      "printed_vowel_si": "ඌ",
+      "printed_examples_si": [
+        "රූ"
+      ],
+      "normalized_examples_nfc": [
+        "රූ"
+      ],
+      "sign_family": "papili",
+      "review_flags": [
+        "FONT_SPECIFIC_ALLOGRAPH_REVIEW",
+        "PRINTED_SIGN_SHAPE_RESEMBLES_ROW_3"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 12,
+      "locator": "IMG_7483.heic#table-row-12",
+      "printed_name_si": "කොම්බුව",
+      "printed_sign_codepoints": [
+        "U+0DD9"
+      ],
+      "printed_sign_display_si": "◌ෙ",
+      "printed_vowel_si": "එ",
+      "printed_examples_si": [
+        "කෙ"
+      ],
+      "normalized_examples_nfc": [
+        "කෙ"
+      ],
+      "sign_family": "simple",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 13,
+      "locator": "IMG_7483.heic#table-row-13",
+      "printed_name_si": "කොම්බුව සහිත හල් කිරීමේ ලකුණ",
+      "printed_sign_codepoints": [
+        "U+0DDA"
+      ],
+      "printed_sign_display_si": "◌ේ",
+      "printed_vowel_si": "ඒ",
+      "printed_examples_si": [
+        "කේ",
+        "වේ"
+      ],
+      "normalized_examples_nfc": [
+        "කේ",
+        "වේ"
+      ],
+      "sign_family": "compound",
+      "review_flags": [
+        "TWO_PRINTED_SIGN_FORMS",
+        "SECOND_EXAMPLE_READS_VE_NOT_ME",
+        "FONT_SPECIFIC_LONG_E_REVIEW"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 14,
+      "locator": "IMG_7483.heic#table-row-14",
+      "printed_name_si": "කොම්බුව සහිත ඇලපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DDC"
+      ],
+      "printed_sign_display_si": "◌ො",
+      "printed_vowel_si": "ඔ",
+      "printed_examples_si": [
+        "කො"
+      ],
+      "normalized_examples_nfc": [
+        "කො"
+      ],
+      "sign_family": "compound",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 15,
+      "locator": "IMG_7483.heic#table-row-15",
+      "printed_name_si": "කොම්බුව, ඇලපිල්ල සහිත හල් කිරීමේ ලකුණ",
+      "printed_sign_codepoints": [
+        "U+0DDD"
+      ],
+      "printed_sign_display_si": "◌ෝ",
+      "printed_vowel_si": "ඕ",
+      "printed_examples_si": [
+        "කෝ"
+      ],
+      "normalized_examples_nfc": [
+        "කෝ"
+      ],
+      "sign_family": "compound",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 16,
+      "locator": "IMG_7483.heic#table-row-16",
+      "printed_name_si": "ගැටඇලපිල්ල",
+      "printed_sign_codepoints": [
+        "U+0DD8"
+      ],
+      "printed_sign_display_si": "◌ෘ",
+      "printed_vowel_si": "ඍ",
+      "printed_examples_si": [
+        "කෘ"
+      ],
+      "normalized_examples_nfc": [
+        "කෘ"
+      ],
+      "sign_family": "compound",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 17,
+      "locator": "IMG_7483.heic#table-row-17",
+      "printed_name_si": "ගැටඇලපිලි දෙක",
+      "printed_sign_codepoints": [
+        "U+0DF2"
+      ],
+      "printed_sign_display_si": "◌ෲ",
+      "printed_vowel_si": "ඎ",
+      "printed_examples_si": [
+        "කෲ"
+      ],
+      "normalized_examples_nfc": [
+        "කෲ"
+      ],
+      "sign_family": "compound",
+      "review_flags": [
+        "RARE_FORM_PROBE_POOL_INSUFFICIENT"
+      ],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 18,
+      "locator": "IMG_7483.heic#table-row-18",
+      "printed_name_si": "කොම්බු දෙක",
+      "printed_sign_codepoints": [
+        "U+0DDB"
+      ],
+      "printed_sign_display_si": "◌ෛ",
+      "printed_vowel_si": "ඓ",
+      "printed_examples_si": [
+        "කෛ"
+      ],
+      "normalized_examples_nfc": [
+        "කෛ"
+      ],
+      "sign_family": "compound",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    },
+    {
+      "row": 19,
+      "locator": "IMG_7483.heic#table-row-19",
+      "printed_name_si": "කොම්බුව සහ ගයනුකිත්ත",
+      "printed_sign_codepoints": [
+        "U+0DDE"
+      ],
+      "printed_sign_display_si": "◌ෞ",
+      "printed_vowel_si": "ඖ",
+      "printed_examples_si": [
+        "කෞ"
+      ],
+      "normalized_examples_nfc": [
+        "කෞ"
+      ],
+      "sign_family": "compound",
+      "review_flags": [],
+      "transcription_status": "visual_transcription_pending_sinhala_review"
+    }
+  ]
+}

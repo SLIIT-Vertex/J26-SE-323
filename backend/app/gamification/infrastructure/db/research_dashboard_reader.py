@@ -48,6 +48,19 @@ class SqlAlchemyResearchDashboardReader:
             "account_created": row.created_at.isoformat() if row.created_at else None,
         }
 
+    def run_versions(self) -> tuple[tuple[str, str, str], ...]:
+        """Every stored game's id, last update and status: enough to tell whether anything
+        changed, without loading any game's state."""
+
+        rows = self.session.execute(
+            select(
+                LearningFlowEpisodeRunModel.episode_id,
+                LearningFlowEpisodeRunModel.updated_at,
+                LearningFlowEpisodeRunModel.status,
+            ).order_by(LearningFlowEpisodeRunModel.updated_at, LearningFlowEpisodeRunModel.episode_id)
+        ).all()
+        return tuple((str(row[0]), str(row[1]), str(row[2])) for row in rows)
+
     def all_runs(self) -> list[dict[str, object]]:
         rows = self.session.scalars(
             select(LearningFlowEpisodeRunModel).order_by(LearningFlowEpisodeRunModel.updated_at)

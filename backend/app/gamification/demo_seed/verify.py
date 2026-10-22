@@ -18,8 +18,8 @@ from uuid import UUID
 from sqlalchemy import Uuid, bindparam, select, text
 from sqlalchemy.orm import Session
 
+from app.gamification.application.engine.area_flow import _model1_label, _model1_uncertain
 from app.gamification.application.learning_flow_orchestration import LearningFlowOrchestrator
-from app.gamification.application.number_world_flow import _model1_label, _model1_uncertain
 from app.gamification.content.support_types import SUPPORT_TYPES
 from app.gamification.infrastructure.db.models import (
     LearningFlowEpisodeRunModel,
@@ -428,7 +428,7 @@ def _loop_checks(seeded: Sequence[Episode]) -> list[Check]:
         if types != expected or len(set(types)) != len(types):
             _fail(order_check, episode_id, f"{types} vs {expected}")
         for index, row in enumerate(rounds[:-1]):
-            if row.get("outcome") != "failed":
+            if row.get("outcome") not in {"failed", "viewed"}:
                 _fail(
                     switch, episode_id, f"round {index + 1} {row.get('outcome')} but another opened"
                 )

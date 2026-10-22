@@ -14,6 +14,7 @@ SKIPPED_DIRECTORY_NAMES = {
     ".pytest_cache",
     ".ruff_cache",
     ".venv",
+    "DerivedData",
     "__pycache__",
     "build",
     "coverage",

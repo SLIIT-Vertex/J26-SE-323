@@ -81,6 +81,7 @@ def measure_withdrawn_episode(
         "baseline": str(baseline),
         "after": str(after),
         "raw_independence_gain": None if raw_ig is None else str(raw_ig),
+        "percentage_point_value": None if raw_ig is None else str(raw_ig * 100),
         "valid": valid,
         "exclusion_reasons": exclusions,
         "supported_correctness_used_as_reward": False,

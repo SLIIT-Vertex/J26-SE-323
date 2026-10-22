@@ -6,14 +6,43 @@ From the repository root:
 npm run dev
 ```
 
-That starts the API on port 8000 and the Grade 5 app. Open the address Vite prints, usually http://localhost:5173/.
+That runs `scripts/dev.sh`. It starts the API on port 8000 (with reload) unless one is already
+running, then the Grade 5 app. Open the address Vite prints, usually http://localhost:5173/.
+The backend needs `backend/.venv` and a running database (see the root `README.md`).
 
-Do not set `VITE_ENABLE_MOBILE_LEARNING_DRAFT` and do not `cd frontend`. The development server turns the draft mission list on by itself (`frontend/.env.development`). Games shows Mathematics, Sinhala, and Environmental Studies.
+`frontend/.env.development` is loaded only by the development server. It sets the API address and
+`VITE_MOBILE_LEARNING_CONDITION=proposed`. There is no flag to turn the draft missions on: the
+app always sends the development caller mark (`X-Dev-Principal: NOT_FOR_PRODUCTION`), and the
+server serves the draft mission list to the researcher role.
+
+**Games** shows four subjects: Mathematics, Sinhala, Environmental Studies and English. Each area
+opens its own game when it has one (see `frontend/src/features/areas/README.md`). Environment
+areas play as fixture rounds, and the other areas open the draft template player.
+
+Other tabs: **Practice** opens the papers flow, **Mindy** opens the adaptive tutor demo, and
+**Home** and **Progress** show the learner's home dashboard and progress. The research dashboard
+button appears in research mode.
+
+Optional switches:
+
+| Variable | Effect |
+|---|---|
+| `VITE_MOBILE_LEARNING_CONDITION` | `baseline` or `proposed` (engineering builds only, never a child setting) |
+| `VITE_MOBILE_LEARNING_ENVIRONMENT` | `development` (default), `test` or `pilot` |
+| `VITE_LEARNER_STATE_PROMPTS=off` | hides the learner-state prompts during games |
+
+## Seeding a demo learner
+
+```bash
+cd backend
+python -m app.gamification.demo_seed plan      # show what would be seeded
+python -m app.gamification.demo_seed seed
+python -m app.gamification.demo_seed verify
+```
+
+All commands: [`tools/README.md`](../../tools/README.md).
 
 ## Not a child release
 
-The mission catalog is development-only. Publication stays blocked. Nothing here is approved for children.
-
-A production web build does not load `.env.development`, so the mission list stays off. The server still refuses the draft package unless the environment is development or test and the caller passes `allow_draft`.
-
-Home, Mindy, and Progress are empty and marked "To be implemented" for other team members. Practice opens the papers flow. Games is the screen this work owns.
+The mission catalogue and every area game are development-only. Publication stays blocked.
+Nothing here is approved for children.

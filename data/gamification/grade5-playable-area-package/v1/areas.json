@@ -1156,21 +1156,21 @@
     },
     {
       "area_id": "G5-AREA-SIN-03",
-      "template_id": "word_workshop",
+      "template_id": "riddle_journey",
       "source_status": "mapped_draft",
       "items": [
         {
           "measurement_role": "unsupported_before",
           "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-03-unsupported_before@v1",
-          "parallel_family_id": "G5-SIN-03-FIX-PF",
-          "prompt_si": "දවල් නිදියි, රෑට ඇහැරෙයි. ඒ කවුද?",
-          "surface_form": "word-03-before|වවුලා|සමනලයා|මී මැස්සා",
-          "correct_response": "වවුලා",
+          "item_revision_id": "G5-AREA-SIN-03-unsupported_before@v2",
+          "parallel_family_id": "G5-SIN-RID-DIRECT-01:direct:short:catalogue-v2",
+          "prompt_si": "උදැල්ල අරගෙන / කුඹුරට යනවා — මේ කවුද?",
+          "surface_form": "riddle-3|ගොවියා|කොකා|මොනරා|ජිරාෆ්",
+          "correct_response": "ගොවියා",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-03-unsupported_before-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -1179,15 +1179,15 @@
         {
           "measurement_role": "supported_practice",
           "assistance_state": "scaffold_active",
-          "item_revision_id": "G5-AREA-SIN-03-supported_practice@v1",
-          "parallel_family_id": "G5-SIN-03-FIX-PF",
-          "prompt_si": "කකුල් නැතිව ගලා යයි. ඒ කුමක්ද?",
-          "surface_form": "word-03-practice|ගඟ|ගල|ගස",
-          "correct_response": "ගඟ",
+          "item_revision_id": "G5-AREA-SIN-03-supported_practice@v2",
+          "parallel_family_id": "G5-SIN-RID-DIRECT-01:direct:short:catalogue-v2",
+          "prompt_si": "ඉර පායන විට පිල් විදහා / නටනවා — මේ කවුද?",
+          "surface_form": "riddle-5|මොනරා|කොකා|සමනලයා|හඳ",
+          "correct_response": "මොනරා",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-03-supported_practice-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -1196,15 +1196,15 @@
         {
           "measurement_role": "unsupported_after",
           "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-03-unsupported_after@v1",
-          "parallel_family_id": "G5-SIN-03-FIX-PF",
-          "prompt_si": "කොළ ඇඳුමක් ඇඳගෙන ගෙඩි ගොඩක් දරයි. ඒ කුමක්ද?",
-          "surface_form": "word-03-after|ගස|වලාකුළ|පාර",
-          "correct_response": "ගස",
+          "item_revision_id": "G5-AREA-SIN-03-unsupported_after@v2",
+          "parallel_family_id": "G5-SIN-RID-DIRECT-01:direct:short:catalogue-v2",
+          "prompt_si": "අරිනවා- වහනවා / රෑට යතුරු දමනවා — මේ කුමක්ද?",
+          "surface_form": "riddle-4|දොර|යතුර|ඔරලෝසුව|කොස්ස",
+          "correct_response": "දොර",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-03-unsupported_after-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -1212,17 +1212,18 @@
         }
       ],
       "eligible_support_types": [
+        "visual_guidance",
         "worked_parallel_example",
         "step_by_step_guidance"
       ],
       "scaffold": {
-        "support_type": "worked_parallel_example",
-        "body_si": "වෙනත් උදාහරණයක්: “අතු අතර ගෙයක්, දොරක් නැත” යන තේරවිල්ලේ එක් එක් ඉඟිය වෙන් කර බලන්න.",
+        "support_type": "visual_guidance",
+        "body_si": "තේරවිල්ලේ පෙනුම, කරන වැඩය හෝ සිටින තැන කියන කොටස් සොයමු.",
         "answer_leakage_rule": "no_probe_values_or_answers"
       },
       "universal_skill_id": null,
       "no_universal_parent": true,
-      "prompt_si": "තේරවිලි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "prompt_si": "තේරවිලි. ඡායාරූපගත තේරවිලි 23න් ගත් කෙටුම්පතකි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
       "curriculum_source_id": null
     },
     {
@@ -1940,21 +1941,21 @@
     },
     {
       "area_id": "G5-AREA-SIN-01",
-      "template_id": "word_workshop",
+      "template_id": "pillam_journey",
       "source_status": "mapped_draft",
       "items": [
         {
           "measurement_role": "unsupported_before",
           "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-01-unsupported_before@v1",
-          "parallel_family_id": "G5-SIN-01-FIX-PF",
-          "prompt_si": "ගී යන වචනයේ ඇති පිල්ල කුමක්ද?",
-          "surface_form": "vowel-before|ඉස්පිල්ල|දිග ඉස්පිල්ල|පාපිල්ල",
-          "correct_response": "දිග ඉස්පිල්ල",
+          "item_revision_id": "G5-AREA-SIN-01-unsupported_before@v2",
+          "parallel_family_id": "G5-SIN-PIL-NAME-01:name:close-i:catalogue-v1",
+          "prompt_si": "ගි අකුරේ ඇති පිල්ලමේ නම කුමක්ද?",
+          "surface_form": "name-before|කෙටි ඉස්පිල්ල|දික් ඉස්පිල්ල|කොම්බුව",
+          "correct_response": "කෙටි ඉස්පිල්ල",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-01-unsupported_before-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -1963,15 +1964,15 @@
         {
           "measurement_role": "supported_practice",
           "assistance_state": "scaffold_active",
-          "item_revision_id": "G5-AREA-SIN-01-supported_practice@v1",
-          "parallel_family_id": "G5-SIN-01-FIX-PF",
-          "prompt_si": "මී යන වචනයේ ඇති පිල්ල කුමක්ද?",
-          "surface_form": "vowel-practice|ඉස්පිල්ල|දිග ඉස්පිල්ල|පාපිල්ල",
-          "correct_response": "දිග ඉස්පිල්ල",
+          "item_revision_id": "G5-AREA-SIN-01-supported_practice@v2",
+          "parallel_family_id": "G5-SIN-PIL-NAME-01:name:close-i:catalogue-v1",
+          "prompt_si": "මි අකුරේ ඇති පිල්ලමේ නම කුමක්ද?",
+          "surface_form": "name-practice|කෙටි ඉස්පිල්ල|දික් ඉස්පිල්ල|ඇලපිල්ල",
+          "correct_response": "කෙටි ඉස්පිල්ල",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-01-supported_practice-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -1980,15 +1981,15 @@
         {
           "measurement_role": "unsupported_after",
           "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-01-unsupported_after@v1",
-          "parallel_family_id": "G5-SIN-01-FIX-PF",
-          "prompt_si": "කු යන වචනයේ ඇති පිල්ල කුමක්ද?",
-          "surface_form": "vowel-after|කොම්බුව|පාපිල්ල|ඇලපිල්ල",
-          "correct_response": "පාපිල්ල",
+          "item_revision_id": "G5-AREA-SIN-01-unsupported_after@v2",
+          "parallel_family_id": "G5-SIN-PIL-NAME-01:name:close-i:catalogue-v1",
+          "prompt_si": "පී අකුරේ ඇති පිල්ලමේ නම කුමක්ද?",
+          "surface_form": "name-after|කෙටි ඉස්පිල්ල|දික් ඉස්පිල්ල|ගැටඇලපිල්ල",
+          "correct_response": "දික් ඉස්පිල්ල",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-01-unsupported_after-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -2002,31 +2003,31 @@
       ],
       "scaffold": {
         "support_type": "visual_guidance",
-        "body_si": "මී තුළ ඉහළ ඇති ලකුණ බලන්න. එම ලකුණ වෙනත් අකුරක තබා බලන්න.",
+        "body_si": "පිල්ලමේ හැඩය හොඳින් බලන්න. වෙනස් වන කොටස කොතැනද?",
         "answer_leakage_rule": "no_probe_values_or_answers"
       },
       "universal_skill_id": null,
       "no_universal_parent": true,
-      "prompt_si": "පිල්ලම් හඳුනාගනිමු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "prompt_si": "පිල්ලම් හඳුනාගනිමු. ඡායාරූපගත වගුවෙන් ගත් කෙටුම්පතකි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
       "curriculum_source_id": null
     },
     {
       "area_id": "G5-AREA-SIN-02",
-      "template_id": "word_workshop",
+      "template_id": "punctuation_journey",
       "source_status": "mapped_draft",
       "items": [
         {
           "measurement_role": "unsupported_before",
           "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-02-unsupported_before@v1",
-          "parallel_family_id": "G5-SIN-02-FIX-PF",
-          "prompt_si": "මම පාසල් යමි. යන වාක්‍යය අවසානයේ ඇති ලකුණ කුමක්ද?",
-          "surface_form": "punct-before|කොමාව|තිත|ප්‍රශ්නාර්ථ ලකුණ",
-          "correct_response": "තිත",
+          "item_revision_id": "G5-AREA-SIN-02-unsupported_before@v2",
+          "parallel_family_id": "G5-SIN-PUNC-END-01:end:final:catalogue-v2",
+          "prompt_si": "'අක්කා පොතක් කියෙව්වා ය' වාක්‍යය අවසන් කරන ලකුණ යොදන්න.",
+          "surface_form": "end-before|.|?|!",
+          "correct_response": "අක්කා පොතක් කියෙව්වා ය.",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-02-unsupported_before-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -2035,15 +2036,15 @@
         {
           "measurement_role": "supported_practice",
           "assistance_state": "scaffold_active",
-          "item_revision_id": "G5-AREA-SIN-02-supported_practice@v1",
-          "parallel_family_id": "G5-SIN-02-FIX-PF",
-          "prompt_si": "ඔබ කොහෙද? යන වාක්‍යය අවසානයේ ඇති ලකුණ කුමක්ද?",
-          "surface_form": "punct-practice|තිත|ප්‍රශ්නාර්ථ ලකුණ|කොමාව",
-          "correct_response": "ප්‍රශ්නාර්ථ ලකුණ",
+          "item_revision_id": "G5-AREA-SIN-02-supported_practice@v2",
+          "parallel_family_id": "G5-SIN-PUNC-END-01:end:final:catalogue-v2",
+          "prompt_si": "'ළමයි පිට්ටනියේ සෙල්ලම් කළහ' වාක්‍යය අවසන් කරන ලකුණ යොදන්න.",
+          "surface_form": "end-practice|.|?|!",
+          "correct_response": "ළමයි පිට්ටනියේ සෙල්ලම් කළහ.",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-02-supported_practice-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -2052,15 +2053,15 @@
         {
           "measurement_role": "unsupported_after",
           "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-02-unsupported_after@v1",
-          "parallel_family_id": "G5-SIN-02-FIX-PF",
-          "prompt_si": "අම්මා, මම එන්නම්. යන වාක්‍යයේ පළමු වචනයෙන් පසු ඇති ලකුණ කුමක්ද?",
-          "surface_form": "punct-after|තිත|ප්‍රශ්නාර්ථ ලකුණ|කොමාව",
-          "correct_response": "කොමාව",
+          "item_revision_id": "G5-AREA-SIN-02-unsupported_after@v2",
+          "parallel_family_id": "G5-SIN-PUNC-END-01:end:final:catalogue-v2",
+          "prompt_si": "'මල්ලී පාසලට ගියේ ය' වාක්‍යය අවසන් කරන ලකුණ යොදන්න.",
+          "surface_form": "end-after|.|?|!",
+          "correct_response": "මල්ලී පාසලට ගියේ ය.",
           "rubric": {
             "rubric_id": "G5-AREA-SIN-02-unsupported_after-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
+            "rubric_version": "catalogue-reference-rubric-v2",
+            "scoring_version": "catalogue-reference-rubric-v2",
             "maximum_score": 1,
             "server_authoritative": true,
             "correct_only_when_every_part_correct": true
@@ -2073,13 +2074,13 @@
         "step_by_step_guidance"
       ],
       "scaffold": {
-        "support_type": "worked_parallel_example",
-        "body_si": "ඔහු ගමට ගියේය! යන වෙනත් වාක්‍යය අවසානයේ විස්මය දක්වන ලකුණ ඇත. වෙනත් වාක්‍යයක අවසාන ලකුණ බලන්න.",
+        "support_type": "visual_guidance",
+        "body_si": "සම්පූර්ණ අදහස අවසන් වන්නේ කොතැනද? වාක්‍යය කියවා බලන්න.",
         "answer_leakage_rule": "no_probe_values_or_answers"
       },
       "universal_skill_id": null,
       "no_universal_parent": true,
-      "prompt_si": "විරාම ලක්ෂණ හඳුනාගනිමු. මෙය නිල ප්‍රශ්නයක් නොවේ.",
+      "prompt_si": "විරාම ලක්ෂණ හඳුනාගනිමු. ඡායාරූපගත පිටු දෙකෙන් ගත් කෙටුම්පතකි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
       "curriculum_source_id": null
     },
     {
@@ -2224,78 +2225,6 @@
       "universal_skill_id": null,
       "no_universal_parent": true,
       "prompt_si": "ඒකවචන හා බහුවචන පද. මෙය නිල ප්‍රශ්නයක් නොවේ.",
-      "curriculum_source_id": null
-    },
-    {
-      "area_id": "G5-AREA-SIN-16",
-      "template_id": "word_workshop",
-      "source_status": "mapped_draft",
-      "items": [
-        {
-          "measurement_role": "unsupported_before",
-          "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-16-unsupported_before@v1",
-          "parallel_family_id": "G5-SIN-16-FIX-PF",
-          "prompt_si": "පා__ල යන රටාවේ නිවැරදි අක්ෂර වින්‍යාසය තෝරන්න.",
-          "surface_form": "spell-before|පාසළ|පාසල|පාශල",
-          "correct_response": "පාසල",
-          "rubric": {
-            "rubric_id": "G5-AREA-SIN-16-unsupported_before-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
-            "maximum_score": 1,
-            "server_authoritative": true,
-            "correct_only_when_every_part_correct": true
-          }
-        },
-        {
-          "measurement_role": "supported_practice",
-          "assistance_state": "scaffold_active",
-          "item_revision_id": "G5-AREA-SIN-16-supported_practice@v1",
-          "parallel_family_id": "G5-SIN-16-FIX-PF",
-          "prompt_si": "ගුරුවර__ යන රටාවේ නිවැරදි අක්ෂර වින්‍යාසය තෝරන්න.",
-          "surface_form": "spell-practice|ගුරුවරියා|ගුරුවරයා|ගුරුවරය",
-          "correct_response": "ගුරුවරයා",
-          "rubric": {
-            "rubric_id": "G5-AREA-SIN-16-supported_practice-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
-            "maximum_score": 1,
-            "server_authoritative": true,
-            "correct_only_when_every_part_correct": true
-          }
-        },
-        {
-          "measurement_role": "unsupported_after",
-          "assistance_state": "none",
-          "item_revision_id": "G5-AREA-SIN-16-unsupported_after@v1",
-          "parallel_family_id": "G5-SIN-16-FIX-PF",
-          "prompt_si": "පො__ යන රටාවේ නිවැරදි අක්ෂර වින්‍යාසය තෝරන්න.",
-          "surface_form": "spell-after|පොත්ත|පොත|පොථ",
-          "correct_response": "පොත",
-          "rubric": {
-            "rubric_id": "G5-AREA-SIN-16-unsupported_after-rubric",
-            "rubric_version": "fixture-rubric-v1",
-            "scoring_version": "fixture-rubric-v1",
-            "maximum_score": 1,
-            "server_authoritative": true,
-            "correct_only_when_every_part_correct": true
-          }
-        }
-      ],
-      "eligible_support_types": [
-        "visual_guidance",
-        "worked_parallel_example",
-        "step_by_step_guidance"
-      ],
-      "scaffold": {
-        "support_type": "worked_parallel_example",
-        "body_si": "අම්මා යන වෙනත් වචනය ම අකුර දෙවරක් යෙදී ලියයි. වෙනත් වචනයක අකුරු පිළිවෙළ බලන්න.",
-        "answer_leakage_rule": "no_probe_values_or_answers"
-      },
-      "universal_skill_id": null,
-      "no_universal_parent": true,
-      "prompt_si": "අක්ෂර වින්‍යාසයේ නිවැරදි භාවිතය ප්‍රදර්ශනය කරයි. මෙය නිල ප්‍රශ්නයක් නොවේ.",
       "curriculum_source_id": null
     },
     {

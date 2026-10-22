@@ -1,0 +1,97 @@
+.phaser-board {
+	display: grid;
+	gap: 0.55rem;
+}
+
+.phaser-board-instruction {
+	margin: 0;
+	font-weight: 800;
+	line-height: 1.35;
+}
+
+.phaser-board-canvas {
+	width: 100%;
+	max-width: 480px;
+	margin: 0 auto;
+	overflow: hidden;
+	border-radius: 20px;
+	box-shadow: 0 6px 18px rgb(46 42 69 / 0.14);
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
+}
+
+.phaser-board-canvas canvas {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.phaser-board-bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	min-height: 2.25rem;
+}
+
+.phaser-board-bar p {
+	margin: 0;
+	font-weight: 700;
+	color: var(--muted, #716d89);
+}
+
+.phaser-board-reset {
+	border: 2px solid currentColor;
+	border-radius: 999px;
+	background: #fff;
+	padding: 0.35rem 0.85rem;
+	font-weight: 800;
+	min-height: 44px;
+}
+
+/* Screen readers and keyboards use this list; it shows only when the canvas cannot run. */
+.phaser-board-mirror:not(.is-visible) {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.phaser-board-mirror.is-visible {
+	display: grid;
+	gap: 0.6rem;
+}
+
+.phaser-board-mirror-cards,
+.phaser-board-mirror-targets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.phaser-board-mirror button {
+	min-height: 48px;
+	border: 2px solid #8c62b6;
+	border-radius: 14px;
+	background: #fff;
+	padding: 0.4rem 0.8rem;
+	font-weight: 800;
+}
+
+.phaser-board-mirror button[aria-pressed="true"] {
+	background: #fff6cc;
+}
+
+/* With a scene, the guide's speech bubble says the instruction; keep it for screen readers. */
+.phaser-board-instruction.is-spoken {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

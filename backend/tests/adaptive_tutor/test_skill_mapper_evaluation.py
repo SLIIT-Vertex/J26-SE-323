@@ -3,6 +3,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
 from app.adaptive_tutor.infrastructure import XlsxSkillTaxonomyCatalog
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
@@ -29,6 +31,7 @@ def test_evaluation_metrics_separate_precision_coverage_and_abstention() -> None
     assert rates["incorrect_abstention_rate"] == 0.5
 
 
+@pytest.mark.requires_research
 def test_language_review_package_covers_taxonomy_and_preserves_pending_status() -> None:
     taxonomy = {
         node.skill_id: node

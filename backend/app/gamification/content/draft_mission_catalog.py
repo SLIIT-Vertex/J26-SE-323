@@ -1,15 +1,16 @@
-"""Development-only missions for the 55 mapped Grade 5 skill areas.
+"""Development-only missions for the 54 mapped Grade 5 skill areas.
 
 Each record is keyed by a ``G5-AREA-*`` id and stores the cited curriculum node,
 a reused template, ``development_only``, and ``publication_status=blocked``.
 The two areas with no Grade 5 source are omitted. Mathematics missions carry
-the 65 medium-confidence learning-outcome slots. Sinhala missions carry 8
-high-confidence draft items and 76 held slots. Environmental Studies missions
+the 65 medium-confidence learning-outcome slots. Sinhala missions carry 7
+high-confidence draft items and 66 held slots. Environmental Studies missions
 carry 117 held slots. A held slot stores the traced string and does not create
 a child question. This package does not replace the existing half-set skill.
 
-The default call is the production loader and rejects the package. A development
-or test caller may read it only when ``allow_draft`` is true.
+``load_draft_mission_catalog`` verifies the manifest and loads the package. It is
+served only by the ``/learning-flow/draft-missions`` routes, which require the
+development caller mark with the researcher role.
 """
 
 from __future__ import annotations
@@ -28,10 +29,10 @@ DRAFT_MISSION_CATALOG_DIRECTORY = (
     GAMIFICATION_DATA_DIRECTORY / "grade5-draft-mission-catalog" / "v1"
 )
 PACKAGE_VERSION = "grade5-draft-mission-catalog-v1"
-MISSION_COUNT = 55
+MISSION_COUNT = 54
 MATHEMATICS_OUTCOME_SLOT_COUNT = 65
-SINHALA_DRAFT_ITEM_COUNT = 8
-SINHALA_HELD_SLOT_COUNT = 76
+SINHALA_DRAFT_ITEM_COUNT = 7
+SINHALA_HELD_SLOT_COUNT = 66
 ENVIRONMENTAL_HELD_SLOT_COUNT = 117
 BLOCKED_AREA_IDS = frozenset({"G5-AREA-SIN-11", "G5-AREA-SIN-12"})
 # High-confidence verb outcomes that are not an area's cited node. Each traced
@@ -88,10 +89,19 @@ DraftTemplateId = Literal[
     "word_workshop",
     "story_studio",
     "eco_explorer",
+    # Dedicated durable games, not reused fixture templates (SIN-01, SIN-02, SIN-03 only).
+    "pillam_journey",
+    "punctuation_journey",
+    "riddle_journey",
 ]
 _MARKET_AREAS = frozenset({1, 2, 4, 6, 8, 10, 15})
 _PARCEL_AREAS = frozenset({7, 9, 11, 12})
 _PATTERN_AREAS = frozenset({3, 13, 14})
+_DEDICATED_SINHALA: dict[int, DraftTemplateId] = {
+    1: "pillam_journey",
+    2: "punctuation_journey",
+    3: "riddle_journey",
+}
 
 
 class FrozenModel(BaseModel):
@@ -102,7 +112,7 @@ def mapped_area_ids() -> tuple[str, ...]:
     """Mathematics, then buildable Sinhala, then Environmental Studies."""
     mathematics = tuple(f"G5-AREA-MAT-{number:02d}" for number in range(1, 17))
     sinhala = tuple(
-        f"G5-AREA-SIN-{number:02d}" for number in range(1, 26) if number not in {11, 12}
+        f"G5-AREA-SIN-{number:02d}" for number in range(1, 26) if number not in {11, 12, 16}
     )
     environmental = tuple(f"G5-AREA-ENV-{number:02d}" for number in range(1, 17))
     return mathematics + sinhala + environmental
@@ -133,6 +143,8 @@ def assigned_template(area_id: str) -> DraftTemplateId:
             raise ValueError(f"{area_id} has no Grade 5 source and is not a draft mission")
         if number == 13:
             return "story_studio"
+        if number in _DEDICATED_SINHALA:
+            return _DEDICATED_SINHALA[number]
         return "word_workshop"
     if prefix == "G5-AREA-ENV" and 1 <= number <= 16:
         return "eco_explorer"
@@ -354,11 +366,11 @@ class DraftMissionCatalog(FrozenModel):
         sinhala_held_ids = [slot.node_id for slot in sinhala_held]
         environmental_ids = [slot.node_id for slot in environmental_held]
         if len(draft_items) != SINHALA_DRAFT_ITEM_COUNT or len(set(draft_ids)) != len(draft_ids):
-            raise ValueError("Sinhala missions must carry 8 distinct high-confidence draft items")
+            raise ValueError("Sinhala missions must carry 7 distinct high-confidence draft items")
         if len(sinhala_held) != SINHALA_HELD_SLOT_COUNT or len(set(sinhala_held_ids)) != len(
             sinhala_held_ids
         ):
-            raise ValueError("Sinhala missions must carry 76 distinct held slots")
+            raise ValueError("Sinhala missions must carry 66 distinct held slots")
         if len(environmental_held) != ENVIRONMENTAL_HELD_SLOT_COUNT or len(
             set(environmental_ids)
         ) != len(environmental_ids):

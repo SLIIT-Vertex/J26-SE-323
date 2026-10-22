@@ -1,0 +1,309 @@
+{
+  "schema_version": "sinhala-punctuation-source-transcription-v1",
+  "area_id": "G5-AREA-SIN-02",
+  "photographs": [
+    {
+      "identity": "IMG_7484.HEIC",
+      "sha256": "e080b9ce43b5d39293d67cd8cf2cda6ae7a66263eefad784d2de66ceff8dc786",
+      "heading_printed_si": "3 - විරාම ලක්ෂණ හඳුනාගනිමු.",
+      "continuation_order": 1
+    },
+    {
+      "identity": "IMG_7485.heic",
+      "sha256": "20c87df0fe233e85e5c1718058c5157554ece9ad9838f52dea5c5bfafb504fe3",
+      "heading_printed_si": null,
+      "continuation_order": 2
+    }
+  ],
+  "bibliographic": {
+    "printed_page_number": null,
+    "book_title": null,
+    "edition": null,
+    "publisher": null,
+    "rights_statement": null,
+    "note": "Heading number 3 is a section number, not a page number."
+  },
+  "encoding_note": "Printed rakaransaya/yansaya ligatures are encoded as virama + ZWJ; that is the Unicode form of the printed glyph, not a correction.",
+  "review_issues": [
+    "SOURCE_IDENTITY: book title, edition, publisher, rights and page identity are missing",
+    "CURRICULUM_ALIGNMENT: links to G5-SIN-C03-L01-K03, G5-SIN-C04-L01-K03 (p.6) and G5-SIN-C03-L01-O04, G5-SIN-C04-L01-O02 (p.21, low extraction confidence) are draft source links, not approval",
+    "UNCERTAIN_TRANSCRIPTION: see per-rule issues",
+    "ACCEPTABLE_VARIANTS: no whitespace or straight/curly quote variant is accepted until a reviewed rubric rule exists",
+    "PARALLEL_PROBE_SUFFICIENCY: the photographs give one to three examples per rule; probes are draft authored items, and abbreviation and line-break measurement is unavailable"
+  ],
+  "sections": [
+    {
+      "section_locator": "IMG_7484.HEIC#section-1",
+      "photograph": "IMG_7484.HEIC",
+      "mark": "full_stop",
+      "printed_heading_si": "තිත (.)",
+      "printed_marks": ".",
+      "printed_lead_si": "තිත යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7484.HEIC#section-1/rule-1",
+          "printed_rule_si": "වාක්‍යයක අවසානය හැඟවීම සඳහා තිත යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7484.HEIC#section-1/rule-1/example-1",
+              "printed_si": "තාත්තා ගෙදර ආවේ ය.",
+              "display_nfc": "තාත්තා ගෙදර ආවේ ය."
+            }
+          ],
+          "review_issues": []
+        },
+        {
+          "rule_locator": "IMG_7484.HEIC#section-1/rule-2",
+          "printed_rule_si": "පුද්ගල නාම, මුල’   කුරු සඳහා තිත යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7484.HEIC#section-1/rule-2/example-1",
+              "printed_si": "කේ. එල්. මියුම් ආකර්ෂා",
+              "display_nfc": "කේ. එල්. මියුම් ආකර්ෂා"
+            }
+          ],
+          "review_issues": [
+            "RULE_PRINT_GAP: 'මුල’   කුරු' printed with a gap and apostrophe where මුලකුරු is expected; not corrected",
+            "NAME_UNCERTAIN: 'මියුම්' and 'ආකර්ෂා' read from the photograph; letters need Sinhala review"
+          ]
+        },
+        {
+          "rule_locator": "IMG_7484.HEIC#section-1/rule-3",
+          "printed_rule_si": "නාමයක් කෙටි කර දැක්වීමේ දී තිත යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7484.HEIC#section-1/rule-3/example-1",
+              "printed_si": "ලං.ග.ම. (ලංකා ගමනාගමන මණ්ඩලය)",
+              "display_nfc": "ලං.ග.ම. (ලංකා ගමනාගමන මණ්ඩලය)"
+            },
+            {
+              "example_locator": "IMG_7484.HEIC#section-1/rule-3/example-2",
+              "printed_si": "ප. ව. (පස්වරු)",
+              "display_nfc": "ප. ව. (පස්වරු)"
+            },
+            {
+              "example_locator": "IMG_7484.HEIC#section-1/rule-3/example-3",
+              "printed_si": "රු. 80/= (රුපියල් 80/=)",
+              "display_nfc": "රු. 80/= (රුපියල් 80/=)"
+            }
+          ],
+          "review_issues": [
+            "SPACING_VARIES: ලං.ග.ම. printed without spaces, ප. ව. with a space; preserved as printed"
+          ]
+        }
+      ]
+    },
+    {
+      "section_locator": "IMG_7484.HEIC#section-2",
+      "photograph": "IMG_7484.HEIC",
+      "mark": "question_mark",
+      "printed_heading_si": "ප්‍රශ්නාර්ථ ලකුණ (?)",
+      "printed_marks": "?",
+      "printed_lead_si": "ප්‍රශ්නාර්ථ ලකුණ යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7484.HEIC#section-2/rule-1",
+          "printed_rule_si": "ප්‍රශ්න අසන වාක්‍යවල අගට ප්‍රශ්නාර්ථ ලකුණ යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7484.HEIC#section-2/rule-1/example-1",
+              "printed_si": "අයියේ සීනිබෝල ගෙනාවා ද?",
+              "display_nfc": "අයියේ සීනිබෝල ගෙනාවා ද?"
+            },
+            {
+              "example_locator": "IMG_7484.HEIC#section-2/rule-1/example-2",
+              "printed_si": "අපි ඊළඟට යන්නේ කොහේ ද?",
+              "display_nfc": "අපි ඊළඟට යන්නේ කොහේ ද?"
+            },
+            {
+              "example_locator": "IMG_7484.HEIC#section-2/rule-1/example-3",
+              "printed_si": "වයලීනය කොහෙද අනේ?",
+              "display_nfc": "වයලීනය කොහෙද අනේ?"
+            }
+          ],
+          "review_issues": [
+            "QUESTION_FORMS: two examples end with a separate ද, the third ends with අනේ; do not teach that every question ends in ද"
+          ]
+        }
+      ]
+    },
+    {
+      "section_locator": "IMG_7484.HEIC#section-3",
+      "photograph": "IMG_7484.HEIC",
+      "mark": "comma",
+      "printed_heading_si": "කොමාව (,)",
+      "printed_marks": ",",
+      "printed_lead_si": "කොමාව යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7484.HEIC#section-3/rule-1",
+          "printed_rule_si": "වාක්‍යයක ඇති නාම පද කිහිපයක් වෙන්කර දැක්වීමට කොමාව යොදයි.",
+          "examples": [],
+          "review_issues": []
+        },
+        {
+          "rule_locator": "IMG_7484.HEIC#section-3/rule-2",
+          "printed_rule_si": "වාක්‍යයක් අවසන් වීමට පෙර තබන විරාමය සඳහා කොමාව යොදයි.",
+          "examples": [],
+          "review_issues": []
+        },
+        {
+          "rule_locator": "IMG_7484.HEIC#section-3/rule-3",
+          "printed_rule_si": null,
+          "examples": [
+            {
+              "example_locator": "IMG_7484.HEIC#section-3/rule-3/example-1",
+              "printed_si": "කජු, මාදන්, අඹ යන ආදී ගස්වලට වැඩි විශාල වෘක්ෂයන් නොවූව ද...",
+              "display_nfc": "කජු, මාදන්, අඹ යන ආදී ගස්වලට වැඩි විශාල වෘක්ෂයන් නොවූව ද..."
+            },
+            {
+              "example_locator": "IMG_7484.HEIC#section-3/rule-3/example-2",
+              "printed_si": "නැහැ නැහැ, ඊ මේල් කියන්නේ විද්‍යුත් තැපෑල",
+              "display_nfc": "නැහැ නැහැ, ඊ මේල් කියන්නේ විද්‍යුත් තැපෑල"
+            }
+          ],
+          "review_issues": [
+            "EXAMPLES_SHARED_BY_TWO_RULES: the two examples follow both comma rules; the list/pause pairing is an inference",
+            "SPELLING_READ: the photograph reads මාදන් (the brief said මාදං)",
+            "CONTINUATION_DOTS: the tree example ends with printed '...'; preserved, not taught as a mark",
+            "NO_FINAL_MARK: the ඊ මේල් example has no final punctuation in print"
+          ]
+        }
+      ]
+    },
+    {
+      "section_locator": "IMG_7485.heic#section-4",
+      "photograph": "IMG_7485.heic",
+      "mark": "quotation_marks",
+      "printed_heading_si": "යුගල උඩු කොමා (“ ”)",
+      "printed_marks": "“”",
+      "printed_lead_si": "යුගල උඩු කොමා යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7485.heic#section-4/rule-1",
+          "printed_rule_si": "යමකු විසින් කළ ප්‍රකාශයක්, යමකින් උපුටා ගැනීමක් සඳහා වන කොටසක් පෙන්වීමට යුගල උඩු කොමා යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7485.heic#section-4/rule-1/example-1",
+              "printed_si": "“අපට අද හොඳින් නැරඹිය හැකියි” ඔහු පිළිතුරු දුන්නේ ය.",
+              "display_nfc": "“අපට අද හොඳින් නැරඹිය හැකියි” ඔහු පිළිතුරු දුන්නේ ය."
+            },
+            {
+              "example_locator": "IMG_7485.heic#section-4/rule-1/example-2",
+              "printed_si": "“අර දිග පුටුව කවිච්චිය. ඒක මං දන්නවා.” කවීෂා කීවා ය.",
+              "display_nfc": "“අර දිග පුටුව කවිච්චිය. ඒක මං දන්නවා.” කවීෂා කීවා ය."
+            }
+          ],
+          "review_issues": [
+            "SPEAKER_NAME_READ: කවීෂා",
+            "BOUNDARIES: quoted speech and reporting clause boundaries preserved as printed"
+          ]
+        }
+      ]
+    },
+    {
+      "section_locator": "IMG_7485.heic#section-5",
+      "photograph": "IMG_7485.heic",
+      "mark": "exclamation_mark",
+      "printed_heading_si": "විස්මයාදි ලකුණ (!)",
+      "printed_marks": "!",
+      "printed_lead_si": "විස්මයාදි ලකුණ යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7485.heic#section-5/rule-1",
+          "printed_rule_si": "විස්මයක් දැනවීමට, ප්‍රාර්ථනයක් හැඟවීමට, සතුටක් දැනවීමට, ශෝකයක් හැඟවීමට විස්මයාදි ලකුණ යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7485.heic#section-5/rule-1/example-1",
+              "printed_si": "ඇයගේ කැපවීම පුදුමාකාර ය !",
+              "display_nfc": "ඇයගේ කැපවීම පුදුමාකාර ය !"
+            },
+            {
+              "example_locator": "IMG_7485.heic#section-5/rule-1/example-2",
+              "printed_si": "ලංකාව ! ඔහු කී ය.",
+              "display_nfc": "ලංකාව ! ඔහු කී ය."
+            },
+            {
+              "example_locator": "IMG_7485.heic#section-5/rule-1/example-3",
+              "printed_si": "දෙවි පිහිටයි මට !",
+              "display_nfc": "දෙවි පිහිටයි මට !"
+            }
+          ],
+          "review_issues": [
+            "SPACE_BEFORE_MARK: a space is printed before every '!'; preserved in the source, not a taught rule"
+          ]
+        }
+      ]
+    },
+    {
+      "section_locator": "IMG_7485.heic#section-6",
+      "photograph": "IMG_7485.heic",
+      "mark": "parentheses",
+      "printed_heading_si": "සරල වරහන් ( )",
+      "printed_marks": "()",
+      "printed_lead_si": "සරල වරහන් යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7485.heic#section-6/rule-1",
+          "printed_rule_si": "ප්‍රකාශනයක යම් තැනක අර්ථය පැහැදිලි කිරීම සඳහා හෝ අමතර තොරතුරක් දැක්වීම සඳහා හෝ වචනයක්, වාක්‍යයක නැතහොත් වාක්‍ය කිහිපයක් අතරට යෙදීමේ දී සරල වරහන යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7485.heic#section-6/rule-1/example-1",
+              "printed_si": "බෞද්ධ කොඩිය වර්ණ පහකින් (නිල්, කහ, රතු, සුදු, තැඹිලි) සමන්විත වේ.",
+              "display_nfc": "බෞද්ධ කොඩිය වර්ණ පහකින් (නිල්, කහ, රතු, සුදු, තැඹිලි) සමන්විත වේ."
+            }
+          ],
+          "review_issues": [
+            "BULLET_GLYPH: this section's heading bullet is printed ★ rather than ♦"
+          ]
+        }
+      ]
+    },
+    {
+      "section_locator": "IMG_7485.heic#section-7",
+      "photograph": "IMG_7485.heic",
+      "mark": "short_dash",
+      "printed_heading_si": "කෙටි ඉර (-)",
+      "printed_marks": "-",
+      "printed_lead_si": "කෙටි ඉර යෙදෙන අවස්ථා",
+      "rules": [
+        {
+          "rule_locator": "IMG_7485.heic#section-7/rule-1",
+          "printed_rule_si": "කාලපරිච්ඡේද, පිටු අංක ආදිය ඉලක්කමෙන් දැක්වීමේ දී කෙටි ඉර යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7485.heic#section-7/rule-1/example-1",
+              "printed_si": "අසිරිමත් ලෝකය 75 - 79",
+              "display_nfc": "අසිරිමත් ලෝකය 75 - 79"
+            },
+            {
+              "example_locator": "IMG_7485.heic#section-7/rule-1/example-2",
+              "printed_si": "වෙසක් කැකුළු 80 - 82",
+              "display_nfc": "වෙසක් කැකුළු 80 - 82"
+            }
+          ],
+          "review_issues": [
+            "PAGE_RANGES_ARE_CONTENT: 75 - 79 and 80 - 82 are lesson content under a 'පිටු අංක' column, not source page numbers",
+            "HYPHEN_PRESERVED: printed as a short hyphen; stored as U+002D, never modernised to an en dash"
+          ]
+        },
+        {
+          "rule_locator": "IMG_7485.heic#section-7/rule-2",
+          "printed_rule_si": "පේළියක කෙළවරෙහි සම්පූර්ණ පදයක් සඳහා ඉඩ ප්‍රමාණය මදි වූ අවස්ථාවක, එහි යෙදිය හැකි අවසාන අකුරට පසුව කෙටි ඉර යොදයි.",
+          "examples": [
+            {
+              "example_locator": "IMG_7485.heic#section-7/rule-2/example-1",
+              "printed_si": "මගේ රට හරි සුවඳයි - පියාණෙනි මගෙ රට හරි සුවඳයි",
+              "display_nfc": "මගේ රට හරි සුවඳයි - පියාණෙනි මගෙ රට හරි සුවඳයි"
+            }
+          ],
+          "review_issues": [
+            "LINE_BREAK_NOT_DEMONSTRATED: the visible dash separates two phrases on one line; it does not show a word split across lines. No syllable boundary is inferred",
+            "SPELLING_READ: first half මගේ, second half මගෙ; preserved",
+            "LINE_BREAK_RULE_REVIEW_REQUIRED: scored line-break items need an educator-approved rule and examples"
+          ]
+        }
+      ]
+    }
+  ]
+}

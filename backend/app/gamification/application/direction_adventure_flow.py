@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.engine.area_flow import AreaFlowError, AreaGameFlow, _attempts
 from app.gamification.content.direction_adventure import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -28,7 +28,7 @@ from app.gamification.content.direction_adventure import (
 )
 
 
-class DirectionAdventureFlow(NumberWorldFlow):
+class DirectionAdventureFlow(AreaGameFlow):
     area_id = AREA_ID
     experience_id = "direction_adventure"
     universal_skill_id = "MAT-DIR"
@@ -58,9 +58,9 @@ class DirectionAdventureFlow(NumberWorldFlow):
 
     @staticmethod
     def _summary(state: dict[str, object]) -> dict[str, object]:
-        response = NumberWorldFlow._summary(state)
-        attempts = state.get("attempts")
-        latest = attempts[-1] if isinstance(attempts, list) and attempts else None
+        response = AreaGameFlow._summary(state)
+        attempts = _attempts(state)
+        latest = attempts[-1] if attempts else None
         if isinstance(latest, Mapping) and latest.get("correct") is False:
             normalized, score = latest.get("constructed_response"), response.get("server_score")
             if (
@@ -87,9 +87,9 @@ class DirectionAdventureFlow(NumberWorldFlow):
             "working_cell_count",
         }
         if not set(result).issubset(allowed):
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         if any(type(value) is not int or not 0 <= value <= 86_400_000 for value in result.values()):
-            raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+            raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return result
 
     @staticmethod

@@ -280,13 +280,31 @@ export interface ModelSetting {
 	tried: string[];
 	replay: "confidence_caps" | "preference_thresholds" | null;
 }
+/** A learned model's one deterministic accuracy test, decided on the server. */
+export interface AccuracyCheck {
+	question: string;
+	rule: string;
+	value: number | null;
+	interval: [number, number] | null;
+	count: number;
+	minimum: number;
+	reference: number | null;
+	reference_label: string;
+	reference_count: number | null;
+	status: "passing" | "not_passing" | "not_enough_data";
+}
 export interface AccuracyReport {
 	generated_at: string;
+	/** When the server last rebuilt the report from the stored games. */
+	computed_at?: string;
 	purpose: string;
 	minimum_sessions?: number;
 	models: {
 		name: string;
 		subtitle: string;
+		/** A learned model has a check; Independence gain is a measurement. */
+		kind?: "model" | "measurement";
+		check?: AccuracyCheck;
 		metrics: AccuracyMetric[];
 		parameters: string[];
 		settings?: ModelSetting[];

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.gamification.api.learning_flow_router import _researcher
-from app.gamification.application.research_dashboard import ResearchDashboardService
+from app.gamification.application.research_dashboard.dashboard import ResearchDashboardService
 from app.gamification.infrastructure.db.research_dashboard_reader import (
     SqlAlchemyResearchDashboardReader,
 )

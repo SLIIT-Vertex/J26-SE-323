@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[3]
 MATRIX = (
     ROOT
@@ -69,7 +71,6 @@ SUPPLIED = [
     ("SIN", "ආරාධනා පත්‍ර", "Invitation Letters"),
     ("SIN", "ස්ත්‍රී ලිංග හා පුරුෂ ලිංග පද", "Feminine and Masculine Nouns"),
     ("SIN", "ඒකවචන හා බහුවචන පද", "Singular and Plural Words"),
-    ("SIN", "අක්ෂර වින්‍යාසය", "Spelling and Orthography"),
     ("SIN", "න, ණ යෙදීම", "Usage of න and ණ"),
     ("SIN", "ල, ළ යෙදීම", "Usage of ල and ළ"),
     ("SIN", "ස, ශ, ෂ යෙදීම", "Usage of ස, ශ and ෂ"),
@@ -113,21 +114,24 @@ def _rows() -> list[dict]:
     return [json.loads(line) for line in MATRIX.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+@pytest.mark.requires_research
 def test_supplied_areas_appear_exactly_once() -> None:
     rows = _rows()
 
-    assert len(rows) == 57
-    assert len(SUPPLIED) == 57
+    assert len(rows) == 56
+    assert len(SUPPLIED) == 56
     assert [(row["subject"], row["name_si"], row["name_en"]) for row in rows] == SUPPLIED
-    assert len({row["area_id"] for row in rows}) == 57
+    assert len({row["area_id"] for row in rows}) == 56
     assert [row["area_id"] for row in rows] == [
         f"G5-AREA-{subject}-{index:02d}"
         for subject, width in (("ENV", 16), ("MAT", 16), ("SIN", 25))
         for index in range(1, width + 1)
+        if (subject, index) != ("SIN", 16)
     ]
     assert all(row["subject"] != "ENG" for row in rows)
 
 
+@pytest.mark.requires_research
 def test_statuses_stay_unapproved_and_only_the_fractions_skill_exists() -> None:
     rows = _rows()
     plan = PLAN.read_text(encoding="utf-8")
@@ -159,4 +163,4 @@ def test_statuses_stay_unapproved_and_only_the_fractions_skill_exists() -> None:
     blocked = [row["area_id"] for row in rows if row["mapping_status"] == "BLOCKED"]
     assert blocked == ["G5-AREA-SIN-11", "G5-AREA-SIN-12"]
     assert all(row["mapping_status"] != "NEEDS_REVIEW" for row in rows)
-    assert sum(row["mapping_status"] == "MAPPED_DRAFT" for row in rows) == 55
+    assert sum(row["mapping_status"] == "MAPPED_DRAFT" for row in rows) == 54

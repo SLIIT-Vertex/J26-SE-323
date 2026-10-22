@@ -154,6 +154,25 @@ async function runBrowserFlow(condition) {
 		});
 		await clickText(cdp, "ක්‍රීඩා");
 		await waitForText(cdp, "ගණිතය");
+		if (process.env.MOBILE_LEARNING_E2E_RIDDLE_ONLY === "1") {
+			await runRiddleJourneyCoverage(cdp, condition);
+			await assertBrowserHealth(cdp, `${condition} Riddle Journey`);
+			cdp.close();
+			return;
+		}
+		if (process.env.MOBILE_LEARNING_E2E_PUNCTUATION_ONLY === "1") {
+			await runPunctuationJourneyCoverage(cdp, condition);
+			await assertBrowserHealth(cdp, `${condition} Punctuation Journey`);
+			cdp.close();
+			return;
+		}
+		if (process.env.MOBILE_LEARNING_E2E_PILLAM_ONLY === "1") {
+			await openPillamJourney(cdp);
+			await runPillamJourneyCoverage(cdp, condition);
+			await assertBrowserHealth(cdp, `${condition} Pillam Journey`);
+			cdp.close();
+			return;
+		}
 		if (process.env.MOBILE_LEARNING_E2E_CONVERSATION_ONLY === "1") {
 			await clickText(cdp, "ඉංග්‍රීසි");
 			await clickText(cdp, "Useful Expressions & Conversation Language");
@@ -297,6 +316,25 @@ async function runBrowserFlow(condition) {
 			await assertBrowserHealth(cdp, `${condition} English`);
 			cdp.close();
 			return;
+		}
+		// The dedicated Sinhala games first, each from the subject list, then back to games.
+		for (const run of process.env.MOBILE_LEARNING_E2E_SKIP_SINHALA === "1" ? [] : [
+			async () => {
+				await openPillamJourney(cdp);
+				await runPillamJourneyCoverage(cdp, condition);
+			},
+			() => runPunctuationJourneyCoverage(cdp, condition),
+			() => runRiddleJourneyCoverage(cdp, condition),
+		]) {
+			await run();
+			await assertBrowserHealth(cdp, `${condition} Sinhala`);
+			// Back out of the game (one or two steps) to the subject list, then to subjects.
+			for (let step = 0; step < 3; step += 1) {
+				if (!(await evaluate(cdp, "Boolean(document.querySelector('.sinhala-journey .adventure-back-action'))"))) break;
+				await clickSelector(cdp, ".sinhala-journey .adventure-back-action");
+				await delay(200);
+			}
+			await clickText(cdp, "ආපසු");
 		}
 		await clickText(cdp, "ගණිතය");
 		await waitForText(cdp, "සංඛ්‍යා");
@@ -1156,6 +1194,279 @@ async function completeClassroomLanguageMapping(cdp, mapping) {
 		return true;
 	})()`,
 	);
+}
+
+function pillamActivities() {
+	return [
+	"පිල්ලම් මිතුරෝ",
+	"ස්වර පාලම",
+	"අකුරු වැඩපොළ",
+	"කෙටිද දික්ද?",
+	"පාපිලි මාරුව",
+	"සංයුක්ත පිල්ලම් උයන",
+	];
+}
+
+async function openPillamJourney(cdp) {
+	await clickText(cdp, "සිංහල");
+	await clickText(cdp, "පිල්ලම් හඳුනාගනිමු");
+	await waitForText(cdp, pillamActivities()[0]);
+}
+
+async function pillamReconstruction(cdp, root = ".pillam-journey") {
+	const episodeId = await evaluate(
+		cdp,
+		`document.querySelector(${JSON.stringify(root)})?.dataset.episodeId`,
+	);
+	if (!episodeId) throw new Error(`${root} episode unavailable`);
+	const response = await fetch(
+		`http://127.0.0.1:8765/api/v1/development/learning-flow/episodes/${episodeId}/reconstruction`,
+		{ headers: { "X-Dev-Principal": "NOT_FOR_PRODUCTION", "X-Dev-Role": "researcher" } },
+	);
+	if (!response.ok) throw new Error(`${root} reconstruction unavailable`);
+	return (await response.json()).state;
+}
+
+/** Answer the board on screen through its accessible controls (the same actions as the canvas). */
+async function answerPillamBoard(cdp, gameData, correct) {
+	await evaluate(
+		cdp,
+		`(async () => {
+		const game = ${JSON.stringify(gameData)};
+		const correct = ${correct ? "true" : "false"};
+		const pause = () => new Promise((resolve) => setTimeout(resolve, 30));
+		const button = (token) => document.querySelector('.pj-board [data-token="' + token + '"]');
+		const rubric = game.rubric;
+		if (game.response_kind === "sinhala_pillam_match") {
+			for (const [source, accepted] of Object.entries(rubric.accepted)) {
+				const dock = correct ? accepted[0] : game.destinations.map((d) => d.destination_id).find((id) => !accepted.includes(id));
+				button(source).click(); await pause(); button(dock).click(); await pause();
+			}
+		} else {
+			const wanted = [...rubric.target_kinds];
+			const tokens = [];
+			for (const [token, kind] of Object.entries(rubric.kind_by_token)) {
+				const at = wanted.indexOf(kind);
+				if (correct && at >= 0) { tokens.push(token); wanted.splice(at, 1); }
+			}
+			if (!correct) tokens.push(Object.entries(rubric.kind_by_token).find(([, kind]) => !rubric.target_kinds.includes(kind))[0]);
+			for (const token of tokens) { button(token).click(); await pause(); }
+		}
+		const check = [...document.querySelectorAll('.pj-board button')].find((node) => node.textContent === 'පරීක්ෂා කරන්න');
+		if (!check || check.disabled) throw new Error('Pillam check unavailable');
+		check.click();
+		return true;
+	})()`,
+	);
+}
+
+/** SIN-02: place marks in gaps (or both pair members) through the accessible controls. */
+async function answerPunctuationBoard(cdp, gameData, correct) {
+	await evaluate(
+		cdp,
+		`(async () => {
+		const game = ${JSON.stringify(gameData)};
+		const correct = ${correct ? "true" : "false"};
+		const pause = () => new Promise((resolve) => setTimeout(resolve, 30));
+		const button = (token) => document.querySelector('.pj-board [data-token="' + token + '"]');
+		const rubric = game.rubric;
+		const gapAt = (position) => Object.entries(rubric.position_by_boundary).find(([, p]) => p === Number(position))[0];
+		const cards = Object.entries(rubric.kind_by_token);
+		const used = new Set();
+		const card = (kind) => { const found = cards.find(([t, k]) => k === kind && !used.has(t)); used.add(found[0]); return found[0]; };
+		const pairs = [];
+		if (rubric.kind === "span") {
+			const open = card(rubric.open), close = card(rubric.close);
+			pairs.push(correct ? [open, gapAt(rubric.start)] : [close, gapAt(rubric.start)]);
+			pairs.push(correct ? [close, gapAt(rubric.end)] : [open, gapAt(rubric.end)]);
+		} else {
+			const targets = Object.entries(rubric.targets);
+			if (correct) for (const [position, kind] of targets) pairs.push([card(kind), gapAt(position)]);
+			else pairs.push([cards.find(([, k]) => k !== targets[0][1])[0], gapAt(targets[0][0])]);
+		}
+		for (const [mark, gap] of pairs) { button(mark).click(); await pause(); button(gap).click(); await pause(); }
+		const check = [...document.querySelectorAll('.pj-board button')].find((node) => node.textContent === 'පරීක්ෂා කරන්න');
+		if (!check || check.disabled) throw new Error('Punctuation check unavailable');
+		check.click();
+		return true;
+	})()`,
+	);
+}
+
+/** Optional evidence: the board at 320×568, a normal phone, and a notched safe-area phone. */
+async function capturePillamViewports(cdp, label) {
+	const directory = process.env.MOBILE_LEARNING_E2E_SCREENSHOTS;
+	if (!directory) return;
+	const { writeFileSync, mkdirSync } = await import("node:fs");
+	mkdirSync(directory, { recursive: true });
+	for (const [name, width, height, inset] of [
+		["320x568", 320, 568, 0],
+		["390x844", 390, 844, 0],
+		["safe-area-393x852", 393, 852, 47],
+	]) {
+		await cdp.call("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 2, mobile: true });
+		await evaluate(cdp, `document.documentElement.style.setProperty('padding-top', '${inset}px')`);
+		await delay(400);
+		await verifyViewportAndAccessibility(cdp, `${label} ${name}`);
+		const shot = await cdp.call("Page.captureScreenshot", { format: "png" });
+		writeFileSync(join(directory, `pillam-${label}-${name}.png`), Buffer.from(shot.data, "base64"));
+	}
+	await evaluate(cdp, "document.documentElement.style.removeProperty('padding-top')");
+	await cdp.call("Emulation.setDeviceMetricsOverride", { width: 320, height: 568, deviceScaleFactor: 2, mobile: true });
+}
+
+async function currentPillamSupportItem(cdp, root = ".pillam-journey") {
+	const state = await pillamReconstruction(cdp, root);
+	const round = state.support_loop.rounds.at(-1);
+	return { state, stage: round.stages[round.stage_index], round };
+}
+
+async function runPillamJourneyCoverage(cdp, condition) {
+	await runSinhalaJourneyCoverage(cdp, condition, {
+		root: ".pillam-journey",
+		label: "Pillam",
+		activities: pillamActivities(),
+		answer: answerPillamBoard,
+		capture: capturePillamViewports,
+	});
+}
+
+/** SIN-03: select one clue line as evidence, then put an answer card in the chest. */
+async function answerRiddleBoard(cdp, gameData, correct) {
+	await evaluate(
+		cdp,
+		`(async () => {
+		const game = ${JSON.stringify(gameData)};
+		const correct = ${correct ? "true" : "false"};
+		const pause = () => new Promise((resolve) => setTimeout(resolve, 30));
+		const button = (token) => document.querySelector('.pj-board [data-token="' + token + '"]');
+		button(game.clue_spans[0].span_id).click(); await pause();
+		const answer = correct ? game.rubric.answer_card_id : game.answer_cards.find((c) => c.card_id !== game.rubric.answer_card_id).card_id;
+		button(answer).click(); await pause();
+		const check = [...document.querySelectorAll('.pj-board button')].find((node) => node.textContent === 'පරීක්ෂා කරන්න');
+		if (!check || check.disabled) throw new Error('Riddle check unavailable');
+		check.click();
+		return true;
+	})()`,
+	);
+}
+
+async function runRiddleJourneyCoverage(cdp, condition) {
+	await clickText(cdp, "සිංහල");
+	await clickText(cdp, "තේරවිලි");
+	await waitForText(cdp, "වචන රහස් පෙට්ටිය");
+	await runSinhalaJourneyCoverage(cdp, condition, {
+		root: ".riddle-journey",
+		label: "Riddle",
+		activities: ["ඉඟි මාවත සහ ඉඟි පාලම", "වචන රහස් පෙට්ටිය"],
+		answer: answerRiddleBoard,
+		capture: async (inner, name) => capturePillamViewports(inner, `riddle-${name}`),
+	});
+	// The post-scoring reveal is labelled and appears only after the after item was scored.
+	const revealed = await evaluate(cdp, "Boolean(document.querySelector('.rd-reveal [role=\"img\"][aria-label]'))");
+	if (!revealed) throw new Error("Riddle reveal missing after scoring");
+}
+
+function punctuationActivities() {
+	return [
+		"වාක්‍ය අවසානය",
+		"ප්‍රශ්න වාක්‍ය",
+		"හැඟීම් වාක්‍ය",
+		"මුලකුරු",
+		"කෙටි නාම",
+		"ලැයිස්තු කොමාව",
+		"විරාම කොමාව",
+		"කියූ වචන",
+		"අමතර තොරතුරු",
+		"පිටු පරාසය",
+	];
+}
+
+async function runPunctuationJourneyCoverage(cdp, condition) {
+	await clickText(cdp, "සිංහල");
+	await clickText(cdp, "විරාම ලක්ෂණ හඳුනාගනිමු");
+	await waitForText(cdp, punctuationActivities()[0]);
+	// The review-blocked line-break activity is visible and cannot be opened.
+	const blocked = await evaluate(
+		cdp,
+		`[...document.querySelectorAll('.punctuation-journey .pj-activity-card')].find((b) => b.textContent.includes('පේළි බෙදීම'))?.disabled`,
+	);
+	if (blocked !== true) throw new Error("Line-break activity is not fail-closed");
+	await runSinhalaJourneyCoverage(cdp, condition, {
+		root: ".punctuation-journey",
+		label: "Punctuation",
+		activities: punctuationActivities(),
+		answer: answerPunctuationBoard,
+		capture: async (inner, name) => capturePillamViewports(inner, `punctuation-${name}`),
+	});
+}
+
+async function runSinhalaJourneyCoverage(cdp, condition, { root, label, activities, answer, capture }) {
+	for (const activity of activities) {
+		await clickText(cdp, activity);
+		// The unscored opening demonstration advances only with ඊළඟ.
+		await waitForSelector(cdp, ".pj-demo");
+		for (let step = 0; step < 6; step += 1) {
+			const text = await evaluate(cdp, "document.querySelector('.pj-demo button')?.textContent");
+			if (!text) break;
+			await clickSelector(cdp, ".pj-demo button");
+			if (text.includes("ඔයාම")) break;
+		}
+		await waitForSelector(cdp, ".pj-board");
+		await verifyViewportAndAccessibility(cdp, `${condition} ${activity} before`);
+		await capture(cdp, `${condition}-${activities.indexOf(activity) + 1}`);
+		let state = await pillamReconstruction(cdp, root);
+		const before = state.presentations.find((row) => row.role === "unsupported_before");
+		await answer(cdp, before.game_data, false);
+		await waitForSelector(cdp, ".pj-support");
+		const seen = new Set();
+		for (let turn = 0; turn < 8; turn += 1) {
+			if (await evaluate(cdp, "Boolean(document.querySelector('.pj-status')) || !document.querySelector('.pj-support')")) break;
+			const { stage, round } = await currentPillamSupportItem(cdp, root);
+			seen.add(round.scaffold_type);
+			if (stage.kind === "view") {
+				for (let press = 0; press < 8; press += 1) {
+					const text = await evaluate(cdp, "document.querySelector('.pj-worked button')?.textContent");
+					await clickSelector(cdp, ".pj-worked button");
+					if (text?.includes("ඔයාම")) break;
+					await delay(30);
+				}
+			} else {
+				// Fail the visual and worked rounds so every method is delivered; succeed on guided.
+				await waitForSelector(cdp, ".pj-support .pj-board");
+				await answer(cdp, stage.item.game_data, round.scaffold_type === "step_by_step_guidance");
+			}
+			await delay(200);
+		}
+		await waitForSelector(cdp, ".pj-board");
+		state = await pillamReconstruction(cdp, root);
+		if (state.status !== "after_presented" || !state.withdrawal?.teardown_receipt)
+			throw new Error(`${label} ${activity}: after not released after verified teardown`);
+		if (state.withdrawal.teardown_observed_on_device !== true)
+			throw new Error(`${label} ${activity}: teardown not observed on the device`);
+		if (condition === "baseline" && seen.size !== 3)
+			throw new Error(`${label} ${activity}: baseline did not deliver all three supports`);
+		const after = state.presentations.find((row) => row.role === "unsupported_after");
+		await answer(cdp, after.game_data, true);
+		await waitForSelector(cdp, ".pj-feedback");
+		state = await pillamReconstruction(cdp, root);
+		const igAvailable = state.presentations[0].game_data.equivalence.ig_available;
+		if (
+			state.condition !== condition ||
+			!state.model1?.probabilities ||
+			!state.model2?.selection_reason ||
+			!state.difficulty_evidence?.rule_version ||
+			!state.demonstration_ledger?.length ||
+			state.withdrawal.teardown_receipt.dom_support_nodes_remaining !== 0 ||
+			(igAvailable && state.measurement?.raw_independence_gain !== "1") ||
+			(!igAvailable && !state.exclusion_reasons.includes("IG_UNAVAILABLE_INSUFFICIENT_REVIEWED_POOL")) ||
+			state.policy_updates.length !== (igAvailable && condition === "proposed" ? 1 : 0)
+		)
+			throw new Error(`${label} ${activity}: persisted model records incomplete`);
+		if (root === ".riddle-journey" && activities.indexOf(activity) === activities.length - 1) return;
+		await clickText(cdp, "ඉදිරියට");
+		await waitForText(cdp, activity);
+	}
 }
 
 async function runConversationStreetCoverage(cdp, condition) {
@@ -2307,6 +2618,7 @@ async function runNumberWorldCoverage(cdp, condition) {
 								const rect = button.getBoundingClientRect();
 								return rect.width < 48 || rect.height < 48;
 							}).length,
+							widths: buttons.slice(0, 6).map((button) => Math.round(button.getBoundingClientRect().width * 10) / 10),
 							unnamed: buttons.filter((button) => !button.getAttribute('aria-label')).length,
 						};
 					})()`,
@@ -2532,7 +2844,10 @@ async function verifyViewportAndAccessibility(cdp, label) {
 			undersizedButtons: buttons.filter((button) => {
 				const rect = button.getBoundingClientRect();
 				return rect.width < 48 || rect.height < 48;
-			}).length,
+			}).map((button) => {
+				const rect = button.getBoundingClientRect();
+				return (button.getAttribute('aria-label') || button.textContent.trim()).slice(0, 40) + ' ' + Math.round(rect.width) + 'x' + Math.round(rect.height);
+			}),
 		};
 	})()`,
 	);
@@ -2543,8 +2858,10 @@ async function verifyViewportAndAccessibility(cdp, label) {
 	if (!result.reducedMotion)
 		throw new Error(`${label}: reduced-motion preference was not active`);
 	if (result.unnamedButtons) throw new Error(`${label}: found unnamed buttons`);
-	if (result.undersizedButtons)
-		throw new Error(`${label}: found undersized touch targets`);
+	if (result.undersizedButtons.length)
+		throw new Error(
+			`${label}: found undersized touch targets: ${result.undersizedButtons.join("; ")}`,
+		);
 }
 
 async function assertBrowserHealth(cdp, label) {

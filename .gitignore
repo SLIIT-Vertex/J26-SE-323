@@ -40,3 +40,5 @@ backend/data/curriculum/raw
 # Local learner-specific sensitivity replay.
 /backend/reports/research-accuracy.json
 /backend/reports/simulated-validation.json
+frontend/build/
+frontend/shot.png

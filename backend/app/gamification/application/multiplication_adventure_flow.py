@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.engine.area_flow import AreaFlowError, AreaGameFlow
 from app.gamification.content.multiplication_adventure import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -29,7 +29,7 @@ from app.gamification.content.multiplication_adventure import (
 _SEQUENCE = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 
 
-class MultiplicationAdventureFlow(NumberWorldFlow):
+class MultiplicationAdventureFlow(AreaGameFlow):
     area_id = AREA_ID
     experience_id = "multiplication_adventure"
     universal_skill_id = "MAT-OPS"
@@ -95,7 +95,7 @@ class MultiplicationAdventureFlow(NumberWorldFlow):
     ) -> None:
         summary = dict(interaction_summary or {})
         if len(summary) > 12:
-            raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+            raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         allowed = {
             "attempt_count",
             "digit_entry_count",
@@ -105,7 +105,7 @@ class MultiplicationAdventureFlow(NumberWorldFlow):
             "evidence_quality",
         }
         if not set(summary).issubset(allowed):
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         return summary
 
     def _worked_example(self, item: dict[str, object], *, scaffold_type: str) -> dict[str, object]:

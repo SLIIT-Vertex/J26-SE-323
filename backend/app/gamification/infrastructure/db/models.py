@@ -1210,7 +1210,7 @@ class LearningFlowSupportRoundModel(Base):
         UniqueConstraint("episode_id", "scaffold_type", name="uq_learning_flow_support_type"),
         CheckConstraint("round_number >= 1", name="ck_learning_flow_support_round_number"),
         CheckConstraint(
-            "outcome IS NULL OR outcome IN ('succeeded', 'failed')",
+            "outcome IS NULL OR outcome IN ('succeeded', 'failed', 'viewed')",
             name="ck_learning_flow_support_round_outcome",
         ),
         Index("ix_learning_flow_support_rounds_episode", "episode_id", "round_number"),

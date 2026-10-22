@@ -46,15 +46,15 @@ def _forbidden_keys(value: object) -> None:
             _forbidden_keys(child)
 
 
-def test_learning_list_returns_55_missions_without_answer_keys() -> None:
+def test_learning_list_returns_54_missions_without_answer_keys() -> None:
     response = _client().get(LIST_PATH, headers=HEADERS)
 
     assert response.status_code == 200, response.text
     body = response.json()
     missions = body["missions"]
     area_ids = [mission["area_id"] for mission in missions]
-    assert len(missions) == 55
-    assert len(set(area_ids)) == 55
+    assert len(missions) == 54
+    assert len(set(area_ids)) == 54
     assert BLOCKED_AREA_IDS[0] not in area_ids
     assert BLOCKED_AREA_IDS[1] not in area_ids
     _forbidden_keys(body)
@@ -110,10 +110,13 @@ def test_area_support_types_follow_the_provisional_catalog() -> None:
     ]
     assert fractions.json()["authoring_basis"] == "provisional_development_assumption"
     assert riddle.status_code == 200, riddle.text
+    # Riddles now register visual guidance too, pointed at the learner's own clue selections.
     assert riddle.json()["eligible_support_types"] == [
+        "visual_guidance",
         "worked_parallel_example",
         "step_by_step_guidance",
     ]
+    assert riddle.json()["rule"] == "riddle_inference"
     assert blocked.status_code == 404, blocked.text
     assert blocked.json()["detail"]["code"] == "AREA_SUPPORT_NOT_FOUND"
     _forbidden_keys(fractions.json())

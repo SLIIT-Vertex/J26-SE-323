@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.engine.area_flow import AreaFlowError, AreaGameFlow, _attempts
 from app.gamification.content.classroom_action_quest import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -29,7 +29,7 @@ from app.gamification.content.classroom_action_quest import (
 )
 
 
-class ClassroomActionQuestFlow(NumberWorldFlow):
+class ClassroomActionQuestFlow(AreaGameFlow):
     area_id = AREA_ID
     experience_id = "classroom_action_quest"
     universal_skill_id = "LAN-BIL"
@@ -61,9 +61,9 @@ class ClassroomActionQuestFlow(NumberWorldFlow):
 
     @staticmethod
     def _summary(state: dict[str, object]) -> dict[str, object]:
-        response = NumberWorldFlow._summary(state)
-        attempts = state.get("attempts")
-        latest = attempts[-1] if isinstance(attempts, list) and attempts else None
+        response = AreaGameFlow._summary(state)
+        attempts = _attempts(state)
+        latest = attempts[-1] if attempts else None
         if isinstance(latest, Mapping) and latest.get("correct") is False:
             normalized = latest.get("constructed_response")
             score = response.get("server_score")
@@ -88,13 +88,13 @@ class ClassroomActionQuestFlow(NumberWorldFlow):
             "tap_alternative_used",
         }
         if not set(result).issubset(allowed):
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in result.items():
             if key == "tap_alternative_used":
                 if type(value) is not bool:
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif type(value) is not int or not 0 <= value <= 86_400_000:
-                raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return result
 
     @staticmethod

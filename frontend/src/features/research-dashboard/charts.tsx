@@ -386,88 +386,6 @@ export function DotTimeline({
 	);
 }
 
-export function SymbolTimeline({
-	points,
-	selected,
-	onSelect,
-	empty = "Appears after the first help choice.",
-}: {
-	points: {
-		episode_id: string;
-		at: string;
-		first_help: string | null;
-		game?: string;
-		outcome: "alone" | "not_alone" | "live" | "abandoned" | "comparison";
-	}[];
-	selected?: string | null;
-	onSelect?(id: string): void;
-	empty?: string;
-}) {
-	const ordered = [...points].sort(
-		(a, b) => Date.parse(b.at) - Date.parse(a.at),
-	);
-	const outcomes = {
-		alone: "Correct on the independent retest",
-		not_alone: "No successful independent retest recorded",
-		live: "In progress · awaiting result",
-		abandoned: "Stopped partway · not counted",
-		comparison: "Comparison group · fixed help order",
-	};
-	return (
-		<section
-			className="rd-chart is-large rd-first-help"
-			aria-label="First help for each game"
-		>
-			<h4>First help for each game</h4>
-			<p className="rd-quiet">
-				Most recent first. Each card shows the first suggested help and the
-				recorded outcome.
-			</p>
-			{!ordered.length ? (
-				<p className="rd-empty">{empty}</p>
-			) : (
-				<ol className="rd-first-help-list">
-					{ordered.slice(0, 12).map((point, index) => (
-						<li key={point.episode_id}>
-							<button
-								type="button"
-								data-episode={point.episode_id}
-								data-selected={selected === point.episode_id}
-								data-outcome={point.outcome}
-								onClick={() => onSelect?.(point.episode_id)}
-							>
-								<span className="rd-first-help__head">
-									<strong>
-										{point.game ?? `Game ${ordered.length - index}`}
-									</strong>
-									<time dateTime={point.at}>
-										{shortDate(point.at)} ·{" "}
-										{new Date(point.at).toLocaleTimeString("en-GB", {
-											hour: "2-digit",
-											minute: "2-digit",
-											timeZone: "Asia/Colombo",
-										})}
-									</time>
-								</span>
-								<span>
-									<b>First suggestion</b>
-									{helpOf(point.first_help)?.name ?? "No help selected"}
-								</span>
-								<span className="rd-first-help__outcome">
-									{outcomes[point.outcome]}
-								</span>
-							</button>
-						</li>
-					))}
-				</ol>
-			)}
-			{ordered.length > 12 && (
-				<p className="rd-quiet">Showing the 12 most recent games.</p>
-			)}
-		</section>
-	);
-}
-
 export function RunningRateBand({
 	points,
 	selected,
@@ -965,48 +883,6 @@ export function WeeklyBars({
 					</g>
 				);
 			})}
-		</ChartShell>
-	);
-}
-
-export function PlayGrid({
-	cells,
-}: {
-	cells: { area_id: string; title: string; subject: string; played: number }[];
-}) {
-	const maths = cells.filter((cell) => cell.subject === "MAT").slice(0, 16);
-	const english = cells.filter((cell) => cell.subject === "ENG").slice(0, 18);
-	const draw = (items: typeof cells, y0: number) =>
-		items.map((cell, index) => {
-			const x = 8 + (index % 9) * 34;
-			const y = y0 + Math.floor(index / 9) * 28;
-			const fill =
-				cell.played >= 3 ? ACCENT : cell.played > 0 ? "#c7d2fe" : "#e2e8f0";
-			return (
-				<g key={cell.area_id}>
-					<rect x={x} y={y} width="28" height="22" rx="4" fill={fill} />
-					<title>
-						{cell.title}: {cell.played} games
-					</title>
-				</g>
-			);
-		});
-	return (
-		<ChartShell
-			title="Where the child plays"
-			ariaLabel="Each learning game, filled by how many times the child has played it."
-			headers={["Game", "Times played"]}
-			rows={cells.map((cell) => [cell.title, String(cell.played)])}
-			height={160}
-		>
-			<text x="8" y="16" fill="#334155" fontSize="11">
-				Mathematics
-			</text>
-			{draw(maths, 22)}
-			<text x="8" y="92" fill="#334155" fontSize="11">
-				English
-			</text>
-			{draw(english, 98)}
 		</ChartShell>
 	);
 }

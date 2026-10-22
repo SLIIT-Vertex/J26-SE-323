@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlow, NumberWorldFlowError
+from app.gamification.application.engine.area_flow import AreaFlowError, AreaGameFlow
 from app.gamification.content.addition_adventure import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -37,7 +37,7 @@ _WORKED_FIRST = (
 )
 
 
-class AdditionAdventureFlow(NumberWorldFlow):
+class AdditionAdventureFlow(AreaGameFlow):
     """Skill-specific content and validity hooks over shared durable episode mechanics."""
 
     area_id = AREA_ID
@@ -118,7 +118,7 @@ class AdditionAdventureFlow(NumberWorldFlow):
             "first_action_ms",
         }
         if not set(summary).issubset(allowed) or len(summary) > 12:
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in summary.items():
             if key == "selected_table_cells":
                 if (
@@ -129,19 +129,19 @@ class AdditionAdventureFlow(NumberWorldFlow):
                         for cell in value
                     )
                 ):
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key in {"alignment_valid"}:
                 if not isinstance(value, bool):
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key == "evidence_quality":
                 if not isinstance(value, (int, float)) or not 0 <= float(value) <= 1:
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif (
                 not isinstance(value, int)
                 or isinstance(value, bool)
                 or not 0 <= value <= 86_400_000
             ):
-                raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return summary
 
     def _infer_belief(

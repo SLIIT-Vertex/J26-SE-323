@@ -179,10 +179,15 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
             game = {"target_ml": 500, "available_portions_ml": [100, 250, 500]}
             prompt = "විවිධ කොටස් භාවිතයෙන් 500 ml සාදන්න."
     elif skill.response_kind == "capacity_conversion":
-        source = rng.choice((1000, 2000, 3000) if simpler else (2350, 2750, 4300, 5600))
-        source_l, source_ml = (0, source) if rng.choice((True, False)) or simpler else split_capacity(source)
+        # Always millilitres only, to be changed into whole litres and the millilitres left over
+        # (2 750 ml → 2 l 750 ml); a given already in litres would be its own answer.
+        if simpler:
+            source = rng.choice((1000, 1500, 2000, 3000))
+        else:
+            source = rng.randint(1, 9) * 1000 + rng.choice((50, 100, 250, 300, 350, 400, 500, 600, 750, 900))
+        source_l, source_ml = 0, source
         game = {"source_litres": source_l, "source_millilitres": source_ml, "source_total_ml": source}
-        prompt = f"{source_l} l {source_ml} ml ලීටර් සහ ඉතිරි මිලිලීටර් ලෙස මාරු කරන්න."
+        prompt = f"{source:,} ml ලීටර් සහ ඉතිරි මිලිලීටර් ලෙස මාරු කරන්න.".replace(",", " ")
     elif skill.response_kind == "capacity_arithmetic":
         operation = rng.choice(("add", "subtract"))
         if operation == "add": pairs = ((8, 250, 4, 750), (3, 650, 2, 700))

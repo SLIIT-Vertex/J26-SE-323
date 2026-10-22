@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import type {
 	EnglishSupportTagKey,
 	SupportAnswer,
+	SupportLesson,
 	SupportRoundActivity,
 	SupportView,
 } from "./api/generated";
@@ -29,13 +30,17 @@ function markAnswer(board: HTMLElement, marks: ReadonlySet<string>) {
 
 /**
  * The game board of a help stage with its real answer shown: faintly tinted while the child
- * plays, or fully solved and untouchable in a worked example.
+ * plays, or strongly marked in a demonstration. Either way the child can still touch the board
+ * and place the answer themselves.
  */
 function AnswerBoard({
 	answer,
+	hideLines = false,
 	children,
 }: {
 	answer?: SupportAnswer | null;
+	/** A lesson says the answer in words, so the raw answer lines are left out. */
+	hideLines?: boolean;
 	children: ReactNode;
 }) {
 	const board = useRef<HTMLDivElement>(null);
@@ -63,11 +68,10 @@ function AnswerBoard({
 				ref={board}
 				className="support-answer-board"
 				data-answer-mode={answer?.mode ?? "none"}
-				inert={filled || undefined}
 			>
 				{children}
 			</div>
-			{answer && answer.lines.length > 0 && (
+			{answer && !hideLines && answer.lines.length > 0 && (
 				<div className="support-answer-lines" data-answer-mode={answer.mode}>
 					<strong>{filled ? "විසඳුම" : "ඉඟිය"}</strong>
 					<ul>
@@ -78,6 +82,83 @@ function AnswerBoard({
 				</div>
 			)}
 		</>
+	);
+}
+
+/** What the help says before the child looks at the board: their mistake, theory, hints. */
+function LessonIntro({ lesson }: { lesson: SupportLesson }) {
+	const empty =
+		!lesson.diagnosis &&
+		lesson.notes.length === 0 &&
+		lesson.another_view_si.length === 0 &&
+		lesson.hints_si.length === 0;
+	if (empty) return null;
+	return (
+		<div className="support-lesson">
+			<h3>{lesson.title_si}</h3>
+			{lesson.diagnosis && (
+				<div className="support-lesson-diagnosis">
+					<p>
+						<strong>ඔබ කළේ:</strong> {lesson.diagnosis.you_did_si}
+					</p>
+					<p>
+						<strong>වැරදුණු තැන:</strong> {lesson.diagnosis.went_wrong_si}
+					</p>
+				</div>
+			)}
+			{lesson.notes.length > 0 && (
+				<dl className="support-lesson-notes">
+					{lesson.notes.map((note) => (
+						<div key={note.title_si}>
+							<dt>{note.title_si}</dt>
+							<dd>{note.text_si}</dd>
+						</div>
+					))}
+				</dl>
+			)}
+			{lesson.another_view_si.length > 0 && (
+				<div className="support-lesson-another">
+					<strong>වෙනත් ආකාරයකින් බලමු</strong>
+					<ul>
+						{lesson.another_view_si.map((line) => (
+							<li key={line}>{line}</li>
+						))}
+					</ul>
+				</div>
+			)}
+			{lesson.hints_si.length > 0 && (
+				<div className="support-lesson-hints">
+					<strong>ඉඟි</strong>
+					<ul>
+						{lesson.hints_si.map((hint) => (
+							<li key={hint}>{hint}</li>
+						))}
+					</ul>
+				</div>
+			)}
+		</div>
+	);
+}
+
+/** The solution under the board: every step with its numbers, then the answer, large. */
+function LessonSolution({ lesson }: { lesson: SupportLesson }) {
+	if (lesson.steps_si.length === 0 && !lesson.answer_si) return null;
+	return (
+		<div className="support-lesson-solution">
+			{lesson.steps_si.length > 0 && (
+				<ol className="support-lesson-steps">
+					{lesson.steps_si.map((step) => (
+						<li key={step}>{step}</li>
+					))}
+				</ol>
+			)}
+			{lesson.answer_si && (
+				<p className="support-lesson-answer">
+					<strong>පිළිතුර</strong>
+					<span>{lesson.answer_si}</span>
+				</p>
+			)}
+		</div>
 	);
 }
 
@@ -98,6 +179,7 @@ export function SupportRoundFrame({
 	const manifest = support.game_manifest;
 	if (manifest.schema_version !== "support-round-v1") return null;
 	const englishTag = ENGLISH_SUPPORT_TAGS[manifest.english_tag_key];
+	const lesson = manifest.lesson ?? null;
 	return (
 		<section
 			className="support-round-frame"
@@ -110,6 +192,7 @@ export function SupportRoundFrame({
 			{manifest.cues_si.map((cue) => (
 				<p key={cue}>{cue}</p>
 			))}
+			{lesson && <LessonIntro lesson={lesson} />}
 			{manifest.guidance && manifest.guidance.length > 0 && (
 				<ol className="support-round-guidance">
 					{manifest.guidance.map((pair) => (
@@ -123,9 +206,15 @@ export function SupportRoundFrame({
 			{manifest.activity && (
 				<div className="support-round-activity">
 					<h3>{manifest.activity.prompt_si}</h3>
-					<AnswerBoard answer={manifest.activity.answer}>
+					<AnswerBoard
+						answer={manifest.activity.answer}
+						hideLines={lesson !== null}
+					>
 						{renderActivity(manifest.activity)}
 					</AnswerBoard>
+					{lesson && !manifest.worked_example && (
+						<LessonSolution lesson={lesson} />
+					)}
 				</div>
 			)}
 			{manifest.worked_example && (
@@ -135,6 +224,7 @@ export function SupportRoundFrame({
 				>
 					<h3>{manifest.worked_example.prompt_si}</h3>
 					<AnswerBoard
+						hideLines={lesson !== null}
 						answer={
 							manifest.worked_example.answer ?? {
 								mode: "filled",
@@ -152,11 +242,12 @@ export function SupportRoundFrame({
 							returns_to_failed_item: false,
 						})}
 					</AnswerBoard>
-					<ol>
+					<ol className="support-lesson-steps">
 						{manifest.worked_example.steps_si.map((step) => (
 							<li key={step}>{step}</li>
 						))}
 					</ol>
+					{lesson && <LessonSolution lesson={{ ...lesson, steps_si: [] }} />}
 				</div>
 			)}
 			{manifest.stage_kind === "view" && (
@@ -166,7 +257,7 @@ export function SupportRoundFrame({
 					disabled={busy}
 					onClick={onViewComplete}
 				>
-					දැන් මම කරමි
+					{lesson?.continue_label_si ?? "දැන් මම කරමි"}
 				</button>
 			)}
 			{children}

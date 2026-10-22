@@ -2,10 +2,12 @@ const STORAGE_KEY = "mindbridge.research";
 
 /**
  * The research dashboard shows model internals and answers, so it is never on in a child-facing
- * build: only in development, with `?research=1`, or after a researcher turned it on.
+ * build: only in development, in a researcher build (`VITE_RESEARCH_MODE=1`, e.g. for the iOS
+ * simulator, which has no address bar), with `?research=1`, or after a researcher turned it on.
  */
 export function isResearchMode(): boolean {
 	if (import.meta.env.DEV) return true;
+	if (import.meta.env.VITE_RESEARCH_MODE === "1") return true;
 	if (new URLSearchParams(window.location.search).get("research") === "1") {
 		remember(true);
 		return true;

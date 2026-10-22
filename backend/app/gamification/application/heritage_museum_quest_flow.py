@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.gamification.application.sri_lanka_discovery_flow import SriLankaDiscoveryFlow
+from app.gamification.application.engine.english_area_flow import EnglishAreaFlow
 from app.gamification.content.heritage_museum_quest import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -27,7 +27,7 @@ from app.gamification.content.heritage_museum_quest import (
 )
 
 
-class HeritageMuseumQuestFlow(SriLankaDiscoveryFlow):
+class HeritageMuseumQuestFlow(EnglishAreaFlow):
     area_id = AREA_ID
     experience_id = "heritage_museum_quest"
     contract_version = "heritage-museum-learning-flow-v1"

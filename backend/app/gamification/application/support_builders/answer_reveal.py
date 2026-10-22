@@ -61,6 +61,10 @@ def answer_reveal(
     if not lines:
         return None
     marks = sorted({mark for line in lines for mark in line.split(" → ")})
+    # Mathematics help says its answer in words, in the lesson; the raw payload lines
+    # ("3434 → 2") would only confuse a child, so only the board highlights remain.
+    if context.subject == "MAT":
+        return {"mode": mode, "lines": [], "marks": marks}
     return {"mode": mode, "lines": lines, "marks": marks}
 
 

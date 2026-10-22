@@ -352,9 +352,9 @@ class PlayableAreaPackage(FrozenModel):
     @model_validator(mode="after")
     def keep_area_rows_distinct(self) -> PlayableAreaPackage:
         area_ids = tuple(row.area_id for row in self.areas)
-        if len(area_ids) > 57 or len(set(area_ids)) != len(area_ids):
+        if len(area_ids) > 56 or len(set(area_ids)) != len(area_ids):
             raise ValueError(
-                "playable area rows must be distinct and at most the 57 supplied areas"
+                "playable area rows must be distinct and at most the 56 supplied areas"
             )
         return self
 

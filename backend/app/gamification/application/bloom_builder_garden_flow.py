@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from app.gamification.application.number_world_flow import NumberWorldFlowError
-from app.gamification.application.sri_lanka_discovery_flow import SriLankaDiscoveryFlow
+from app.gamification.application.engine.area_flow import AreaFlowError
+from app.gamification.application.engine.english_area_flow import EnglishAreaFlow
 from app.gamification.content.bloom_builder_garden import (
     AREA_ID,
     CATALOGUE_VERSION,
@@ -30,7 +30,7 @@ from app.gamification.content.bloom_builder_garden import (
 )
 
 
-class BloomBuilderGardenFlow(SriLankaDiscoveryFlow):
+class BloomBuilderGardenFlow(EnglishAreaFlow):
     area_id = AREA_ID
     experience_id = "bloom_builder_garden"
     contract_version = "bloom-builder-garden-learning-flow-v1"
@@ -71,13 +71,13 @@ class BloomBuilderGardenFlow(SriLankaDiscoveryFlow):
             "detail_sheet_open_count",
         }
         if not set(result).issubset(allowed):
-            raise NumberWorldFlowError("PII_OR_ANSWER_DATA_REJECTED")
+            raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in result.items():
             if key == "tap_alternative_used":
                 if type(value) is not bool:
-                    raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif type(value) is not int or not 0 <= value <= 86_400_000:
-                raise NumberWorldFlowError("PAYLOAD_OUT_OF_BOUNDS")
+                raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return result
 
     @staticmethod

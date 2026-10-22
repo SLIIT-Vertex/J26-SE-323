@@ -1,0 +1,16 @@
+{
+  "area_id": "G5-AREA-SIN-01",
+  "package_version": "g5-sin-pillam-journey-draft-v1",
+  "status": "draft",
+  "production_enabled": false,
+  "source_photograph_sha256": "1f1a4e092f4fe25c2b1cd5a0200db9e24527ff404609e1d1ee52973283a1eaa1",
+  "files": {
+    "source-transcription.json": "424dc6da408e451c9211b597e1d1587c99773597d189ae20a75c88c69dd2af9d"
+  },
+  "atomic_skills": ["G5-SIN-PIL-NAME-01", "G5-SIN-PIL-VOWEL-01", "G5-SIN-PIL-BUILD-01", "G5-SIN-PIL-LENGTH-01", "G5-SIN-PIL-PAPILI-01", "G5-SIN-PIL-COMPOUND-01"],
+  "atomic_skill_id_status": "provisional_internal_not_official_curriculum_codes",
+  "curriculum_trace": {"node_id": "G5-SIN-C03-L01-K01", "node_type": "content_point", "status": "draft_blocked_pending_review"},
+  "blocked_reviews": ["source_identity", "usage_rights", "sinhala_language", "educator", "rubric", "parallel_equivalence", "answer_leakage", "accessibility", "security_privacy", "model_safety", "ethics", "consent_assent", "release"],
+  "approvals_recorded": [],
+  "active_content_policy": "Development/test only. Production child delivery and real-child research fail closed until every blocked review is recorded."
+}

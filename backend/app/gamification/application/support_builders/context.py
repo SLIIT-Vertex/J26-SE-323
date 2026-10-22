@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Literal, Protocol
 from uuid import uuid4
@@ -57,6 +57,10 @@ class SupportBuildContext:
     at: datetime
     # The area's subject code (``MAT``, ``ENG``): which wording the cues use.
     subject: str = "MAT"
+    # The area itself: which theory a mathematics help teaches.
+    area_id: str = ""
+    # What the child answered on the failed item, for help that starts from their mistake.
+    failed_response: Mapping[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -71,6 +75,11 @@ class SupportStage:
     answer: dict[str, object] | None = None
     # Guided reasoning only: each question with its answer for this game.
     guidance: tuple[tuple[str, str], ...] = ()
+    # Mathematics only: what the stage teaches in words (see support_builders.teaching).
+    lesson: dict[str, object] | None = None
+
+    def with_lesson(self, lesson: dict[str, object] | None) -> SupportStage:
+        return replace(self, lesson=lesson)
 
     def as_record(self) -> dict[str, object]:
         return {
@@ -83,6 +92,7 @@ class SupportStage:
             "guidance": [
                 {"question_si": question, "answer_si": answer} for question, answer in self.guidance
             ],
+            "lesson": self.lesson,
         }
 
 
@@ -145,6 +155,18 @@ def practice_stage(
         gate_on_success=gate_on_success,
         answer=answer_reveal(context, record, "tint"),
     )
+
+
+def teaches(context: SupportBuildContext) -> bool:
+    """Mathematics help explains its steps and answers in words; other subjects keep their cues."""
+
+    return context.subject == "MAT"
+
+
+def skill_name(context: SupportBuildContext, skill_id: str) -> str | None:
+    skill = context.source.skills.get(skill_id)
+    name = getattr(skill, "name_si", None) or getattr(skill, "title_si", None)
+    return str(name) if name else None
 
 
 def answer_tokens(context: SupportBuildContext) -> frozenset[str]:

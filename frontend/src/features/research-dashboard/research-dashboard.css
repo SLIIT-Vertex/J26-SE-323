@@ -1181,49 +1181,10 @@
 	}
 }
 
-/* Parameter validation & accuracy: method first, results second. */
-.rd-method {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0.6rem;
-	margin: 0.6rem 0 0.5rem;
-	padding: 0;
-	list-style: none;
-	counter-reset: none;
-}
-
-.rd-method li {
-	display: grid;
-	grid-template-columns: auto 1fr;
-	column-gap: 0.6rem;
-	align-items: start;
-	padding: 0.75rem 0.9rem;
-	border: 1px solid var(--rd-line);
-	border-radius: 12px;
-	background: var(--rd-panel);
-}
-
-.rd-method li > span:last-child {
-	grid-column: 2;
-	color: var(--rd-muted);
-	font-size: 0.88rem;
-}
-
-.rd-method__n {
-	grid-row: span 2;
-	display: grid;
-	place-items: center;
-	width: 2rem;
-	height: 2rem;
-	border-radius: 50%;
-	background: var(--rd-accent);
-	color: #fff;
-	font-weight: 800;
-}
-
+/* Parameter validation & accuracy: one test and one verdict per model. */
 .rd-validate-grid {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 0.9rem;
 	align-items: start;
 }
@@ -1262,17 +1223,13 @@
 	list-style: none;
 }
 
-.rd-settings > li,
-.rd-check {
-	display: grid;
-	gap: 0.3rem;
-	padding: 0.65rem 0.75rem;
+.rd-settings > li {
+	padding: 0.5rem 0.75rem;
 	border-radius: 10px;
 	background: var(--rd-bg);
 }
 
-.rd-settings__head,
-.rd-check__head {
+.rd-settings__head {
 	display: flex;
 	align-items: baseline;
 	justify-content: space-between;
@@ -1289,164 +1246,66 @@
 	white-space: nowrap;
 }
 
-.rd-tried {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.3rem;
-	color: var(--rd-muted);
-	font-size: 0.8rem;
-}
-
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-tried span {
-	padding: 0.05rem 0.45rem;
-	border: 1px solid var(--rd-line);
-	border-radius: 6px;
-	background: #fff;
-	color: var(--rd-ink);
-}
-
-.rd-tried span.is-current {
-	border-color: var(--rd-accent);
-	background: var(--rd-accent);
-	color: #fff;
-}
-
-.rd-replay {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-	font-size: 0.8rem;
-}
-
-.rd-replay li {
+.rd-verdict {
 	display: grid;
-	justify-items: center;
-	min-width: 4.2rem;
-	padding: 0.3rem 0.4rem;
-	border-radius: 8px;
-	background: #fff;
+	gap: 0.35rem;
+	padding: 0.9rem 1rem;
+	border-radius: 12px;
+	background: var(--rd-bg);
 }
 
-.rd-replay li small {
-	color: var(--rd-muted);
-	font-size: 0.68rem;
-}
-
-.rd-replay.is-waiting {
-	display: grid;
-	gap: 0.3rem;
-	color: var(--rd-muted);
-}
-
-.rd-progress {
-	display: block;
-	height: 6px;
-	border-radius: 99px;
-	background: var(--rd-line);
-	overflow: hidden;
-}
-
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-progress span {
-	display: block;
-	height: 100%;
-	background: var(--rd-accent);
-}
-
-.rd-check h5 {
-	flex: 1;
-	margin: 0;
-	font-size: 0.92rem;
-}
-
-.rd-check__icon {
-	display: grid;
-	place-items: center;
-	flex: none;
-	width: 1.4rem;
-	height: 1.4rem;
-	border-radius: 50%;
+.rd-verdict.is-passing {
 	background: var(--rd-good-soft);
-	color: var(--rd-good);
-	font-weight: 800;
-	font-size: 0.8rem;
 }
 
-.rd-check__value {
-	font-size: 1.15rem;
+.rd-verdict.is-not-passing {
+	background: var(--rd-bad-soft);
+}
+
+.rd-verdict__status {
+	margin: 0;
+	font-weight: 800;
+}
+
+.rd-verdict.is-passing .rd-verdict__status {
+	color: var(--rd-good);
+}
+
+.rd-verdict.is-not-passing .rd-verdict__status {
+	color: var(--rd-bad);
+}
+
+.rd-verdict__numbers {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem;
+	color: var(--rd-muted);
 }
 
 /* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-check p {
+.rd-verdict__numbers strong {
+	color: var(--rd-ink);
+	font-size: 1.8rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
+.rd-verdict p {
+	margin: 0;
+}
+
+.rd-verdict__rule {
 	color: var(--rd-muted);
 	font-size: 0.84rem;
 }
 
-.rd-check p b {
-	display: inline-block;
-	min-width: 2.6rem;
-	color: var(--rd-ink);
-	font-size: 0.72rem;
-	letter-spacing: 0.05em;
-	text-transform: uppercase;
-}
-
-.rd-check__foot {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.rd-check__foot .rd-range {
-	flex: 1 1 8rem;
-}
-
-.rd-sim-mini {
-	display: grid;
-	grid-template-columns: auto 1fr auto;
-	align-items: center;
-	gap: 1rem;
-	padding: 0.75rem 1rem;
-	border: 1px dashed var(--rd-line);
-	border-radius: 12px;
-	background: var(--rd-panel);
-}
-
-.rd-sim-mini > ul {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.5rem 1.25rem;
+.rd-gain-note {
 	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.rd-sim-mini li {
-	display: flex;
-	align-items: baseline;
-	gap: 0.4rem;
-	font-size: 0.86rem;
-}
-
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.rd-sim-mini li strong {
-	font-size: 1.05rem;
-}
-
-.rd-sim-mini li small {
-	color: var(--rd-muted);
+	font-size: 0.85rem;
 }
 
 @media (max-width: 1023px) {
-	.rd-validate-grid,
-	.rd-method,
-	.rd-sim-mini {
+	.rd-validate-grid {
 		grid-template-columns: 1fr;
 	}
 }
@@ -1565,9 +1424,7 @@
 	gap: 3px;
 	min-width: 0;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-game-row__facts b,
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-first-help-list b {
 	display: block;
 	color: var(--rd-muted);
@@ -1919,7 +1776,6 @@
 	white-space: nowrap;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-rank__text small {
 	color: var(--rd-muted);
 }
@@ -1956,7 +1812,6 @@
 	color: var(--rd-accent);
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-flow__steps small {
 	color: var(--rd-muted);
 	font-weight: 400;
@@ -1991,7 +1846,6 @@
 	display: grid;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .rd-flow__outcomes small {
 	color: var(--rd-muted);
 }
@@ -2038,4 +1892,249 @@
 	.rd-flow__arrow {
 		display: none;
 	}
+}
+
+/* Game details: a sheet that slides up from the bottom over the model tab. */
+.rd-sheet-layer {
+	position: fixed;
+	inset: 0;
+	z-index: 120;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+}
+
+.rd-sheet-backdrop {
+	position: absolute;
+	inset: 0;
+	border: 0;
+	background: rgb(17 24 39 / 0.42);
+	animation: rd-sheet-fade 180ms ease-out;
+}
+
+.rd-sheet {
+	position: relative;
+	display: grid;
+	grid-template-rows: auto auto 1fr;
+	width: min(640px, 100%);
+	max-height: 82dvh;
+	border-radius: 20px 20px 0 0;
+	background: var(--rd-panel, #fff);
+	color: var(--rd-ink, #111827);
+	box-shadow: 0 -12px 32px rgb(17 24 39 / 0.22);
+	padding-bottom: env(safe-area-inset-bottom);
+	animation: rd-sheet-up 260ms cubic-bezier(0.2, 0.9, 0.3, 1.1);
+	outline: none;
+}
+
+.rd-sheet__grip {
+	width: 44px;
+	height: 5px;
+	margin: 8px auto 0;
+	border-radius: 999px;
+	background: var(--rd-line, #e3e6ee);
+}
+
+.rd-sheet__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.6rem 1rem 0.7rem;
+	border-bottom: 1px solid var(--rd-line, #e3e6ee);
+}
+
+.rd-sheet__head h3 {
+	margin: 0;
+	font-size: 1.1rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__head p {
+	margin: 0.2rem 0 0;
+	color: var(--rd-muted, #5b6475);
+	font-size: 0.85rem;
+}
+
+.rd-sheet__close {
+	min-height: 40px;
+	border: 1px solid var(--rd-line, #e3e6ee);
+	border-radius: 999px;
+	background: var(--rd-bg, #f4f6fb);
+	padding: 0 0.9rem;
+	font-weight: 700;
+}
+
+.rd-sheet__body {
+	overflow-y: auto;
+	padding: 0.4rem 1rem 1.2rem;
+	overscroll-behavior: contain;
+}
+
+.rd-sheet__body section {
+	padding: 0.7rem 0;
+	border-bottom: 1px solid var(--rd-line, #e3e6ee);
+}
+
+.rd-sheet__body section:last-child {
+	border-bottom: 0;
+}
+
+.rd-sheet__body h4 {
+	margin: 0 0 0.45rem;
+	font-size: 0.95rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__body p {
+	margin: 0.3rem 0;
+	line-height: 1.45;
+}
+
+.rd-sheet__note {
+	border-left: 3px solid var(--rd-accent, #4f46e5);
+	background: var(--rd-accent-soft, #eef0ff);
+	border-radius: 6px;
+	padding: 0.4rem 0.6rem;
+}
+
+.rd-sheet__bars,
+.rd-sheet__order,
+.rd-sheet__rounds,
+.rd-sheet__checks {
+	display: grid;
+	gap: 0.45rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__bars li {
+	display: grid;
+	grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) 3.2rem;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.85rem;
+}
+
+.rd-sheet__bars li.is-top {
+	font-weight: 800;
+}
+
+.rd-sheet__bar {
+	height: 10px;
+	border-radius: 999px;
+	background: var(--rd-bg, #f4f6fb);
+	overflow: hidden;
+}
+
+.rd-sheet__bar i {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--rd-accent, #4f46e5);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__bars b {
+	text-align: right;
+}
+
+.rd-sheet__steps {
+	margin: 0.4rem 0 0;
+	padding-left: 1.2rem;
+	display: grid;
+	gap: 0.25rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__order li {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: 0.5rem;
+	border: 1px solid var(--rd-line, #e3e6ee);
+	border-radius: 10px;
+	padding: 0.45rem 0.6rem;
+	counter-increment: help-order;
+}
+
+.rd-sheet__order li.is-used {
+	border-color: var(--rd-accent, #4f46e5);
+	background: var(--rd-accent-soft, #eef0ff);
+}
+
+.rd-sheet__order small {
+	color: var(--rd-muted, #5b6475);
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__rounds > li {
+	border: 1px solid var(--rd-line, #e3e6ee);
+	border-radius: 12px;
+	padding: 0.6rem 0.7rem;
+}
+
+.rd-sheet__rounds header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.45rem;
+}
+
+/* biome-ignore lint/style/noDescendingSpecificity: detail-sheet rules target sheet elements, not overlay or replay lists. */
+.rd-sheet__rounds ul {
+	margin: 0.35rem 0 0;
+	padding-left: 1.1rem;
+	font-size: 0.85rem;
+}
+
+.rd-sheet__pill {
+	margin-left: auto;
+	border-radius: 999px;
+	background: var(--rd-bg, #f4f6fb);
+	padding: 0.15rem 0.55rem;
+	font-size: 0.78rem;
+	font-weight: 700;
+}
+
+.rd-sheet__pill.is-yes {
+	background: var(--rd-good-soft, #e7f6ec);
+	color: var(--rd-good, #15803d);
+}
+
+.rd-sheet__pill.is-no {
+	background: var(--rd-bad-soft, #fdecec);
+	color: var(--rd-bad, #b91c1c);
+}
+
+@keyframes rd-sheet-up {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+@keyframes rd-sheet-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rd-sheet,
+	.rd-sheet-backdrop {
+		animation: none;
+	}
+}
+
+.rd-sheet__order li > span {
+	display: grid;
+	gap: 0.1rem;
 }

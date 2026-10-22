@@ -30,11 +30,13 @@ from app.gamification.modeling.support_selection.support_order import (
     choose_support_order,
     reason_family,
 )
-from tests.gamification.support_loop_helpers import (
+from tests.gamification.helpers.support_loop_helpers import (
     MATHEMATICS_AREAS,
     correct_answer,
     flow_for,
     orchestrator_with_learner,
+    skip_watch_only_help,
+    walk_every_help,
     wrong_answer,
 )
 
@@ -57,6 +59,13 @@ ENGLISH_AREAS = {
     "G5-AREA-ENG-16": "HeritageMuseumQuestFlow",
     "G5-AREA-ENG-17": "ClassroomLanguageLiveFlow",
     "G5-AREA-ENG-18": "ConversationStreetFlow",
+}
+# Sinhala packages run the loop with the three original types only and build their own
+# assisted items, so they have no simpler-version generator.
+SINHALA_LOOP_AREAS = {
+    "G5-AREA-SIN-01": "SinhalaPillamFlow",
+    "G5-AREA-SIN-02": "SinhalaPunctuationFlow",
+    "G5-AREA-SIN-03": "SinhalaRiddleFlow",
 }
 MULTI_HELP_AREAS = {**MATHEMATICS_AREAS, **ENGLISH_AREAS}
 # Skills whose task is already the smallest of its kind: shading one half or one quarter, the one
@@ -122,7 +131,7 @@ def _skills() -> list[tuple[str, str]]:
     ]
 
 
-def _failed(area: str, skill: str, *, condition: str = "baseline"):
+def _failed(area: str, skill: str, *, condition: str = "baseline", answerable: bool = False):
     learner = uuid4()
     orchestrator, session = orchestrator_with_learner(learner)
     opened = orchestrator.open_episode(
@@ -139,6 +148,9 @@ def _failed(area: str, skill: str, *, condition: str = "baseline"):
     )
     episode_id = UUID(str(opened["episode_id"]))
     game_flow = flow_for(orchestrator, area)
+    # A visual demonstration is watched and then withdrawn; some tests need an answerable round.
+    if answerable:
+        skip_watch_only_help(game_flow)
     state = orchestrator.reconstruct(episode_id)["state"]
     before = next(row for row in state["presentations"] if row["role"] == "unsupported_before")
     shown = orchestrator.submit_before(
@@ -156,6 +168,11 @@ def test_every_mathematics_and_english_flow_runs_the_loop_with_its_own_simpler_v
     orchestrator, _session = orchestrator_with_learner(uuid4())
     for area, flow in orchestrator._area_flows.items():
         multi_help = area in MULTI_HELP_AREAS
+        if area in SINHALA_LOOP_AREAS:
+            assert type(flow).__name__ == SINHALA_LOOP_AREAS[area]
+            assert flow.runs_support_loop is True
+            assert flow.generate_simpler_item is None
+            continue
         assert getattr(flow, "runs_support_loop", False) is multi_help, area
         if multi_help:
             assert type(flow).__name__ == MULTI_HELP_AREAS[area]
@@ -214,64 +231,48 @@ def test_designed_simpler_version_is_the_same_skill_scoreable_and_smaller(area, 
         ("G5-AREA-ENG-17", "G5-ENG-CLASS-FUNCTION-01"),
     ),
 )
-def test_each_wrong_supported_answer_opens_the_next_server_type_until_the_order_ends(area, skill):
-    orchestrator, session, game_flow, episode_id, response = _failed(area, skill)
+def test_each_wrong_answer_opens_the_next_server_type_until_the_order_ends(area, skill):
+    orchestrator, session, _game_flow, episode_id, response = _failed(area, skill)
     order = orchestrator.reconstruct(episode_id)["state"]["support_loop"]["order"]
-    shown_types = []
-    calls = 0
-    while not response["support_round"]["withdrawal_allowed"]:
-        calls += 1
-        assert calls <= 16
-        status = response["support_round"]
-        if not shown_types or shown_types[-1] != status["scaffold_type"]:
-            shown_types.append(status["scaffold_type"])
-        assert response["support"]["english_tag_key"] == status["english_tag_key"]
-        if status["stage_kind"] == "view":
-            response = orchestrator.complete_support(
-                episode_id,
-                duration_ms=100,
-                steps_viewed=1,
-                manifest_revision_id=status["manifest_revision_id"],
-                grouped_count=0,
-                group_sizes=(0, 0),
-                interaction_summary={"completed": True},
-                idempotency_key=f"view:{calls}:{uuid4()}",
-            )
-            continue
-        current = game_flow._support_rounds.current_item(
-            orchestrator.reconstruct(episode_id)["state"]
-        )
-        response = orchestrator.submit_supported(
-            episode_id,
-            constructed_response=wrong_answer(game_flow, current),
-            response_time_ms=100,
-            interaction_summary={},
-            idempotency_key=f"wrong:{calls}:{uuid4()}",
-        )
+    shown_types: list[str] = []
+    for support in walk_every_help(orchestrator, episode_id, response):
+        assert support["english_tag_key"] == support["game_manifest"]["english_tag_key"]
+        if not shown_types or shown_types[-1] != support["scaffold_type"]:
+            shown_types.append(support["scaffold_type"])
 
+    # Wrong with help opens the next type; wrong alone after withdrawal does too, in a follow-up.
     state = orchestrator.reconstruct(episode_id)["state"]
-    assert shown_types == order == state["support_loop"]["types_used"]
-    assert state["support_loop"]["stop_reason"] == "order_exhausted"
-    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == len(order)
+    measured = state["support_loop"]["types_used"]
+    assert shown_types == order == measured + state["follow_up"]["support_loop"]["types_used"]
+    assert state["follow_up"]["finish_reason"] == "order_exhausted"
+    assert state["status"] == "completed"
+    assert len(session.scalars(select(LearningFlowSupportRoundModel)).all()) == len(measured)
     expected = MATHEMATICS_ORDER if area.startswith("G5-AREA-MAT-") else ENGLISH_ORDER
     assert order == [support for support in expected if support in order]
 
 
 def test_english_round_withdraws_after_supported_success_and_measures_only_the_fresh_item():
     orchestrator, _session, game_flow, episode_id, shown = _failed(
-        "G5-AREA-ENG-06", "G5-ENG-FOOD-VOCAB-01", condition="proposed"
+        "G5-AREA-ENG-06", "G5-ENG-FOOD-VOCAB-01", condition="proposed", answerable=True
     )
     public = str(shown["support"])
     for secret in ("target_mapping", "correct_response", "answer_key", "support_order"):
         assert secret not in public
-    current = game_flow._support_rounds.current_item(orchestrator.reconstruct(episode_id)["state"])
-    stopped = orchestrator.submit_supported(
-        episode_id,
-        constructed_response=correct_answer(game_flow, current),
-        response_time_ms=250,
-        interaction_summary={},
-        idempotency_key=f"supported:{uuid4()}",
-    )
+    # Right on every stage of the round (a round may practise an easier item first).
+    stopped = shown
+    for step in range(4):
+        current = game_flow._support_rounds.current_item(
+            orchestrator.reconstruct(episode_id)["state"]
+        )
+        stopped = orchestrator.submit_supported(
+            episode_id,
+            constructed_response=correct_answer(game_flow, current),
+            response_time_ms=250,
+            interaction_summary={},
+            idempotency_key=f"supported:{step}:{uuid4()}",
+        )
+        if stopped["support_round"]["withdrawal_allowed"]:
+            break
     assert stopped["support_round"]["withdrawal_allowed"] is True
     round_status = stopped["support_round"]
     orchestrator.withdraw_support(
@@ -307,7 +308,7 @@ def test_english_round_withdraws_after_supported_success_and_measures_only_the_f
 
 def test_an_overlapping_answer_for_a_closed_round_does_not_advance_the_order_again():
     orchestrator, _session, game_flow, episode_id, _shown = _failed(
-        "G5-AREA-ENG-06", "G5-ENG-FOOD-VOCAB-01"
+        "G5-AREA-ENG-06", "G5-ENG-FOOD-VOCAB-01", answerable=True
     )
     current = game_flow._support_rounds.current_item(orchestrator.reconstruct(episode_id)["state"])
     answer = wrong_answer(game_flow, current)
@@ -318,6 +319,7 @@ def test_an_overlapping_answer_for_a_closed_round_does_not_advance_the_order_aga
         interaction_summary={},
         idempotency_key=f"first:{uuid4()}",
     )
+    opened = len(orchestrator.reconstruct(episode_id)["state"]["support_loop"]["types_used"])
     with pytest.raises(LearningFlowOrchestrationError):
         orchestrator.submit_supported(
             episode_id,
@@ -327,7 +329,8 @@ def test_an_overlapping_answer_for_a_closed_round_does_not_advance_the_order_aga
             idempotency_key=f"overlap:{uuid4()}",
         )
 
-    assert len(orchestrator.reconstruct(episode_id)["state"]["support_loop"]["types_used"]) == 2
+    # The overlapping answer opened nothing new.
+    assert len(orchestrator.reconstruct(episode_id)["state"]["support_loop"]["types_used"]) == opened
 
 
 def test_english_simpler_and_prerequisite_stay_distinct():

@@ -314,11 +314,12 @@ def validate_constructed_response(
             response["denominator"] != denominator
             or not isinstance(assignments, list)
             or len(assignments) != total
-            or any(type(v) is not int or v < 0 or v >= denominator for v in assignments)
+            # -1 is an object the child has not placed yet: an incomplete share, not bad input.
+            or any(type(v) is not int or v < -1 or v >= denominator for v in assignments)
         ):
             raise ValueError("INVALID_GROUP_ASSIGNMENTS")
         sizes = [assignments.count(group) for group in range(denominator)]
-        correct = len(set(sizes)) == 1
+        correct = sum(sizes) == total and len(set(sizes)) == 1
         return (
             correct,
             "correct"

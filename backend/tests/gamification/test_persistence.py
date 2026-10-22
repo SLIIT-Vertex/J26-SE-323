@@ -73,6 +73,15 @@ from app.gamification.modeling.support_selection.selection import (
 )
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.helpers.fixtures import (
+    DECISION_ID,
+    EPISODE_ID,
+    LEARNER_ID,
+    NOW,
+    SESSION_ID,
+    SKILL_CODE,
+    seed_complete_synthetic_episode,
+)
 from tests.gamification.modeling.independence_gain.test_measurement import valid_input
 from tests.gamification.modeling.misconception_inference.test_inference import (
     inference_input as model1_input,
@@ -85,16 +94,6 @@ from tests.gamification.modeling.support_selection.test_selection import (
 )
 from tests.gamification.modeling.support_selection.test_selection import (
     decide as model2_decide,
-)
-
-from .fixtures import (
-    DECISION_ID,
-    EPISODE_ID,
-    LEARNER_ID,
-    NOW,
-    SESSION_ID,
-    SKILL_CODE,
-    seed_complete_synthetic_episode,
 )
 
 BACKEND_ROOT = Path(__file__).parents[2]
@@ -691,8 +690,8 @@ def test_gamification_branch_label_resolves_to_an_independent_head() -> None:
     script = ScriptDirectory.from_config(config)
 
     (gamification_head,) = script.get_revisions("gamification@head")
-    assert gamification_head.revision == "gam_20261021_03"
-    assert gamification_head.down_revision == "gam_20261021_02"
+    assert gamification_head.revision == "gam_20261022_01"
+    assert gamification_head.down_revision == "gam_20261021_03"
     assert gamification_head.revision in script.get_heads()
     for head in set(script.get_heads()) - {gamification_head.revision}:
         ancestors = {revision.revision for revision in script.iterate_revisions(head, "base")}

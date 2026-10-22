@@ -249,7 +249,7 @@ describe("SupportRoundFrame", () => {
 		await act(async () => root.unmount());
 	});
 
-	it("shows a worked example already solved, with nothing for the child to do", async () => {
+	it("shows a worked example already solved, and the child can still touch the board", async () => {
 		const view = support("worked_parallel_example", "view");
 		if (view.game_manifest.schema_version !== "support-round-v1")
 			throw new Error();
@@ -279,7 +279,8 @@ describe("SupportRoundFrame", () => {
 		);
 		const board = host.querySelector(".support-answer-board");
 		expect(board?.getAttribute("data-answer-mode")).toBe("filled");
-		expect(board?.hasAttribute("inert")).toBe(true);
+		// Solved, but not locked: the child can place the shown answer themselves.
+		expect(board?.hasAttribute("inert")).toBe(false);
 		expect(board?.querySelector(".support-answer-mark")?.textContent).toBe(
 			"45",
 		);
@@ -287,5 +288,103 @@ describe("SupportRoundFrame", () => {
 			"45",
 		);
 		await act(async () => root.unmount());
+	});
+});
+
+describe("SupportRoundFrame lesson", () => {
+	it("shows a visual demonstration solved, with a next button and nothing to submit", async () => {
+		const view = support("visual_guidance", "view");
+		if (view.game_manifest.schema_version !== "support-round-v1")
+			throw new Error();
+		view.game_manifest.lesson = {
+			title_si: "බලන්න: මෙසේ කරයි",
+			notes: [],
+			steps_si: ["52 014 හි 2 ඇත්තේ දහස ස්ථානයේ."],
+			answer_si: "2 තිබෙන්නේ දහස ස්ථානයේ.",
+			hints_si: [],
+			another_view_si: [],
+			diagnosis: null,
+			continue_label_si: "ඊළඟ",
+		};
+		const onViewComplete = vi.fn();
+		const host = document.createElement("div");
+		document.body.append(host);
+		const root = createRoot(host);
+		await act(async () =>
+			root.render(
+				<SupportRoundPlay
+					support={view}
+					busy={false}
+					ready
+					checkLabel="තහවුරු කරන්න"
+					onCheck={vi.fn()}
+					onViewComplete={onViewComplete}
+					renderActivity={() => <button type="button">board</button>}
+				/>,
+			),
+		);
+		expect(host.querySelector(".support-lesson-steps")?.textContent).toContain(
+			"දහස ස්ථානයේ",
+		);
+		expect(host.querySelector(".support-lesson-answer")?.textContent).toContain(
+			"2 තිබෙන්නේ දහස ස්ථානයේ.",
+		);
+		const buttons = [...host.querySelectorAll("button")].map(
+			(button) => button.textContent,
+		);
+		expect(buttons).toContain("ඊළඟ");
+		expect(buttons).not.toContain("තහවුරු කරන්න");
+		await act(async () =>
+			[...host.querySelectorAll("button")]
+				.find((b) => b.textContent === "ඊළඟ")
+				?.click(),
+		);
+		expect(onViewComplete).toHaveBeenCalledOnce();
+		await act(async () => root.unmount());
+		host.remove();
+	});
+
+	it("starts prerequisite repair from what the child did, without saying the answer", async () => {
+		const target = support("prerequisite_repair");
+		if (target.game_manifest.schema_version !== "support-round-v1")
+			throw new Error();
+		target.game_manifest.lesson = {
+			title_si: "වැරදුණු තැන",
+			notes: [{ title_si: "මූලික කුසලතාව", text_si: "මානසික එකතු කිරීම" }],
+			steps_si: [],
+			answer_si: null,
+			hints_si: ["එකක තීරුවෙන් පටන් ගන්න."],
+			another_view_si: ["4597 = 4000 + 500 + 90 + 7"],
+			diagnosis: {
+				you_did_si: "ඔබේ එකතුව 7610",
+				went_wrong_si: "දහය තීරුවට ගෙන ආ 1 එකතු කිරීමට අමතක විය.",
+			},
+			continue_label_si: null,
+		};
+		const host = document.createElement("div");
+		document.body.append(host);
+		const root = createRoot(host);
+		await act(async () =>
+			root.render(
+				<SupportRoundFrame
+					support={target}
+					onViewComplete={vi.fn()}
+					renderActivity={() => <div>board</div>}
+				/>,
+			),
+		);
+		expect(
+			host.querySelector(".support-lesson-diagnosis")?.textContent,
+		).toContain("ගෙන ආ 1");
+		expect(host.querySelector(".support-lesson-notes")?.textContent).toContain(
+			"මානසික එකතු කිරීම",
+		);
+		expect(host.querySelector(".support-lesson-hints")?.textContent).toContain(
+			"එකක තීරුවෙන්",
+		);
+		expect(host.querySelector(".support-lesson-another")).not.toBeNull();
+		expect(host.querySelector(".support-lesson-answer")).toBeNull();
+		await act(async () => root.unmount());
+		host.remove();
 	});
 });

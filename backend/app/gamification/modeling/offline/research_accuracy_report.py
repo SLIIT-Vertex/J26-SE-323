@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime
 
-from app.gamification.application.research_accuracy import prediction_pairs
+from app.gamification.application.research_dashboard.accuracy import prediction_pairs
 from app.gamification.modeling.misconception_inference.learner_prior import apply_learner_prior
 from app.gamification.modeling.support_selection.support_order import (
     choose_support_order,

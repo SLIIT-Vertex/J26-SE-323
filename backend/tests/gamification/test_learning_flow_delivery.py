@@ -47,7 +47,7 @@ from app.gamification.modeling.support_selection.reference_policy import SafeSup
 from app.main import app
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
-from tests.gamification.engineering_slice import SKILL, engineering_package
+from tests.gamification.helpers.engineering_slice import SKILL, engineering_package
 from tests.gamification.test_persistence import sqlite_engine
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000201")

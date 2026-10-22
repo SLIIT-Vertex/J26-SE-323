@@ -15,6 +15,7 @@ from app.gamification.application.support_builders.context import (
     target_stage,
 )
 from app.gamification.application.support_builders.cues import cues_for
+from app.gamification.application.support_builders.teaching import item_lesson, lesson_block
 
 # Fields that describe the item rather than its difficulty.
 _IGNORED = frozenset({"source_page", "seed", "round_id", "schema_version", "grid_max"})
@@ -54,13 +55,24 @@ class SimplerSameGameBuilder:
         if record is None:
             return None
         cues = cues_for(context.subject)
+        practice = practice_stage(context, record, cues.simpler_start, gate_on_success=True)
+        target = target_stage(context, cues.simpler_return)
+        easy = item_lesson(context, record)
+        if easy is not None:
+            # The easy one is solved in front of the child, answer and all; the failed one then
+            # takes the same steps, with only its first moves as hints.
+            own = item_lesson(context, context.failed_record)
+            practice = practice.with_lesson(
+                lesson_block("පහසු ප්‍රශ්නය විසඳන හැටි", steps=easy.steps, answer=easy.answer)
+            )
+            target = target_stage(
+                context,
+                cues.simpler_return + ("පහසු ප්‍රශ්නයේ කළ පියවරම මෙහි ලොකු අගයන් සමඟ කරන්න.",),
+            ).with_lesson(lesson_block("දැන් ඔබේ ප්‍රශ්නය", hints=own.hints if own else ()))
         return SupportPlan(
             scaffold_type="simpler_same_game",
             title_si="පහසු අනුවාදය",
-            stages=(
-                practice_stage(context, record, cues.simpler_start, gate_on_success=True),
-                target_stage(context, cues.simpler_return),
-            ),
+            stages=(practice, target),
         )
 
     @staticmethod

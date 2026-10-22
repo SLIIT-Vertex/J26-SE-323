@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
+import type { FixturePhase, FixtureRoundView } from "../api/fixtureRoundClient";
 import type {
 	ChildEpisodeResponse,
 	DraftMissionRecord,
@@ -8,7 +9,6 @@ import type {
 	PresentationManifest,
 	SupportView,
 } from "../api/generated";
-import type { FixturePhase, FixtureRoundView } from "../api/fixtureRoundClient";
 import {
 	MobileLearningApp,
 	type MobileLearningService,
@@ -116,30 +116,49 @@ describe("baseline mobile flow", () => {
 	});
 
 	it.each([
-		{ random: 0, areaId: "G5-AREA-MAT-01", title: "සංඛ්‍යා", screen: "number-world" },
-		{ random: 0.999, areaId: "G5-AREA-ENG-18", title: "Useful Expressions & Conversation Language", screen: "conversation-street" },
-	])("opens the featured $areaId game without fabricated progress", async ({ random, areaId, title, screen }) => {
-		const choose = vi.spyOn(Math, "random").mockReturnValue(random);
-		const container = document.createElement("div");
-		document.body.append(container);
-		const root = createRoot(container);
-		try {
-			await act(async () => root.render(<MobileLearningApp service={fakeService()} initialScreen="home" />));
-			const card = container.querySelector(".home-mission-card");
-			expect(card?.querySelector("h2")?.textContent).toBe(title);
-			expect(card?.querySelector('[role="progressbar"]')).toBeNull();
-			expect(card?.textContent).not.toMatch(/\d\s*\/\s*3/);
-			expect(card?.querySelector("button")?.getAttribute("data-area-id")).toBe(areaId);
-			await click(container, "නව දැනුම්දීම් 1ක්");
-			expect(card?.querySelector("h2")?.textContent).toBe(title);
-			await click(container, "අභියෝගය අරඹමු");
-			await waitForSelector(container, `main[data-screen="${screen}"]`);
-			expect(container.textContent).not.toContain("මෙහෙයුම බලන්න");
-		} finally {
-			await act(async () => root.unmount());
-			choose.mockRestore();
-		}
-	});
+		{
+			random: 0,
+			areaId: "G5-AREA-MAT-01",
+			title: "සංඛ්‍යා",
+			screen: "number-world",
+		},
+		{
+			random: 0.999,
+			areaId: "G5-AREA-ENG-18",
+			title: "Useful Expressions & Conversation Language",
+			screen: "conversation-street",
+		},
+	])(
+		"opens the featured $areaId game without fabricated progress",
+		async ({ random, areaId, title, screen }) => {
+			const choose = vi.spyOn(Math, "random").mockReturnValue(random);
+			const container = document.createElement("div");
+			document.body.append(container);
+			const root = createRoot(container);
+			try {
+				await act(async () =>
+					root.render(
+						<MobileLearningApp service={fakeService()} initialScreen="home" />,
+					),
+				);
+				const card = container.querySelector(".home-mission-card");
+				expect(card?.querySelector("h2")?.textContent).toBe(title);
+				expect(card?.querySelector('[role="progressbar"]')).toBeNull();
+				expect(card?.textContent).not.toMatch(/\d\s*\/\s*3/);
+				expect(
+					card?.querySelector("button")?.getAttribute("data-area-id"),
+				).toBe(areaId);
+				await click(container, "නව දැනුම්දීම් 1ක්");
+				expect(card?.querySelector("h2")?.textContent).toBe(title);
+				await click(container, "අභියෝගය අරඹමු");
+				await waitForSelector(container, `main[data-screen="${screen}"]`);
+				expect(container.textContent).not.toContain("මෙහෙයුම බලන්න");
+			} finally {
+				await act(async () => root.unmount());
+				choose.mockRestore();
+			}
+		},
+	);
 
 	it("does not report a lost connection in settings when no game is open", async () => {
 		const container = document.createElement("div");
@@ -506,9 +525,12 @@ describe("baseline mobile flow", () => {
 			);
 			await click(container, "ආපසු");
 		}
+		// The dedicated Sinhala games are listed even without a catalogue mission.
 		expect(choices).toEqual([
 			"G5-AREA-MAT-01",
 			"G5-AREA-SIN-01",
+			"G5-AREA-SIN-02",
+			"G5-AREA-SIN-03",
 			"G5-AREA-SIN-11",
 			"G5-AREA-SIN-12",
 			"G5-AREA-ENV-01",
@@ -523,8 +545,8 @@ describe("baseline mobile flow", () => {
 			["G5-AREA-MAT-01", "market_mission"],
 			["G5-AREA-MAT-03", "pattern_temple"],
 			["G5-AREA-MAT-07", "parcel_workshop"],
-			["G5-AREA-SIN-01", "word_workshop"],
-			["G5-AREA-SIN-03", "word_workshop"],
+			["G5-AREA-SIN-04", "word_workshop"],
+			["G5-AREA-SIN-05", "word_workshop"],
 			["G5-AREA-SIN-13", "story_studio"],
 			["G5-AREA-ENV-01", "eco_explorer"],
 		];
@@ -590,8 +612,8 @@ describe("baseline mobile flow", () => {
 			"G5-AREA-MAT-01": ["MAT", "සංඛ්‍යා"],
 			"G5-AREA-MAT-03": ["MAT", "සංඛ්‍යා රටා"],
 			"G5-AREA-MAT-07": ["MAT", "කාලය"],
-			"G5-AREA-SIN-01": ["SIN", "පිල්ලම් හඳුනාගනිමු"],
-			"G5-AREA-SIN-03": ["SIN", "තේරවිලි"],
+			"G5-AREA-SIN-04": ["SIN", "සමානාර්ථ පද (සමාන පද)"],
+			"G5-AREA-SIN-05": ["SIN", "විරුද්ධාර්ථ පද (විරුද්ධ පද)"],
 			"G5-AREA-SIN-13": ["SIN", "ආරාධනා පත්‍ර"],
 			"G5-AREA-ENV-01": ["ENV", "අපේ යහපැවැත්ම"],
 		};
@@ -601,8 +623,8 @@ describe("baseline mobile flow", () => {
 			ENV: "පරිසර අධ්‍යයනය",
 		};
 		const fixtureAreas = new Set([
-			"G5-AREA-SIN-01",
-			"G5-AREA-SIN-03",
+			"G5-AREA-SIN-04",
+			"G5-AREA-SIN-05",
 			"G5-AREA-SIN-13",
 			"G5-AREA-ENV-01",
 		]);
@@ -827,5 +849,4 @@ describe("baseline mobile flow", () => {
 		expect(container.textContent).not.toContain("correct_option_id");
 		await act(async () => root.unmount());
 	});
-
 });

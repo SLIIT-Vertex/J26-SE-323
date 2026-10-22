@@ -1,22 +1,14 @@
 import type { ReactNode } from "react";
 import type {
-	AccuracyMetric,
+	AccuracyCheck,
 	AccuracyReport,
 	EpisodeSummary,
 	LearnerProfile,
-	ModelSetting,
 	Overview,
 	Trace,
 } from "./api";
-import {
-	HELP_STYLE,
-	HelpMark,
-	KpiTile,
-	PlayGrid,
-	pct,
-	WeeklyBars,
-} from "./charts";
-import { answerLabel, GameRow, PlayStatus } from "./game-row";
+import { HELP_STYLE, HelpMark, KpiTile, pct, WeeklyBars } from "./charts";
+import { answerLabel, GameRow, PlayStatus } from "./GameRow";
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
 	return (
@@ -87,7 +79,6 @@ export function OverviewPanel({
 				{overview.counts.abandoned ?? 0}
 			</p>
 			<WeeklyBars weeks={overview.weeks ?? []} />
-			<PlayGrid cells={[...maths, ...english]} />
 			<section className="rd-recent" aria-label="Recent games">
 				<h4>Recent games</h4>
 				{recent.length ? (
@@ -260,243 +251,84 @@ export function LivePanel({ trace }: { trace: Trace }) {
 	);
 }
 
-const SHORT_HEADLINE: Record<string, string> = {
-	"Probabilistic Misconception": "Found the true reason",
-	"Contextual Support Selection": "Chose the help that works",
-	"Independence Gain": "Gain matched real learning",
+const CHECK_STATUS: Record<AccuracyCheck["status"], string> = {
+	passing: "Working accurately",
+	not_passing: "Not yet beating the baseline",
+	not_enough_data: "Not enough games yet",
 };
 
-const METHOD_STEPS = [
-	["Set", "Each model runs on a few fixed, written-down settings."],
-	["Replay", "Stored games are re-run with other values to see what changes."],
-	["Measure", "Finished games are scored against what the child did next."],
-] as const;
-
-type Offline = AccuracyReport["offline"];
-
-/** What replaying the stored games with each tried value showed, for one setting. */
-function ReplayRow({
-	setting,
-	offline,
-	minimum,
-}: {
-	setting: ModelSetting;
-	offline: Offline;
-	minimum: number;
-}) {
-	if (!setting.replay || !offline) return null;
-	if (setting.replay === "confidence_caps") {
-		const rows = offline.confidence_caps;
-		const count = rows[0]?.count ?? 0;
-		if (rows.every((row) => row.agreement == null))
-			return (
-				<p className="rd-replay is-waiting">
-					<span className="rd-progress" aria-hidden="true">
-						<span
-							style={{ width: `${Math.min(100, (count / minimum) * 100)}%` }}
-						/>
-					</span>
-					Replay result after {minimum} games · {count} so far
-				</p>
-			);
-		return (
-			<ul className="rd-replay">
-				{rows.map((row) => (
-					<li key={row.confidence_cap}>
-						<span>{pct(row.confidence_cap)}</span>
-						<strong className="rd-num">{pct(row.agreement)}</strong>
-					</li>
-				))}
-			</ul>
-		);
-	}
+/** One model's deterministic accuracy test: the rule, today's number and the verdict. */
+export function ModelCheckCard({ check }: { check: AccuracyCheck }) {
+	const hasData = check.count > 0 && check.value != null;
+	const range = hasData ? check.interval : null;
+	const waiting = Math.max(0, check.minimum - check.count);
 	return (
-		<ul className="rd-replay">
-			{offline.preference_thresholds.map((row) => (
-				<li key={row.success_threshold}>
-					<span>{row.success_threshold}</span>
-					<strong className="rd-num">
-						{row.changed_first_choices}/{row.checked}
-					</strong>
-					<small>first help changed</small>
-				</li>
-			))}
-		</ul>
-	);
-}
-
-export function CheckRow({ metric }: { metric: AccuracyMetric }) {
-	const hasData =
-		metric.count > 0 && metric.value != null && Number.isFinite(metric.value);
-	const score = metric.unit === "score";
-	const format = (value: number) => (score ? value.toFixed(2) : pct(value));
-	const value = hasData ? format(metric.value as number) : "No result yet";
-	const interval =
-		hasData &&
-		metric.interval?.every(Number.isFinite) &&
-		metric.interval[0] <= metric.interval[1]
-			? metric.interval
-			: null;
-	return (
-		<li className="rd-check">
-			<div className="rd-check__head">
-				<h5>{metric.title}</h5>
-				<strong className="rd-check__value">{value}</strong>
-			</div>
-			<span className="rd-evidence-status">
-				{!hasData
-					? "Waiting for evidence"
-					: metric.small_sample
-						? "Early evidence"
-						: "Recorded estimate"}
-			</span>
-			<p>
-				<b>How it is checked</b>
-				{metric.method}
-			</p>
-			{metric.good && (
-				<p>
-					<b>What a better result means</b>
-					{metric.good}
-				</p>
-			)}
-			{metric.meaning && <p>{metric.meaning}</p>}
-			<div className="rd-check__foot">
-				<span>
-					{metric.count} {metric.count === 1 ? "game" : "games"} checked
-				</span>
-				{interval && (
+		<section className={`rd-verdict is-${check.status.replace(/_/g, "-")}`}>
+			<p className="rd-verdict__status">{CHECK_STATUS[check.status]}</p>
+			<div className="rd-verdict__numbers">
+				<strong className="rd-num">
+					{hasData ? pct(check.value) : "No result yet"}
+				</strong>
+				{check.reference != null && (
 					<span>
-						Estimated range: {format(interval[0])}–{format(interval[1])}
+						vs {pct(check.reference)} {check.reference_label}
 					</span>
 				)}
-				{metric.small_sample && <em className="rd-pill">early sign</em>}
 			</div>
-		</li>
+			<p className="rd-quiet">
+				{check.count} {check.count === 1 ? "game" : "games"}
+				{range && ` · 95% range ${pct(range[0])}–${pct(range[1])}`}
+				{waiting > 0 && ` · ${waiting} more needed`}
+			</p>
+			<p className="rd-verdict__rule">{check.rule}</p>
+		</section>
 	);
 }
 
 export function AccuracyPanel({ report }: { report: AccuracyReport }) {
-	const simulation = report.simulation;
+	const models = report.models.filter((model) => model.check);
+	const gain = report.models.find((model) => model.kind === "measurement");
+	const fair = gain?.metrics.find((metric) => metric.key === "fair");
 	return (
 		<div className="rd-stack rd-validate-page">
 			<header className="rd-model__head">
-				<h3>How we validate each model</h3>
-				<ol className="rd-method">
-					{METHOD_STEPS.map(([step, line], index) => (
-						<li key={step}>
-							<span className="rd-method__n">{index + 1}</span>
-							<strong>{step}</strong>
-							<span>{line}</span>
-						</li>
-					))}
-				</ol>
+				<h3>Is each model working accurately?</h3>
 				<p className="rd-quiet">
-					Rates include an estimated range when available. Under{" "}
-					{report.minimum_sessions ?? 20} games it is marked as an early sign.
+					Each model has one fixed test, run on this child's finished games. It
+					passes only when the low end of its 95% range beats a simple baseline,
+					with at least {report.minimum_sessions ?? 20} games behind it.
 				</p>
 			</header>
 			<div className="rd-validate-grid">
-				{report.models.map((model) => (
+				{models.map((model) => (
 					<article className="rd-validate" key={model.name}>
 						<header>
 							<h4>{model.name}</h4>
-							<p className="rd-quiet">{model.subtitle}</p>
+							<p className="rd-quiet">{model.check?.question}</p>
 						</header>
+						{model.check && <ModelCheckCard check={model.check} />}
 						<section>
-							<h5 className="rd-eyebrow">Parameters checked</h5>
+							<h5 className="rd-eyebrow">Settings</h5>
 							<ul className="rd-settings">
 								{(model.settings ?? []).map((setting) => (
-									<li key={setting.name}>
-										<div className="rd-settings__head">
-											<span>{setting.name}</span>
-											<strong>{setting.value}</strong>
-										</div>
-										{setting.tried.length > 0 && (
-											<p className="rd-tried">
-												Tried{" "}
-												{setting.tried.map((value) => (
-													<span
-														key={value}
-														className={
-															value === setting.value ? "is-current" : undefined
-														}
-													>
-														{value}
-													</span>
-												))}
-											</p>
-										)}
-										<p className="rd-quiet">{setting.how}</p>
-										<ReplayRow
-											setting={setting}
-											offline={report.offline}
-											minimum={report.minimum_sessions ?? 20}
-										/>
+									<li key={setting.name} className="rd-settings__head">
+										<span>{setting.name}</span>
+										<strong>{setting.value}</strong>
 									</li>
 								))}
 							</ul>
 						</section>
-						<section>
-							<h5 className="rd-eyebrow">Accuracy checks</h5>
-							<ul className="rd-checks">
-								{model.metrics
-									.filter((metric) => metric.tile)
-									.map((metric) => (
-										<CheckRow key={metric.key} metric={metric} />
-									))}
-							</ul>
-							{model.leakage && (
-								<p className="rd-chip">
-									Answer leaks: {model.leakage.count} of {model.leakage.checked}{" "}
-									games
-								</p>
-							)}
-						</section>
 					</article>
 				))}
 			</div>
-			{simulation && (
-				<section
-					className="rd-sim-mini"
-					aria-label="Example from simulated learners"
-				>
-					<div>
-						<h4>Example: simulated learners</h4>
-						<p className="rd-quiet">
-							{simulation.cohort.learners} learners with known answers ·{" "}
-							{simulation.cohort.sessions.toLocaleString("en-GB")} games
-						</p>
-					</div>
-					<ul>
-						{simulation.models.map((model) => {
-							const headline = model.metrics.find(
-								(metric) => metric.title === model.headline,
-							);
-							return (
-								<li key={model.name}>
-									<strong className="rd-num">
-										{pct(headline?.value ?? null)}
-									</strong>
-									<span>{SHORT_HEADLINE[model.name] ?? model.name}</span>
-									{model.reference?.value != null && (
-										<small>
-											vs {pct(model.reference.value)} {model.reference.label}
-										</small>
-									)}
-								</li>
-							);
-						})}
-					</ul>
-					<details className="rd-assumptions">
-						<summary>How they behave</summary>
-						<ul>
-							{simulation.assumptions.map((rule) => (
-								<li key={rule}>{rule}</li>
-							))}
-						</ul>
-					</details>
-				</section>
+			{gain && (
+				<p className="rd-quiet rd-gain-note">
+					Independence gain is a before-and-after score, not a learned model, so
+					it has no accuracy test.
+					{fair && fair.count > 0 && fair.value != null
+						? ` ${pct(fair.value)} of ${fair.count} help games passed its fairness checks.`
+						: ""}
+				</p>
 			)}
 		</div>
 	);
@@ -528,19 +360,6 @@ export function ProfilePanel({ profile }: { profile: LearnerProfile }) {
 						{profile.areas_available.ENG} games tried
 					</dd>
 				</dl>
-			</Card>
-			<Card title="Mistakes seen most often">
-				{profile.mistakes.length ? (
-					<ul>
-						{profile.mistakes.map((row) => (
-							<li key={`${row.title}-${row.reason}`}>
-								{row.title}: {row.reason} ({row.count})
-							</li>
-						))}
-					</ul>
-				) : (
-					<p>No mistakes have been recorded yet.</p>
-				)}
 			</Card>
 		</div>
 	);

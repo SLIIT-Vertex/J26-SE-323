@@ -1,8 +1,15 @@
 """The multi-help loop inside one episode.
 
 After a detected difficulty, Model 2 fixes the help order. Each round delivers one type. A wrong
-supported attempt opens the next type in that order that has not been used; a correct one, or the
-end of the order, stops the loop and allows withdrawal. A type is never repeated in an episode.
+supported attempt opens the next type in that order that has not been used; a correct one, a
+watched demonstration (which already showed the answer), or the end of the order stops the loop
+and allows withdrawal. A type is never repeated in an episode.
+
+If the child then fails the fresh after item, that first after item stays the Model 3
+measurement and a follow-up loop opens with the next unused type of the same order. It lives in
+``state["follow_up"]`` (see :func:`scope`), so the measured loop, exposure and withdrawal are never
+overwritten. Each follow-up help ends in another withdrawal and another fresh practice item, until
+the child succeeds alone or the order runs out.
 
 This service advances, scores and stops the loop. It does not render (the builders do), does not
 choose the order (Model 2 does), and does not calculate Model 3 (the measurement module does).
@@ -33,6 +40,22 @@ class SupportRoundError(ValueError):
 
 
 ContextFactory = Callable[[], SupportBuildContext]
+
+
+def scope(state: Mapping[str, object]) -> dict[str, object]:
+    """Where the current help loop, exposure, withdrawal and phase live: the episode itself, or
+    its follow-up after a failed after item."""
+
+    follow_up = state.get("follow_up")
+    if isinstance(follow_up, dict) and follow_up["status"] != "finished":
+        return follow_up
+    return state  # type: ignore[return-value]
+
+
+def phase(state: Mapping[str, object]) -> str:
+    """The step the phone is on. The episode's own status stays terminal during a follow-up."""
+
+    return str(scope(state)["status"])
 
 
 class SupportRoundService:
@@ -100,13 +123,74 @@ class SupportRoundService:
             self._stop(state, "order_exhausted", at)
         return self.status(state, previous_attempt_correct=False, another_round=opened)
 
+    def open_follow_up(
+        self,
+        state: dict[str, object],
+        failed: Mapping[str, object],
+        next_context: ContextFactory,
+        at: datetime,
+    ) -> bool:
+        """Open the next unused type after a failed unsupported item. False when none is left.
+
+        ``failed`` names the item the child just failed; the next help is built on it.
+        """
+
+        follow_up = state.get("follow_up")
+        if not isinstance(follow_up, dict):
+            measured = state.get("support_loop")
+            if not isinstance(measured, dict):
+                return False
+            used = {*measured["types_used"], *measured["skipped_unrenderable"]}
+            follow_up = {
+                "status": "finished",
+                "support_loop": {
+                    "order": [support for support in measured["order"] if support not in used],
+                    "types_used": [],
+                    "rounds": [],
+                    "skipped_unrenderable": [],
+                    "stop_reason": None,
+                },
+                "scaffold_exposure": None,
+                "withdrawal": None,
+                "supported_correctness": None,
+                "presentations": [],
+                "attempts": [],
+                "failed": None,
+            }
+            state["follow_up"] = follow_up
+        follow_up["failed"] = dict(failed)
+        follow_up["status"] = "support_pending"
+        follow_up["support_loop"]["stop_reason"] = None
+        if self._open_next(state, next_context, at):
+            return True
+        follow_up["support_loop"]["stop_reason"] = "order_exhausted"
+        self.finish_follow_up(state, "order_exhausted", at)
+        return False
+
+    def finish_follow_up(self, state: dict[str, object], reason: str, at: datetime) -> None:
+        follow_up = state["follow_up"]
+        assert isinstance(follow_up, dict)
+        follow_up["status"] = "finished"
+        follow_up["finish_reason"] = reason
+        self._event(state, "follow_up_finished", at, None, reason=reason)
+
     def record_view_complete(
-        self, state: dict[str, object], manifest_revision_id: str, at: datetime
+        self,
+        state: dict[str, object],
+        manifest_revision_id: str,
+        at: datetime,
     ) -> dict[str, object]:
         current = self._current_round(state)
         stage = current["stages"][current["stage_index"]]
         if stage["kind"] != "view" or manifest_revision_id != current["manifest_revision_id"]:
             raise SupportRoundError("INVALID_SUPPORT_COMPLETION")
+        if current["stage_index"] == len(current["stages"]) - 1:
+            # A demonstration-only round (mathematics visual guidance) has nothing to answer:
+            # it already showed the answer. Watching it ends the loop and allows withdrawal,
+            # so the after item measures what the demonstration taught.
+            self._close(state, current, "viewed", at)
+            self._stop(state, "support_viewed", at)
+            return self.status(state, previous_attempt_correct=None)
         current["stage_index"] += 1
         self._event(state, "support_stage_advanced", at, current)
         return self.status(state, previous_attempt_correct=None)
@@ -125,7 +209,7 @@ class SupportRoundService:
         previous_attempt_correct: bool | None,
         another_round: bool = False,
     ) -> dict[str, object]:
-        loop = state["support_loop"]
+        loop = scope(state)["support_loop"]
         assert isinstance(loop, dict)
         latest = loop["rounds"][-1]
         stopped = loop["stop_reason"] is not None
@@ -151,7 +235,7 @@ class SupportRoundService:
         to show filled); the scored before and after items never do.
         """
 
-        loop = state.get("support_loop")
+        loop = scope(state).get("support_loop")
         if not isinstance(loop, dict) or loop["stop_reason"] is not None:
             return None
         current = loop["rounds"][-1]
@@ -193,6 +277,7 @@ class SupportRoundService:
                 "stage_kind": stage["kind"],
                 "cues_si": list(stage["cues_si"]),
                 "guidance": list(stage.get("guidance") or ()),
+                "lesson": stage.get("lesson"),
                 "activity": public_activity,
                 "worked_example": worked,
             },
@@ -200,7 +285,10 @@ class SupportRoundService:
 
     @staticmethod
     def round_rows(state: Mapping[str, object]) -> tuple[dict[str, object], ...]:
-        """One durable row per delivered type, for the store's support-round table."""
+        """One durable row per delivered type, for the store's support-round table.
+
+        Only the measured loop: follow-up help comes after Model 3 and is kept in the state.
+        """
 
         loop = state.get("support_loop")
         if not isinstance(loop, dict):
@@ -213,8 +301,11 @@ class SupportRoundService:
                 "english_tag_key": row["english_tag_key"],
                 "order_position": loop["order"].index(row["scaffold_type"]),
                 "outcome": row["outcome"],
+                # A watched demonstration was never answered, so it has no supported result.
                 "supported_correct": (
-                    None if row["outcome"] is None else row["outcome"] == "succeeded"
+                    None
+                    if row["outcome"] in {None, "viewed"}
+                    else row["outcome"] == "succeeded"
                 ),
                 "opened_at": row["opened_at"],
                 "closed_at": row["closed_at"],
@@ -225,7 +316,7 @@ class SupportRoundService:
     def _open_next(
         self, state: dict[str, object], next_context: ContextFactory, at: datetime
     ) -> bool:
-        loop = state["support_loop"]
+        loop = scope(state)["support_loop"]
         assert isinstance(loop, dict)
         for support in loop["order"]:
             if support in loop["types_used"] or support in loop["skipped_unrenderable"]:
@@ -239,12 +330,14 @@ class SupportRoundService:
         return False
 
     def _open(self, state: dict[str, object], plan: SupportPlan, at: datetime) -> None:
-        loop = state["support_loop"]
+        holder = scope(state)
+        loop = holder["support_loop"]
         assert isinstance(loop, dict)
         if plan.scaffold_type in loop["types_used"]:
             raise SupportRoundError("SUPPORT_TYPE_REPEATED")
         number = len(loop["rounds"]) + 1
-        revision = f"{state['skill_id']}:{plan.scaffold_type}:round-{number}@v1"
+        label = "round" if holder is state else "follow-up-round"
+        revision = f"{state['skill_id']}:{plan.scaffold_type}:{label}-{number}@v1"
         current = {
             "round_id": str(uuid4()),
             "round_number": number,
@@ -262,7 +355,7 @@ class SupportRoundService:
         }
         loop["rounds"].append(current)
         loop["types_used"].append(plan.scaffold_type)
-        state["scaffold_exposure"] = {
+        holder["scaffold_exposure"] = {
             "exposure_id": str(uuid4()),
             "revision_id": revision,
             "scaffold_type": plan.scaffold_type,
@@ -272,10 +365,11 @@ class SupportRoundService:
             "displayed": True,
             "fully_withdrawn": False,
             # A worked example shows a full solution; withdrawal must clear it either way.
-            "answer_revealing": plan.scaffold_type == "worked_parallel_example",
+            "answer_revealing": plan.scaffold_type == "worked_parallel_example"
+            or any(stage.kind == "view" and stage.item is not None for stage in plan.stages),
             "manifest_revision_id": current["manifest_revision_id"],
         }
-        state["status"] = "support_active"
+        holder["status"] = "support_active"
         self._event(state, "support_round_opened", at, current)
 
     @staticmethod
@@ -287,20 +381,23 @@ class SupportRoundService:
 
     @staticmethod
     def _stop(state: dict[str, object], reason: str, at: datetime) -> None:
-        loop = state["support_loop"]
+        holder = scope(state)
+        loop = holder["support_loop"]
         assert isinstance(loop, dict)
         loop["stop_reason"] = reason
-        exposure = state["scaffold_exposure"]
+        exposure = holder["scaffold_exposure"]
         assert isinstance(exposure, dict)
         exposure["completed_at"] = at.isoformat()
         # The supported result is kept for audit only; it is never a reward.
-        state["supported_correctness"] = reason == "supported_success"
-        state["status"] = "support_complete"
+        holder["supported_correctness"] = (
+            None if reason == "support_viewed" else reason == "supported_success"
+        )
+        holder["status"] = "support_complete"
         SupportRoundService._event(state, "support_loop_stopped", at, None, reason=reason)
 
     @staticmethod
     def _current_round(state: Mapping[str, object]) -> dict[str, object]:
-        loop = state.get("support_loop")
+        loop = scope(state).get("support_loop")
         if not isinstance(loop, dict) or not loop["rounds"] or loop["stop_reason"] is not None:
             raise SupportRoundError("EPISODE_STATE_CONFLICT")
         return loop["rounds"][-1]
