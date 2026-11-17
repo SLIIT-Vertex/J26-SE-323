@@ -1545,32 +1545,12 @@
     "confused",
     "disengaged"
   ],
-  "meaning": "Expected valid Independence Gain of each help type before any child's data. Sorting the drawable helps by it, ties broken by the subject order, gives today's order.",
+  "meaning": "Expected valid Independence Gain of each help type before any child's data. Sorting the drawable helps by it gives today's order.",
+  "own_success_rate_gain": 0.3,
   "package_version": "expert-model-data-v1",
-  "prior_strength": 4,
-  "tie_break_order": {
-    "ENG": [
-      "visual_guidance",
-      "simpler_same_game",
-      "step_by_step_guidance",
-      "conceptual_reexplanation",
-      "prerequisite_repair",
-      "worked_parallel_example"
-    ],
-    "MAT": [
-      "visual_guidance",
-      "step_by_step_guidance",
-      "conceptual_reexplanation",
-      "simpler_same_game",
-      "prerequisite_repair",
-      "worked_parallel_example"
-    ],
-    "SIN": [
-      "visual_guidance",
-      "worked_parallel_example",
-      "step_by_step_guidance"
-    ]
-  },
+  "prior_strength": 8,
+  "tie_rule": "Gains within tie_tolerance of each other count as equal; the help earlier in the cell's order wins.",
+  "tie_tolerance": 1e-09,
   "unused_reference": {
     "SIN": {
       "lead_by_reason": {

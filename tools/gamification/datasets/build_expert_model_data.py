@@ -81,8 +81,15 @@ REWRITE_INPUT_PREFIX = "explained_by_"
 # Expected valid Independence Gain by position in today's order: the first help gets the most.
 FIRST_GAIN = 0.6
 GAIN_DECREMENT = 0.05
-# How many episodes of evidence the expert start is worth.
-PRIOR_STRENGTH = 4
+# How many episodes of evidence the expert start is worth. With this spacing, the shared lead
+# help gives way after two failed rounds or one helped-but-not-independent result, and another
+# help takes the lead after two independent successes, as the rules' preference threshold does.
+PRIOR_STRENGTH = 8
+# Expert start for a child's own valid independent-success rate with a help on this skill: one
+# own success puts even the last help first for that child, as the rules do today.
+OWN_SUCCESS_RATE_GAIN = 0.3
+# Predicted gains this close count as equal; the help earlier in the cell's order then wins.
+TIE_TOLERANCE = 1e-9
 
 
 # --- Evidence bands -------------------------------------------------------------------------
@@ -330,12 +337,15 @@ def _support_gains(orders: Mapping[str, object]) -> dict[str, object]:
         "package_version": PACKAGE_VERSION,
         "evidence_status": EVIDENCE_STATUS,
         "meaning": "Expected valid Independence Gain of each help type before any child's data. "
-        "Sorting the drawable helps by it, ties broken by the subject order, gives today's order.",
+        "Sorting the drawable helps by it gives today's order.",
         "first_gain": FIRST_GAIN,
         "gain_decrement": GAIN_DECREMENT,
         "prior_strength": PRIOR_STRENGTH,
+        "own_success_rate_gain": OWN_SUCCESS_RATE_GAIN,
+        "tie_tolerance": TIE_TOLERANCE,
+        "tie_rule": "Gains within tie_tolerance of each other count as equal; the help earlier in "
+        "the cell's order wins.",
         "help_types": {subject: orders["subject_orders"][subject] for subject in SUBJECTS},  # type: ignore[index]
-        "tie_break_order": {subject: orders["subject_orders"][subject] for subject in SUBJECTS},  # type: ignore[index]
         "learning_states": list(LEARNING_STATES),
         "cells": cells,
         "unused_reference": {

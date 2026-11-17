@@ -8,6 +8,7 @@ import hashlib
 import importlib.util
 import json
 from collections import Counter
+from itertools import pairwise
 from pathlib import Path
 
 import pytest
@@ -204,6 +205,13 @@ def test_every_label_has_a_reason_family(tables) -> None:
 def test_expected_gains_cover_every_cell_and_help(orders) -> None:
     gains = _json(PACKAGE / "support_gains.json")
     assert gains["prior_strength"] > 0
+    assert 0 < gains["own_success_rate_gain"] <= 1 - gains["first_gain"]
+    assert gains["tie_tolerance"] > 0
+    for cell in gains["cells"]:
+        values = [cell["expected_gain"][support] for support in cell["order"]]
+        assert values == sorted(values, reverse=True)
+        assert min(a - b for a, b in pairwise(values)) > gains["tie_tolerance"]
+        assert values[0] - values[-1] < gains["own_success_rate_gain"]
     cells = {
         (c["subject"], c["reason_family"], c["model1_uncertain"], c["learning_state"]): c
         for c in gains["cells"]
@@ -236,9 +244,8 @@ def test_sorting_by_expected_gain_reproduces_todays_order(orders) -> None:
             else families[subject]["labels"][decision["model1_label"]]["reason_family"]
         )
         cell = cells[(subject, family, decision["model1_uncertain"], decision["learning_state"])]
-        tie_break = gains["tie_break_order"][subject]
-        drawable = [s for s in tie_break if s in decision["renderable"]]
-        order = sorted(drawable, key=lambda s: (-cell["expected_gain"][s], tie_break.index(s)))
+        drawable = [s for s in cell["order"] if s in decision["renderable"]]
+        order = sorted(drawable, key=lambda s: (-cell["expected_gain"][s], cell["order"].index(s)))
         expected = (
             decision["delivered"]["support_order"]
             if subject == "SIN"

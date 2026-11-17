@@ -29,6 +29,11 @@ pins the fixtures' SHA-256 and the commit that last changed them.
   `unknown_or_other` top label in an area whose table says so.
 - **Expected gains** are positions in today's order turned into numbers (0.60 for the first help,
   0.05 less for each next one). They are a starting belief for the bandit, not a measurement.
+  With `prior_strength` 8, shared evidence overturns them as the rules would: the first help gives
+  way after two failed rounds or one helped-but-not-independent result, and another help leads
+  after two independent successes. `own_success_rate_gain` (0.3) is the starting weight of a
+  child's own independent-success rate with a help, enough to put that help first for that child.
+  Gains within `tie_tolerance` count as equal, and the help earlier in the cell's order wins.
 - **Sinhala** games deliver one authored order (visual, worked, guided) whatever the reason, so
   every Sinhala cell holds that order. The Sinhala lead-by-reason table the rules compute but do
   not use is kept under `unused_reference`.
