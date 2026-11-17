@@ -1,0 +1,333 @@
+{
+  "area_id": "G5-AREA-SIN-03",
+  "catalogue_version": "g5-sin-riddles-misconceptions-v1",
+  "class_priors": {
+    "clue_combination_failure": 1.0,
+    "familiar_answer_recall_without_checking": 1.0,
+    "figurative_taken_literally": 1.0,
+    "similar_household_referent_confusion": 1.0,
+    "single_clue_contradiction_ignored": 1.0,
+    "unknown_or_other": 1.0,
+    "vocabulary_or_referent_unfamiliarity": 1.0
+  },
+  "codes": [
+    "single_clue_contradiction_ignored",
+    "figurative_taken_literally",
+    "clue_combination_failure",
+    "similar_household_referent_confusion",
+    "vocabulary_or_referent_unfamiliarity",
+    "familiar_answer_recall_without_checking",
+    "unknown_or_other"
+  ],
+  "error_likelihoods": {
+    "motor": {
+      "__unseen__": {
+        "clue_combination_failure": 0.08333333333333333,
+        "familiar_answer_recall_without_checking": 0.08333333333333333,
+        "figurative_taken_literally": 0.08333333333333333,
+        "similar_household_referent_confusion": 0.08333333333333333,
+        "single_clue_contradiction_ignored": 0.08333333333333333,
+        "unknown_or_other": 0.5,
+        "vocabulary_or_referent_unfamiliarity": 0.08333333333333333
+      },
+      "clue_combination_failure": {
+        "clue_combination_failure": 0.2727272727272727,
+        "familiar_answer_recall_without_checking": 0.09090909090909091,
+        "figurative_taken_literally": 0.09090909090909091,
+        "similar_household_referent_confusion": 0.09090909090909091,
+        "single_clue_contradiction_ignored": 0.09090909090909091,
+        "unknown_or_other": 0.2727272727272727,
+        "vocabulary_or_referent_unfamiliarity": 0.09090909090909091
+      },
+      "familiar_answer_recall_without_checking": {
+        "clue_combination_failure": 0.09090909090909091,
+        "familiar_answer_recall_without_checking": 0.2727272727272727,
+        "figurative_taken_literally": 0.09090909090909091,
+        "similar_household_referent_confusion": 0.09090909090909091,
+        "single_clue_contradiction_ignored": 0.09090909090909091,
+        "unknown_or_other": 0.2727272727272727,
+        "vocabulary_or_referent_unfamiliarity": 0.09090909090909091
+      },
+      "figurative_taken_literally": {
+        "clue_combination_failure": 0.09090909090909091,
+        "familiar_answer_recall_without_checking": 0.09090909090909091,
+        "figurative_taken_literally": 0.2727272727272727,
+        "similar_household_referent_confusion": 0.09090909090909091,
+        "single_clue_contradiction_ignored": 0.09090909090909091,
+        "unknown_or_other": 0.2727272727272727,
+        "vocabulary_or_referent_unfamiliarity": 0.09090909090909091
+      },
+      "similar_household_referent_confusion": {
+        "clue_combination_failure": 0.09090909090909091,
+        "familiar_answer_recall_without_checking": 0.09090909090909091,
+        "figurative_taken_literally": 0.09090909090909091,
+        "similar_household_referent_confusion": 0.2727272727272727,
+        "single_clue_contradiction_ignored": 0.09090909090909091,
+        "unknown_or_other": 0.2727272727272727,
+        "vocabulary_or_referent_unfamiliarity": 0.09090909090909091
+      },
+      "single_clue_contradiction_ignored": {
+        "clue_combination_failure": 0.09090909090909091,
+        "familiar_answer_recall_without_checking": 0.09090909090909091,
+        "figurative_taken_literally": 0.09090909090909091,
+        "similar_household_referent_confusion": 0.09090909090909091,
+        "single_clue_contradiction_ignored": 0.2727272727272727,
+        "unknown_or_other": 0.2727272727272727,
+        "vocabulary_or_referent_unfamiliarity": 0.09090909090909091
+      },
+      "unknown_or_other": {
+        "clue_combination_failure": 0.08333333333333333,
+        "familiar_answer_recall_without_checking": 0.08333333333333333,
+        "figurative_taken_literally": 0.08333333333333333,
+        "similar_household_referent_confusion": 0.08333333333333333,
+        "single_clue_contradiction_ignored": 0.08333333333333333,
+        "unknown_or_other": 0.5,
+        "vocabulary_or_referent_unfamiliarity": 0.08333333333333333
+      },
+      "vocabulary_or_referent_unfamiliarity": {
+        "clue_combination_failure": 0.09090909090909091,
+        "familiar_answer_recall_without_checking": 0.09090909090909091,
+        "figurative_taken_literally": 0.09090909090909091,
+        "similar_household_referent_confusion": 0.09090909090909091,
+        "single_clue_contradiction_ignored": 0.09090909090909091,
+        "unknown_or_other": 0.2727272727272727,
+        "vocabulary_or_referent_unfamiliarity": 0.2727272727272727
+      }
+    },
+    "motor_and_rendering": {
+      "__unseen__": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "clue_combination_failure": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "familiar_answer_recall_without_checking": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "figurative_taken_literally": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "similar_household_referent_confusion": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "single_clue_contradiction_ignored": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "unknown_or_other": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "vocabulary_or_referent_unfamiliarity": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      }
+    },
+    "normal": {
+      "__unseen__": {
+        "clue_combination_failure": 0.08333333333333333,
+        "familiar_answer_recall_without_checking": 0.08333333333333333,
+        "figurative_taken_literally": 0.08333333333333333,
+        "similar_household_referent_confusion": 0.08333333333333333,
+        "single_clue_contradiction_ignored": 0.08333333333333333,
+        "unknown_or_other": 0.5,
+        "vocabulary_or_referent_unfamiliarity": 0.08333333333333333
+      },
+      "clue_combination_failure": {
+        "clue_combination_failure": 0.5806451612903226,
+        "familiar_answer_recall_without_checking": 0.06451612903225806,
+        "figurative_taken_literally": 0.06451612903225806,
+        "similar_household_referent_confusion": 0.06451612903225806,
+        "single_clue_contradiction_ignored": 0.06451612903225806,
+        "unknown_or_other": 0.0967741935483871,
+        "vocabulary_or_referent_unfamiliarity": 0.06451612903225806
+      },
+      "familiar_answer_recall_without_checking": {
+        "clue_combination_failure": 0.06451612903225806,
+        "familiar_answer_recall_without_checking": 0.5806451612903226,
+        "figurative_taken_literally": 0.06451612903225806,
+        "similar_household_referent_confusion": 0.06451612903225806,
+        "single_clue_contradiction_ignored": 0.06451612903225806,
+        "unknown_or_other": 0.0967741935483871,
+        "vocabulary_or_referent_unfamiliarity": 0.06451612903225806
+      },
+      "figurative_taken_literally": {
+        "clue_combination_failure": 0.06451612903225806,
+        "familiar_answer_recall_without_checking": 0.06451612903225806,
+        "figurative_taken_literally": 0.5806451612903226,
+        "similar_household_referent_confusion": 0.06451612903225806,
+        "single_clue_contradiction_ignored": 0.06451612903225806,
+        "unknown_or_other": 0.0967741935483871,
+        "vocabulary_or_referent_unfamiliarity": 0.06451612903225806
+      },
+      "similar_household_referent_confusion": {
+        "clue_combination_failure": 0.06451612903225806,
+        "familiar_answer_recall_without_checking": 0.06451612903225806,
+        "figurative_taken_literally": 0.06451612903225806,
+        "similar_household_referent_confusion": 0.5806451612903226,
+        "single_clue_contradiction_ignored": 0.06451612903225806,
+        "unknown_or_other": 0.0967741935483871,
+        "vocabulary_or_referent_unfamiliarity": 0.06451612903225806
+      },
+      "single_clue_contradiction_ignored": {
+        "clue_combination_failure": 0.06451612903225806,
+        "familiar_answer_recall_without_checking": 0.06451612903225806,
+        "figurative_taken_literally": 0.06451612903225806,
+        "similar_household_referent_confusion": 0.06451612903225806,
+        "single_clue_contradiction_ignored": 0.5806451612903226,
+        "unknown_or_other": 0.0967741935483871,
+        "vocabulary_or_referent_unfamiliarity": 0.06451612903225806
+      },
+      "unknown_or_other": {
+        "clue_combination_failure": 0.08333333333333333,
+        "familiar_answer_recall_without_checking": 0.08333333333333333,
+        "figurative_taken_literally": 0.08333333333333333,
+        "similar_household_referent_confusion": 0.08333333333333333,
+        "single_clue_contradiction_ignored": 0.08333333333333333,
+        "unknown_or_other": 0.5,
+        "vocabulary_or_referent_unfamiliarity": 0.08333333333333333
+      },
+      "vocabulary_or_referent_unfamiliarity": {
+        "clue_combination_failure": 0.06451612903225806,
+        "familiar_answer_recall_without_checking": 0.06451612903225806,
+        "figurative_taken_literally": 0.06451612903225806,
+        "similar_household_referent_confusion": 0.06451612903225806,
+        "single_clue_contradiction_ignored": 0.06451612903225806,
+        "unknown_or_other": 0.0967741935483871,
+        "vocabulary_or_referent_unfamiliarity": 0.5806451612903226
+      }
+    },
+    "rendering": {
+      "__unseen__": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "clue_combination_failure": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "familiar_answer_recall_without_checking": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "figurative_taken_literally": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "similar_household_referent_confusion": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "single_clue_contradiction_ignored": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "unknown_or_other": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      },
+      "vocabulary_or_referent_unfamiliarity": {
+        "clue_combination_failure": 0.07142857142857142,
+        "familiar_answer_recall_without_checking": 0.07142857142857142,
+        "figurative_taken_literally": 0.07142857142857142,
+        "similar_household_referent_confusion": 0.07142857142857142,
+        "single_clue_contradiction_ignored": 0.07142857142857142,
+        "unknown_or_other": 0.5714285714285714,
+        "vocabulary_or_referent_unfamiliarity": 0.07142857142857142
+      }
+    }
+  },
+  "evidence_band_rule": "sinhala_interaction",
+  "evidence_bands": [
+    "normal",
+    "motor",
+    "rendering",
+    "motor_and_rendering"
+  ],
+  "game": "SinhalaRiddleFlow",
+  "interaction_rewrites": [],
+  "source_model_version": "g5-sin-riddles-authored-probabilistic-v1",
+  "source_package_sha256": "45a1ce896775ccc3163e39f01a769247282a69070fd8419ba5f15c4934c936da",
+  "subject": "SIN",
+  "unknown_top_is_uncertain": true
+}

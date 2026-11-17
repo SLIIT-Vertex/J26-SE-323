@@ -1,0 +1,98 @@
+{
+  "band_rules": {
+    "sinhala_interaction": [
+      {
+        "band": "motor_and_rendering",
+        "when_all": [
+          "motor",
+          "rendering"
+        ]
+      },
+      {
+        "band": "motor",
+        "when_all": [
+          "motor"
+        ]
+      },
+      {
+        "band": "rendering",
+        "when_all": [
+          "rendering"
+        ]
+      }
+    ],
+    "timing": [
+      {
+        "band": "sparse",
+        "when_all": [
+          "response_time_missing"
+        ]
+      }
+    ],
+    "timing_and_summary": [
+      {
+        "band": "sparse",
+        "when_all": [
+          "response_time_missing",
+          "summary_empty"
+        ]
+      },
+      {
+        "band": "low_quality",
+        "when_all": [
+          "summary_empty"
+        ]
+      }
+    ]
+  },
+  "default_band": "normal",
+  "evidence_status": "provisional_expert_assumption",
+  "interaction_rewrite_scope": {
+    "applies_to_error_code": "unknown_or_other",
+    "first_match_wins": true,
+    "requires_interaction_summary": true
+  },
+  "learner_prior": {
+    "counts": "unaided before and after answers of this learner on this skill; supported answers never count; a correct answer keeps its place in the window",
+    "pseudocount": 1,
+    "source_version": "learner-prior-v1",
+    "update": "posterior proportional to likelihood times (1 + count of the code in the window)",
+    "window": 5
+  },
+  "package_version": "expert-model-data-v1",
+  "signals": {
+    "motor": {
+      "any": {
+        "cancelled_drag_count": 2,
+        "correction_count": 3
+      }
+    },
+    "rendering": {
+      "equals": {
+        "rendering_issue_reported": true
+      }
+    },
+    "response_time_missing": {
+      "field": "response_time_ms",
+      "missing": true
+    },
+    "summary_empty": {
+      "empty": true,
+      "field": "interaction_summary"
+    }
+  },
+  "uncertainty_rule": {
+    "top_probability_below": 0.4,
+    "top_two_margin_below": 0.1,
+    "unknown_code": "unknown_or_other",
+    "unknown_top_when_area_says": true,
+    "weak_band": true
+  },
+  "weak_bands": [
+    "sparse",
+    "low_quality",
+    "motor",
+    "rendering",
+    "motor_and_rendering"
+  ]
+}

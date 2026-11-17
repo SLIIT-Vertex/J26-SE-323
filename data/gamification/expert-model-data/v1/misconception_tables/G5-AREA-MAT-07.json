@@ -1,0 +1,263 @@
+{
+  "area_id": "G5-AREA-MAT-07",
+  "catalogue_version": "g5-mat-time-misconceptions-v1",
+  "class_priors": {
+    "hour_minute_hands_confused": 1.0,
+    "midday_midnight_confused": 1.0,
+    "minute_marks_miscounted": 1.0,
+    "minutes_treated_as_base_100": 1.0,
+    "regrouping_omitted": 1.0,
+    "start_end_reversed": 1.0,
+    "twelve_twenty_four_conversion_error": 1.0,
+    "unit_relationship_confused": 1.0,
+    "unknown_or_other": 1.0
+  },
+  "codes": [
+    "unit_relationship_confused",
+    "hour_minute_hands_confused",
+    "minute_marks_miscounted",
+    "twelve_twenty_four_conversion_error",
+    "midday_midnight_confused",
+    "start_end_reversed",
+    "minutes_treated_as_base_100",
+    "regrouping_omitted",
+    "unknown_or_other"
+  ],
+  "error_likelihoods": {
+    "normal": {
+      "__unseen__": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.576
+      },
+      "hour_minute_hands_confused": {
+        "hour_minute_hands_confused": 0.576,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "midday_midnight_confused": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.576,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "minute_marks_miscounted": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.576,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "minutes_treated_as_base_100": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.576,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "regrouping_omitted": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.576,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "start_end_reversed": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.576,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "twelve_twenty_four_conversion_error": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.576,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "unit_relationship_confused": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.576,
+        "unknown_or_other": 0.053000000000000005
+      },
+      "unknown_or_other": {
+        "hour_minute_hands_confused": 0.053000000000000005,
+        "midday_midnight_confused": 0.053000000000000005,
+        "minute_marks_miscounted": 0.053000000000000005,
+        "minutes_treated_as_base_100": 0.053000000000000005,
+        "regrouping_omitted": 0.053000000000000005,
+        "start_end_reversed": 0.053000000000000005,
+        "twelve_twenty_four_conversion_error": 0.053000000000000005,
+        "unit_relationship_confused": 0.053000000000000005,
+        "unknown_or_other": 0.576
+      }
+    },
+    "sparse": {
+      "__unseen__": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "hour_minute_hands_confused": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "midday_midnight_confused": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "minute_marks_miscounted": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "minutes_treated_as_base_100": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "regrouping_omitted": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "start_end_reversed": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "twelve_twenty_four_conversion_error": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "unit_relationship_confused": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      },
+      "unknown_or_other": {
+        "hour_minute_hands_confused": 0.1111111111111111,
+        "midday_midnight_confused": 0.1111111111111111,
+        "minute_marks_miscounted": 0.1111111111111111,
+        "minutes_treated_as_base_100": 0.1111111111111111,
+        "regrouping_omitted": 0.1111111111111111,
+        "start_end_reversed": 0.1111111111111111,
+        "twelve_twenty_four_conversion_error": 0.1111111111111111,
+        "unit_relationship_confused": 0.1111111111111111,
+        "unknown_or_other": 0.1111111111111111
+      }
+    }
+  },
+  "evidence_band_rule": "timing",
+  "evidence_bands": [
+    "normal",
+    "sparse"
+  ],
+  "game": "TimeAdventureFlow",
+  "interaction_rewrites": [],
+  "source_model_version": "g5-mat-time-authored-probabilistic-v1",
+  "source_package_sha256": "f18050893f1fece76176b46b779117dac01457af66fe8087b2c2fe1338be54d6",
+  "subject": "MAT",
+  "unknown_top_is_uncertain": false
+}

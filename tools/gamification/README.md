@@ -70,6 +70,22 @@ PYTHONPATH=backend python3 tools/gamification/datasets/freeze_synthetic_expert_r
 The resulting package is useful only for application development. It contains no human data and
 cannot authorize research claims or child-facing model activation.
 
+## Expert model data
+
+`datasets/build_expert_model_data.py` builds `data/gamification/expert-model-data/v1/` from the
+frozen rule-based reference fixtures (see below), never by calling the rules: per-area Model 1
+likelihood tables by evidence band, the shared band and uncertainty settings, each subject's
+reason-family map, and the Model 2 expected gains that reproduce today's help order:
+
+```bash
+PYTHONPATH=backend python3 tools/gamification/datasets/build_expert_model_data.py
+PYTHONPATH=backend python3 tools/gamification/datasets/build_expert_model_data.py --check
+```
+
+Every value is a provisional expert assumption. The builder refuses to run while the reference
+fixtures have uncommitted changes, and the manifest pins their hashes and the commit that last
+changed them, so a second run writes the same bytes.
+
 ## Skill review package
 
 `skills/build_skill_review_package.py` builds the development skill-review package from the

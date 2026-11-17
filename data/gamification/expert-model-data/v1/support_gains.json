@@ -1,0 +1,1586 @@
+{
+  "cells": [
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.5,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.45,
+        "step_by_step_guidance": 0.55,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.5,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.45,
+        "step_by_step_guidance": 0.55,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.5,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.4,
+        "step_by_step_guidance": 0.55,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "worked_parallel_example",
+        "simpler_same_game",
+        "prerequisite_repair"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.5,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.45,
+        "step_by_step_guidance": 0.6,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "conceptual_reexplanation",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.5,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.45,
+        "step_by_step_guidance": 0.6,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "conceptual_reexplanation",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.5,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.4,
+        "step_by_step_guidance": 0.6,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "conceptual_reexplanation",
+        "worked_parallel_example",
+        "simpler_same_game",
+        "prerequisite_repair"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.55,
+        "visual_guidance": 0.5,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "visual_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.6,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.45,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.6,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.45,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "simpler_same_game",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.6,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.4,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "worked_parallel_example",
+        "simpler_same_game",
+        "prerequisite_repair"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.55,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.5,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.6,
+        "simpler_same_game": 0.4,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "prerequisite_repair",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "simpler_same_game",
+        "worked_parallel_example"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.6,
+        "simpler_same_game": 0.4,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "prerequisite_repair",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "simpler_same_game",
+        "worked_parallel_example"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.6,
+        "simpler_same_game": 0.35,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "prerequisite_repair",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "worked_parallel_example",
+        "conceptual_reexplanation",
+        "simpler_same_game"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.55,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.5,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "prerequisite_repair",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "worked_parallel_example"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "worked_parallel_example",
+        "conceptual_reexplanation",
+        "prerequisite_repair"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "confused",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "MAT"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.55,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.55,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.55,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "worked_parallel_example",
+        "conceptual_reexplanation",
+        "prerequisite_repair"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.6,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "simpler_same_game",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.6,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "simpler_same_game",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.6,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "step_by_step_guidance",
+        "visual_guidance",
+        "simpler_same_game",
+        "worked_parallel_example",
+        "conceptual_reexplanation",
+        "prerequisite_repair"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.55,
+        "visual_guidance": 0.5,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "visual_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.6,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.6,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.6,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.4,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "simpler_same_game",
+        "worked_parallel_example",
+        "step_by_step_guidance",
+        "prerequisite_repair"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.55,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.5,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "conceptual_reexplanation",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.6,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "prerequisite_repair",
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "worked_parallel_example"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.6,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "prerequisite_repair",
+        "visual_guidance",
+        "simpler_same_game",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "worked_parallel_example"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.35,
+        "prerequisite_repair": 0.6,
+        "simpler_same_game": 0.5,
+        "step_by_step_guidance": 0.4,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "prerequisite_repair",
+        "visual_guidance",
+        "simpler_same_game",
+        "worked_parallel_example",
+        "step_by_step_guidance",
+        "conceptual_reexplanation"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.55,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.45,
+        "visual_guidance": 0.5,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "prerequisite_repair",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "worked_parallel_example"
+      ],
+      "reason_family": "prerequisite",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.4,
+        "prerequisite_repair": 0.35,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.45
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "worked_parallel_example",
+        "conceptual_reexplanation",
+        "prerequisite_repair"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "calm",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "confused",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "conceptual_reexplanation": 0.45,
+        "prerequisite_repair": 0.4,
+        "simpler_same_game": 0.6,
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.55,
+        "worked_parallel_example": 0.35
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": true,
+      "order": [
+        "simpler_same_game",
+        "visual_guidance",
+        "step_by_step_guidance",
+        "conceptual_reexplanation",
+        "prerequisite_repair",
+        "worked_parallel_example"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "ENG"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "representation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "procedure",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "relation",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "prerequisite",
+      "source": "sinhala_delivered_sequence",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "prerequisite",
+      "source": "sinhala_delivered_sequence",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "prerequisite",
+      "source": "sinhala_delivered_sequence",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "prerequisite",
+      "source": "sinhala_delivered_sequence",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "calm",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "confused",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": false,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "not_available",
+      "model1_uncertain": true,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "calm",
+      "model1_uncertain": true,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "confused",
+      "model1_uncertain": true,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    },
+    {
+      "expected_gain": {
+        "step_by_step_guidance": 0.5,
+        "visual_guidance": 0.6,
+        "worked_parallel_example": 0.55
+      },
+      "learning_state": "disengaged",
+      "model1_uncertain": true,
+      "order": [
+        "visual_guidance",
+        "worked_parallel_example",
+        "step_by_step_guidance"
+      ],
+      "reason_family": "unclear",
+      "source": "frozen_order",
+      "subject": "SIN"
+    }
+  ],
+  "evidence_status": "provisional_expert_assumption",
+  "first_gain": 0.6,
+  "gain_decrement": 0.05,
+  "help_types": {
+    "ENG": [
+      "visual_guidance",
+      "simpler_same_game",
+      "step_by_step_guidance",
+      "conceptual_reexplanation",
+      "prerequisite_repair",
+      "worked_parallel_example"
+    ],
+    "MAT": [
+      "visual_guidance",
+      "step_by_step_guidance",
+      "conceptual_reexplanation",
+      "simpler_same_game",
+      "prerequisite_repair",
+      "worked_parallel_example"
+    ],
+    "SIN": [
+      "visual_guidance",
+      "worked_parallel_example",
+      "step_by_step_guidance"
+    ]
+  },
+  "learning_states": [
+    "not_available",
+    "calm",
+    "confused",
+    "disengaged"
+  ],
+  "meaning": "Expected valid Independence Gain of each help type before any child's data. Sorting the drawable helps by it, ties broken by the subject order, gives today's order.",
+  "package_version": "expert-model-data-v1",
+  "prior_strength": 4,
+  "tie_break_order": {
+    "ENG": [
+      "visual_guidance",
+      "simpler_same_game",
+      "step_by_step_guidance",
+      "conceptual_reexplanation",
+      "prerequisite_repair",
+      "worked_parallel_example"
+    ],
+    "MAT": [
+      "visual_guidance",
+      "step_by_step_guidance",
+      "conceptual_reexplanation",
+      "simpler_same_game",
+      "prerequisite_repair",
+      "worked_parallel_example"
+    ],
+    "SIN": [
+      "visual_guidance",
+      "worked_parallel_example",
+      "step_by_step_guidance"
+    ]
+  },
+  "unused_reference": {
+    "SIN": {
+      "lead_by_reason": {
+        "prerequisite": "visual_guidance",
+        "procedure": "step_by_step_guidance",
+        "relation": "worked_parallel_example",
+        "representation": "visual_guidance",
+        "unclear": "visual_guidance"
+      },
+      "note": "The Sinhala rule computes a lead help per reason, but the games deliver the authored sequence instead. Kept for reference; not used for the expert start."
+    }
+  }
+}

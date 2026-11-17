@@ -1,0 +1,41 @@
+# Expert model data
+
+**Provisional expert assumptions, not learned from children.** Every value here was taken from
+what the rule-based Model 1 and Model 2 do in the games today. No teacher has reviewed it yet
+(`reviewed_by: null`), and no child's answers were used to fit it.
+
+The research models start from this data: the Bayesian misconception model (Model 1) and the
+LinUCB help-order bandit (Model 2). Nothing in the app reads it yet.
+
+Built by `tools/gamification/datasets/build_expert_model_data.py` from the frozen reference
+fixtures in `backend/tests/gamification/fixtures/`, never by calling the rules. `manifest.json`
+pins the fixtures' SHA-256 and the commit that last changed them.
+
+## Files
+
+| File | What it holds |
+|---|---|
+| `misconception_tables/<area>.json` | One per game area. Its codes; a uniform class prior; one likelihood row per evidence band and error code (`__unseen__` for a code the area does not list), which is the game's belief for that answer before the learner prior; the area's evidence-band rule; interaction rewrites (Subtraction only); and whether an `unknown_or_other` top label alone makes the reading uncertain. Every skill in the area uses the area's table. |
+| `misconception_settings.json` | Shared by every area: how each evidence band is detected, which bands are weak, the uncertainty rule and the learner-prior settings. |
+| `reason_families.json` | Per subject, each label's reason family (`representation`, `procedure`, `relation`, `prerequisite`, `unclear`) and what decided it. Labels that no pattern matched are `unclear` with `needs_review: true`. |
+| `support_gains.json` | Per subject, the expected valid Independence Gain of each help type for every reason family, Model 1 uncertainty and Learning State reading. Sorting the drawable helps by it, ties broken by the subject order, gives today's order. `prior_strength` says how many episodes of evidence this start is worth. |
+
+## Reading the values
+
+- **Evidence bands** replace a continuous evidence quality: `normal`, `sparse` (no response time),
+  `low_quality` (no interaction summary, in the games that read one) and, for Sinhala, `motor`,
+  `rendering` and `motor_and_rendering`. Sinhala ignores timing, so it is never `sparse`.
+- **Uncertain** means: top probability below 0.4, or the top two within 0.1, or a weak band, or an
+  `unknown_or_other` top label in an area whose table says so.
+- **Expected gains** are positions in today's order turned into numbers (0.60 for the first help,
+  0.05 less for each next one). They are a starting belief for the bandit, not a measurement.
+- **Sinhala** games deliver one authored order (visual, worked, guided) whatever the reason, so
+  every Sinhala cell holds that order. The Sinhala lead-by-reason table the rules compute but do
+  not use is kept under `unused_reference`.
+
+Regenerate or check with:
+
+```bash
+PYTHONPATH=backend python3 tools/gamification/datasets/build_expert_model_data.py
+PYTHONPATH=backend python3 tools/gamification/datasets/build_expert_model_data.py --check
+```

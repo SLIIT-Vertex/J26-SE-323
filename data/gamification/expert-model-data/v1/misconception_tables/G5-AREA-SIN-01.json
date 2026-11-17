@@ -1,0 +1,489 @@
+{
+  "area_id": "G5-AREA-SIN-01",
+  "catalogue_version": "g5-sin-pillam-misconceptions-v1",
+  "class_priors": {
+    "compound_component_extra": 1.0,
+    "compound_component_missing": 1.0,
+    "gaeta_single_double_confusion": 1.0,
+    "kombu_family_confusion": 1.0,
+    "papili_allograph_confusion": 1.0,
+    "short_long_confusion": 1.0,
+    "sign_name_confusion": 1.0,
+    "unknown_or_other": 1.0,
+    "wrong_vowel_association": 1.0
+  },
+  "codes": [
+    "sign_name_confusion",
+    "short_long_confusion",
+    "wrong_vowel_association",
+    "papili_allograph_confusion",
+    "compound_component_missing",
+    "compound_component_extra",
+    "kombu_family_confusion",
+    "gaeta_single_double_confusion",
+    "unknown_or_other"
+  ],
+  "error_likelihoods": {
+    "motor": {
+      "__unseen__": {
+        "compound_component_extra": 0.07142857142857142,
+        "compound_component_missing": 0.07142857142857142,
+        "gaeta_single_double_confusion": 0.07142857142857142,
+        "kombu_family_confusion": 0.07142857142857142,
+        "papili_allograph_confusion": 0.07142857142857142,
+        "short_long_confusion": 0.07142857142857142,
+        "sign_name_confusion": 0.07142857142857142,
+        "unknown_or_other": 0.42857142857142855,
+        "wrong_vowel_association": 0.07142857142857142
+      },
+      "compound_component_extra": {
+        "compound_component_extra": 0.23076923076923078,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "compound_component_missing": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.23076923076923078,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "gaeta_single_double_confusion": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.23076923076923078,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "kombu_family_confusion": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.23076923076923078,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "papili_allograph_confusion": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.23076923076923078,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "short_long_confusion": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.23076923076923078,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "sign_name_confusion": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.23076923076923078,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.07692307692307693
+      },
+      "unknown_or_other": {
+        "compound_component_extra": 0.07142857142857142,
+        "compound_component_missing": 0.07142857142857142,
+        "gaeta_single_double_confusion": 0.07142857142857142,
+        "kombu_family_confusion": 0.07142857142857142,
+        "papili_allograph_confusion": 0.07142857142857142,
+        "short_long_confusion": 0.07142857142857142,
+        "sign_name_confusion": 0.07142857142857142,
+        "unknown_or_other": 0.42857142857142855,
+        "wrong_vowel_association": 0.07142857142857142
+      },
+      "wrong_vowel_association": {
+        "compound_component_extra": 0.07692307692307693,
+        "compound_component_missing": 0.07692307692307693,
+        "gaeta_single_double_confusion": 0.07692307692307693,
+        "kombu_family_confusion": 0.07692307692307693,
+        "papili_allograph_confusion": 0.07692307692307693,
+        "short_long_confusion": 0.07692307692307693,
+        "sign_name_confusion": 0.07692307692307693,
+        "unknown_or_other": 0.23076923076923078,
+        "wrong_vowel_association": 0.23076923076923078
+      }
+    },
+    "motor_and_rendering": {
+      "__unseen__": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "compound_component_extra": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "compound_component_missing": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "gaeta_single_double_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "kombu_family_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "papili_allograph_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "short_long_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "sign_name_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "unknown_or_other": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "wrong_vowel_association": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      }
+    },
+    "normal": {
+      "__unseen__": {
+        "compound_component_extra": 0.07142857142857142,
+        "compound_component_missing": 0.07142857142857142,
+        "gaeta_single_double_confusion": 0.07142857142857142,
+        "kombu_family_confusion": 0.07142857142857142,
+        "papili_allograph_confusion": 0.07142857142857142,
+        "short_long_confusion": 0.07142857142857142,
+        "sign_name_confusion": 0.07142857142857142,
+        "unknown_or_other": 0.42857142857142855,
+        "wrong_vowel_association": 0.07142857142857142
+      },
+      "compound_component_extra": {
+        "compound_component_extra": 0.5142857142857142,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "compound_component_missing": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.5142857142857142,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "gaeta_single_double_confusion": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.5142857142857142,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "kombu_family_confusion": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.5142857142857142,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "papili_allograph_confusion": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.5142857142857142,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "short_long_confusion": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.5142857142857142,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "sign_name_confusion": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.5142857142857142,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.05714285714285714
+      },
+      "unknown_or_other": {
+        "compound_component_extra": 0.07142857142857142,
+        "compound_component_missing": 0.07142857142857142,
+        "gaeta_single_double_confusion": 0.07142857142857142,
+        "kombu_family_confusion": 0.07142857142857142,
+        "papili_allograph_confusion": 0.07142857142857142,
+        "short_long_confusion": 0.07142857142857142,
+        "sign_name_confusion": 0.07142857142857142,
+        "unknown_or_other": 0.42857142857142855,
+        "wrong_vowel_association": 0.07142857142857142
+      },
+      "wrong_vowel_association": {
+        "compound_component_extra": 0.05714285714285714,
+        "compound_component_missing": 0.05714285714285714,
+        "gaeta_single_double_confusion": 0.05714285714285714,
+        "kombu_family_confusion": 0.05714285714285714,
+        "papili_allograph_confusion": 0.05714285714285714,
+        "short_long_confusion": 0.05714285714285714,
+        "sign_name_confusion": 0.05714285714285714,
+        "unknown_or_other": 0.08571428571428572,
+        "wrong_vowel_association": 0.5142857142857142
+      }
+    },
+    "rendering": {
+      "__unseen__": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "compound_component_extra": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "compound_component_missing": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "gaeta_single_double_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "kombu_family_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "papili_allograph_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "short_long_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "sign_name_confusion": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "unknown_or_other": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      },
+      "wrong_vowel_association": {
+        "compound_component_extra": 0.0625,
+        "compound_component_missing": 0.0625,
+        "gaeta_single_double_confusion": 0.0625,
+        "kombu_family_confusion": 0.0625,
+        "papili_allograph_confusion": 0.0625,
+        "short_long_confusion": 0.0625,
+        "sign_name_confusion": 0.0625,
+        "unknown_or_other": 0.5,
+        "wrong_vowel_association": 0.0625
+      }
+    }
+  },
+  "evidence_band_rule": "sinhala_interaction",
+  "evidence_bands": [
+    "normal",
+    "motor",
+    "rendering",
+    "motor_and_rendering"
+  ],
+  "game": "SinhalaPillamFlow",
+  "interaction_rewrites": [],
+  "source_model_version": "g5-sin-pillam-authored-probabilistic-v1",
+  "source_package_sha256": "74bab2e0b80561202fac0e46656131d32931eb05af992ca4c91eb0cb7a638af6",
+  "subject": "SIN",
+  "unknown_top_is_uncertain": true
+}
