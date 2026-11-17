@@ -25,6 +25,7 @@ from app.gamification.infrastructure.db.models import (
     LearningFlowEpisodeRunModel,
     LearningFlowSupportRoundModel,
 )
+from app.gamification.modeling.misconception_inference.bayesian_model import GAME_MODEL_VERSION
 from app.gamification.modeling.misconception_inference.learner_prior import (
     apply_learner_prior,
     prior_errors,
@@ -139,7 +140,7 @@ def _model1_checks(
     label = Check("model1", "Predicted label is the most probable misconception", True)
     fallback = Check(
         "model1",
-        "Fallback (flat estimate) appears only when timing and interaction evidence are missing",
+        "Fallback appears only when the answer's evidence is too thin to name a reason",
         True,
     )
     provenance = Check("model1", "Model, catalogue and mapping versions are recorded", True)
@@ -159,15 +160,27 @@ def _model1_checks(
             _fail(distribution, episode_id, f"sum={sum(probabilities.values())}")
         flow = flows[str(state["area_id"])]
         summary = model1.get("structured_response") or None
-        expected = flow._infer_belief(  # type: ignore[attr-defined]
-            str(model1["structured_error_code"]),
-            response_time_ms=model1.get("response_time_ms"),
-            interaction_summary=summary,
-        )
-        if model1.get("prior_version"):
-            expected = apply_learner_prior(
-                expected, prior_errors(_prior_history(episode, everything))
+        bayesian = model1.get("model_version") == GAME_MODEL_VERSION
+        if bayesian:
+            # Recompute through the same expert-initialised model, from the same earlier answers.
+            expected = flow._game_belief(  # type: ignore[attr-defined]
+                str(state["skill_id"]),
+                str(model1["structured_error_code"]),
+                response_time_ms=model1.get("response_time_ms"),
+                interaction_summary=summary,
+                history=_prior_history(episode, everything),
             )
+        else:
+            # Beliefs stored before the Bayesian model came from the area's authored rule.
+            expected = flow._infer_belief(  # type: ignore[attr-defined]
+                str(model1["structured_error_code"]),
+                response_time_ms=model1.get("response_time_ms"),
+                interaction_summary=summary,
+            )
+            if model1.get("prior_version"):
+                expected = apply_learner_prior(
+                    expected, prior_errors(_prior_history(episode, everything))
+                )
         stored_fields = {
             "probabilities": probabilities,
             "predicted_label": model1.get("predicted_label"),
@@ -191,9 +204,18 @@ def _model1_checks(
         predicted = model1.get("predicted_label")
         if predicted is not None and abs(probabilities.get(str(predicted), -1) - top) > _TOLERANCE:
             _fail(label, episode_id, f"{predicted} is not the most probable")
-        sparse = model1.get("response_time_ms") is None and not summary
-        if bool(model1.get("fallback_used")) and not sparse:
-            _fail(fallback, episode_id, "fallback used although evidence was present")
+        if bayesian:
+            thin = model1.get("evidence_band") in {"sparse", "low_quality"}
+            if bool(model1.get("fallback_used")) != thin:
+                _fail(
+                    fallback,
+                    episode_id,
+                    f"fallback does not match band {model1.get('evidence_band')}",
+                )
+        else:
+            sparse = model1.get("response_time_ms") is None and not summary
+            if bool(model1.get("fallback_used")) and not sparse:
+                _fail(fallback, episode_id, "fallback used although evidence was present")
         for key in ("model_version", "catalogue_version", "mapping_version"):
             if not model1.get(key):
                 _fail(provenance, episode_id, f"missing {key}")

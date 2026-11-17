@@ -39,6 +39,7 @@ from app.gamification.application.engine.sinhala_area_flow import (
 )
 from app.gamification.application.learning_flow_orchestration import GAME_FLOW_TYPES
 from app.gamification.infrastructure.db.models import LearningFlowEpisodeRunModel
+from app.gamification.modeling.misconception_inference.bayesian_model import GAME_MODEL_VERSION
 from app.gamification.modeling.misconception_inference.learner_prior import apply_learner_prior
 from app.gamification.modeling.support_selection.support_order import (
     ORDER_POLICY_VERSION,
@@ -65,7 +66,11 @@ def _flow_type(state: Mapping[str, object]) -> type[AreaGameFlow] | None:
 
 
 def replay_model1(state: Mapping[str, object]) -> str:
-    """``match``, ``differs:<fields>`` or ``not_replayable:<reason>`` for one stored belief."""
+    """``match``, ``differs:<fields>``, ``not_rule_based`` or ``not_replayable:<reason>``.
+
+    Beliefs written by the expert-initialised Bayesian model are not rule decisions and are
+    counted as ``not_rule_based``; their own checks are in the demo-seed verifier.
+    """
 
     flow_type = _flow_type(state)
     stored = state.get("model1")
@@ -73,6 +78,8 @@ def replay_model1(state: Mapping[str, object]) -> str:
         return "not_replayable:unknown_game"
     if not isinstance(stored, Mapping) or "structured_error_code" not in stored:
         return "not_replayable:no_error_code"
+    if stored.get("model_version") == GAME_MODEL_VERSION:
+        return "not_rule_based"
     flow = flow_type.__new__(flow_type)
     belief = flow._infer_belief(
         str(stored["structured_error_code"]),

@@ -69,7 +69,8 @@ def test_every_seeded_decision_replays_exactly(tool, seeded) -> None:
     assert result["episodes_read"] > 0
     model1 = {row["outcome"] for row in result["model1"]}
     model2 = {row["outcome"] for row in result["model2"]}
-    assert model1 == {"match"}, result["model1"]
+    # Model 1 beliefs now come from the Bayesian model, so only Model 2 replays as a rule.
+    assert model1 == {"not_rule_based"}, result["model1"]
     assert model2 == {"match"}, result["model2"]
     assert {row["subject"] for row in result["model2"]} == {"MAT", "ENG", "SIN"}
 

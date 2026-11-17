@@ -1,7 +1,7 @@
 """The shared adaptive episode engine behind every playable area game.
 
 :class:`AreaGameFlow` runs one episode for any area: unsupported before item → difficulty →
-Model 1 belief → Model 2 support order → multi-help support loop → withdrawal → fresh unsupported
+Model 1 belief (the expert-initialised Bayesian model) → Model 2 support order → multi-help support loop → withdrawal → fresh unsupported
 after item → Model 3 Independence Gain. A failed after item then opens follow-up help with the
 next unused type, another withdrawal and a fresh practice item, until the child succeeds alone or
 the order runs out; follow-up answers are never measured, published or rewarded. It shares the hash-bound store, probe gateway, evidence
@@ -10,7 +10,8 @@ outbox, idempotency rules, and research route used by :class:`LearningFlowOrches
 An area game is a subclass in ``application/<slug>_flow.py`` that supplies its profile: versions,
 ``skills``, and the content functions (``generate_item``, ``validate_constructed_response``,
 ``infer_belief``, ``scaffold_decision``, ``package_hash``) plus ``_public_game_data`` and
-``_worked_example``. English games extend :class:`EnglishAreaFlow` and Sinhala games extend
+``_worked_example``. ``infer_belief`` is the area's authored rule; Model 1 no longer uses it, and it
+stays only so older stored beliefs can still be checked. English games extend :class:`EnglishAreaFlow` and Sinhala games extend
 :class:`SinhalaAreaFlow`, both in this package.
 """
 
@@ -18,9 +19,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import cache
 from typing import Protocol
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
@@ -43,10 +45,13 @@ from app.gamification.content.area_support_catalog import assignment
 from app.gamification.modeling.independence_gain.episode_measurement import (
     measure_withdrawn_episode,
 )
-from app.gamification.modeling.misconception_inference.learner_prior import (
-    apply_learner_prior,
-    prior_errors,
+from app.gamification.modeling.misconception_inference.bayesian_model import (
+    BayesianMisconceptionModel,
 )
+from app.gamification.modeling.misconception_inference.expert_tables import (
+    load_game_misconception_model,
+)
+from app.gamification.modeling.misconception_inference.game_belief import learner_answer_window
 from app.gamification.modeling.support_selection.support_order import (
     choose_support_order,
     subject_of,
@@ -174,6 +179,15 @@ def _event(state: dict[str, object], event_type: str, at: datetime, **details: o
 def _model1_label(belief: Mapping[str, object]) -> str | None:
     label = belief.get("top_hypothesis") or belief.get("predicted_label")
     return None if label is None else str(label)
+
+
+@cache
+def _game_misconception_model(
+    area_id: str, skills: tuple[str, ...]
+) -> BayesianMisconceptionModel:
+    """One game's Model 1, loaded once per process: the flows are rebuilt on every request."""
+
+    return load_game_misconception_model(area_id, skills)
 
 
 def _model1_uncertain(belief: Mapping[str, object]) -> bool:
@@ -397,14 +411,15 @@ class AreaGameFlow:
                 _event(state, "episode_completed_no_support", at)
                 return self._summary(state)
             error_code = str(score["structured_error_code"])
-            belief = self._infer_belief(
+            belief = self._game_belief(
+                str(state["skill_id"]),
                 error_code,
                 response_time_ms=response_time_ms,
                 interaction_summary=interaction_summary,
+                history=self._store.support_history(
+                    learner_id=UUID(str(state["learner_id"])), skill_id=str(state["skill_id"]),
+                ),
             )
-            belief = apply_learner_prior(belief, prior_errors(self._store.support_history(
-                learner_id=UUID(str(state["learner_id"])), skill_id=str(state["skill_id"]),
-            )))
             state["learning_state_session_id"] = str(learner_state_session_id or state["session_id"])
             evidence_id = uuid4()
             state["model1"] = {
@@ -1270,6 +1285,27 @@ class AreaGameFlow:
             "created_at": at.isoformat(),
         }
 
+    def _game_belief(
+        self,
+        skill_id: str,
+        error_code: str,
+        *,
+        response_time_ms: int | None,
+        interaction_summary: Mapping[str, object] | None,
+        history: Iterable[Mapping[str, object]],
+    ) -> dict[str, object]:
+        """Model 1: the expert-initialised Bayesian belief for one unaided wrong answer."""
+
+        model = _game_misconception_model(self.area_id, tuple(self.skills))
+        assert model.game is not None
+        return model.predict_game_belief(
+            skill_id=skill_id,
+            error_code=error_code,
+            response_time_ms=response_time_ms,
+            interaction_summary=interaction_summary,
+            prior_window=learner_answer_window(history, size=model.game.prior_window),
+        )
+
     def _infer_belief(
         self,
         error_code: str,
@@ -1277,6 +1313,8 @@ class AreaGameFlow:
         response_time_ms: int | None,
         interaction_summary: Mapping[str, object] | None,
     ) -> dict[str, object]:
+        """The area's authored rule, kept only to check beliefs stored before the Bayesian model."""
+
         del interaction_summary
         return self.infer_belief(error_code, sparse=response_time_ms is None)
 
