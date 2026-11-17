@@ -43,7 +43,10 @@ from app.gamification.application.teardown_receipt import (
 from app.gamification.application.teardown_receipt import TRUE_FLAGS as _TEARDOWN_TRUE_FLAGS
 from app.gamification.application.teardown_receipt import ZERO_COUNTS as _TEARDOWN_ZERO_COUNTS
 from app.gamification.content.area_support_catalog import assignment
-from app.gamification.modeling.support_selection.support_order import choose_support_order
+from app.gamification.modeling.support_selection.support_order import (
+    SupportOrderDecision,
+    choose_support_order,
+)
 
 AUTHORED_SEQUENCE = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 SUPPORT_TITLES_SI = {
@@ -404,18 +407,8 @@ class SinhalaAreaFlow(AreaGameFlow):
             raise AreaFlowError(str(error)) from error
         cursor = _support_cursor(own_history, proposed=proposed)
         authored = tuple(s for s in AUTHORED_SEQUENCE if s in plans)
-        start = cursor["next_position"] % len(authored)
-        rotated = authored[start:] + authored[:start]
-        learned = decision.selection_mode == "learned_post_withdrawal_preference"
-        if not proposed:
-            order, reason = authored, "activity_default"
-        elif learned and not cursor["preference_failed"]:
-            order, reason = decision.order, "learned_activity_preference"
-        elif cursor["unresolved"]:
-            order, reason = rotated, "activity_support_escalation"
-        else:
-            order, reason = rotated, "activity_default"
-        decision = replace(decision, order=tuple(order))
+        order, reason = activity_order(decision, authored=authored, cursor=cursor, proposed=proposed)
+        decision = replace(decision, order=order)
         cursor_record = {
             "cursor_version": CURSOR_VERSION,
             "authored_sequence": list(authored),
@@ -795,4 +788,29 @@ def _support_cursor(history: tuple[Mapping[str, object], ...], *, proposed: bool
     return {"next_position": 0, "unresolved": False, "preference_failed": False, "source_episode_id": None}
 
 
-__all__ = ["SINHALA_BUILDERS", "SinhalaAreaFlow"]
+def activity_order(
+    decision: SupportOrderDecision,
+    *,
+    authored: tuple[str, ...],
+    cursor: Mapping[str, object],
+    proposed: bool,
+) -> tuple[tuple[str, ...], str]:
+    """The help order a Sinhala package delivers, and why.
+
+    The authored sequence resumes at the learner's cursor. Model 2's order is used only for a
+    learned preference that has not since failed. Baseline always starts the authored sequence.
+    """
+
+    start = cursor["next_position"] % len(authored)
+    rotated = authored[start:] + authored[:start]
+    learned = decision.selection_mode == "learned_post_withdrawal_preference"
+    if not proposed:
+        return authored, "activity_default"
+    if learned and not cursor["preference_failed"]:
+        return tuple(decision.order), "learned_activity_preference"
+    if cursor["unresolved"]:
+        return rotated, "activity_support_escalation"
+    return rotated, "activity_default"
+
+
+__all__ = ["SINHALA_BUILDERS", "SinhalaAreaFlow", "activity_order"]

@@ -261,6 +261,48 @@ class RecordingEvidencePublisher:
         self.records.append(dict(evidence))
 
 
+# Every playable area game, in the order the orchestrator registers them.
+GAME_FLOW_TYPES: tuple[type[AdaptiveGameFlow], ...] = (
+    NumberWorldFlow,
+    AdditionAdventureFlow,
+    NumberPatternsFlow,
+    SubtractionAdventureFlow,
+    FractionAdventureFlow,
+    MultiplicationAdventureFlow,
+    TimeAdventureFlow,
+    DivisionAdventureFlow,
+    DistanceAdventureFlow,
+    MoneyAdventureFlow,
+    CapacityAdventureFlow,
+    MassAdventureFlow,
+    ShapeAdventureFlow,
+    DirectionAdventureFlow,
+    DecimalAdventureFlow,
+    RomanAdventureFlow,
+    ClassroomActionQuestFlow,
+    SriLankaDiscoveryFlow,
+    PlantExplorerFlow,
+    WildlifeRangerFlow,
+    EverydayObjectQuestFlow,
+    RainbowWardrobeQuestFlow,
+    IslandFoodFestivalFlow,
+    WaterWorksAdventureFlow,
+    TransitTerminalQuestFlow,
+    BloomBuilderGardenFlow,
+    WorkplaceLinkCityFlow,
+    FamilyWordConstellationFlow,
+    EarthSkyExplorerFlow,
+    BlueprintQuestFlow,
+    InformationStationFlow,
+    HeritageMuseumQuestFlow,
+    ClassroomLanguageLiveFlow,
+    ConversationStreetFlow,
+    SinhalaPillamFlow,
+    SinhalaPunctuationFlow,
+    SinhalaRiddleFlow,
+)
+
+
 class LearningFlowOrchestrator:
     """State-transition owner for one durable development/test episode."""
 
@@ -279,45 +321,6 @@ class LearningFlowOrchestrator:
         self._probe = probe_gateway
         self._publisher = evidence_publisher
         self._now = now or (lambda: datetime.now(UTC))
-        flow_types: tuple[type[AdaptiveGameFlow], ...] = (
-            NumberWorldFlow,
-            AdditionAdventureFlow,
-            NumberPatternsFlow,
-            SubtractionAdventureFlow,
-            FractionAdventureFlow,
-            MultiplicationAdventureFlow,
-            TimeAdventureFlow,
-            DivisionAdventureFlow,
-            DistanceAdventureFlow,
-            MoneyAdventureFlow,
-            CapacityAdventureFlow,
-            MassAdventureFlow,
-            ShapeAdventureFlow,
-            DirectionAdventureFlow,
-            DecimalAdventureFlow,
-            RomanAdventureFlow,
-            ClassroomActionQuestFlow,
-            SriLankaDiscoveryFlow,
-            PlantExplorerFlow,
-            WildlifeRangerFlow,
-            EverydayObjectQuestFlow,
-            RainbowWardrobeQuestFlow,
-            IslandFoodFestivalFlow,
-            WaterWorksAdventureFlow,
-            TransitTerminalQuestFlow,
-            BloomBuilderGardenFlow,
-            WorkplaceLinkCityFlow,
-            FamilyWordConstellationFlow,
-            EarthSkyExplorerFlow,
-            BlueprintQuestFlow,
-            InformationStationFlow,
-            HeritageMuseumQuestFlow,
-            ClassroomLanguageLiveFlow,
-            ConversationStreetFlow,
-            SinhalaPillamFlow,
-            SinhalaPunctuationFlow,
-            SinhalaRiddleFlow,
-        )
         flows: tuple[AdaptiveGameFlow, ...] = tuple(
             flow_type(
                 store,
@@ -328,7 +331,7 @@ class LearningFlowOrchestrator:
                 camera_consent=camera_consent,
                 support_need_provider=support_need_provider,
             )
-            for flow_type in flow_types
+            for flow_type in GAME_FLOW_TYPES
         )
         self._area_flows = {flow.area_id: flow for flow in flows}
         self._experience_flows = {flow.experience_id: flow for flow in flows}
