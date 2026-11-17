@@ -25,8 +25,10 @@ pins the fixtures' SHA-256 and the commit that last changed them.
 - **Evidence bands** replace a continuous evidence quality: `normal`, `sparse` (no response time),
   `low_quality` (no interaction summary, in the games that read one) and, for Sinhala, `motor`,
   `rendering` and `motor_and_rendering`. Sinhala ignores timing, so it is never `sparse`.
-- **Uncertain** means: top probability below 0.4, or the top two within 0.1, or a weak band, or an
-  `unknown_or_other` top label in an area whose table says so.
+- **Uncertain** means: top probability below 0.4, or the top two within 0.1, or a `sparse` or
+  `low_quality` band, or, in an area whose table says so, an answer whose own likelihood row puts
+  `unknown_or_other` first (before the learner prior). Motor and rendering bands only weaken the
+  row, so a clear learner history can still name a reason after a motor difficulty.
 - **Expected gains** are positions in today's order turned into numbers (0.60 for the first help,
   0.05 less for each next one). They are a starting belief for the bandit, not a measurement.
   With `prior_strength` 8, shared evidence overturns them as the rules would: the first help gives

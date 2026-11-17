@@ -62,7 +62,7 @@ def test_every_frozen_belief_is_reproduced(models) -> None:
         # What Model 2 reads must agree exactly, with no tolerance on a threshold.
         assert _model1_label(belief) == record["model1_label"], record
         assert _model1_uncertain(belief) is record["model1_uncertain"], record
-        assert belief["fallback_used"] is (belief["evidence_band"] != "normal")
+        assert belief["fallback_used"] is (belief["evidence_band"] in {"sparse", "low_quality"})
         subject = AREAS[record["area_id"]]["subject"]
         expected_family = FAMILIES["subjects"][subject]["labels"][belief["predicted_label"]]
         assert belief["reason_family"] == expected_family["reason_family"]
@@ -74,6 +74,30 @@ def test_sinhala_ignores_response_time(models) -> None:
             continue
         model = models[record["area_id"]]
         assert _predict(model, record) == _predict(model, record, input_name="no_response_time")
+
+
+def test_motor_evidence_yields_to_a_clear_learner_history(models) -> None:
+    # Motor difficulty only weakens the answer's evidence. Alone it leaves the reading uncertain;
+    # a history of the same unaided mistake can still make it clear, as the games do today.
+    area_id = "G5-AREA-SIN-03"
+    codes = [code for code in AREAS[area_id]["codes"] if code != "unknown_or_other"]
+    arguments = {
+        "skill_id": SKILLS[area_id][0],
+        "error_code": codes[0],
+        "response_time_ms": 4000,
+        "interaction_summary": {"correction_count": 3},
+    }
+    alone = models[area_id].predict_game_belief(**arguments)
+    with_history = models[area_id].predict_game_belief(**arguments, prior_window=[codes[0]] * 4)
+    assert alone["evidence_band"] == with_history["evidence_band"] == "motor"
+    assert _model1_uncertain(alone) is True
+    assert _model1_uncertain(with_history) is False
+    assert with_history["fallback_used"] is False
+    rendering = models[area_id].predict_game_belief(
+        **{**arguments, "interaction_summary": {"rendering_issue_reported": True}},
+        prior_window=[codes[0]] * 4,
+    )
+    assert "unknown_top" in rendering["uncertain_because"]
 
 
 def test_answer_window_matches_every_frozen_window() -> None:

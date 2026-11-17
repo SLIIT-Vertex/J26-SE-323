@@ -107,7 +107,8 @@ def test_package_regenerates_identically(tool) -> None:
 
 def test_every_game_has_a_complete_misconception_table(tables, settings) -> None:
     assert list(tables) == sorted(flow_type.area_id for flow_type in GAME_FLOW_TYPES)
-    bands = {settings["default_band"], *settings["weak_bands"]}
+    bands = set(settings["bands"])
+    assert set(settings["uncertain_bands"]) < bands
     for area_id, table in tables.items():
         codes = table["codes"]
         assert UNKNOWN in codes, area_id
@@ -161,13 +162,15 @@ def test_uncertainty_rule_reproduces_every_frozen_reading(tool, tables, settings
         table = tables[record["area_id"]]
         given = areas[record["area_id"]]["inputs"][record["input"]]
         probabilities = record["belief"]["probabilities"]
+        likelihood = record["belief"]["likelihood"]
         ordered = sorted(probabilities, reverse=True)
-        top = table["codes"][probabilities.index(ordered[0])]
+        # The answer's own evidence, before the learner prior, decides the unknown-top cause.
+        evidence_top = table["codes"][likelihood.index(max(likelihood))]
         uncertain = (
             ordered[0] < rule["top_probability_below"]
             or ordered[0] - ordered[1] < rule["top_two_margin_below"]
-            or _band(tool, table, given) in settings["weak_bands"]
-            or (table["unknown_top_is_uncertain"] and top == rule["unknown_code"])
+            or _band(tool, table, given) in settings["uncertain_bands"]
+            or (table["unknown_top_is_uncertain"] and evidence_top == rule["unknown_code"])
         )
         assert uncertain is record["model1_uncertain"], record
 

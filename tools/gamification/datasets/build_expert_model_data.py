@@ -44,7 +44,10 @@ LEARNING_STATES = ("not_available", "calm", "confused", "disengaged")
 UNKNOWN = "unknown_or_other"
 UNSEEN = "__unseen__"
 DEFAULT_BAND = "normal"
-WEAK_BANDS = ("sparse", "low_quality", "motor", "rendering", "motor_and_rendering")
+BANDS = ("normal", "sparse", "low_quality", "motor", "rendering", "motor_and_rendering")
+# Bands in which the answer alone can never name a reason, whatever the learner's history. Motor
+# and rendering only weaken the likelihood row; a rendering problem puts unknown_or_other on top.
+UNCERTAIN_BANDS = ("sparse", "low_quality")
 
 # How each game's belief hook reads its evidence, as the rules do today. The thresholds are the
 # Sinhala packages' motor and rendering rules.
@@ -175,16 +178,16 @@ def _misconception_table(
         )
     rewrites.sort(key=lambda item: [s[0] for s in INTERACTION_REWRITE_SIGNALS].index(item["field"]))
 
-    # Whether an unknown_or_other top label alone makes the reading uncertain, as the game shows.
+    # Whether an answer whose own evidence puts unknown_or_other on top makes the reading
+    # uncertain, whatever the learner prior then does, as the game shows.
     unknown_top = set()
     for record in records + [r for r in beliefs["learner_prior"] if r["area_id"] == area_id]:  # type: ignore[union-attr]
         given = inputs[record["input"]]
         band = evidence_band(rule, given["response_time_ms"], given["interaction_summary"])  # type: ignore[arg-type]
-        probabilities = record["belief"]["probabilities"]
         if (
-            band == DEFAULT_BAND
-            and _top(codes, probabilities) == UNKNOWN
-            and not _low_confidence(probabilities)
+            band not in UNCERTAIN_BANDS
+            and _top(codes, record["belief"]["likelihood"]) == UNKNOWN
+            and not _low_confidence(record["belief"]["probabilities"])
         ):
             unknown_top.add(record["model1_uncertain"])
     if len(unknown_top) != 1:
@@ -200,10 +203,8 @@ def _misconception_table(
         "codes": codes,
         "class_priors": dict.fromkeys(codes, 1.0),
         "evidence_band_rule": rule,
-        "evidence_bands": [band for band in (DEFAULT_BAND, *WEAK_BANDS) if band in rows],
-        "error_likelihoods": {
-            band: rows[band] for band in (DEFAULT_BAND, *WEAK_BANDS) if band in rows
-        },
+        "evidence_bands": [band for band in BANDS if band in rows],
+        "error_likelihoods": {band: rows[band] for band in BANDS if band in rows},
         "interaction_rewrites": rewrites,
         "unknown_top_is_uncertain": unknown_top.pop(),
     }
@@ -214,7 +215,8 @@ def _misconception_settings(beliefs: Mapping[str, object]) -> dict[str, object]:
         "package_version": PACKAGE_VERSION,
         "evidence_status": EVIDENCE_STATUS,
         "default_band": DEFAULT_BAND,
-        "weak_bands": list(WEAK_BANDS),
+        "bands": list(BANDS),
+        "uncertain_bands": list(UNCERTAIN_BANDS),
         "signals": SIGNALS,
         "band_rules": BAND_RULES,
         "interaction_rewrite_scope": {
@@ -225,8 +227,8 @@ def _misconception_settings(beliefs: Mapping[str, object]) -> dict[str, object]:
         "uncertainty_rule": {
             "top_probability_below": 0.4,
             "top_two_margin_below": 0.1,
-            "weak_band": True,
-            "unknown_top_when_area_says": True,
+            "uncertain_band": True,
+            "unknown_top_of_the_answer_evidence_when_area_says": True,
             "unknown_code": UNKNOWN,
         },
         "learner_prior": {

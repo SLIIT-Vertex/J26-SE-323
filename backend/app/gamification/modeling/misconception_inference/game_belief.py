@@ -53,7 +53,7 @@ class GameBeliefSettings:
     band_rules: Mapping[str, tuple[Mapping[str, object], ...]]
     signals: Mapping[str, Mapping[str, object]]
     default_band: str
-    weak_bands: frozenset[str]
+    uncertain_bands: frozenset[str]
     interaction_rewrites: tuple[Mapping[str, object], ...]
     unknown_code: str
     unknown_top_is_uncertain: bool
@@ -109,7 +109,7 @@ class GameBeliefSettings:
             },
             signals=settings["signals"],  # type: ignore[arg-type]
             default_band=str(settings["default_band"]),
-            weak_bands=frozenset(settings["weak_bands"]),  # type: ignore[arg-type]
+            uncertain_bands=frozenset(settings["uncertain_bands"]),  # type: ignore[arg-type]
             interaction_rewrites=tuple(table["interaction_rewrites"]),  # type: ignore[arg-type]
             unknown_code=str(rule["unknown_code"]),  # type: ignore[index]
             unknown_top_is_uncertain=bool(table["unknown_top_is_uncertain"]),
@@ -172,9 +172,14 @@ class GameBeliefSettings:
         return error_code, None
 
     def uncertain_because(
-        self, probabilities: Mapping[str, float], top: str, band: str
+        self, probabilities: Mapping[str, float], evidence_top: str | None, band: str
     ) -> tuple[bool, tuple[str, ...]]:
-        """Whether the top two probabilities make a low-confidence reading, and every cause."""
+        """Whether the top two probabilities make a low-confidence reading, and every cause.
+
+        ``evidence_top`` is the label the answer's own likelihood row ranks first. The learner
+        prior can move the final top away from ``unknown_or_other``, but an answer whose evidence
+        points there still cannot name a reason. Motor and rendering bands only weaken the row.
+        """
 
         ordered = sorted(probabilities, key=probabilities.get, reverse=True)  # type: ignore[arg-type]
         confidence = probabilities[ordered[0]]
@@ -184,9 +189,9 @@ class GameBeliefSettings:
         causes = []
         if low:
             causes.append("low_confidence_rule")
-        if band in self.weak_bands:
+        if band in self.uncertain_bands:
             causes.append("weak_evidence")
-        if self.unknown_top_is_uncertain and top == self.unknown_code:
+        if self.unknown_top_is_uncertain and evidence_top == self.unknown_code:
             causes.append("unknown_top")
         return low, tuple(causes)
 
@@ -201,13 +206,13 @@ class GameBeliefSettings:
             "band_rules": {name: list(entries) for name, entries in self.band_rules.items()},
             "signals": dict(self.signals),
             "default_band": self.default_band,
-            "weak_bands": sorted(self.weak_bands),
+            "uncertain_bands": sorted(self.uncertain_bands),
             "interaction_rewrites": list(self.interaction_rewrites),
             "uncertainty_rule": {
                 "top_probability_below": self.top_probability_below,
                 "top_two_margin_below": self.top_two_margin_below,
-                "weak_band": True,
-                "unknown_top": self.unknown_top_is_uncertain,
+                "uncertain_band": True,
+                "unknown_top_of_the_answer_evidence": self.unknown_top_is_uncertain,
                 "unknown_code": self.unknown_code,
                 "abstain_threshold_used": False,
             },
@@ -233,10 +238,10 @@ class GameBeliefSettings:
             },
             signals=MappingProxyType(dict(parameters["signals"])),  # type: ignore[call-overload]
             default_band=str(parameters["default_band"]),
-            weak_bands=frozenset(parameters["weak_bands"]),  # type: ignore[arg-type]
+            uncertain_bands=frozenset(parameters["uncertain_bands"]),  # type: ignore[arg-type]
             interaction_rewrites=tuple(parameters["interaction_rewrites"]),  # type: ignore[arg-type]
             unknown_code=str(rule["unknown_code"]),  # type: ignore[index]
-            unknown_top_is_uncertain=bool(rule["unknown_top"]),  # type: ignore[index]
+            unknown_top_is_uncertain=bool(rule["unknown_top_of_the_answer_evidence"]),  # type: ignore[index]
             top_probability_below=float(rule["top_probability_below"]),  # type: ignore[index]
             top_two_margin_below=float(rule["top_two_margin_below"]),  # type: ignore[index]
             prior_window=int(prior["window"]),  # type: ignore[index]

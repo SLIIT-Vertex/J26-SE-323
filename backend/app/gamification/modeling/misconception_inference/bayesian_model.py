@@ -341,7 +341,8 @@ class BayesianMisconceptionModel:
         probabilities = {code: value / total for code, value in weights.items()}
         ordered = sorted(probabilities, key=probabilities.__getitem__, reverse=True)
         top = ordered[0]
-        low_confidence, causes = game.uncertain_because(probabilities, top, band)
+        evidence_top = None if row is None else max(codes, key=lambda code: row[code])
+        low_confidence, causes = game.uncertain_because(probabilities, evidence_top, band)
         return {
             "model_version": self.model_version,
             "catalogue_version": self.catalogue_version,
@@ -359,7 +360,8 @@ class BayesianMisconceptionModel:
             "entropy": -sum(p * math.log(p) for p in probabilities.values() if p > 0),
             "low_confidence": low_confidence,
             "abstained": any(cause != "low_confidence_rule" for cause in causes),
-            # Read by the research dashboard and the demo-seed checks as "the evidence was weak".
+            # Read by the research dashboard and the demo-seed checks as "the evidence was too
+            # weak to name a reason".
             "fallback_used": "weak_evidence" in causes,
             "uncertain_because": list(causes),
             "reason_family": game.reason_family(top),

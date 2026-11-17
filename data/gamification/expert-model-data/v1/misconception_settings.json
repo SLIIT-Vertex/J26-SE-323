@@ -45,6 +45,14 @@
       }
     ]
   },
+  "bands": [
+    "normal",
+    "sparse",
+    "low_quality",
+    "motor",
+    "rendering",
+    "motor_and_rendering"
+  ],
   "default_band": "normal",
   "evidence_status": "provisional_expert_assumption",
   "interaction_rewrite_scope": {
@@ -81,18 +89,15 @@
       "field": "interaction_summary"
     }
   },
+  "uncertain_bands": [
+    "sparse",
+    "low_quality"
+  ],
   "uncertainty_rule": {
     "top_probability_below": 0.4,
     "top_two_margin_below": 0.1,
+    "uncertain_band": true,
     "unknown_code": "unknown_or_other",
-    "unknown_top_when_area_says": true,
-    "weak_band": true
-  },
-  "weak_bands": [
-    "sparse",
-    "low_quality",
-    "motor",
-    "rendering",
-    "motor_and_rendering"
-  ]
+    "unknown_top_of_the_answer_evidence_when_area_says": true
+  }
 }
