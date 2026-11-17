@@ -3,14 +3,21 @@
 Likelihood weights, the abstention threshold, the staleness window, and the response-time and
 attempt bands are provisional assumptions. Synthetic data can exercise this update; it is not an
 empirical calibration of Grade 5 misconceptions.
+
+A model built with game settings (``GameBeliefSettings``) also reads a game answer directly
+through ``predict_game_belief``: the answer's evidence band and error code select a likelihood row,
+and the learner's last unaided answers on the skill form the prior. The games use only that factor;
+the other factors stay in the model, switched off, until a reviewed or learned table exists.
 """
 
 import math
-from collections.abc import Mapping
+from collections import Counter
+from collections.abc import Iterable, Mapping
 from types import MappingProxyType
 
 from app.gamification.application.records import FeatureSnapshotRecord
 from app.gamification.modeling.misconception_inference.contracts import UNKNOWN_CODE
+from app.gamification.modeling.misconception_inference.game_belief import GameBeliefSettings
 from app.gamification.modeling.misconception_inference.probabilistic_model import (
     build_distribution,
 )
@@ -30,7 +37,19 @@ PROVISIONAL_FACTOR_WEIGHTS: Mapping[str, float] = MappingProxyType(
         "support_need": 0.25,
     }
 )
+GAME_MODEL_VERSION = "bayesian-misconception-v2"
+# The games read only the answer's error code, by evidence band, and the learner prior.
+GAME_FACTOR_WEIGHTS: Mapping[str, float] = MappingProxyType(
+    {
+        "option_evidence": 0.0,
+        "structured_error": 1.0,
+        "attempt_count": 0.0,
+        "response_time_band": 0.0,
+        "support_need": 0.0,
+    }
+)
 UNSEEN_EVIDENCE = "__unseen__"
+_BAND_SEPARATOR = "|"
 _CONTEXT_FIELDS = (
     ("prior_skill_accuracy", "PRIOR_SKILL_ACCURACY", "PRIOR_SKILL_ACCURACY_MISSING"),
     ("template_key", "TEMPLATE_PRESENT", "TEMPLATE_MISSING"),
@@ -67,6 +86,12 @@ def support_need_band(support_need: float) -> str:
     return "elevated" if support_need >= 0.5 else "low"
 
 
+def band_evidence_key(band: str, code: str) -> str:
+    """The structured-error evidence key of a game model: one row per evidence band and code."""
+
+    return f"{band}{_BAND_SEPARATOR}{code}"
+
+
 def _copy_table(table: Mapping[str, Mapping[str, float]] | None) -> dict[str, dict[str, float]]:
     return {evidence: dict(weights) for evidence, weights in (table or {}).items()}
 
@@ -97,6 +122,7 @@ class BayesianMisconceptionModel:
         staleness_threshold_ms: int = PROVISIONAL_STALENESS_THRESHOLD_MS,
         table_version: str = LIKELIHOOD_TABLE_VERSION,
         model_version: str = BAYESIAN_MODEL_VERSION,
+        game: GameBeliefSettings | None = None,
     ) -> None:
         if not catalogue_version:
             raise ValueError("catalogue_version is required")
@@ -113,9 +139,11 @@ class BayesianMisconceptionModel:
         self.abstain_threshold = abstain_threshold
         self.staleness_threshold_ms = staleness_threshold_ms
         self.factor_weights = weights
+        self.game = game
+        # The games name their unknown code ``unknown_or_other``; the pilot catalogue does not.
+        unknown = UNKNOWN_CODE if game is None else game.unknown_code
         self.skill_codes = {
-            skill: tuple(dict.fromkeys((*codes, UNKNOWN_CODE)))
-            for skill, codes in skill_codes.items()
+            skill: tuple(dict.fromkeys((*codes, unknown))) for skill, codes in skill_codes.items()
         }
         self.class_priors = {skill: dict(prior) for skill, prior in class_priors.items()}
         self.option_likelihoods = {
@@ -186,6 +214,7 @@ class BayesianMisconceptionModel:
             "attempt_likelihoods": self.attempt_likelihoods,
             "response_time_likelihoods": self.response_time_likelihoods,
             "support_need_likelihoods": self.support_need_likelihoods,
+            **({"game": self.game.to_parameters()} if self.game is not None else {}),
         }
 
     @classmethod
@@ -219,7 +248,132 @@ class BayesianMisconceptionModel:
             ),
             table_version=str(parameters.get("table_version", LIKELIHOOD_TABLE_VERSION)),
             model_version=str(parameters.get("model_version", artifact.model_version)),
+            game=(
+                GameBeliefSettings.from_parameters(parameters["game"])  # type: ignore[arg-type]
+                if isinstance(parameters.get("game"), Mapping)
+                else None
+            ),
         )
+
+    def predict_game_belief(
+        self,
+        *,
+        skill_id: str,
+        error_code: str | None,
+        response_time_ms: int | None,
+        interaction_summary: Mapping[str, object] | None,
+        prior_window: Iterable[str] = (),
+        attempt_count: int | None = None,
+        response_time_ratio: float | None = None,
+        support_need: float | None = None,
+    ) -> dict[str, object]:
+        """One game answer's belief, in the shape the games, help builders and dashboard read.
+
+        ``prior_window`` is the learner's last unaided answers on this skill, oldest first, as
+        ``learner_answer_window`` returns them. The product is taken directly rather than through
+        logarithms, so a belief is reproduced to the last bit and a reading on a threshold is not
+        flipped by rounding.
+        """
+
+        game = self.game
+        if game is None:
+            raise ValueError("this model has no game settings")
+        codes = self.skill_codes.get(skill_id)
+        if codes is None:
+            raise KeyError(f"{skill_id} has no misconception table")
+        summary = dict(interaction_summary or {})
+        band = game.evidence_band(response_time_ms, summary)
+        window = tuple(prior_window)[-game.prior_window :] if game.prior_window else ()
+        counts = Counter(answer for answer in window if answer in codes)
+        prior = self.class_priors[skill_id]
+        weights = {code: prior[code] * (game.prior_pseudocount + counts[code]) for code in codes}
+        factors: dict[str, str] = {}
+
+        interpreted, rewrite = (
+            game.interpret_error_code(error_code, summary) if error_code else (None, None)
+        )
+        row: Mapping[str, float] | None = None
+        if interpreted is None:
+            factors["structured_error"] = "missing"
+        else:
+            table = self.error_likelihoods.get(skill_id, {})
+            row = table.get(band_evidence_key(band, interpreted))
+            factors["structured_error"] = "matched"
+            if row is None:
+                row = table.get(band_evidence_key(band, UNSEEN_EVIDENCE))
+                factors["structured_error"] = "unseen"
+            if row is None:
+                raise ValueError(f"{skill_id} has no likelihood rows for evidence band {band}")
+            weights = _times(weights, row, self.factor_weights.get("structured_error", 0.0))
+        extra = (
+            ("option_evidence", self.option_likelihoods.get(skill_id, {}), None),
+            (
+                "attempt_count",
+                self.attempt_likelihoods.get(skill_id, {}),
+                None if attempt_count is None else attempt_band(attempt_count),
+            ),
+            (
+                "response_time_band",
+                self.response_time_likelihoods.get(skill_id, {}),
+                None if response_time_ratio is None else response_time_band(response_time_ratio),
+            ),
+            (
+                "support_need",
+                self.support_need_likelihoods.get(skill_id, {}),
+                None if support_need is None else support_need_band(support_need),
+            ),
+        )
+        for name, table, evidence in extra:
+            weight = self.factor_weights.get(name, 0.0)
+            if weight == 0:
+                factors[name] = "off"
+            elif evidence is None:
+                factors[name] = "missing"
+            elif evidence not in table and UNSEEN_EVIDENCE not in table:
+                factors[name] = "unseen"
+            else:
+                factors[name] = "matched" if evidence in table else "unseen"
+                weights = _times(
+                    weights, table.get(evidence, table.get(UNSEEN_EVIDENCE, {})), weight
+                )
+
+        total = sum(weights.values())
+        probabilities = {code: value / total for code, value in weights.items()}
+        ordered = sorted(probabilities, key=probabilities.__getitem__, reverse=True)
+        top = ordered[0]
+        low_confidence, causes = game.uncertain_because(probabilities, top, band)
+        return {
+            "model_version": self.model_version,
+            "catalogue_version": self.catalogue_version,
+            "table_version": self.table_version,
+            "expert_data_version": game.data_version,
+            "expert_data_status": game.evidence_status,
+            "expert_data_sha256": dict(game.file_sha256),
+            "area_id": game.area_id,
+            "skill_id": skill_id,
+            "probabilities": probabilities,
+            "likelihood": None if row is None else {code: row[code] for code in codes},
+            "predicted_label": top,
+            "top_hypothesis": top,
+            "confidence": probabilities[top],
+            "entropy": -sum(p * math.log(p) for p in probabilities.values() if p > 0),
+            "low_confidence": low_confidence,
+            "abstained": any(cause != "low_confidence_rule" for cause in causes),
+            # Read by the research dashboard and the demo-seed checks as "the evidence was weak".
+            "fallback_used": "weak_evidence" in causes,
+            "uncertain_because": list(causes),
+            "reason_family": game.reason_family(top),
+            "evidence_band": band,
+            "structured_error_code": error_code,
+            "interpreted_error_code": interpreted,
+            "interaction_rewrite": None if rewrite is None else dict(rewrite),
+            "prior_window": list(window),
+            "prior_counts": {code: counts[code] for code in codes},
+            "prior_sample_size": len(window),
+            "prior_pseudocount": game.prior_pseudocount,
+            "learner_prior_used": bool(counts),
+            "factors": factors,
+        }
 
     def _fallback(self, reason: str) -> MisconceptionDistribution:
         return build_distribution(
@@ -335,6 +489,20 @@ class BayesianMisconceptionModel:
     ) -> tuple[str, str]:
         absent = snapshot.missingness.get(field, field not in snapshot.values)
         return ("", missing) if absent else (present, "")
+
+
+def _times(
+    weights: Mapping[str, float], row: Mapping[str, float], weight: float
+) -> dict[str, float]:
+    """Multiply each code's weight by its likelihood raised to the factor weight."""
+
+    product = {}
+    for code, value in weights.items():
+        likelihood = row.get(code, sum(row.values()) / len(row))
+        if likelihood <= 0:
+            raise ValueError(f"likelihood for {code} must be positive")
+        product[code] = value * (likelihood if weight == 1 else likelihood**weight)
+    return product
 
 
 def _mapping(value: object) -> Mapping[str, Mapping[str, Mapping[str, float]]]:
