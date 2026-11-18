@@ -28,8 +28,30 @@ ROLES = ("credited", "failed_round")
 
 
 def canonical_sha256(value: object) -> str:
-    text = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    """SHA-256 of the value as stored, whatever the database does to its numbers.
+
+    PostgreSQL's JSONB keeps numbers as decimals: it returns ``-0.0`` as ``0`` and a large float
+    as an integer. Every number is hashed as a float, with ``-0.0`` as ``0.0``, so a stored state
+    keeps its hash.
+    """
+
+    text = json.dumps(
+        _numbers_as_floats(value), ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _numbers_as_floats(value: object) -> object:
+    if isinstance(value, bool) or value is None or isinstance(value, str):
+        return value
+    if isinstance(value, int | float):
+        number = float(value)
+        return 0.0 if number == 0 else number
+    if isinstance(value, Mapping):
+        return {str(key): _numbers_as_floats(item) for key, item in value.items()}
+    if isinstance(value, list | tuple):
+        return [_numbers_as_floats(item) for item in value]
+    raise TypeError(f"cannot hash {type(value).__name__}")
 
 
 @dataclass(frozen=True)

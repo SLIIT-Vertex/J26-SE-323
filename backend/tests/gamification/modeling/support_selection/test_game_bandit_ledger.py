@@ -66,6 +66,14 @@ def test_a_snapshot_keeps_every_scored_context_exactly_and_survives_json() -> No
     assert canonical_sha256(restored.as_record()) == canonical_sha256(snapshot.as_record())
 
 
+def test_the_hash_survives_what_postgresql_does_to_numbers() -> None:
+    stored = {"zero": -0.0, "large": 1.2345678901234567e20, "whole": 32.0, "flag": True}
+    returned = {"zero": 0, "large": 123456789012345670000, "whole": 32.0, "flag": True}
+    assert canonical_sha256(stored) == canonical_sha256(returned)
+    assert canonical_sha256({"flag": True}) != canonical_sha256({"flag": 1.0})
+    assert canonical_sha256({"value": 0.1}) != canonical_sha256({"value": 0.10000000000000002})
+
+
 def test_ledger_entries_follow_the_credit_rule_in_the_artifact_settings() -> None:
     bandit = load_game_help_bandit("MAT")
     _, snapshot = _decision(bandit)
