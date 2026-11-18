@@ -244,6 +244,20 @@ def learning_state_of(reading: Mapping[str, object] | None) -> str:
     return str(state) if available and state in LEARNING_STATES else "not_available"
 
 
+
+def rank_by_gain(
+    cell_order: Sequence[str], gains: Mapping[str, float], tolerance: float
+) -> tuple[str, ...]:
+    """Highest predicted gain first; gains within ``tolerance`` tie, and the cell's order wins."""
+
+    remaining, order = list(cell_order), []
+    while remaining:
+        best = max(gains[support] for support in remaining)
+        chosen = next(support for support in remaining if gains[support] >= best - tolerance)
+        order.append(chosen)
+        remaining.remove(chosen)
+    return tuple(order)
+
 # --- The bandit -----------------------------------------------------------------------------
 
 
@@ -457,14 +471,8 @@ class GameHelpBandit:
             support: self.policy.predict(contexts[support], [support])[support][0]
             for support in available
         }
-        tolerance = float(self.settings["tie_tolerance"])  # type: ignore[arg-type]
-        remaining, order = list(available), []
-        while remaining:
-            best = max(gains[support] for support in remaining)
-            chosen = next(support for support in remaining if gains[support] >= best - tolerance)
-            order.append(chosen)
-            remaining.remove(chosen)
-        return HelpOrder(tuple(order), gains, family, model1_uncertain, state, contexts)
+        order = rank_by_gain(available, gains, float(self.settings["tie_tolerance"]))  # type: ignore[arg-type]
+        return HelpOrder(order, gains, family, model1_uncertain, state, contexts)
 
     def learn(self, observation: CreditObservation, context: BanditContext) -> None:
         """Apply one observation, in the context stored when the episode's order was chosen."""
@@ -524,13 +532,21 @@ def load_game_help_bandit(
 ) -> GameHelpBandit:
     """One subject's expert-initialised bandit, from the checked expert model data."""
 
+    gains, families, file_sha256 = load_help_order_expert_data(directory)
+    return GameHelpBandit.from_expert_data(subject, gains, families, file_sha256=file_sha256)
+
+
+def load_help_order_expert_data(
+    directory: Path = EXPERT_MODEL_DATA_DIRECTORY,
+) -> tuple[Mapping[str, object], Mapping[str, object], dict[str, str]]:
+    """The checked expert gains and reason families, with the hashes an artifact records."""
+
     manifest = read_expert_manifest(directory)
     gains, gains_sha = read_verified_expert_file(directory, manifest, "support_gains.json")
     families, families_sha = read_verified_expert_file(directory, manifest, "reason_families.json")
     assert isinstance(gains, Mapping) and isinstance(families, Mapping)
-    return GameHelpBandit.from_expert_data(
-        subject,
+    return (
         gains,
         families,
-        file_sha256={"support_gains.json": gains_sha, "reason_families.json": families_sha},
+        {"support_gains.json": gains_sha, "reason_families.json": families_sha},
     )

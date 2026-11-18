@@ -12,6 +12,9 @@ from app.gamification.application.research_dashboard.glossary import (
     reason_name,
 )
 from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
+from app.gamification.modeling.misconception_inference.bayesian_model import (
+    GAME_FACTOR_WEIGHTS as FACTOR_WEIGHTS,
+)
 
 
 @lru_cache
@@ -49,6 +52,41 @@ def name(support):
     return TYPE_NAMES.get(str(support), "Help")
 
 
+# Why a Bayesian reading names no reason, in plain words.
+UNCERTAIN_CAUSES = {
+    "low_confidence_rule": "the top reason was below 40% or the top two were within 10 points",
+    "weak_evidence": "the answer carried too little evidence (no time or no interaction summary)",
+    "unknown_top": "the answer's own evidence pointed to no listed reason",
+}
+FACTOR_NAMES = {
+    "structured_error": "The mistake in the answer",
+    "option_evidence": "The option chosen",
+    "attempt_count": "Attempts",
+    "response_time_band": "Response time",
+    "support_need": "Learning State",
+}
+LEDGER_ROLES = {
+    "credited": "Ended the help; scored with the fair test's gain at full weight",
+    "failed_round": "Did not work while shown; scored 0 at half weight",
+}
+FACTOR_STATES = {
+    "matched": "used",
+    "unseen": "not in the table, so it was not used",
+    "missing": "not available",
+    "off": "switched off",
+}
+
+
+def belief_uncertain(model1) -> bool:
+    """Uncertain as Model 2 reads it: the recorded causes, else any of the three flags."""
+
+    if not isinstance(model1, Mapping):
+        return False
+    if "uncertain_because" in model1:
+        return bool(model1["uncertain_because"])
+    return any(model1.get(flag) for flag in ("low_confidence", "fallback_used", "abstained"))
+
+
 def explain_model1(model1, subject="MAT"):
     if not isinstance(model1, Mapping):
         return None
@@ -59,7 +97,13 @@ def explain_model1(model1, subject="MAT"):
     count, size = prior.get(label, 0), model1.get("prior_sample_size", 0)
     likelihood = model1.get("likelihood") or probabilities
     why = "The game noticed a mistake in the child's answer. Other reasons remain possible."
-    if model1.get("fallback_used"):
+    causes = [
+        UNCERTAIN_CAUSES.get(str(cause), str(cause))
+        for cause in model1.get("uncertain_because") or []
+    ]
+    if causes:
+        why = "No reason is named with confidence: " + "; ".join(causes) + "."
+    elif model1.get("fallback_used"):
         why = "There was too little evidence in this answer to name one reason confidently."
     history_effect = (
         (
@@ -73,7 +117,7 @@ def explain_model1(model1, subject="MAT"):
         "headline": f"Most likely reason: {reason_name(label, subject)} ({top:.0%} sure)",
         "why": why,
         "history_effect": history_effect,
-        "uncertain": bool(model1.get("low_confidence") or model1.get("fallback_used")),
+        "uncertain": belief_uncertain(model1),
         "reasons": [
             {"code": code, "label": reason_name(code, subject), "probability": probability}
             for code, probability in sorted(
@@ -84,14 +128,34 @@ def explain_model1(model1, subject="MAT"):
             "answer": model1.get("constructed_response"),
             "error_code": model1.get("structured_error_code"),
         },
+        "evidence_band": model1.get("evidence_band"),
+        "factors": [
+            {
+                "name": FACTOR_NAMES.get(str(factor), str(factor)),
+                "state": FACTOR_STATES.get(str(outcome), str(outcome)),
+                "weight": weight,
+            }
+            for factor, outcome in dict(model1.get("factors") or {}).items()
+            for weight in [FACTOR_WEIGHTS.get(str(factor))]
+        ],
         "assumptions": [
             "One answer cannot prove why a mistake happened.",
             "At most five earlier answers influence the estimate.",
+            *(
+                [
+                    (
+                        "The tables are provisional expert assumptions taken from the earlier rules, "
+                        "not yet reviewed by a teacher."
+                    )
+                ]
+                if model1.get("expert_data_status")
+                else []
+            ),
         ],
     }
 
 
-def explain_model2(state):
+def explain_model2(state, ledger=()):
     record = state.get("model2")
     if not isinstance(record, Mapping) or not record.get("support_order"):
         return None
@@ -127,6 +191,11 @@ def explain_model2(state):
             "Past results do not change this order.",
         ]
     elif mode == "bandit_greedy":
+        if reading.get("status") == "available" and not state_sentence:
+            state_sentence = (
+                f"During this game the child seemed {plain_status(reading.get('state')).lower()}; "
+                "the prediction takes that into account."
+            )
         steps = [
             f"Likely reason: {FAMILY_NAMES.get(family, FAMILY_NAMES['unclear'])}.",
             (
@@ -152,6 +221,16 @@ def explain_model2(state):
         "subject_order": [],
         "history": history,
         "learning_state_sentence": state_sentence,
+        "predicted_gain": [
+            {"help": support, "gain": float(gain)}
+            for support in order
+            if (gain := dict(record.get("predicted_gain") or {}).get(support)) is not None
+        ],
+        "ledger": [
+            {**row, "role_label": LEDGER_ROLES.get(str(row.get("role")), str(row.get("role")))}
+            for row in ledger
+        ],
+        "bandit_update": record.get("bandit_update"),
         "legacy_shared_credit": record.get("order_policy_version") == "support-order-v2",
         "history_note": "This older decision counted every help that was tried. New games credit only the help that succeeded."
         if record.get("order_policy_version") == "support-order-v2"
@@ -159,7 +238,20 @@ def explain_model2(state):
         "assumptions": [
             "Only the help that succeeded receives the later independent result.",
             "Earlier failed help is counted separately.",
-            "Two independent successes outweigh how the child seemed in one game.",
+            *(
+                [
+                    (
+                        "Predictions start from provisional expert values and learn from every valid "
+                        "fair test in the study."
+                    ),
+                    (
+                        "A help that failed while shown counts at half weight; a help that was not "
+                        "shown teaches nothing."
+                    ),
+                ]
+                if mode == "bandit_greedy"
+                else ["Two independent successes outweigh how the child seemed in one game."]
+            ),
         ],
     }
 

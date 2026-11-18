@@ -9,6 +9,9 @@ from uuid import UUID
 from sqlalchemy import Uuid, bindparam, select, text
 from sqlalchemy.orm import Session
 
+from app.gamification.infrastructure.db.game_help_bandit_store import (
+    SqlAlchemyGameHelpBanditStore,
+)
 from app.gamification.infrastructure.db.learning_flow_store import digest
 from app.gamification.infrastructure.db.models import (
     LearningFlowEpisodeRunModel,
@@ -84,6 +87,24 @@ class SqlAlchemyResearchDashboardReader:
         if row is None or not _intact(row):
             return None
         return _as_run(row)
+
+    def help_order_ledger(self, episode_id: UUID) -> list[dict[str, object]]:
+        """What one episode taught the help-order bandit, in applied order."""
+
+        return SqlAlchemyGameHelpBanditStore(self.session).ledger_for_episode(episode_id)
+
+    def help_order_subjects(self) -> dict[str, dict[str, object]]:
+        """Each subject's approved help-order bandit: its parameters, ledger and decisions."""
+
+        store = SqlAlchemyGameHelpBanditStore(self.session)
+        return {
+            subject: {
+                "parameters": parameters,
+                "ledger": store.ledger_with_snapshots(model_version_id),
+                "decisions": store.decisions(model_version_id),
+            }
+            for subject, (model_version_id, parameters) in store.approved_artifacts().items()
+        }
 
     def round_counts(self, episode_ids: list[UUID]) -> Counter[UUID]:
         return Counter(

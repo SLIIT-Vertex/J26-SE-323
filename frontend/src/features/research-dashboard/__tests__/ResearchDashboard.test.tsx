@@ -332,11 +332,11 @@ function fakeClient(overrides: Partial<ResearchClient> = {}) {
 					parameters: [],
 					settings: [
 						{
-							name: "Evidence cap",
-							value: "72%",
-							how: "Replayed with each cap.",
-							tried: ["60%", "72%", "80%"],
-							replay: "confidence_caps" as const,
+							name: "Top reason must reach",
+							value: "40%",
+							how: "Replayed with each value.",
+							tried: ["30%", "40%", "50%"],
+							replay: "top_probability_below",
 						},
 					],
 					leakage: { count: 0, checked: 4 },
@@ -357,6 +357,35 @@ function fakeClient(overrides: Partial<ResearchClient> = {}) {
 						reference_count: 4,
 						status: "not_enough_data" as const,
 					},
+					settings: [
+						{
+							name: "Failed round weight",
+							value: "0.5",
+							how: "Replayed the stored ledger with each weight.",
+							tried: ["0", "0.25", "0.5", "1"],
+							replay: "failed_round_weight",
+						},
+					],
+					evidence: [
+						{
+							subject: "MAT",
+							approved: true,
+							observations: 7,
+							credited: 4,
+							failed_rounds: 3,
+							decisions: 12,
+							by_help: [
+								{
+									help: "visual_guidance" as const,
+									credited_success: 3,
+									credited_zero: 1,
+									failed_rounds: 3,
+									failed_round_weight: 1.5,
+								},
+							],
+						},
+						{ subject: "SIN", approved: false, observations: 0 },
+					],
 					metrics: [
 						{
 							key: "first",
@@ -460,10 +489,29 @@ function fakeClient(overrides: Partial<ResearchClient> = {}) {
 			offline: {
 				generated_at: "2026-10-21T10:00:00Z",
 				note: "",
-				confidence_caps: [
-					{ confidence_cap: 0.72, count: 13, agreement: null, brier: null },
-				],
-				preference_thresholds: [],
+				model1_settings: [0.3, 0.4].map((value) => ({
+					setting: "top_probability_below",
+					value,
+					approved: value === 0.4,
+					readings: 13,
+					agreement: null,
+					brier: null,
+					pairs: 9,
+					changed_reason: 0,
+					changed_uncertain: value === 0.4 ? 0 : 2,
+					reproduced: 13,
+					bayesian_readings: 13,
+				})),
+				help_order_settings: ["MAT", "ENG"].flatMap((subject) =>
+					[0.5, 1].map((value) => ({
+						subject,
+						setting: "failed_round_weight",
+						value,
+						approved: value === 0.5,
+						decisions: 12,
+						changed_first_helps: value === 0.5 ? 0 : 3,
+					})),
+				),
 			},
 			simulation: {
 				generated_at: "2026-10-21T11:00:00Z",
@@ -757,6 +805,19 @@ describe("judge-facing research dashboard", () => {
 			"not a learned model",
 		);
 		expect(host.querySelector(".rd-sim-mini")).toBeNull();
+		// Each replayed setting shows what changes when only that value changes.
+		const replays = [...host.querySelectorAll(".rd-replay")];
+		expect(replays).toHaveLength(2);
+		expect(replays[0]?.textContent).toContain("0.4 (in use)");
+		expect(replays[0]?.textContent).toContain("0 reason · 2 unsure of 13");
+		expect(replays[1]?.textContent).toContain("MAT first helps changed");
+		expect(replays[1]?.textContent).toContain("3 of 12");
+		expect(host.querySelector(".rd-evidence")?.textContent).toContain(
+			"7 observations · 4 credited · 3 failed rounds",
+		);
+		expect(host.querySelector(".rd-evidence")?.textContent).toContain(
+			"No approved model yet",
+		);
 		await act(async () => {
 			window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 		});
@@ -953,6 +1014,63 @@ describe("clear mobile research summaries", () => {
 		expect(host.textContent).toContain("Help after the try alone");
 		expect(host.textContent).toContain("Fresh practice questions: ✓ right");
 		act(() => root.unmount());
+	});
+	it("shows the help-order model's predicted gains and what the game taught it", () => {
+		const learned: Trace = {
+			...trace,
+			model1: trace.model1 && {
+				...trace.model1,
+				evidence_band: "low_quality",
+				factors: [
+					{ name: "The mistake in the answer", state: "used", weight: 1 },
+					{ name: "Response time", state: "switched off", weight: 0 },
+				],
+			},
+			model2: trace.model2 && {
+				...trace.model2,
+				mode: "bandit_greedy",
+				predicted_gain: [
+					{ help: "conceptual_reexplanation", gain: 0.6 },
+					{ help: "visual_guidance", gain: 0.55 },
+				],
+				ledger: [
+					{
+						position: 3,
+						help: "conceptual_reexplanation",
+						role: "credited",
+						role_label:
+							"Ended the help; scored with the fair test's gain at full weight",
+						score: 1,
+						weight: 1,
+					},
+				],
+				bandit_update: "applied",
+			},
+		};
+		const support = render(
+			<GameDetailSheet model="support" trace={learned} onClose={() => {}} />,
+		);
+		expect(support.host.textContent).toContain("Predicted gain 0.60");
+		expect(support.host.textContent).toContain("Next highest predicted gain");
+		expect(
+			support.host.querySelector(".rd-sheet__ledger")?.textContent,
+		).toContain("#3 · Explain the idea again");
+		expect(support.host.textContent).toContain("score 1 · weight 1");
+		act(() => support.root.unmount());
+		const reason = render(
+			<GameDetailSheet
+				model="misconception"
+				trace={learned}
+				onClose={() => {}}
+			/>,
+		);
+		expect(reason.host.textContent).toContain(
+			"Evidence in this answer: low quality",
+		);
+		expect(
+			reason.host.querySelector(".rd-sheet__factors")?.textContent,
+		).toContain("switched off · weight 0");
+		act(() => reason.root.unmount());
 	});
 	it("does not show a verdict or a number without evidence", () => {
 		const { host, root } = render(

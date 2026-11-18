@@ -78,8 +78,7 @@ def test_seed_plays_through_the_real_models_and_every_check_passes(world):
     checks = _verify(session, orchestrator, plan)
     # These summarise the whole 126-skill seed; three skills cannot reach every type and path.
     whole_seed = {
-        "Every help type is delivered in some round",
-        "Preferences are per skill: different skills learned different types",
+        "Every help type the games offer is in some decision's order",
         "Decision paths taken",
     }
     failing = {
@@ -141,8 +140,8 @@ def test_verify_catches_a_help_order_the_logic_would_not_choose(world):
     _tamper(session, reverse)
 
     check = _verify(session, orchestrator, plan)[
-        "Recomputing the help order from the stored inputs and the history at that moment gives "
-        "the stored order, mode and reason family"
+        "Recomputing the help order from the artifact, the ledger at that moment and the stored "
+        "inputs gives the stored order, gains and reason family"
     ]
     assert check.passed is False
 

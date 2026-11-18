@@ -356,13 +356,18 @@ export function SupportTab({
 					/>
 					<StackedBar100
 						title="Why it chose, all games"
-						ariaLabel="How often the likely reason, the child's past results, or the fixed order drove the choice."
+						ariaLabel="How often the likely reason, the child's past results, the help-order model, or the fixed order drove the choice."
 						segments={[
 							{ label: "Likely reason", value: drivers.reason, tone: "accent" },
 							{
 								label: "Past results",
 								value: drivers.history,
 								tone: "soft",
+							},
+							{
+								label: "Help-order model",
+								value: drivers.model ?? 0,
+								tone: "deep",
 							},
 							{ label: "Fixed order", value: drivers.fixed, tone: "grey" },
 						]}

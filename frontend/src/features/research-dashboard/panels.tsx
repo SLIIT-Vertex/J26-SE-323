@@ -3,6 +3,7 @@ import type {
 	AccuracyCheck,
 	AccuracyReport,
 	EpisodeSummary,
+	HelpOrderEvidence,
 	LearnerProfile,
 	Overview,
 	Trace,
@@ -291,6 +292,127 @@ export function ModelCheckCard({ check }: { check: AccuracyCheck }) {
 	);
 }
 
+/** One setting's replay: what changes when only that value changes. */
+function SettingReplay({
+	setting,
+	offline,
+}: {
+	setting: string;
+	offline: AccuracyReport["offline"];
+}) {
+	const model1 = (offline?.model1_settings ?? []).filter(
+		(row) => row.setting === setting,
+	);
+	const helpOrder = (offline?.help_order_settings ?? []).filter(
+		(row) => row.setting === setting,
+	);
+	if (model1.length > 0)
+		return (
+			<table className="rd-replay">
+				<thead>
+					<tr>
+						<th>Value</th>
+						<th>Reason confirmed</th>
+						<th>Readings changed</th>
+					</tr>
+				</thead>
+				<tbody>
+					{model1.map((row) => (
+						<tr
+							key={row.value}
+							className={row.approved ? "is-approved" : undefined}
+						>
+							<td>
+								{row.value}
+								{row.approved && " (in use)"}
+							</td>
+							<td>
+								{row.agreement == null ? "too few games" : pct(row.agreement)}
+							</td>
+							<td>
+								{row.changed_reason} reason · {row.changed_uncertain} unsure of{" "}
+								{row.readings}
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		);
+	if (helpOrder.length === 0) return null;
+	const subjects = [...new Set(helpOrder.map((row) => row.subject))];
+	const values = [...new Set(helpOrder.map((row) => row.value))];
+	return (
+		<table className="rd-replay">
+			<thead>
+				<tr>
+					<th>Value</th>
+					{subjects.map((subject) => (
+						<th key={subject}>{subject} first helps changed</th>
+					))}
+				</tr>
+			</thead>
+			<tbody>
+				{values.map((value) => {
+					const cells = subjects.map((subject) =>
+						helpOrder.find(
+							(row) => row.subject === subject && row.value === value,
+						),
+					);
+					return (
+						<tr
+							key={String(value)}
+							className={cells[0]?.approved ? "is-approved" : undefined}
+						>
+							<td>
+								{value}
+								{cells[0]?.approved && " (in use)"}
+							</td>
+							{cells.map((row, index) => (
+								<td key={subjects[index]}>
+									{row?.decisions
+										? `${row.changed_first_helps} of ${row.decisions}`
+										: "no decisions yet"}
+								</td>
+							))}
+						</tr>
+					);
+				})}
+			</tbody>
+		</table>
+	);
+}
+
+/** What the shared help-order model has learned from, per subject and help. */
+function HelpOrderEvidenceList({ rows }: { rows: HelpOrderEvidence[] }) {
+	return (
+		<section>
+			<h5 className="rd-eyebrow">What it has learned from (every child)</h5>
+			<ul className="rd-evidence">
+				{rows.map((row) => (
+					<li key={row.subject}>
+						<strong>{row.subject}</strong>{" "}
+						{!row.approved
+							? "No approved model yet: the fixed order is used."
+							: `${row.observations} observations · ${row.credited ?? 0} credited · ${row.failed_rounds ?? 0} failed rounds`}
+						{(row.by_help ?? []).length > 0 && (
+							<ul>
+								{(row.by_help ?? []).map((help) => (
+									<li key={help.help}>
+										<HelpMark code={help.help} /> {help.credited_success} alone
+										after · {help.credited_zero} not alone ·{" "}
+										{help.failed_rounds} failed rounds (weight{" "}
+										{help.failed_round_weight})
+									</li>
+								))}
+							</ul>
+						)}
+					</li>
+				))}
+			</ul>
+		</section>
+	);
+}
+
 export function AccuracyPanel({ report }: { report: AccuracyReport }) {
 	const models = report.models.filter((model) => model.check);
 	const gain = report.models.find((model) => model.kind === "measurement");
@@ -317,13 +439,24 @@ export function AccuracyPanel({ report }: { report: AccuracyReport }) {
 							<h5 className="rd-eyebrow">Settings</h5>
 							<ul className="rd-settings">
 								{(model.settings ?? []).map((setting) => (
-									<li key={setting.name} className="rd-settings__head">
-										<span>{setting.name}</span>
-										<strong>{setting.value}</strong>
+									<li key={setting.name}>
+										<span className="rd-settings__head">
+											<span>{setting.name}</span>
+											<strong>{setting.value}</strong>
+										</span>
+										{setting.replay && (
+											<SettingReplay
+												setting={setting.replay}
+												offline={report.offline}
+											/>
+										)}
 									</li>
 								))}
 							</ul>
 						</section>
+						{model.evidence && model.evidence.length > 0 && (
+							<HelpOrderEvidenceList rows={model.evidence} />
+						)}
 					</article>
 				))}
 			</div>

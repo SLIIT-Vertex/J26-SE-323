@@ -28,6 +28,7 @@ from app.gamification.infrastructure.db.models import (
     ModelVersionModel,
 )
 from app.gamification.modeling.shared.expert_data import EXPERT_MODEL_DATA_VERSION
+from app.gamification.modeling.support_selection.bandit_sensitivity import StoredDecision
 from app.gamification.modeling.support_selection.context import GAME_CONTEXT_VERSION
 from app.gamification.modeling.support_selection.game_bandit import (
     GAME_POLICY_VERSION,
@@ -294,16 +295,78 @@ class SqlAlchemyGameHelpBanditStore:
         rows = self.ledger(model_version_id)
         if [position for position, _, _ in rows] != list(range(1, len(rows) + 1)):
             raise GameHelpBanditStoreError("LEDGER_GAP")
-        if upto is not None:
-            rows = rows[:upto]
+        applied = self.ledger_with_snapshots(model_version_id)
+        return replay(
+            artifact.metrics_json["parameters"],  # type: ignore[arg-type]
+            applied if upto is None else applied[:upto],
+        )
+
+    def ledger_with_snapshots(
+        self, model_version_id: UUID
+    ) -> list[tuple[LedgerEntry, DecisionSnapshot]]:
+        """The ledger in applied order, each entry with the snapshot it was applied in."""
+
+        rows = self.ledger(model_version_id)
         snapshots: dict[UUID, DecisionSnapshot] = {}
         for _, _, snapshot_id in rows:
             if snapshot_id not in snapshots:
                 snapshots[snapshot_id] = _stored_snapshot(self._snapshot_row(snapshot_id)).snapshot
-        return replay(
-            artifact.metrics_json["parameters"],  # type: ignore[arg-type]
-            ((entry, snapshots[snapshot_id]) for _, entry, snapshot_id in rows),
-        )
+        return [(entry, snapshots[snapshot_id]) for _, entry, snapshot_id in rows]
+
+    def decisions(self, model_version_id: UUID) -> list[StoredDecision]:
+        """Every decision this artifact made, with the ledger position it decided from."""
+
+        decisions = []
+        for snapshot, state in self.session.execute(
+            select(GameHelpBanditSnapshotModel, LearningFlowEpisodeRunModel.state_json)
+            .join(
+                LearningFlowEpisodeRunModel,
+                LearningFlowEpisodeRunModel.episode_id == GameHelpBanditSnapshotModel.episode_id,
+            )
+            .where(GameHelpBanditSnapshotModel.model_version_id == model_version_id)
+        ):
+            model2 = dict(state).get("model2") or {}
+            if model2.get("snapshot_id") != str(snapshot.snapshot_id):
+                continue
+            decisions.append(
+                StoredDecision(
+                    snapshot=_stored_snapshot(snapshot).snapshot,
+                    ledger_position=int(model2["ledger_position"]),
+                    first_help=str(model2["support_order"][0]),
+                )
+            )
+        return decisions
+
+    def approved_artifacts(self) -> dict[str, tuple[UUID, dict[str, object]]]:
+        """Each subject's approved artifact: its id and its approved parameters."""
+
+        return {
+            str(row.metrics_json["subject"]): (row.id, dict(row.metrics_json["parameters"]))  # type: ignore[call-overload]
+            for row in self.session.scalars(
+                select(ModelVersionModel).where(
+                    ModelVersionModel.model_name.like("game-help-order-bandit:%"),
+                    ModelVersionModel.approval_status == "approved",
+                )
+            )
+        }
+
+    def ledger_for_episode(self, episode_id: UUID) -> list[dict[str, object]]:
+        """The observations one episode added, in applied order."""
+
+        return [
+            {
+                "position": row.position,
+                "help": row.help_type,
+                "role": row.role,
+                "score": row.score,
+                "weight": row.weight,
+            }
+            for row in self.session.scalars(
+                select(GameHelpBanditLedgerModel)
+                .where(GameHelpBanditLedgerModel.episode_id == episode_id)
+                .order_by(GameHelpBanditLedgerModel.position)
+            )
+        ]
 
     def replay_matches(self, model_version_id: UUID) -> bool:
         """Whether rebuilding from artifact and ledger gives exactly the stored state."""

@@ -6,11 +6,12 @@ from math import sqrt
 
 from app.gamification.application.research_dashboard.explain import area_title
 from app.gamification.application.research_dashboard.glossary import EXCLUSIONS
-from app.gamification.modeling.misconception_inference.learner_prior import PRIOR_CAP
-from app.gamification.modeling.support_selection.support_order import (
-    LEAD_BY_REASON,
-    credited_support,
+from app.gamification.modeling.support_selection.game_bandit import (
+    PROVISIONAL_FAILED_ROUND_WEIGHT,
+    PROVISIONAL_UNINFORMED_PRECISION,
+    load_help_order_expert_data,
 )
+from app.gamification.modeling.support_selection.support_order import credited_support
 
 MIN_SESSIONS = 20
 CALIBRATION_PAIRS = 30
@@ -142,7 +143,26 @@ def prediction_pairs(states):
     return pairs
 
 
-def accuracy_report(runs, *, all_runs=None):
+def _help_order_values() -> dict[str, float]:
+    """The help-order bandit's provisional settings, as the expert data and the code set them."""
+
+    try:
+        gains, _families, _hashes = load_help_order_expert_data()
+    except (OSError, ValueError):
+        gains = {}
+    return {
+        "prior_strength": float(gains.get("prior_strength", 8)),  # type: ignore[arg-type]
+        "own_success_rate_gain": float(gains.get("own_success_rate_gain", 0.3)),  # type: ignore[arg-type]
+        "failed_round_weight": PROVISIONAL_FAILED_ROUND_WEIGHT,
+        "uninformed_precision": PROVISIONAL_UNINFORMED_PRECISION,
+    }
+
+
+def _number(value: float) -> str:
+    return f"{value:g}"
+
+
+def accuracy_report(runs, *, all_runs=None, help_order=None):
     states = [
         r["state"]
         for r in runs
@@ -216,7 +236,7 @@ def accuracy_report(runs, *, all_runs=None):
             if max(i[0] for i in intervals) <= min(i[1] for i in intervals)
             else "The observed ranges do not overlap. This comparison alone does not prove that the help caused the difference."
         )
-    matched, other, learned = [], [], []
+    learned, errors, bias = [], [], []
     first = []
     rates = defaultdict(lambda: defaultdict(list))
     for s in helped:
@@ -227,14 +247,16 @@ def accuracy_report(runs, *, all_runs=None):
         if s not in valid:
             continue
         success = int(is_independent(s))
-        if decision.get("support_selection_mode") == "learned_post_withdrawal_preference":
+        mode = decision.get("support_selection_mode")
+        if mode in {"learned_post_withdrawal_preference", "bandit_greedy"}:
             learned.append(success)
-        if decision.get("reason_family") in LEAD_BY_REASON:
-            first_choice = (decision.get("support_order") or [None])[0]
-            (
-                matched if first_choice == LEAD_BY_REASON[decision["reason_family"]] else other
-            ).append(success)
         winner, failed = credited_support(s)
+        # The help-order bandit's prediction for the help the fair test credits, against the gain.
+        predicted = dict(decision.get("predicted_gain") or {}).get(winner)
+        gain = (s.get("measurement") or {}).get("raw_independence_gain")
+        if mode == "bandit_greedy" and predicted is not None and gain is not None:
+            errors.append(abs(float(gain) - float(predicted)))
+            bias.append(float(gain) - float(predicted))
         for support in failed:
             rates[s.get("skill_id")][support].append(0)
         if winner:
@@ -305,6 +327,7 @@ def accuracy_report(runs, *, all_runs=None):
                 "flagged": gap is not None and gap > 0.15,
             }
         )
+    values = _help_order_values()
     proposed = [int(is_independent(s)) for s in valid if s.get("condition") == "proposed"]
     baseline = [int(is_independent(s)) for s in valid if s.get("condition") == "baseline"]
     return {
@@ -344,41 +367,59 @@ def accuracy_report(runs, *, all_runs=None):
                         unit="score",
                         tile=True,
                     ),
-                    metric(
-                        "reason-help",
-                        "Help matched to reason worked",
-                        "The child succeeds alone after help.",
-                        "Compare reason-led help with other first choices; this describes a pattern, not a cause.",
-                        matched,
-                    ),
-                    metric(
-                        "other-help",
-                        "Other first help worked",
-                        "The child succeeds alone after help.",
-                        "Use other first help choices as a descriptive comparison.",
-                        other,
-                    ),
                 ],
                 "calibration": calibration,
                 "parameters": [
-                    "Answer evidence is capped at 72% and floored at 20% before history is applied.",
-                    "Only five earlier answers can influence a new estimate.",
-                    "A cap avoids certainty from one answer. A floor keeps some weight on a detected mistake.",
-                    "These are provisional settings, not proven optimal values.",
+                    (
+                        "Each reason's chance is the expert likelihood of the answer's mistake, times "
+                        "one plus how often that mistake appeared in the last five unaided answers."
+                    ),
+                    (
+                        "A reading is unsure when the top reason is below 40%, the top two are within "
+                        "10 points, the answer carried too little evidence, or, in eight games, the "
+                        "answer's own evidence points to no listed reason."
+                    ),
+                    (
+                        "Only the mistake in the answer carries weight; the other factors are recorded "
+                        "but switched off."
+                    ),
+                    (
+                        "The tables are provisional expert assumptions taken from the earlier rules, "
+                        "not yet reviewed by a teacher."
+                    ),
                 ],
                 "settings": [
                     setting(
-                        "Evidence cap",
-                        "72%",
-                        "Replayed stored answers with each cap; compared agreement and calibration.",
-                        tried=["60%", "72%", "80%"],
-                        replay="confidence_caps",
+                        "Top reason must reach",
+                        "40%",
+                        "Replayed stored answers with each value; compared agreement, calibration "
+                        "and how many readings change.",
+                        tried=["30%", "40%", "50%"],
+                        replay="top_probability_below",
                     ),
-                    setting("Evidence floor", "20%", "Keeps some weight on a detected mistake."),
+                    setting(
+                        "Top two must differ by",
+                        "10 points",
+                        "Replayed stored answers with each value.",
+                        tried=["5", "10", "20"],
+                        replay="top_two_margin_below",
+                    ),
                     setting(
                         "Answers remembered",
-                        str(PRIOR_CAP),
-                        "Only the latest answers without help shape the estimate.",
+                        "5",
+                        "Replayed stored answers with each window, from the same earlier answers.",
+                        tried=["3", "5", "8"],
+                        replay="prior_window",
+                    ),
+                    setting(
+                        "Factor weights",
+                        "Mistake 1, others 0",
+                        "Fixed: the other factors are recorded for later study.",
+                    ),
+                    setting(
+                        "Expert tables",
+                        "expert-model-data-v1",
+                        "Provisional expert assumptions, not yet reviewed by a teacher.",
                     ),
                 ],
             },
@@ -409,10 +450,28 @@ def accuracy_report(runs, *, all_runs=None):
                     metric(
                         "preference",
                         "Learned help worked",
-                        "The child can do it alone after a familiar help choice.",
-                        "Count independent successes after choices based on earlier results.",
+                        "The child can do it alone after a help chosen from earlier results.",
+                        "Count independent successes after orders chosen from earlier results: "
+                        "the help-order model's, or an earlier rule's learned preference.",
                         learned,
                         tile=True,
+                    ),
+                    metric(
+                        "prediction-error",
+                        "Prediction error",
+                        "Smaller is better.",
+                        "For the help the fair test credits, the measured gain minus the gain the "
+                        "help-order model predicted, without its sign.",
+                        errors,
+                        unit="score",
+                    ),
+                    metric(
+                        "prediction-bias",
+                        "Prediction bias",
+                        "Near 0 is best; below 0 means the model expected more than it saw.",
+                        "The same difference with its sign: measured minus predicted gain.",
+                        bias,
+                        unit="gain",
                     ),
                     metric(
                         "regret",
@@ -426,24 +485,54 @@ def accuracy_report(runs, *, all_runs=None):
                 "conditions": conditions,
                 "comparison": comparison,
                 "parameters": [
-                    "Two earlier independent successes outweigh how the child seems in one game.",
-                    "Rank by independent success, average gain, fewer failed rounds, then subject order.",
+                    (
+                        "A LinUCB model run greedily: it always puts the help with the highest "
+                        "predicted gain first and never tries a help just to learn."
+                    ),
+                    (
+                        "It starts from provisional expert gains and learns from every valid fair "
+                        "test in the study: the help that ended the help at full weight, helps that "
+                        "failed while shown at half weight."
+                    ),
+                    (
+                        "A child's own independent successes with a help raise its predicted gain "
+                        "for that child."
+                    ),
                 ],
                 "settings": [
                     setting(
-                        "Successes before a help is trusted",
-                        "2",
-                        "Replayed past decisions with each value; counted changed first choices.",
-                        tried=["1", "2", "3"],
-                        replay="preference_thresholds",
+                        "Expert start worth",
+                        f"{_number(values['prior_strength'])} games",
+                        "Replayed the stored decisions with each value; counted changed first helps.",
+                        tried=["4", "8", "16"],
+                        replay="prior_strength",
                     ),
                     setting(
-                        "Ranking order",
-                        "Alone → gain → fewer rounds",
-                        "Fixed rule, compared against the fixed-order group.",
+                        "Own success weight",
+                        _number(values["own_success_rate_gain"]),
+                        "Replayed the stored decisions with each value.",
+                        tried=["0", "0.15", "0.3"],
+                        replay="own_success_rate_gain",
+                    ),
+                    setting(
+                        "Failed round weight",
+                        _number(values["failed_round_weight"]),
+                        "Replayed the stored ledger with each weight.",
+                        tried=["0", "0.25", "0.5", "1"],
+                        replay="failed_round_weight",
+                    ),
+                    setting(
+                        "Unknown features start fixed",
+                        _number(values["uninformed_precision"]),
+                        "How slowly features the expert data says nothing about may move; "
+                        "replayed with each value.",
+                        tried=["10", "100", "1000"],
+                        replay="uninformed_precision",
                     ),
                 ],
-                "honesty": "The policy uses fixed rules without random exploration. Comparing the proposed and fixed orders is the main test.",
+                "evidence": list((help_order or {}).get("subjects") or []),
+                "honesty": "The model never explores: every recorded choice was its best guess. "
+                "Comparing the proposed and fixed orders is the main test.",
             },
             {
                 "name": "Independence Gain",

@@ -17,6 +17,7 @@ import random
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import cache
 from pathlib import Path
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -27,6 +28,7 @@ from app.gamification.application.learning_flow_orchestration import (
     LearningFlowOrchestrator,
 )
 from app.gamification.application.research_dashboard.accuracy import present_simulation, wilson
+from app.gamification.application.research_dashboard.explain import belief_uncertain
 from app.gamification.application.teardown_receipt import (
     shown_steps,
     simulated_receipt,
@@ -35,16 +37,43 @@ from app.gamification.application.teardown_receipt import (
 from app.gamification.content.support_types import SUPPORT_TYPES
 from app.gamification.demo_seed.answers import correct_answer, wrong_answers
 from app.gamification.demo_seed.runner import multi_help_areas
-from app.gamification.modeling.support_selection.support_order import (
-    LEAD_BY_REASON,
-    reason_family,
-    subject_of,
+from app.gamification.modeling.shared.expert_data import (
+    EXPERT_MODEL_DATA_DIRECTORY,
+    read_expert_manifest,
+    read_verified_expert_file,
 )
+from app.gamification.modeling.support_selection.support_order import subject_of
 from app.shared.learner.model import LearnerModel
 
 TAG = "validation-sim-v1"
 REPORT = Path(__file__).resolve().parents[3] / "reports" / "simulated-validation.json"
 FAMILIES = ("representation", "procedure", "relation", "prerequisite", "unclear")
+# The simulated world: the help that suits each kind of difficulty, for the learners whose best
+# help matches their reason. An assumption of the simulation, kept apart from every model.
+WORLD_HELP_FOR_REASON = {
+    "representation": "visual_guidance",
+    "procedure": "step_by_step_guidance",
+    "relation": "conceptual_reexplanation",
+    "prerequisite": "prerequisite_repair",
+    "unclear": "simpler_same_game",
+}
+
+
+@cache
+def _families() -> dict[str, object]:
+    manifest = read_expert_manifest(EXPERT_MODEL_DATA_DIRECTORY)
+    families, _sha = read_verified_expert_file(
+        EXPERT_MODEL_DATA_DIRECTORY, manifest, "reason_families.json"
+    )
+    return dict(families)  # type: ignore[call-overload]
+
+
+def reason_family(label: str | None, subject: str) -> str:
+    """A label's reason family, from the expert data the models read."""
+
+    table = _families()["subjects"][subject]  # type: ignore[index]
+    row = table["labels"].get(label or "")
+    return str((row or table["missing_label"])["reason_family"])
 
 
 @dataclass(frozen=True)
@@ -135,7 +164,7 @@ def run_cohort(
             skill = skills[0]
             rng = random.Random(f"{assumptions.seed}:{index}:{skill}")
             family = rng.choice(FAMILIES)
-            lead = LEAD_BY_REASON[family]
+            lead = WORLD_HELP_FOR_REASON[family]
             best = (
                 lead
                 if rng.random() < assumptions.best_help_matches_reason
@@ -199,9 +228,7 @@ def _play(orchestrator, learner, obs: Observation, rng, a: Assumptions) -> bool:
     candidates = list(wrong_answers(flow, before))
     if not candidates:
         return False
-    own = [
-        pair for pair in candidates if reason_family(pair[1], subject=subject) == obs.true_family
-    ]
+    own = [pair for pair in candidates if reason_family(pair[1], subject) == obs.true_family]
     obs.testable_family = bool(own)
     if own and rng.random() < a.consistent_mistake:
         payload = rng.choice(own)[0]
@@ -299,8 +326,7 @@ def _read_back(obs: Observation, state) -> None:
     model2 = state.get("model2") or {}
     subject = subject_of(obs.area_id)
     label = model1.get("top_hypothesis") or model1.get("predicted_label")
-    uncertain = any(model1.get(flag) for flag in ("low_confidence", "fallback_used", "abstained"))
-    obs.predicted_family = "unclear" if uncertain else reason_family(label, subject=subject)
+    obs.predicted_family = "unclear" if belief_uncertain(model1) else reason_family(label, subject)
     obs.confidence = float(model1.get("confidence") or 0) or None
     obs.first_help = (model2.get("support_order") or [None])[0]
     obs.selection_mode = model2.get("support_selection_mode")
@@ -327,7 +353,6 @@ def _summary(flow, rng) -> dict[str, object]:
         "correction_count": rng.randint(0, 3),
         "first_action_ms": rng.randint(800, 6_000),
         "active_time_ms": rng.randint(5_000, 28_000),
-        "evidence_quality": round(rng.uniform(0.45, 0.95), 2),
     }
     accepted = {}
     for key, value in values.items():
@@ -367,8 +392,11 @@ def report(result: CohortResult, assumptions: Assumptions) -> dict[str, object]:
     final = {}
     for o in proposed:
         final[(o.learner, o.skill_id)] = o
+    # The help-order model has a record to lead from only after the child's first game on the skill.
     preference_hits = [
-        int(o.preferred_after == o.true_best) for o in final.values() if o.preferred_after
+        int(o.preferred_after == o.true_best)
+        for o in final.values()
+        if o.preferred_after and (o.selection_mode != "bandit_greedy" or o.session > 1)
     ]
     measured = [o for o in obs if o.measured_gain is not None and o.valid]
     agree = [int((o.measured_gain == "1") == o.truly_learned) for o in measured]
@@ -469,7 +497,8 @@ def report(result: CohortResult, assumptions: Assumptions) -> dict[str, object]:
                     _rate(
                         "Learned the help that really works",
                         "Higher is better.",
-                        "After three games, is the child's preferred help the hidden best one?",
+                        "After the child's last game on a skill, is the help the model leads "
+                        "with for this child the hidden best one?",
                         preference_hits,
                     ),
                 ],

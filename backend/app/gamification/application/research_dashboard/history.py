@@ -13,6 +13,7 @@ from decimal import Decimal
 
 from app.gamification.application.research_dashboard.accuracy import is_independent, wilson
 from app.gamification.application.research_dashboard.explain import (
+    belief_uncertain,
     english_title,
     help_rounds,
     name,
@@ -172,7 +173,7 @@ def _misconception(run, earlier):
             )
     else:
         unchanged.append("First estimate for this skill.")
-    if model1.get("low_confidence") or model1.get("fallback_used"):
+    if belief_uncertain(model1):
         unchanged.append(
             "Marked as unsure, so the help choice treats the reason as “not sure yet”."
         )
@@ -619,7 +620,7 @@ def _support_outcome(run, now: datetime) -> str:
 
 def _support_series(ordered, now: datetime) -> dict[str, object]:
     points = []
-    drivers = {"reason": 0, "history": 0, "fixed": 0}
+    drivers = {"reason": 0, "history": 0, "fixed": 0, "model": 0}
     first_worked: list[int] = []
     by_skill: dict[str, list[Mapping[str, object]]] = defaultdict(list)
     for run in ordered:
@@ -637,8 +638,13 @@ def _support_series(ordered, now: datetime) -> dict[str, object]:
             )
         if order:
             mode = str((_state(run).get("model2") or {}).get("support_selection_mode"))  # type: ignore[union-attr]
-            if mode == "baseline_fixed_order" or state.get("condition") == "baseline":
+            if (
+                mode in {"baseline_fixed_order", "no_approved_policy"}
+                or state.get("condition") == "baseline"
+            ):
                 drivers["fixed"] += 1
+            elif mode == "bandit_greedy":
+                drivers["model"] += 1
             elif mode == "learned_post_withdrawal_preference":
                 drivers["history"] += 1
             else:

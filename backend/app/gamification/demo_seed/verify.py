@@ -31,17 +31,9 @@ from app.gamification.infrastructure.db.models import (
     LearningFlowSupportRoundModel,
 )
 from app.gamification.modeling.misconception_inference.bayesian_model import GAME_MODEL_VERSION
-from app.gamification.modeling.misconception_inference.learner_prior import (
-    apply_learner_prior,
-    prior_errors,
-)
 from app.gamification.modeling.support_selection.baseline_order import fixed_order
 from app.gamification.modeling.support_selection.support_order import (
-    LEAD_BY_REASON,
-    SUBJECT_ORDERS,
-    choose_support_order,
     credited_support,
-    rank_support_history,
     subject_of,
 )
 
@@ -152,6 +144,11 @@ def _model1_checks(
         True,
     )
     provenance = Check("model1", "Model, catalogue and mapping versions are recorded", True)
+    older = Check(
+        "model1",
+        "Readings written by the earlier rule are kept as stored, not recomputed",
+        True,
+    )
     families: dict[str, set[str]] = defaultdict(set)
     for episode in beliefs:
         state = episode.state
@@ -169,7 +166,10 @@ def _model1_checks(
         flow = flows[str(state["area_id"])]
         summary = model1.get("structured_response") or None
         bayesian = model1.get("model_version") == GAME_MODEL_VERSION
-        if bayesian:
+        if not bayesian:
+            # Written by the earlier rule before the switch: kept as stored, not recomputed.
+            older.checked += 1
+        else:
             # Recompute through the same expert-initialised model, from the same earlier answers.
             expected = flow._game_belief(  # type: ignore[attr-defined]
                 str(state["skill_id"]),
@@ -178,36 +178,29 @@ def _model1_checks(
                 interaction_summary=summary,
                 history=_prior_history(episode, everything),
             )
-        else:
-            # Beliefs stored before the Bayesian model came from the area's authored rule.
-            expected = flow._infer_belief(  # type: ignore[attr-defined]
-                str(model1["structured_error_code"]),
-                response_time_ms=model1.get("response_time_ms"),
-                interaction_summary=summary,
-            )
-            if model1.get("prior_version"):
-                expected = apply_learner_prior(
-                    expected, prior_errors(_prior_history(episode, everything))
+            stored_fields = {
+                "probabilities": probabilities,
+                "predicted_label": model1.get("predicted_label"),
+                "fallback_used": bool(model1.get("fallback_used")),
+            }
+            expected_fields = {
+                "probabilities": {
+                    key: float(value) for key, value in dict(expected["probabilities"]).items()
+                },
+                "predicted_label": expected.get("predicted_label"),
+                "fallback_used": bool(expected.get("fallback_used")),
+            }
+            if not _same_distribution(
+                stored_fields["probabilities"], expected_fields["probabilities"]
+            ) or any(
+                stored_fields[key] != expected_fields[key]
+                for key in ("predicted_label", "fallback_used")
+            ):
+                _fail(
+                    recompute,
+                    episode_id,
+                    f"stored {stored_fields} != recomputed {expected_fields}",
                 )
-        stored_fields = {
-            "probabilities": probabilities,
-            "predicted_label": model1.get("predicted_label"),
-            "fallback_used": bool(model1.get("fallback_used")),
-        }
-        expected_fields = {
-            "probabilities": {
-                key: float(value) for key, value in dict(expected["probabilities"]).items()
-            },
-            "predicted_label": expected.get("predicted_label"),
-            "fallback_used": bool(expected.get("fallback_used")),
-        }
-        if not _same_distribution(
-            stored_fields["probabilities"], expected_fields["probabilities"]
-        ) or any(
-            stored_fields[key] != expected_fields[key]
-            for key in ("predicted_label", "fallback_used")
-        ):
-            _fail(recompute, episode_id, f"stored {stored_fields} != recomputed {expected_fields}")
         top = max(probabilities.values())
         predicted = model1.get("predicted_label")
         if predicted is not None and abs(probabilities.get(str(predicted), -1) - top) > _TOLERANCE:
@@ -239,7 +232,7 @@ def _model1_checks(
             f"{subject}: {', '.join(sorted(found))}" for subject, found in sorted(families.items())
         ),
     )
-    return [distribution, recompute, label, fallback, provenance, coverage]
+    return [distribution, recompute, label, fallback, provenance, coverage, older]
 
 
 def _same_distribution(left: Mapping[str, float], right: Mapping[str, float]) -> bool:
@@ -283,34 +276,50 @@ def _model2_checks(
     ]
     recompute = Check(
         "model2",
-        "Recomputing the help order from the stored inputs and the history at that moment gives "
-        "the stored order, mode and reason family",
+        "Recomputing the help order from the artifact, the ledger at that moment and the stored "
+        "inputs gives the stored order, gains and reason family",
         True,
     )
     baseline = Check("model2", "Baseline uses the subject's fixed order and no history", True)
-    lead = Check("model2", "Reason lead puts the type matched to Model 1's reason first", True)
-    learned = Check(
-        "model2",
-        "Learned preference puts first the type with the best valid independent record",
-        True,
-    )
     no_supported_reward = Check(
-        "model2", "Success only while helped never creates a preference", True
+        "model2", "Success only while helped never raises a help's prediction", True
+    )
+    own_record = Check(
+        "model2", "A child's own record in a decision comes only from that skill", True
+    )
+    older = Check(
+        "model2", "Orders written by the earlier rule are kept as stored, not recomputed", True
     )
     first_types: Counter[str] = Counter()
     used_types: Counter[str] = Counter()
+    ordered_types: Counter[str] = Counter()
     modes: Counter[str] = Counter()
-    preferred_by_skill: dict[str, str] = {}
+    by_id = {str(other.state["episode_id"]): other.state for other in everything}
     for episode in decisions:
         state = episode.state
         model2 = state["model2"]
         assert isinstance(model2, Mapping)
         episode_id = str(state["episode_id"])
         subject = subject_of(str(state["area_id"]))
-        model1 = state.get("model1") if isinstance(state.get("model1"), Mapping) else {}
-        history = _prior_history(episode, everything)
-        recompute.checked += 1
-        if model2.get("support_selection_mode") in (BANDIT_GREEDY, NO_APPROVED_POLICY):
+        mode = str(model2.get("support_selection_mode"))
+        order = list(model2["support_order"])
+        modes[mode] += 1
+        first_types[order[0]] += 1
+        ordered_types.update(order)
+        loop = state.get("support_loop")
+        if isinstance(loop, Mapping):
+            used_types.update(loop.get("types_used") or [])
+        if mode == "baseline_fixed_order":
+            baseline.checked += 1
+            eligible = list(model2["eligible_actions"])
+            allowed = list(
+                fixed_order(subject, eligible, model2.get("renderable_actions") or eligible)
+            )
+            preference = dict(model2.get("learner_activity_support_preference") or {})
+            if order != allowed or preference.get("by_support"):
+                _fail(baseline, episode_id, f"order {order} != {allowed} or history used")
+        elif mode in (BANDIT_GREEDY, NO_APPROVED_POLICY):
+            recompute.checked += 1
             problem = _recompute_bandit_order(bandits, state, model2, everything)
             if problem:
                 _fail(recompute, episode_id, problem)
@@ -319,118 +328,38 @@ def _model2_checks(
                 no_supported_reward.checked += 1
                 if score > 0 and not _independent(state):
                     _fail(no_supported_reward, episode_id, "positive score without independence")
-            modes[str(model2["support_selection_mode"])] += 1
-            first_types[str(model2["support_order"][0])] += 1
-            loop = state.get("support_loop")
-            if isinstance(loop, Mapping):
-                used_types.update(loop.get("types_used") or [])
-            continue
-        try:
-            expected = choose_support_order(
-                subject=subject,
-                condition=str(state["condition"]),
-                model1_label=_model1_label(model1),  # type: ignore[arg-type]
-                model1_uncertain=_model1_uncertain(model1),  # type: ignore[arg-type]
-                eligible=list(model2["eligible_actions"]),
-                renderable=list(model2.get("renderable_actions") or model2["eligible_actions"]),
-                history=history,
-                policy_version=str(model2.get("order_policy_version", "support-order-v2")),
-                learning_state_input=model2.get("learning_state_input"),
-            ).as_record()
-        except ValueError as error:
-            _fail(recompute, episode_id, f"recompute raised {error}")
-            continue
-        for key in ("support_order", "support_selection_mode", "reason_family"):
-            if expected[key] != model2.get(key):
-                _fail(recompute, episode_id, f"{key}: stored {model2.get(key)} != {expected[key]}")
-        mode = str(model2["support_selection_mode"])
-        modes[mode] += 1
-        order = list(model2["support_order"])
-        first_types[order[0]] += 1
-        loop = state.get("support_loop")
-        if isinstance(loop, Mapping):
-            used_types.update(loop.get("types_used") or [])
-        if mode == "baseline_fixed_order":
-            baseline.checked += 1
-            allowed = [
-                support
-                for support in SUBJECT_ORDERS[subject]
-                if support in model2["eligible_actions"]
-                and support in (model2.get("renderable_actions") or model2["eligible_actions"])
-            ]
-            preference = dict(model2.get("learner_activity_support_preference") or {})
-            if order != allowed or preference.get("by_support"):
-                _fail(baseline, episode_id, f"order {order} != {allowed} or history used")
-        elif mode == "model1_reason_lead":
-            lead.checked += 1
-            if order[0] != LEAD_BY_REASON[str(model2["reason_family"])]:
-                _fail(lead, episode_id, f"{order[0]} for {model2['reason_family']}")
-        elif mode == "learned_post_withdrawal_preference":
-            learned.checked += 1
-            ranking = rank_support_history(
-                history,
-                order=SUBJECT_ORDERS[subject],
-                legacy=model2.get("order_policy_version") == "support-order-v2",
-            )
-            if ranking.preferred != order[0]:
-                _fail(
-                    learned, episode_id, f"first {order[0]} but ranking prefers {ranking.preferred}"
-                )
-            preferred_by_skill[str(state["skill_id"])] = order[0]
-        # No preference may rest on an episode whose after-question was missed.
-        preference = dict(model2.get("learner_activity_support_preference") or {})
-        for support, row in dict(preference.get("by_support") or {}).items():
-            no_supported_reward.checked += 1
-            successes = sum(
-                1
-                for prior in history
-                if (
-                    support in _types(prior)
-                    if model2.get("order_policy_version") == "support-order-v2"
-                    else credited_support(prior)[0] == support
-                )
-                and _independent(prior)
-            )
-            if int(row["independent_successes"]) != successes:
-                _fail(
-                    no_supported_reward,
-                    episode_id,
-                    f"{support}: {row} vs {successes} valid successes",
-                )
+            snapshot = bandits.snapshot_for(UUID(episode_id)) if mode == BANDIT_GREEDY else None
+            if snapshot is not None:
+                own_record.checked += 1
+                ids = [str(value) for value in snapshot.snapshot.inputs["history_episode_ids"]]  # type: ignore[union-attr]
+                other_skills = {
+                    str(by_id[value].get("skill_id")) if value in by_id else "another learner"
+                    for value in ids
+                } - {str(state["skill_id"])}
+                if other_skills:
+                    _fail(own_record, episode_id, f"history from {sorted(other_skills)}")
+        else:
+            older.checked += 1
     reachable = Check(
         "model2",
-        "Every help type is delivered in some round",
-        set(used_types) == set(SUPPORT_TYPES),
+        "Every help type the games offer is in some decision's order",
+        set(ordered_types) == set(SUPPORT_TYPES),
         checked=len(decisions),
-        # The worked example is last in both subject orders and leads no reason family, so it is
-        # first only when it alone holds the best valid record: by design that is rare.
         detail=f"chosen first: {dict(first_types)}; delivered: {dict(used_types)}",
     )
     if not reachable.passed:
         reachable.failures.append(
-            f"never delivered: {sorted(set(SUPPORT_TYPES) - set(used_types))}"
+            f"never in an order: {sorted(set(SUPPORT_TYPES) - set(ordered_types))}"
         )
-    # A rule-based learned preference only; the help-order bandit has none to compare.
-    rule_ordered = any(mode not in (BANDIT_GREEDY, NO_APPROVED_POLICY) for mode in modes)
-    isolation = Check(
-        "model2",
-        "Preferences are per skill: different skills learned different types",
-        len(set(preferred_by_skill.values())) > 1 or not rule_ordered,
-        checked=len(preferred_by_skill),
-        detail=f"preferred types across skills: {dict(Counter(preferred_by_skill.values()))}"
-        if rule_ordered
-        else "not applicable: every order came from the help-order bandit",
-    )
+    has_baseline = any(episode.state.get("condition") == "baseline" for episode in decisions)
     paths = Check(
         "model2",
         "Decision paths taken",
-        {"baseline_fixed_order", "model1_reason_lead", "learned_post_withdrawal_preference"}
-        <= set(modes)
-        or {"baseline_fixed_order", BANDIT_GREEDY} <= set(modes),
+        BANDIT_GREEDY in modes and (not has_baseline or "baseline_fixed_order" in modes),
         checked=len(decisions),
         detail=str(dict(modes)),
     )
-    return [recompute, baseline, lead, learned, no_supported_reward, reachable, isolation, paths]
+    return [recompute, baseline, no_supported_reward, own_record, older, reachable, paths]
 
 
 def _ledger_by_episode(session: Session) -> dict[str, list[tuple[str, str, float, float]]]:

@@ -123,6 +123,27 @@ function MisconceptionDetail({ trace }: { trace: Trace }) {
 					<p>{model1.history_effect}</p>
 				</section>
 			)}
+			{model1.factors && model1.factors.length > 0 && (
+				<section>
+					<h4>What the model weighed</h4>
+					{model1.evidence_band && (
+						<p className="rd-quiet">
+							Evidence in this answer: {model1.evidence_band.replace(/_/g, " ")}
+						</p>
+					)}
+					<ul className="rd-sheet__factors">
+						{model1.factors.map((factor) => (
+							<li key={factor.name}>
+								<span>{factor.name}</span>
+								<small>
+									{factor.state}
+									{factor.weight != null && ` · weight ${factor.weight}`}
+								</small>
+							</li>
+						))}
+					</ul>
+				</section>
+			)}
 		</>
 	);
 }
@@ -131,6 +152,9 @@ function SupportDetail({ trace }: { trace: Trace }) {
 	const model2 = trace.model2;
 	if (!model2)
 		return <p className="rd-quiet">No help was needed in this game.</p>;
+	const predicted = new Map(
+		(model2.predicted_gain ?? []).map((row) => [row.help, row.gain]),
+	);
 	return (
 		<>
 			<section>
@@ -164,7 +188,12 @@ function SupportDetail({ trace }: { trace: Trace }) {
 									<b>
 										{index + 1}. {HELP_STYLE[code]?.name ?? code}
 									</b>
-									<small>{orderReason(index, model2.why)}</small>
+									<small>{orderReason(index, model2.why, model2.mode)}</small>
+									{predicted.has(code) && (
+										<small>
+											Predicted gain {predicted.get(code)?.toFixed(2)}
+										</small>
+									)}
 								</span>
 								<small>
 									{!used
@@ -178,6 +207,37 @@ function SupportDetail({ trace }: { trace: Trace }) {
 					})}
 				</ol>
 			</section>
+			{model2.mode === "bandit_greedy" && (
+				<section>
+					<h4>What this game taught the help-order model</h4>
+					{model2.ledger && model2.ledger.length > 0 ? (
+						<ol className="rd-sheet__ledger">
+							{model2.ledger.map((row) => (
+								<li key={row.position}>
+									<HelpMark code={row.help} />
+									<span>
+										<b>
+											#{row.position} · {HELP_STYLE[row.help]?.name ?? row.help}
+										</b>
+										<small>{row.role_label}</small>
+									</span>
+									<small>
+										score {row.score} · weight {row.weight}
+									</small>
+								</li>
+							))}
+						</ol>
+					) : (
+						<p className="rd-quiet">
+							Nothing yet
+							{model2.bandit_update
+								? ` (${model2.bandit_update.replace(/_/g, " ")})`
+								: ": the game has not finished"}
+							.
+						</p>
+					)}
+				</section>
+			)}
 			<section>
 				<h4>Help recorded, round by round</h4>
 				{trace.rounds.length === 0 ? (
@@ -249,8 +309,10 @@ function SupportDetail({ trace }: { trace: Trace }) {
 }
 
 /** Why a help sits where it does in the order. */
-function orderReason(index: number, why: string) {
+function orderReason(index: number, why: string, mode: string) {
 	if (index === 0) return `Chosen first: ${why}`;
+	if (mode === "bandit_greedy")
+		return "Next highest predicted gain, if the help before it was not enough";
 	return "Next in this subject's standard order, if the help before it was not enough";
 }
 

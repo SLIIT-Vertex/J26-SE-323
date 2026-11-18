@@ -45,6 +45,8 @@ from app.gamification.application.research_dashboard.play_status import (
     play_status,
 )
 from app.gamification.modeling.offline.research_accuracy_report import replay_report
+from app.gamification.modeling.support_selection.bandit_sensitivity import evidence, sensitivity
+from app.gamification.modeling.support_selection.game_bandit import load_help_order_expert_data
 from app.gamification.modeling.support_selection.support_order import (
     SUBJECT_ORDERS,
     rank_support_history,
@@ -179,7 +181,7 @@ class ResearchDashboardService:
             },
             "model1": explain_model1(state.get("model1"), research_subject(state)),  # type: ignore[arg-type]
             "model1_record": state.get("model1"),
-            "model2": explain_model2(state),
+            "model2": explain_model2(state, self._help_order_ledger(episode_id)),
             "model2_record": state.get("model2"),
             "rounds": explain_rounds(state),
             "withdrawal": state.get("withdrawal"),
@@ -191,6 +193,49 @@ class ResearchDashboardService:
                 for event in state.get("events") or []
             ],
         }
+
+    def _help_order_ledger(self, episode_id: UUID) -> list[dict[str, object]]:
+        read = getattr(self._reader, "help_order_ledger", None)
+        return list(read(episode_id)) if read else []
+
+    def _help_order(self) -> dict[str, list[dict[str, object]]]:
+        """Each subject's evidence behind the help-order bandit, and its settings replays.
+
+        The bandit is shared by every child, so these cover every child's decisions.
+        """
+
+        read = getattr(self._reader, "help_order_subjects", None)
+        subjects = read() if read else {}
+        rows: list[dict[str, object]] = []
+        replays: list[dict[str, object]] = []
+        for subject in ("MAT", "ENG", "SIN"):
+            data = subjects.get(subject)
+            if data is None:
+                rows.append({"subject": subject, "approved": False, "observations": 0})
+                continue
+            ledger = list(data["ledger"])
+            entries = [entry for entry, _snapshot in ledger]
+            rows.append(
+                {
+                    "subject": subject,
+                    "approved": True,
+                    "observations": len(entries),
+                    "credited": sum(entry.role == "credited" for entry in entries),
+                    "failed_rounds": sum(entry.role == "failed_round" for entry in entries),
+                    "decisions": len(data["decisions"]),
+                    "by_help": evidence(entries),
+                }
+            )
+            try:
+                gains, families, _hashes = load_help_order_expert_data()
+                found = sensitivity(
+                    data["parameters"], gains, families, ledger, list(data["decisions"])
+                )
+            except (OSError, ValueError) as error:
+                replays.append({"subject": subject, "error": str(error)})
+                continue
+            replays.extend({"subject": subject, **row} for row in found)
+        return {"subjects": rows, "sensitivity": replays}
 
     def live(self, learner_id: UUID) -> dict[str, object]:
         """The game being played now, or one that just finished or was just abandoned."""
@@ -327,9 +372,10 @@ class ResearchDashboardService:
             return cached[1]
         runs = self._reader.runs(learner_id)
         all_runs = self._reader.all_runs()
-        result = accuracy_report(runs, all_runs=all_runs)
+        help_order = self._help_order()
+        result = accuracy_report(runs, all_runs=all_runs, help_order=help_order)
         result["computed_at"] = self._now().isoformat()
-        result["offline"] = replay_report(runs, learner_id)
+        result["offline"] = replay_report(runs, learner_id, help_order=help_order["sensitivity"])
         result["simulation"] = None
         if SIMULATION_REPORT.exists():
             try:

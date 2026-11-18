@@ -36,7 +36,6 @@ _SUMMARY_FIELDS = (
     "correction_count",
     "first_action_ms",
     "active_time_ms",
-    "evidence_quality",
 )
 _MAX_HELP_STEPS = 24
 _OPEN_ATTEMPTS = 160
@@ -256,7 +255,6 @@ class SeedRunner:
             "correction_count": rng.randint(0, 3),
             "first_action_ms": rng.randint(800, 6_000),
             "active_time_ms": rng.randint(5_000, 28_000),
-            "evidence_quality": round(rng.uniform(0.45, 0.95), 2),
         }
         accepted: dict[str, object] = {}
         for name in _SUMMARY_FIELDS:

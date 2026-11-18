@@ -543,13 +543,18 @@ export function StackedBar100({
 	segments: {
 		label: string;
 		value: number;
-		tone: "accent" | "soft" | "grey";
+		tone: "accent" | "soft" | "grey" | "deep";
 	}[];
 	empty?: string;
 }) {
 	const total = segments.reduce((sum, segment) => sum + segment.value, 0);
 	let cursor = 16;
-	const fills = { accent: ACCENT, soft: "#a5b4fc", grey: GREY };
+	const fills = {
+		accent: ACCENT,
+		soft: "#a5b4fc",
+		grey: GREY,
+		deep: "#3730a3",
+	};
 	return (
 		<ChartShell
 			title={title}

@@ -79,6 +79,20 @@ export interface Model1Explained extends Explained {
 	uncertain?: boolean;
 	reasons?: { code?: string; label: string; probability: number }[];
 	inputs: Record<string, unknown>;
+	/** The evidence band the answer was read in, for the expert-initialised Bayesian model. */
+	evidence_band?: string | null;
+	/** Each factor the Bayesian model weighed, whether it was used, and its weight. */
+	factors?: { name: string; state: string; weight: number | null }[];
+}
+
+/** One observation a game added to the shared help-order model. */
+export interface HelpOrderLedgerRow {
+	position: number;
+	help: SupportType;
+	role: "credited" | "failed_round";
+	role_label: string;
+	score: number;
+	weight: number;
 }
 
 export interface Model2Explained extends Explained {
@@ -91,6 +105,10 @@ export interface Model2Explained extends Explained {
 	matched_pattern: string;
 	subject_order: SupportType[];
 	history: Record<string, SupportRecord>;
+	/** The help-order model's predicted gain for each help, in the order chosen. */
+	predicted_gain?: { help: SupportType; gain: number }[];
+	ledger?: HelpOrderLedgerRow[];
+	bandit_update?: string | null;
 }
 
 export interface Model3Explained extends Explained {
@@ -292,7 +310,25 @@ export interface ModelSetting {
 	value: string;
 	how: string;
 	tried: string[];
-	replay: "confidence_caps" | "preference_thresholds" | null;
+	/** The setting whose replay rows describe it, in ``offline``. */
+	replay: string | null;
+}
+
+/** What the help-order model has learned from, per subject. */
+export interface HelpOrderEvidence {
+	subject: string;
+	approved: boolean;
+	observations: number;
+	credited?: number;
+	failed_rounds?: number;
+	decisions?: number;
+	by_help?: {
+		help: SupportType;
+		credited_success: number;
+		credited_zero: number;
+		failed_rounds: number;
+		failed_round_weight: number;
+	}[];
 }
 /** A learned model's one deterministic accuracy test, decided on the server. */
 export interface AccuracyCheck {
@@ -346,21 +382,35 @@ export interface AccuracyReport {
 		}[];
 		exclusions?: { reason: string; count: number }[];
 		accuracy_link?: string;
+		evidence?: HelpOrderEvidence[];
 	}[];
 	simulation: SimulationReport | null;
 	offline: {
 		generated_at: string;
 		note: string;
-		confidence_caps: {
-			confidence_cap: number;
-			count: number;
+		/** Stored answers read again by Model 1 with one setting changed. */
+		model1_settings: {
+			setting: string;
+			value: number;
+			approved: boolean;
+			readings: number;
 			agreement: number | null;
 			brier: number | null;
+			pairs: number;
+			changed_reason: number;
+			changed_uncertain: number;
+			reproduced: number;
+			bayesian_readings: number;
 		}[];
-		preference_thresholds: {
-			success_threshold: number;
-			checked: number;
-			changed_first_choices: number;
+		/** Every child's stored help-order decisions replayed with one setting changed. */
+		help_order_settings: {
+			subject: string;
+			setting?: string;
+			value?: number;
+			approved?: boolean;
+			decisions?: number;
+			changed_first_helps?: number;
+			error?: string;
 		}[];
 	} | null;
 }
@@ -478,7 +528,7 @@ export interface SupportSeries {
 		rate: number | null;
 		tried: boolean;
 	}[];
-	drivers: { reason: number; history: number; fixed: number };
+	drivers: { reason: number; history: number; fixed: number; model?: number };
 	recent: { episode_id: string; order: string[]; after: boolean | null }[];
 }
 
