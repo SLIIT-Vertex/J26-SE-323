@@ -285,8 +285,9 @@ def _previous_first_gain(orders: Mapping[str, object], subject: str) -> float:
     """Expert start for "the previous episode's first help was not followed by an unaided success".
 
     Read from the frozen orders: where the rules then move that help from first to last (the
-    Sinhala cursor), the value drops it just below the last help; where they leave the order
-    unchanged, it is 0.
+    Sinhala cursor), the value drops it just below the last help, and far enough that a full own
+    success rate cannot lift it back, because the rules also move on from a learned preference
+    that did not transfer; where they leave the order unchanged, it is 0.
     """
 
     def order(history: str) -> list[str]:
@@ -308,8 +309,14 @@ def _previous_first_gain(orders: Mapping[str, object], subject: str) -> float:
         return 0.0
     if after != before[1:] + before[:1]:
         raise ValueError(f"{subject} reacts to a first help that did not transfer in a new way")
+    preference = orders["histories"][subject]["learned_preference_then_failed"][-1]  # type: ignore[index]
+    if (
+        order("learned_preference_then_failed")[-1]
+        != preference["support_loop"]["rounds"][0]["scaffold_type"]
+    ):
+        raise ValueError(f"{subject} keeps a learned preference that did not transfer")
     span = GAIN_DECREMENT * (len(before) - 1)
-    return round(-(span + GAIN_DECREMENT), 10)
+    return round(-(span + GAIN_DECREMENT + OWN_SUCCESS_RATE_GAIN), 10)
 
 
 def _support_gains(orders: Mapping[str, object]) -> dict[str, object]:

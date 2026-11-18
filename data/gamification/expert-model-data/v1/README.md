@@ -37,9 +37,10 @@ pins the fixtures' SHA-256 and the commit that last changed them.
   child's own independent-success rate with a help, enough to put that help first for that child.
   Gains within `tie_tolerance` count as equal, and the help earlier in the cell's order wins.
   `previous_first_not_transferred_gain` is the starting weight of "the child's previous episode on
-  this skill began with this help and the after-answer was still wrong". It is −0.15 for Sinhala,
-  which moves that help from first to last as the Sinhala packages do, and 0 for Maths and English,
-  whose rules do not react to it.
+  this skill began with this help and the after-answer was still wrong". It is −0.45 for Sinhala,
+  which moves that help from first to last as the Sinhala packages do, even when it was the child's
+  learned preference (the 0.15 that puts it below the last help, plus the 0.3 a full own success
+  rate could add back), and 0 for Maths and English, whose rules do not react to it.
 - **Sinhala** games deliver one authored order (visual, worked, guided) whatever the reason, so
   every Sinhala cell holds that order. The Sinhala lead-by-reason table the rules compute but do
   not use is kept under `unused_reference`.

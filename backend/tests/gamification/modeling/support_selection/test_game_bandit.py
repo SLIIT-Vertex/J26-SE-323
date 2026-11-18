@@ -126,6 +126,23 @@ def test_a_first_help_that_did_not_transfer_moves_on_only_in_sinhala() -> None:
         assert row["same_first_help"] == row["decisions"], subject
 
 
+def test_a_sinhala_learned_preference_that_did_not_transfer_goes_last() -> None:
+    bandit = load_game_help_bandit("SIN")
+    history = ORDERS["histories"]["SIN"]["learned_preference_then_failed"]
+    preference = history[-1]["support_loop"]["rounds"][0]["scaffold_type"]
+    decisions = [
+        d
+        for d in ORDERS["decisions"]
+        if d["subject"] == "SIN"
+        and d["history"] == "learned_preference_then_failed"
+        and d["condition"] == "proposed"
+    ]
+    assert decisions
+    for decision in decisions:
+        assert _order(bandit, decision, history=history).order[-1] == preference
+        assert _frozen_order(decision)[-1] == preference
+
+
 def test_no_help_can_be_drawn() -> None:
     bandit = load_game_help_bandit("MAT")
     with pytest.raises(ValueError, match="NO_RENDERABLE_SUPPORT"):

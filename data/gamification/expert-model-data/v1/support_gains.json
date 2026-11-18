@@ -1551,7 +1551,7 @@
   "previous_first_not_transferred_gain": {
     "ENG": 0.0,
     "MAT": 0.0,
-    "SIN": -0.15
+    "SIN": -0.45
   },
   "prior_strength": 8,
   "tie_rule": "Gains within tie_tolerance of each other count as equal; the help earlier in the cell's order wins.",

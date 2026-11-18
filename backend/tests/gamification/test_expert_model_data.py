@@ -210,7 +210,7 @@ def test_expected_gains_cover_every_cell_and_help(orders) -> None:
     assert gains["prior_strength"] > 0
     assert 0 < gains["own_success_rate_gain"] <= 1 - gains["first_gain"]
     # Only the Sinhala packages move on from a first help that did not transfer.
-    assert gains["previous_first_not_transferred_gain"] == {"MAT": 0.0, "ENG": 0.0, "SIN": -0.15}
+    assert gains["previous_first_not_transferred_gain"] == {"MAT": 0.0, "ENG": 0.0, "SIN": -0.45}
     assert gains["tie_tolerance"] > 0
     for cell in gains["cells"]:
         values = [cell["expected_gain"][support] for support in cell["order"]]
