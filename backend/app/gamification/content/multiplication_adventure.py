@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -254,47 +253,6 @@ _ALLOWED = {
     "written_multiplication": {"kind", "multiplicand", "multiplier", "result_digits", "product"},
     "multiplication_story": {"kind", "group_size", "group_count", "product"},
 }
-
-
-def infer_belief(error_code: str, *, sparse: bool = False) -> dict[str, object]:
-    probabilities = {name: 0.03 for name in MISCONCEPTIONS}
-    probabilities["unknown_or_other"] = 0.73 if sparse else 0.20
-    if not sparse and error_code in probabilities and error_code != "unknown_or_other":
-        probabilities[error_code] = 0.53
-    total = sum(probabilities.values())
-    normalized = {name: value / total for name, value in probabilities.items()}
-    top = max(normalized, key=normalized.__getitem__)
-    entropy = -sum(value * math.log(value) for value in normalized.values() if value)
-    return {
-        "probabilities": normalized,
-        "confidence": normalized[top],
-        "entropy": entropy,
-        "top_hypothesis": top,
-        "abstained": sparse or top == "unknown_or_other",
-        "low_confidence": sparse or normalized[top] < 0.5,
-    }
-
-
-def scaffold_decision(
-    skill_id: str, condition: str, belief: dict[str, object], *, seed: int
-) -> dict[str, object]:
-    del belief
-    selected = "visual_guidance"
-    return {
-        "policy_version": POLICY_VERSION,
-        "skill_id": skill_id,
-        "condition": condition,
-        "mode": "deterministic_baseline" if condition == "baseline" else "proposed_shadow",
-        "uses_complete_model1_distribution": condition == "proposed",
-        "objective": "predicted_raw_independence_gain",
-        "reward_source": "valid_post_withdrawal_raw_ig_only",
-        "seed": seed,
-        "selected_action": selected,
-        "candidates": [
-            {"scaffold_type": scaffold, "eligible": True, "exclusion_reasons": [], "propensity": 1 / 3}
-            for scaffold in ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
-        ],
-    }
 
 
 def worked_steps(game: Mapping[str, object], scaffold_type: str) -> list[str]:

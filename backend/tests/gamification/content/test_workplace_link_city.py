@@ -2,11 +2,9 @@ import pytest
 
 from app.gamification.content.workplace_link_city import (
     EXCLUDED_PENDING_INCLUSION_REVIEW,
-    MISCONCEPTIONS,
     PAIRS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -34,10 +32,3 @@ def test_many_to_one_buildings_links_are_valid_but_unknown_tokens_are_rejected()
     response["links"][0]["place_token"] = "p-unknown"
     with pytest.raises(ValueError, match="INVALID_WORKPLACE_LINK_TOKEN_OR_SEQUENCE"):
         validate_constructed_response(item, response)
-
-
-def test_sparse_work_belief_normalizes_to_unknown() -> None:
-    belief = infer_belief("unreviewed", sparse=True)
-    assert belief["predicted_label"] == "unknown_or_other" and belief["fallback_used"] is True
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert abs(sum(belief["probabilities"].values()) - 1.0) < 1e-9

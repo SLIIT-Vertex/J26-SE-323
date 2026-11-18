@@ -42,7 +42,6 @@ from app.gamification.application.teardown_receipt import TRUE_FLAGS as _TEARDOW
 from app.gamification.application.teardown_receipt import ZERO_COUNTS as _TEARDOWN_ZERO_COUNTS
 from app.gamification.content.area_support_catalog import assignment
 from app.gamification.modeling.support_selection.baseline_order import BaselineOrder
-from app.gamification.modeling.support_selection.support_order import SupportOrderDecision
 
 AUTHORED_SEQUENCE = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 SUPPORT_TITLES_SI = {
@@ -52,6 +51,14 @@ SUPPORT_TITLES_SI = {
 }
 DIFFICULTY_RULE_VERSION = "g5-sin-package-difficulty-v1"
 CURSOR_VERSION = "g5-sin-package-support-cursor-v1"
+# The comparison group always starts the authored sequence and never reads outcomes, so its cursor
+# record is the same for every episode.
+BASELINE_CURSOR = {
+    "next_position": 0,
+    "unresolved": False,
+    "preference_failed": False,
+    "source_episode_id": None,
+}
 
 
 def _content(context: SupportBuildContext) -> ModuleType:
@@ -191,8 +198,7 @@ class SinhalaAreaFlow(AreaGameFlow):
     ITEM_SCHEMA_VERSION, SKILLS, DONE_LINE, VISUAL_EMPHASIS, ResponseError (with ``code``),
     generate_item, generate_support_item, episode_subfamily, opening_demonstration,
     support_copy, worked_steps, worked_display, correct_response,
-    validate_constructed_response, public_game_data, feedback_si, infer_belief,
-    scaffold_decision and package_hash.
+    validate_constructed_response, public_game_data, feedback_si and package_hash.
     """
 
     content: ModuleType
@@ -218,8 +224,6 @@ class SinhalaAreaFlow(AreaGameFlow):
         cls.equivalence_version = content.EQUIVALENCE_VERSION
         cls.skills = content.SKILLS
         cls.generate_item = staticmethod(content.generate_item)
-        cls.infer_belief = staticmethod(content.infer_belief)
-        cls.scaffold_decision = staticmethod(content.scaffold_decision)
         cls.package_hash = staticmethod(content.package_hash)
         cls.validate_constructed_response = staticmethod(content.validate_constructed_response)
 
@@ -351,24 +355,12 @@ class SinhalaAreaFlow(AreaGameFlow):
                 missing.append(key)
         return missing
 
-    def _infer_belief(
-        self,
-        error_code: str,
-        *,
-        response_time_ms: int | None,
-        interaction_summary: Mapping[str, object] | None,
-    ) -> dict[str, object]:
-        # Timing is optional (accommodations): it never makes evidence sparse or penalised.
-        del response_time_ms
-        return self.content.infer_belief(error_code, interaction_summary=interaction_summary)
-
     # --- Model 2 ---------------------------------------------------------------------------
 
     def _start_support_loop(
         self,
         state: dict[str, object],
         belief: Mapping[str, object],
-        content_decision: Mapping[str, object],
         at: datetime,
         *,
         evidence_id: UUID,
@@ -402,13 +394,12 @@ class SinhalaAreaFlow(AreaGameFlow):
                 raise AreaFlowError("NO_RENDERABLE_SUPPORT")
             # The comparison group always starts the authored sequence; baseline never reads outcomes.
             decision = BaselineOrder(authored)
-            cursor = _support_cursor(own_history, proposed=False)
             reason = "activity_default"
             cursor_record = {
                 "cursor_version": CURSOR_VERSION,
                 "authored_sequence": list(authored),
                 "start_position": 0,
-                **cursor,
+                **BASELINE_CURSOR,
             }
             state["support_cursor"] = cursor_record
             selection = {
@@ -432,13 +423,11 @@ class SinhalaAreaFlow(AreaGameFlow):
             "missingness": self._missingness(response_time_ms, interaction_summary),
             "condition": state["condition"],
             "policy_version": self.policy_version,
-            "model_selected_action": content_decision.get("selected_action"),
-            "reference_decision": dict(content_decision),
             "eligible_actions": list(eligible),
             "excluded_actions": [
                 {"scaffold_type": s, "reason": "NOT_IN_AREA_SUPPORT_CATALOGUE"}
-                for s in content_decision.get("candidates", ())  # type: ignore[union-attr]
-                if isinstance(s, Mapping) and s.get("scaffold_type") not in eligible
+                for s in AUTHORED_SEQUENCE
+                if s not in eligible
             ],
             "renderable_actions": list(plans),
             **selection,
@@ -760,56 +749,4 @@ def _difficulty_evidence(
     }
 
 
-def _support_cursor(history: tuple[Mapping[str, object], ...], *, proposed: bool) -> dict[str, object]:
-    """Where the authored help sequence resumes for this learner and skill.
-
-    Only completed episodes with a recorded withdrawn after-score move it; invalidated episodes
-    are never in the history and so never move it. Baseline always starts at the beginning.
-    """
-
-    if not proposed:
-        return {"next_position": 0, "unresolved": False, "preference_failed": False,
-                "source_episode_id": None}
-    for episode in reversed(history):
-        cursor = episode.get("support_cursor")
-        measurement = episode.get("measurement")
-        if not isinstance(cursor, Mapping) or not isinstance(measurement, Mapping):
-            continue
-        failed = str(measurement.get("after_earned")) == "0"
-        start = int(cursor.get("start_position", 0))
-        model2 = episode.get("model2") or {}
-        return {
-            "next_position": start + 1 if failed else start,
-            "unresolved": failed,
-            "preference_failed": failed and model2.get("selection_reason") == "learned_activity_preference",
-            "source_episode_id": episode.get("episode_id"),
-        }
-    return {"next_position": 0, "unresolved": False, "preference_failed": False, "source_episode_id": None}
-
-
-def activity_order(
-    decision: SupportOrderDecision,
-    *,
-    authored: tuple[str, ...],
-    cursor: Mapping[str, object],
-    proposed: bool,
-) -> tuple[tuple[str, ...], str]:
-    """The help order a Sinhala package delivers, and why.
-
-    The authored sequence resumes at the learner's cursor. Model 2's order is used only for a
-    learned preference that has not since failed. Baseline always starts the authored sequence.
-    """
-
-    start = cursor["next_position"] % len(authored)
-    rotated = authored[start:] + authored[:start]
-    learned = decision.selection_mode == "learned_post_withdrawal_preference"
-    if not proposed:
-        return authored, "activity_default"
-    if learned and not cursor["preference_failed"]:
-        return tuple(decision.order), "learned_activity_preference"
-    if cursor["unresolved"]:
-        return rotated, "activity_support_escalation"
-    return rotated, "activity_default"
-
-
-__all__ = ["SINHALA_BUILDERS", "SinhalaAreaFlow", "activity_order"]
+__all__ = ["SINHALA_BUILDERS", "SinhalaAreaFlow"]

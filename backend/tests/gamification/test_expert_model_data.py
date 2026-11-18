@@ -265,26 +265,20 @@ def test_sorting_by_expected_gain_reproduces_todays_order(orders) -> None:
     }
 
 
-def test_detection_rules_match_the_rules_they_were_copied_from(tool) -> None:
-    from app.gamification.content import sinhala_common, sinhala_pillam, subtraction_adventure
-
-    motor = tool.SIGNALS["motor"]["any"]
-    for module in (sinhala_common, sinhala_pillam):
-        assert motor == {
-            "correction_count": module._MOTOR_CORRECTIONS,
-            "cancelled_drag_count": module._MOTOR_CANCELS,
-        }
+def test_detection_rules_keep_what_the_earlier_rules_did(tool) -> None:
+    # The values the deleted rules held at commit 8c0965f: Sinhala motor thresholds and the
+    # Subtraction answer rewrites, which now live only in the expert data.
+    assert tool.SIGNALS["motor"]["any"] == {"correction_count": 3, "cancelled_drag_count": 2}
     table = _json(PACKAGE / "misconception_tables" / "G5-AREA-MAT-04.json")
-    summaries = [
-        {"started_from_ones": False, "alignment_valid": False},
-        {"alignment_valid": False, "invalid_exchange_count": 2},
-        {"invalid_exchange_count": 0, "operation_changes": 1},
-        {"story_reorder_count": 3},
-        {"story_reorder_count": 0},
-        {"first_action_ms": 800},
+    expected = [
+        ({"started_from_ones": False, "alignment_valid": False}, "starts_from_left"),
+        ({"alignment_valid": False, "invalid_exchange_count": 2}, "misaligns_place_columns"),
+        ({"invalid_exchange_count": 0, "operation_changes": 1}, "uses_addition_instead"),
+        ({"story_reorder_count": 3}, "smaller_quantity_as_minuend"),
+        ({"story_reorder_count": 0}, UNKNOWN),
+        ({"first_action_ms": 800}, UNKNOWN),
     ]
-    for summary in summaries:
-        for code in (UNKNOWN, "starts_from_left"):
-            assert _rewritten(
-                table, code, summary
-            ) == subtraction_adventure.apply_interaction_evidence(code, summary)
+    for summary, rewritten in expected:
+        assert _rewritten(table, UNKNOWN, summary) == rewritten, summary
+        # A named mistake is never rewritten.
+        assert _rewritten(table, "starts_from_left", summary) == "starts_from_left"

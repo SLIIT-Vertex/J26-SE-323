@@ -17,7 +17,6 @@ import random
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from functools import cache
 from pathlib import Path
 from uuid import NAMESPACE_URL, UUID, uuid5
 
@@ -37,12 +36,8 @@ from app.gamification.application.teardown_receipt import (
 from app.gamification.content.support_types import SUPPORT_TYPES
 from app.gamification.demo_seed.answers import correct_answer, wrong_answers
 from app.gamification.demo_seed.runner import multi_help_areas
-from app.gamification.modeling.shared.expert_data import (
-    EXPERT_MODEL_DATA_DIRECTORY,
-    read_expert_manifest,
-    read_verified_expert_file,
-)
-from app.gamification.modeling.support_selection.support_order import subject_of
+from app.gamification.modeling.shared.expert_data import expert_reason_family
+from app.gamification.modeling.support_selection.baseline_order import subject_of
 from app.shared.learner.model import LearnerModel
 
 TAG = "validation-sim-v1"
@@ -57,23 +52,6 @@ WORLD_HELP_FOR_REASON = {
     "prerequisite": "prerequisite_repair",
     "unclear": "simpler_same_game",
 }
-
-
-@cache
-def _families() -> dict[str, object]:
-    manifest = read_expert_manifest(EXPERT_MODEL_DATA_DIRECTORY)
-    families, _sha = read_verified_expert_file(
-        EXPERT_MODEL_DATA_DIRECTORY, manifest, "reason_families.json"
-    )
-    return dict(families)  # type: ignore[call-overload]
-
-
-def reason_family(label: str | None, subject: str) -> str:
-    """A label's reason family, from the expert data the models read."""
-
-    table = _families()["subjects"][subject]  # type: ignore[index]
-    row = table["labels"].get(label or "")
-    return str((row or table["missing_label"])["reason_family"])
 
 
 @dataclass(frozen=True)
@@ -228,7 +206,7 @@ def _play(orchestrator, learner, obs: Observation, rng, a: Assumptions) -> bool:
     candidates = list(wrong_answers(flow, before))
     if not candidates:
         return False
-    own = [pair for pair in candidates if reason_family(pair[1], subject) == obs.true_family]
+    own = [pair for pair in candidates if expert_reason_family(pair[1], subject) == obs.true_family]
     obs.testable_family = bool(own)
     if own and rng.random() < a.consistent_mistake:
         payload = rng.choice(own)[0]
@@ -326,7 +304,7 @@ def _read_back(obs: Observation, state) -> None:
     model2 = state.get("model2") or {}
     subject = subject_of(obs.area_id)
     label = model1.get("top_hypothesis") or model1.get("predicted_label")
-    obs.predicted_family = "unclear" if belief_uncertain(model1) else reason_family(label, subject)
+    obs.predicted_family = "unclear" if belief_uncertain(model1) else expert_reason_family(label, subject)
     obs.confidence = float(model1.get("confidence") or 0) or None
     obs.first_help = (model2.get("support_order") or [None])[0]
     obs.selection_mode = model2.get("support_selection_mode")

@@ -1,11 +1,9 @@
 import pytest
 
 from app.gamification.content.everyday_object_quest import (
-    MISCONCEPTIONS,
     SKILLS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -33,9 +31,3 @@ def test_duplicate_object_mapping_is_rejected() -> None:
     response["placements"][1]["word_token"] = response["placements"][0]["word_token"]
     with pytest.raises(ValueError, match="INCOMPLETE_OR_DUPLICATE_OBJECT_MAPPING"):
         validate_constructed_response(item, response)
-
-
-def test_object_belief_normalizes_with_unknown() -> None:
-    belief = infer_belief("object_word_visual_confusion")
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert abs(sum(belief["probabilities"].values()) - 1.0) < 1e-9

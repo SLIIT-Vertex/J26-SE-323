@@ -3,10 +3,8 @@ import pytest
 from app.gamification.content.family_word_constellation import (
     BLOCKED_FORM_SKILL,
     BLOCKED_SOURCE_FORMS,
-    MISCONCEPTIONS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -32,11 +30,3 @@ def test_duplicate_family_link_is_rejected() -> None:
     response["links"][1]["sinhala_token"] = response["links"][0]["sinhala_token"]
     with pytest.raises(ValueError, match="INCOMPLETE_OR_DUPLICATE_FAMILY_LINKS"):
         validate_constructed_response(item, response)
-
-
-def test_family_belief_normalizes_with_unknown() -> None:
-    belief = infer_belief("father_mother_confusion")
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert abs(sum(belief["probabilities"].values()) - 1.0) < 1e-9
-    sparse = infer_belief("not-a-label", sparse=True)
-    assert sparse["predicted_label"] == "unknown_or_other"

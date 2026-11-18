@@ -159,7 +159,6 @@ def generate_simpler_item(skill_id: str, *, seed: int, than: Mapping[str, object
     return simpler_matching_item(item, than=than)
 
 
-
 def public_game_data(item: InformationItem) -> dict[str, object]:
     return {
         "chapter": item.chapter,
@@ -254,35 +253,6 @@ def validate_constructed_response(
         else "information_word_object_confusion"
     )
     return correct, "correct" if correct else error, dict(response)
-
-
-def infer_belief(
-    error_code: str, *, sparse: bool = False, evidence_quality: float = 0.8
-) -> dict[str, object]:
-    primary = error_code if error_code in MISCONCEPTIONS else "unknown_or_other"
-    confidence = 1 / len(MISCONCEPTIONS) if sparse else min(0.72, max(0.2, evidence_quality * 0.72))
-    remainder = (1 - confidence) / (len(MISCONCEPTIONS) - 1)
-    probabilities = {x: confidence if x == primary else remainder for x in MISCONCEPTIONS}
-    return {
-        "probabilities": probabilities,
-        "predicted_label": primary,
-        "confidence": probabilities[primary],
-        "fallback_used": sparse,
-    }
-
-
-def scaffold_decision(
-    skill_id: str, condition: str, belief: Mapping[str, object], *, seed: int
-) -> dict[str, object]:
-    del skill_id, seed
-    return {
-        "selected_action": "visual_guidance",
-        "condition": condition,
-        "propensity": 1.0,
-        "policy_version": POLICY_VERSION,
-        "eligible_actions": list(SCAFFOLDS),
-        "belief_label": belief.get("predicted_label"),
-    }
 
 
 def worked_steps(game: Mapping[str, object], scaffold_type: str) -> list[str]:

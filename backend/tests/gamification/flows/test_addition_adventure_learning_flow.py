@@ -11,7 +11,7 @@ from app.gamification.application.learning_flow_orchestration import (
     LocalProbeGateway,
     RecordingEvidencePublisher,
 )
-from app.gamification.content.addition_adventure import ATOMIC_SKILLS, MISCONCEPTIONS, SCAFFOLDS
+from app.gamification.content.addition_adventure import ATOMIC_SKILLS, MISCONCEPTIONS
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
 from app.shared.database.base import Base
@@ -133,8 +133,10 @@ def test_each_addition_skill_runs_through_all_three_models(service, skill):
     assert state["model1"]["server_score"]["scoring_version"].startswith("g5-mat-addition")
     assert state["model1"]["pre_decision_only"] is True
     assert state["model1"]["immutable_provenance"] is True
-    assert {row["scaffold_type"] for row in state["model2"]["reference_decision"]["candidates"]} == set(SCAFFOLDS)
-    assert state["model2"]["reference_decision"]["uses_complete_model1_distribution"] is True
+    # The help-order model scored every help it ordered; the earlier audit-only decision is gone.
+    assert state["model2"]["support_selection_mode"] == "bandit_greedy"
+    assert set(state["model2"]["predicted_gain"]) == set(state["model2"]["support_order"])
+    assert "reference_decision" not in state["model2"]
     assert state["scaffold_exposure"]["fully_withdrawn"] is True
     assert len(state["policy_updates"]) == 1
     assert {record["universal_skill_id"] for record in publisher.records} == {"MAT-OPS"}
@@ -145,7 +147,7 @@ def test_baseline_isolated_and_invalid_episode_never_updates(service):
     flow, _, _ = service
     episode_id, _, result, state = _finish(flow, _open(flow, ATOMIC_SKILLS[0].skill_id, "baseline"))
     assert result["status"] == "completed"
-    assert state["model2"]["reference_decision"]["uses_complete_model1_distribution"] is False
+    assert state["model2"]["support_selection_mode"] == "baseline_fixed_order"
     assert state["policy_update_status"] == "not_authorized_baseline"
     assert state["policy_updates"] == []
     flow.invalidate(episode_id, reason="RESEARCH_REVIEW", idempotency_key="invalidate-baseline")
@@ -168,7 +170,6 @@ def test_sparse_evidence_uses_unknown_safe_fallback(service):
     state = flow.reconstruct(episode_id)["state"]
     assert state["model1"]["abstained"] is True
     assert state["model1"]["top_hypothesis"] == "unknown_or_other"
-    assert state["model2"]["reference_decision"]["mode"] == "proposed_shadow_conservative_fallback"
     # An abstaining Model 1 names no reason, so the loop lowers the load first.
     assert state["model2"]["reason_family"] == "unclear"
     assert state["model2"]["selected_action"] == "simpler_same_game"

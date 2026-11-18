@@ -24,12 +24,13 @@ from app.gamification.content.area_support_catalog import assignment
 from app.gamification.content.simpler_items import fewer_pairs, pair_count
 from app.gamification.content.support_types import SUPPORT_TYPES
 from app.gamification.infrastructure.db.models import LearningFlowSupportRoundModel
-from app.gamification.modeling.support_selection.support_order import (
+from app.gamification.modeling.shared.expert_data import expert_reason_family
+from app.gamification.modeling.support_selection.baseline_order import (
     ENGLISH_ORDER,
     MATHEMATICS_ORDER,
-    choose_support_order,
-    reason_family,
+    baseline_order,
 )
+from app.gamification.modeling.support_selection.game_bandit import load_game_help_bandit
 from tests.gamification.helpers.support_loop_helpers import (
     MATHEMATICS_AREAS,
     correct_answer,
@@ -392,7 +393,7 @@ def _labels(modules: tuple[str, ...]) -> set[str]:
 def test_every_model1_label_names_a_kind_of_difficulty(subject, modules):
     labels = _labels(modules)
     assert labels
-    families = {label: reason_family(label, subject=subject) for label in labels}
+    families = {label: expert_reason_family(label, subject) for label in labels}
     assert set(families.values()) <= {
         "representation",
         "procedure",
@@ -420,12 +421,13 @@ def test_every_model1_label_names_a_kind_of_difficulty(subject, modules):
     ),
 )
 def test_english_reasons_lead_the_english_order(label, family, lead):
-    assert reason_family(label, subject="ENG") == family
-    decision = choose_support_order(
-        subject="ENG",
-        condition="proposed",
+    # The help-order model's expert start, before it has learned anything.
+    assert expert_reason_family(label, "ENG") == family
+    decision = load_game_help_bandit("ENG").order(
         model1_label=label,
         model1_uncertain=False,
+        learning_state_input=None,
+        history=[],
         eligible=SUPPORT_TYPES,
         renderable=SUPPORT_TYPES,
     )
@@ -434,18 +436,15 @@ def test_english_reasons_lead_the_english_order(label, family, lead):
 
 
 def test_baseline_english_order_is_the_english_fallback_without_reason_or_history():
-    decision = choose_support_order(
-        subject="ENG",
-        condition="baseline",
-        model1_label="food_word_visual_confusion",
-        model1_uncertain=False,
-        eligible=SUPPORT_TYPES,
-        renderable=tuple(support for support in SUPPORT_TYPES if support != "prerequisite_repair"),
+    decision = baseline_order(
+        "ENG",
+        SUPPORT_TYPES,
+        tuple(support for support in SUPPORT_TYPES if support != "prerequisite_repair"),
     )
     assert decision.order == tuple(
         support for support in ENGLISH_ORDER if support != "prerequisite_repair"
     )
-    assert decision.reason_family is None
+    assert decision.as_record()["reason_family"] is None
 
 
 def test_history_prefers_the_type_with_independent_success_not_supported_success():
@@ -468,15 +467,13 @@ def test_history_prefers_the_type_with_independent_success_not_supported_success
             ]},
         },
     ]
-    decision = choose_support_order(
-        subject="ENG",
-        condition="proposed",
+    decision = load_game_help_bandit("ENG").order(
         model1_label="food_word_visual_confusion",
         model1_uncertain=False,
+        learning_state_input=None,
+        history=history,
         eligible=SUPPORT_TYPES,
         renderable=SUPPORT_TYPES,
-        history=history,
     )
     assert decision.first == "step_by_step_guidance"
-    assert decision.selection_mode == "learned_post_withdrawal_preference"
     assert set(decision.order) <= set(SUPPORT_TYPES)

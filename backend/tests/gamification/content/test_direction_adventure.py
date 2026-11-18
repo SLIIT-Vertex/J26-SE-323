@@ -6,12 +6,10 @@ from app.gamification.content.direction_adventure import (
     ALL_DIRECTIONS,
     ATOMIC_SKILLS,
     MAIN_POSITIONS,
-    MISCONCEPTIONS,
     PLACES,
     SECONDARY_POSITIONS,
     correct_response,
     generate_item,
-    infer_belief,
     validate_constructed_response,
     validate_scene,
 )
@@ -61,16 +59,13 @@ def test_scene_rejects_duplicate_or_ambiguous_positions():
         validate_scene(game)
 
 
-def test_child_viewpoint_reversal_and_full_probability_distribution():
+def test_child_viewpoint_reversal():
     item = generate_item("G5-MAT-DIRECTION-SCENE-01", role="unsupported_before", seed=3)
     response = correct_response(item.game_data)
     response["selections"][0]["selected_direction"] = "south"
     correct, error, normalized = validate_constructed_response(item, response)
     assert correct is False and error == "child_viewpoint_reversal"
     assert normalized["_feedback_column"] == "statement-1"
-    belief = infer_belief(error)
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert sum(belief["probabilities"].values()) == pytest.approx(1)
 
 
 def test_public_game_data_never_contains_explicit_answer_map():

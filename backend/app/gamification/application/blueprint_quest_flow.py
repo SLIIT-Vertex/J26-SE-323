@@ -18,10 +18,8 @@ from app.gamification.content.blueprint_quest import (
     correct_response,
     generate_item,
     generate_simpler_item,
-    infer_belief,
     package_hash,
     public_game_data,
-    scaffold_decision,
     validate_constructed_response,
     worked_steps,
 )
@@ -46,8 +44,6 @@ class BlueprintQuestFlow(EnglishAreaFlow):
     skills = SKILLS
     generate_item = staticmethod(generate_item)
     generate_simpler_item = staticmethod(generate_simpler_item)
-    infer_belief = staticmethod(infer_belief)
-    scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
     validate_constructed_response = staticmethod(validate_constructed_response)
     missing_skill_error = "BLUEPRINT_SKILL_NOT_FOUND"

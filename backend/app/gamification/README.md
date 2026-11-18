@@ -53,8 +53,8 @@ flow. Every step below is a method of `AreaGameFlow` in `application/engine/area
 |---|---|---|
 | 1 | `open` | Draw a before item and a parallel after item; reserve the after item so it stays unseen |
 | 2 | `submit_before` | Score the unsupported answer on the server (`validate_constructed_response`) |
-| 3 | `submit_before` | **Model 1**: `self._infer_belief` (the area's `infer_belief`) then `apply_learner_prior` |
-| 4 | `_start_support_loop` | **Model 2**: `choose_support_order` fixes the help order; the content module's `scaffold_decision` is stored as `reference_decision` |
+| 3 | `submit_before` | **Model 1**: `self._game_belief`, the expert-initialised Bayesian model (`predict_game_belief`) over the learner's recent unaided answers |
+| 4 | `_start_support_loop` | **Model 2**: in the proposed condition the approved help-order bandit fixes the order (`application/game_help_order.py`); the baseline condition gets the subject's fixed order (`support_selection/baseline_order.py`) |
 | 5 | `submit_supported`, `complete_support` | Help rounds (`support_rounds.py`, `support_builders/`) |
 | 6 | `withdraw` | Every trace of help is removed and confirmed |
 | 7 | `present_after`, `submit_after` | Fresh unsupported after item |

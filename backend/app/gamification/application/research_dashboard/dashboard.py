@@ -22,6 +22,7 @@ from app.gamification.application.research_dashboard.accuracy import (
     is_independent,
     present_simulation,
 )
+from app.gamification.application.research_dashboard.child_record import child_record
 from app.gamification.application.research_dashboard.explain import (
     area_title,
     area_titles,
@@ -46,12 +47,8 @@ from app.gamification.application.research_dashboard.play_status import (
 )
 from app.gamification.modeling.offline.research_accuracy_report import replay_report
 from app.gamification.modeling.support_selection.bandit_sensitivity import evidence, sensitivity
+from app.gamification.modeling.support_selection.baseline_order import SUBJECT_ORDERS, subject_of
 from app.gamification.modeling.support_selection.game_bandit import load_help_order_expert_data
-from app.gamification.modeling.support_selection.support_order import (
-    SUBJECT_ORDERS,
-    rank_support_history,
-    subject_of,
-)
 
 _ACCURACY_CACHE = {}
 SIMULATION_REPORT = Path(__file__).resolve().parents[4] / "reports/simulated-validation.json"
@@ -414,7 +411,7 @@ class ResearchDashboardService:
             if area_id is None:
                 continue
             completed = [_state(run) for run in skill_runs if run["status"] == "completed"]
-            ranking = rank_support_history(completed, order=SUBJECT_ORDERS[subject_of(area_id)])
+            ranking = child_record(completed, order=SUBJECT_ORDERS[subject_of(area_id)])
             decisions = [
                 _state(run)["model2"]
                 for run in skill_runs

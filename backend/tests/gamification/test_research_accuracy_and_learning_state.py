@@ -1,3 +1,5 @@
+"""The research accuracy checks, the dashboard glossary and the Learning State reading."""
+
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
@@ -11,15 +13,6 @@ from app.gamification.application.research_dashboard.accuracy import (
 )
 from app.gamification.application.research_dashboard.glossary import STATUS_NAMES, plain_status
 from app.gamification.infrastructure.gateways.research_learning_state import read_learning_state
-from app.gamification.modeling.misconception_inference.learner_prior import (
-    apply_learner_prior,
-    prior_errors,
-)
-from app.gamification.modeling.support_selection.support_order import (
-    MATHEMATICS_ORDER,
-    choose_support_order,
-    rank_support_history,
-)
 
 
 def history(*, success=True, exhausted=False, condition="proposed", validity="valid"):
@@ -43,98 +36,6 @@ def history(*, success=True, exhausted=False, condition="proposed", validity="va
             ],
         },
     }
-
-
-def choose(**kwargs):
-    return choose_support_order(
-        subject="MAT",
-        condition="proposed",
-        model1_label="wrong_column",
-        model1_uncertain=False,
-        eligible=MATHEMATICS_ORDER,
-        renderable=MATHEMATICS_ORDER,
-        **kwargs,
-    )
-
-
-def test_only_the_successful_round_receives_the_independent_result():
-    ranking = rank_support_history([history()])
-    assert ranking.preferred == "step_by_step_guidance"
-    assert ranking.by_support["visual_guidance"]["independent_successes"] == 0
-    assert ranking.by_support["visual_guidance"]["episodes"] == 0
-    assert ranking.by_support["visual_guidance"]["did_not_help"] == 1
-    assert ranking.by_support["step_by_step_guidance"]["independent_successes"] == 1
-    assert rank_support_history([history(exhausted=True)]).preferred is None
-    assert (
-        rank_support_history([history(condition="baseline"), history(validity="invalid")]).preferred
-        is None
-    )
-
-
-def test_ranking_uses_failed_round_count_before_subject_tie_break():
-    a = history()
-    b = history()
-    b["support_loop"]["rounds"] = [{"scaffold_type": "visual_guidance", "outcome": "succeeded"}]
-    ranking = rank_support_history([a, b])
-    assert ranking.preferred == "step_by_step_guidance"
-
-
-def test_legacy_single_help_keeps_its_one_type():
-    h = history()
-    del h["support_loop"]
-    h["model2"] = {"selected_action": "visual_guidance"}
-    assert rank_support_history([h]).preferred == "visual_guidance"
-
-
-def test_fresh_state_changes_order_but_two_proven_successes_win():
-    reading = {"status": "available", "state": "disengaged"}
-    assert choose(learning_state_input=reading).first == "simpler_same_game"
-    assert choose(history=[history()], learning_state_input=reading).first == "simpler_same_game"
-    decision = choose(history=[history(), history()], learning_state_input=reading)
-    assert decision.first == "step_by_step_guidance"
-    assert not decision.learning_state_input["changed_first_help"]
-    assert (
-        choose(learning_state_input={"status": "not_available", "reason": "STALE"}).first
-        == "visual_guidance"
-    )
-    confused = choose(learning_state_input={"status": "available", "state": "confused"})
-    assert confused.order[0] == "visual_guidance"
-    assert confused.order.index("worked_parallel_example") == 3
-
-
-def test_state_specific_history_is_used_only_with_enough_evidence():
-    calm = history()
-    calm["model2"] = {"learning_state_input": {"state": "calm"}}
-    confused = history()
-    confused["support_loop"]["rounds"] = [
-        {"scaffold_type": "simpler_same_game", "outcome": "succeeded"}
-    ]
-    confused["model2"] = {"learning_state_input": {"state": "confused"}}
-    decision = choose(
-        history=[calm, calm, calm, confused, confused],
-        learning_state_input={"status": "available", "state": "confused"},
-    )
-    assert decision.first == "simpler_same_game"
-
-
-def test_prior_only_uses_last_five_unsupported_answers_and_records_replay_inputs():
-    attempts = [
-        {"role": "unsupported_before", "correct": False, "structured_error_code": "a"}
-        for _ in range(8)
-    ]
-    attempts += [{"role": "supported_practice", "correct": False, "structured_error_code": "b"}]
-    errors = prior_errors([{"attempts": attempts}])
-    assert errors == ["a"] * 5
-    belief = {"probabilities": {"a": 0.58, "b": 0.42}, "predicted_label": "a"}
-    posterior = apply_learner_prior(belief, errors)
-    assert posterior["prior_counts"] == {"a": 5, "b": 0}
-    assert posterior["confidence"] > 0.58
-    assert sum(posterior["probabilities"].values()) == pytest.approx(1)
-    assert posterior["likelihood"] == belief["probabilities"]
-    assert not apply_learner_prior({"probabilities": {"a": 0.51, "b": 0.49}}, [])[
-        "learner_prior_used"
-    ]
-    assert apply_learner_prior({"probabilities": {"a": 0.51, "b": 0.49}}, [])["low_confidence"]
 
 
 def test_learning_state_rejects_old_and_other_session_readings():

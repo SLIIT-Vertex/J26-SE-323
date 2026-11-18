@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from app.gamification.application.research_dashboard.accuracy import is_independent, wilson
+from app.gamification.application.research_dashboard.child_record import child_record
 from app.gamification.application.research_dashboard.explain import (
     belief_uncertain,
     english_title,
@@ -28,12 +29,8 @@ from app.gamification.application.research_dashboard.glossary import (
     reason_name,
 )
 from app.gamification.application.research_dashboard.play_status import STATUS_LABELS, play_status
-from app.gamification.modeling.support_selection.support_order import (
-    SUBJECT_ORDERS,
-    credited_support,
-    rank_support_history,
-    subject_of,
-)
+from app.gamification.modeling.support_selection.baseline_order import SUBJECT_ORDERS, subject_of
+from app.gamification.modeling.support_selection.game_bandit import loop_credit
 
 MODELS = ("misconception", "support", "gain")
 TERMINAL = {"completed", "invalidated"}
@@ -246,7 +243,7 @@ def _support(run, earlier):
     subject_order = (
         SUBJECT_ORDERS[subject_of(area)] if area.startswith("G5-AREA-") else SUBJECT_ORDERS["MAT"]
     )
-    before_rank = rank_support_history(completed, order=subject_order)
+    before_rank = child_record(completed, order=subject_order)
     if run["status"] not in TERMINAL:
         unchanged.append("The game is still being played; the record changes when it ends.")
     elif run["status"] == "invalidated":
@@ -254,8 +251,8 @@ def _support(run, earlier):
     elif state.get("condition") != "proposed":
         unchanged.append("Comparison-group games never change the record.")
     else:
-        after_rank = rank_support_history([*completed, state], order=subject_order)
-        winner, failed = credited_support(state)
+        after_rank = child_record([*completed, state], order=subject_order)
+        winner, failed = loop_credit(state)
         record_chip = None
         for support in sorted(set(before_rank.by_support) | set(after_rank.by_support)):
             old = before_rank.by_support.get(support)
@@ -385,7 +382,7 @@ def _gain(run, _earlier):
     )
     updates = list(state.get("policy_updates") or [])
     if updates:
-        winner, _failed = credited_support(state)
+        winner, _failed = loop_credit(state)
         changed.append(
             "Contextual Support Selection learned from this result"
             + (f" (credit to {name(winner)})." if winner else " (no help type earned credit).")
@@ -693,11 +690,11 @@ def _support_series(ordered, now: datetime) -> dict[str, object]:
 
 
 def _preference(ordered) -> list[dict[str, object]]:
-    """Every help, most to least preferred, ranked the way the support model ranks its history."""
+    """Every help, most to least preferred, by this child's record (a description, not the model)."""
 
     order = tuple(dict.fromkeys(help for subject in SUBJECT_ORDERS.values() for help in subject))
     states = [_state(run) for run in ordered if run["status"] == "completed"]
-    by_support = rank_support_history(states, order=order).by_support
+    by_support = child_record(states, order=order).by_support
     rows = []
     for index, support in enumerate(order):
         row = by_support.get(support) or {}
@@ -712,8 +709,8 @@ def _preference(ordered) -> list[dict[str, object]]:
                 "did_not_help": failed,
                 "rate": round(successes / credited, 4) if credited else None,
                 "tried": bool(credited or failed),
-                # Same tie-breaks as the model: success rate, mean gain, fewer failed rounds,
-                # then the subject's default order.
+                # The record's own order: success rate, mean gain, fewer failed rounds, then the
+                # subject's default order.
                 "_score": (
                     bool(credited or failed),
                     successes / credited if credited else -1.0,
@@ -738,7 +735,7 @@ def _worked(by_skill: dict[str, list[Mapping[str, object]]]):
     for states in by_skill.values():
         if not states:
             continue
-        ranking = rank_support_history(states, order=_subject_order(states[-1]))
+        ranking = child_record(states, order=_subject_order(states[-1]))
         if ranking.preferred:
             skills += 1
             if len(states) > best_skill_size:

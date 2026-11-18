@@ -1,19 +1,15 @@
-from math import isclose
 
 import pytest
 
 from app.gamification.content.number_world import (
     ATOMIC_SKILLS,
     MISCONCEPTIONS,
-    SCAFFOLDS,
     abacus_digits,
     construct_extreme,
     expanded_form,
     expanded_terms,
     generate_item,
-    infer_belief,
     order_numbers,
-    scaffold_decision,
     validate_constructed_response,
 )
 
@@ -146,25 +142,3 @@ def test_direct_manipulation_response_is_scored_from_server_item(skill):
     field = next(key for key in response if key != "kind")
     malformed = {**response, field: [] if isinstance(response[field], list) else True}
     assert validate_constructed_response(item, malformed)[0] is False
-
-
-def test_model1_distribution_is_complete_normalized_and_abstains_when_sparse():
-    belief = infer_belief("leading_zero_first")
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert isclose(sum(belief["probabilities"].values()), 1.0)
-    assert belief["top_hypothesis"] == "leading_zero_first"
-    sparse = infer_belief("leading_zero_first", sparse=True)
-    assert sparse["abstained"] is True
-    assert sparse["top_hypothesis"] == "unknown_or_other"
-
-
-def test_model2_baseline_ignores_belief_and_proposed_consumes_complete_distribution():
-    belief = infer_belief("ascending_descending_reversed")
-    baseline = scaffold_decision(ATOMIC_SKILLS[-1].skill_id, "baseline", belief, seed=31)
-    proposed = scaffold_decision(ATOMIC_SKILLS[-1].skill_id, "proposed", belief, seed=31)
-    assert baseline["uses_complete_model1_distribution"] is False
-    assert baseline["selected_action"] == "visual_guidance"
-    assert proposed["uses_complete_model1_distribution"] is True
-    assert proposed["objective"] == "predicted_raw_independence_gain"
-    assert {row["scaffold_type"] for row in proposed["candidates"]} == set(SCAFFOLDS)
-    assert isclose(sum(row["propensity"] for row in proposed["candidates"]), 1.0)

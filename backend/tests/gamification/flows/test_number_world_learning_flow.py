@@ -14,12 +14,11 @@ from app.gamification.application.learning_flow_orchestration import (
 from app.gamification.content.number_world import (
     ATOMIC_SKILLS,
     MISCONCEPTIONS,
-    SCAFFOLDS,
     validate_constructed_response,
 )
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
 from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
-from app.gamification.modeling.support_selection.support_order import credited_support
+from app.gamification.modeling.support_selection.game_bandit import loop_credit
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 from tests.gamification.helpers.support_loop_helpers import finish_help
@@ -133,9 +132,10 @@ def test_each_atomic_skill_runs_on_durable_three_model_path(service, skill):
     assert state["raw_independence_gain"] == "1"
     assert state["measurement"]["supported_correctness_used_as_reward"] is False
     assert set(state["model1"]["probabilities"]) == set(MISCONCEPTIONS)
-    reference = state["model2"]["reference_decision"]
-    assert {row["scaffold_type"] for row in reference["candidates"]} == set(SCAFFOLDS)
-    assert reference["uses_complete_model1_distribution"] is True
+    # The help-order model scored every help it ordered; the earlier audit-only decision is gone.
+    assert state["model2"]["support_selection_mode"] == "bandit_greedy"
+    assert set(state["model2"]["predicted_gain"]) == set(state["model2"]["support_order"])
+    assert "reference_decision" not in state["model2"]
     assert state["scaffold_exposure"]["fully_withdrawn"] is True
     assert len(state["policy_updates"]) == 1
     assert {record["universal_skill_id"] for record in publisher.records} == {"MAT-NUM"}
@@ -146,7 +146,7 @@ def test_baseline_does_not_use_model1_for_selection_or_update(service):
     flow, _ = service
     _, _, result, state = _finish(flow, _open(flow, ATOMIC_SKILLS[0].skill_id, "baseline"))
     assert result["status"] == "completed"
-    assert state["model2"]["reference_decision"]["uses_complete_model1_distribution"] is False
+    assert state["model2"]["support_selection_mode"] == "baseline_fixed_order"
     assert state["model2"]["reason_family"] is None
     assert state["policy_update_status"] == "not_authorized_baseline"
     assert state["policy_updates"] == []
@@ -168,7 +168,6 @@ def test_sparse_model1_uses_conservative_fallback(service):
     flow.submit_before(episode_id, option_id=wrong, response_time_ms=None, idempotency_key="sparse")
     state = flow.reconstruct(episode_id)["state"]
     assert state["model1"]["abstained"] is True
-    assert state["model2"]["reference_decision"]["mode"] == "proposed_shadow_conservative_fallback"
     # An abstaining Model 1 names no reason, so the loop lowers the load first.
     assert state["model2"]["reason_family"] == "unclear"
     assert state["model2"]["selected_action"] == "simpler_same_game"
@@ -205,7 +204,7 @@ def test_future_episode_starts_with_support_that_previously_led_to_independent_s
     )
     # Watching the visual demonstration led straight to withdrawal and the fresh item was
     # answered alone, so the demonstration is the help that is learned.
-    winner, _failed = credited_support(learned_from)
+    winner, _failed = loop_credit(learned_from)
     assert winner is not None
     learned = [winner]
 
@@ -234,7 +233,7 @@ def test_a_prior_independent_failure_is_not_a_preference(service):
         _open(flow, skill, key_suffix="failed-first-support"),
         after_correct=False,
     )
-    not_independent, _ = credited_support(failed)
+    not_independent, _ = loop_credit(failed)
 
     opened = _open(flow, skill, key_suffix="resume-escalation")
     episode_id = UUID(opened["episode_id"])

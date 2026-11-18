@@ -1,12 +1,10 @@
 import pytest
 
 from app.gamification.content.heritage_museum_quest import (
-    MISCONCEPTIONS,
     SOURCE_PAIRS,
     UNRESOLVED_RENDERERS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -44,13 +42,9 @@ def test_public_manifest_strips_answer_map_and_server_scores(skill_id):
     assert validate_constructed_response(item, correct_response(item.game_data))[0]
 
 
-def test_strict_schema_and_sparse_normalized_belief():
+def test_strict_schema():
     item = generate_item("G5-ENG-PAST-BILINGUAL-01", role="unsupported_before", seed=3)
     malformed = correct_response(item.game_data)
     malformed["unexpected"] = True
     with pytest.raises(ValueError, match="MALFORMED_HERITAGE_RESPONSE"):
         validate_constructed_response(item, malformed)
-    belief = infer_belief("unregistered", sparse=True)
-    assert belief["predicted_label"] == "unknown_or_other"
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert sum(belief["probabilities"].values()) == pytest.approx(1.0)

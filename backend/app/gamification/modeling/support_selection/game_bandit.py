@@ -127,14 +127,34 @@ def episode_observations(
         return ()
     independent = Decimal(str(measurement.get("after_earned", 0))) == maximum
     score = float(Decimal(str(gain)))
+    credited, failed = loop_credit(state)
+    if credited is None and independent:
+        return ()
+    observations = []
+    if credited is not None:
+        observations.append(CreditObservation(credited, "credited", score, 1.0, independent))
+    if failed_round_weight > 0:
+        observations.extend(
+            CreditObservation(support, "failed_round", 0.0, failed_round_weight, False)
+            for support in failed
+        )
+    return tuple(observations)
+
+
+def loop_credit(state: Mapping[str, object]) -> tuple[str | None, tuple[str, ...]]:
+    """The help the support loop ended on, and every other help that failed while shown.
+
+    Read from the stored ``support_loop``: the first round that succeeded ends the loop, a watched
+    demonstration that ended it credits the last round, and a loop whose order ran out credits no
+    help. Episodes from before the multi-help loop showed one help, ``model2.selected_action``.
+    Follow-up help after a wrong after-answer lives outside ``support_loop`` and is never read.
+    """
+
     loop = state.get("support_loop")
     if not isinstance(loop, Mapping) or "rounds" not in loop:
-        # Episodes from before the multi-help loop showed one help.
         model2 = state.get("model2")
         support = model2.get("selected_action") if isinstance(model2, Mapping) else None
-        if support not in SUPPORT_TYPES:
-            return ()
-        return (CreditObservation(str(support), "credited", score, 1.0, independent),)
+        return (str(support) if support in SUPPORT_TYPES else None), ()
     rounds = [
         row
         for row in loop.get("rounds") or []  # type: ignore[union-attr]
@@ -149,22 +169,14 @@ def episode_observations(
             (str(row["scaffold_type"]) for row in rounds if row.get("outcome") in SUCCESS_OUTCOMES),
             None,
         )
-    if credited is None and independent:
-        return ()
-    observations = []
-    if credited is not None:
-        observations.append(CreditObservation(credited, "credited", score, 1.0, independent))
-    if failed_round_weight > 0:
-        failed = dict.fromkeys(
+    failed = tuple(
+        dict.fromkeys(
             str(row["scaffold_type"])
             for row in rounds
             if row.get("outcome") == "failed" and row["scaffold_type"] != credited
         )
-        observations.extend(
-            CreditObservation(support, "failed_round", 0.0, failed_round_weight, False)
-            for support in failed
-        )
-    return tuple(observations)
+    )
+    return credited, failed
 
 
 # --- This child's own record ----------------------------------------------------------------

@@ -1,12 +1,10 @@
 import pytest
 
 from app.gamification.content.island_food_festival import (
-    MISCONCEPTIONS,
     SKILLS,
     UNRESOLVED_SOURCE_FORMS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -36,15 +34,6 @@ def test_duplicate_food_mapping_is_rejected() -> None:
     response["placements"][1]["word_token"] = response["placements"][0]["word_token"]
     with pytest.raises(ValueError, match="INCOMPLETE_OR_DUPLICATE_FOOD_MAPPING"):
         validate_constructed_response(item, response)
-
-
-def test_food_belief_normalizes_with_unknown() -> None:
-    belief = infer_belief("food_word_visual_confusion")
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert abs(sum(belief["probabilities"].values()) - 1.0) < 1e-9
-    sparse = infer_belief("not-a-label", sparse=True)
-    assert sparse["predicted_label"] == "unknown_or_other"
-    assert sparse["fallback_used"] is True
 
 
 def test_basket_sort_uses_concrete_foods_and_places_coconut_with_fruit() -> None:

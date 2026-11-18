@@ -9,9 +9,8 @@ outbox, idempotency rules, and research route used by :class:`LearningFlowOrches
 
 An area game is a subclass in ``application/<slug>_flow.py`` that supplies its profile: versions,
 ``skills``, and the content functions (``generate_item``, ``validate_constructed_response``,
-``infer_belief``, ``scaffold_decision``, ``package_hash``) plus ``_public_game_data`` and
-``_worked_example``. ``infer_belief`` is the area's authored rule; Model 1 no longer uses it, and it
-stays only so older stored beliefs can still be checked. English games extend :class:`EnglishAreaFlow` and Sinhala games extend
+``package_hash``) plus ``_public_game_data`` and ``_worked_example``. English games extend
+:class:`EnglishAreaFlow` and Sinhala games extend
 :class:`SinhalaAreaFlow`, both in this package.
 """
 
@@ -61,8 +60,8 @@ from app.gamification.modeling.misconception_inference.game_belief import learne
 from app.gamification.modeling.support_selection.baseline_order import (
     BaselineOrder,
     baseline_order,
+    subject_of,
 )
-from app.gamification.modeling.support_selection.support_order import subject_of
 
 PROTOCOL_VERSION = "adaptive-episode-v1"
 
@@ -226,8 +225,6 @@ class AreaGameFlow:
     skills: Mapping[str, object]
     generate_item: Callable[..., AreaItem]
     validate_constructed_response: Callable[..., tuple[bool, str, dict[str, object]]]
-    infer_belief: Callable[..., dict[str, object]]
-    scaffold_decision: Callable[..., dict[str, object]]
     package_hash: Callable[[], str]
     missing_skill_error: str
     episode_type_error: str
@@ -464,13 +461,9 @@ class AreaGameFlow:
                 "immutable_provenance": True,
                 **belief,
             }
-            decision = self.scaffold_decision(
-                str(state["skill_id"]), str(state["condition"]), belief, seed=int(state["seed"])
-            )
             return self._start_support_loop(
                 state,
                 belief,
-                decision,
                 at,
                 evidence_id=evidence_id,
                 response_time_ms=response_time_ms,
@@ -762,7 +755,6 @@ class AreaGameFlow:
         self,
         state: dict[str, object],
         belief: Mapping[str, object],
-        content_decision: Mapping[str, object],
         at: datetime,
         *,
         evidence_id: UUID,
@@ -801,9 +793,6 @@ class AreaGameFlow:
             "missingness": self._missingness(response_time_ms, interaction_summary),
             "condition": state["condition"],
             "policy_version": self.policy_version,
-            "model_selected_action": content_decision.get("selected_action"),
-            # The game's own single-help decision, kept for audit; the order below is what runs.
-            "reference_decision": dict(content_decision),
             "eligible_actions": list(eligible),
             "renderable_actions": list(plans),
             **selection,
@@ -1361,18 +1350,6 @@ class AreaGameFlow:
             interaction_summary=interaction_summary,
             prior_window=learner_answer_window(history, size=model.game.prior_window),
         )
-
-    def _infer_belief(
-        self,
-        error_code: str,
-        *,
-        response_time_ms: int | None,
-        interaction_summary: Mapping[str, object] | None,
-    ) -> dict[str, object]:
-        """The area's authored rule, kept only to check beliefs stored before the Bayesian model."""
-
-        del interaction_summary
-        return self.infer_belief(error_code, sparse=response_time_ms is None)
 
     @staticmethod
     def _validate_interaction_summary(

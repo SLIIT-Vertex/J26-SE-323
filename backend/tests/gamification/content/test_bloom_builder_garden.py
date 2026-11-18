@@ -2,11 +2,9 @@ import pytest
 
 from app.gamification.content.bloom_builder_garden import (
     FLOWERS,
-    MISCONCEPTIONS,
     STAGES,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -33,11 +31,3 @@ def test_unknown_and_duplicate_flower_tokens_are_rejected() -> None:
     response["placements"][1]["word_token"] = response["placements"][0]["word_token"]
     with pytest.raises(ValueError):
         validate_constructed_response(item, response)
-
-
-def test_sparse_flower_belief_is_normalized_and_uncertain() -> None:
-    belief = infer_belief("not-reviewed", sparse=True)
-    assert belief["predicted_label"] == "unknown_or_other"
-    assert belief["fallback_used"] is True
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert abs(sum(belief["probabilities"].values()) - 1.0) < 1e-9

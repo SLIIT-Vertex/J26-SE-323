@@ -3,13 +3,11 @@ import pytest
 from app.gamification.content.conversation_street import (
     ACTIVE_PAIRS,
     BLOCKED_SOURCE_ANSWERS,
-    MISCONCEPTIONS,
     PET_STATEMENTS,
     SOURCE_PAIRS,
     STANDALONE_STATEMENTS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -85,10 +83,3 @@ def test_strict_schema_rejects_free_text_and_personal_fields():
         malformed[field] = "private"
         with pytest.raises(ValueError, match="MALFORMED_CONVERSATION_STREET_RESPONSE"):
             validate_constructed_response(item, malformed)
-
-
-def test_sparse_belief_is_finite_and_normalized():
-    belief = infer_belief("unregistered", sparse=True)
-    assert belief["predicted_label"] == "unknown_or_other"
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert sum(belief["probabilities"].values()) == pytest.approx(1.0)

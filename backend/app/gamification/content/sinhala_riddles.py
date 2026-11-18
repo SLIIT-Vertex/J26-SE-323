@@ -458,21 +458,6 @@ def reveal_key(game: Mapping[str, object]) -> str:
 
 # --- Models ----------------------------------------------------------------------------------
 
-def infer_belief(error_code: str, *, sparse: bool = False, interaction_summary: Mapping[str, object] | None = None) -> dict[str, object]:
-    return common.infer_belief(error_code, MISCONCEPTIONS, catalogue_version=CATALOGUE_VERSION, sparse=sparse,
-                               interaction_summary=interaction_summary)
-
-
-_AFFINITY = {
-    "visual_guidance": {"single_clue_contradiction_ignored"},
-    "worked_parallel_example": {"figurative_taken_literally", "similar_household_referent_confusion"},
-    "step_by_step_guidance": {"clue_combination_failure"},
-}
-
-
-def scaffold_decision(skill_id: str, condition: str, belief: Mapping[str, object], *, seed: int) -> dict[str, object]:
-    return common.scaffold_decision(skill_id, condition, belief, seed=seed, policy_version=POLICY_VERSION, affinity=_AFFINITY)
-
 
 # --- Support copy (draft, newly authored; not textbook language) ------------------------------
 

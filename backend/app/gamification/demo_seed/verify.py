@@ -31,11 +31,8 @@ from app.gamification.infrastructure.db.models import (
     LearningFlowSupportRoundModel,
 )
 from app.gamification.modeling.misconception_inference.bayesian_model import GAME_MODEL_VERSION
-from app.gamification.modeling.support_selection.baseline_order import fixed_order
-from app.gamification.modeling.support_selection.support_order import (
-    credited_support,
-    subject_of,
-)
+from app.gamification.modeling.support_selection.baseline_order import fixed_order, subject_of
+from app.gamification.modeling.support_selection.game_bandit import loop_credit
 
 _TOLERANCE = 1e-6
 
@@ -603,7 +600,7 @@ def _model3_checks(
             and dict(state.get("model2") or {}).get("support_selection_mode") == BANDIT_GREEDY
         ):
             closed.checked += 1
-            winner = credited_support(state)[0]
+            winner = loop_credit(state)[0]
             if winner is not None and (winner, "credited", float(stored_gain)) not in {
                 (support, role, score) for support, role, score, _ in ledger.get(episode_id, ())
             }:
@@ -632,7 +629,7 @@ def _model3_checks(
                 for support in (
                     _types(state)
                     if dict(nxt.state["model2"]).get("order_policy_version") == "support-order-v2"
-                    else tuple(filter(None, [credited_support(state)[0]]))
+                    else tuple(filter(None, [loop_credit(state)[0]]))
                 ):
                     if int(dict(counted.get(support) or {}).get("independent_successes", 0)) < 1:
                         _fail(closed, episode_id, f"{support} not counted in the next decision")

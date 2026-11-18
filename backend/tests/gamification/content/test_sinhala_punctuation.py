@@ -130,9 +130,6 @@ def test_end_exclamation_is_an_unsupported_choice():
     assert p.validate_constructed_response(item, answer)[1] == "unsupported_exclamation_choice"
 
 
-def test_model1_catalogue_and_unknown_fallback():
+def test_model1_catalogue_lists_every_code():
     catalogue = p.misconception_catalogue()
     assert [row["code"] for row in catalogue] == list(p.MISCONCEPTIONS)
-    belief = p.infer_belief("reporting_clause_inclusion")
-    assert abs(sum(belief["probabilities"].values()) - 1) < 1e-9
-    assert p.infer_belief("reporting_clause_inclusion", sparse=True)["top_hypothesis"] == p.UNKNOWN

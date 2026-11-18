@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -607,25 +606,6 @@ def validate_constructed_response(
     return error == "correct", error, normalized
 
 
-def apply_interaction_evidence(error_code: str, summary: Mapping[str, object] | None) -> str:
-    """Use bounded interaction counts only when the payload itself is unexplained."""
-
-    if error_code != "unknown_or_other" or not summary:
-        return error_code
-    if summary.get("started_from_ones") is False:
-        return "starts_from_left"
-    if summary.get("alignment_valid") is False:
-        return "misaligns_place_columns"
-    invalid_exchanges = summary.get("invalid_exchange_count")
-    if type(invalid_exchanges) is int and invalid_exchanges > 0:
-        return "wrong_exchange_source"
-    if type(summary.get("operation_changes")) is int and int(summary["operation_changes"]) > 0:
-        return "uses_addition_instead"
-    if type(summary.get("story_reorder_count")) is int and int(summary["story_reorder_count"]) > 0:
-        return "smaller_quantity_as_minuend"
-    return error_code
-
-
 def generate_simpler_item(
     skill_id: str, *, seed: int, than: Mapping[str, object] | None = None
 ) -> SubtractionItem:
@@ -734,76 +714,6 @@ def generate_item(
         error_codes={},
         game_data=game,
     )
-
-
-def infer_belief(
-    error_code: str, *, sparse: bool = False, evidence_quality: float = 1.0
-) -> dict[str, object]:
-    if error_code not in MISCONCEPTIONS and error_code != "correct":
-        error_code = "unknown_or_other"
-    if not 0 <= evidence_quality <= 1:
-        raise ValueError("INVALID_EVIDENCE_QUALITY")
-    probabilities = {code: 0.02 for code in MISCONCEPTIONS}
-    probabilities["unknown_or_other"] = 0.18
-    if sparse or evidence_quality < 0.5 or error_code == "correct":
-        probabilities["unknown_or_other"] = 0.78
-    elif error_code in probabilities:
-        probabilities[error_code] = 0.52 + 0.10 * evidence_quality
-    total = sum(probabilities.values())
-    normalized = {key: value / total for key, value in probabilities.items()}
-    top = max(normalized, key=normalized.__getitem__)
-    entropy = -sum(value * math.log(value) for value in normalized.values() if value)
-    abstained = sparse or evidence_quality < 0.5 or top == "unknown_or_other"
-    return {
-        "probabilities": normalized,
-        "confidence": normalized[top],
-        "entropy": entropy,
-        "top_hypothesis": top,
-        "abstained": abstained,
-        "low_confidence": abstained or normalized[top] < 0.5,
-        "evidence_quality": evidence_quality,
-    }
-
-
-def scaffold_decision(
-    skill_id: str, condition: str, belief: dict[str, object], *, seed: int
-) -> dict[str, object]:
-    if skill_id not in SKILLS:
-        raise ValueError("SUBTRACTION_SKILL_NOT_FOUND")
-    abstained = bool(belief.get("abstained"))
-    first = {
-        "G5-MAT-SUB-NO-REGROUP-01": "visual_guidance",
-        "G5-MAT-SUB-EXPANDED-01": "visual_guidance",
-        "G5-MAT-C07-L01-O01": "worked_parallel_example",
-        "G5-MAT-C07-L01-O02": "worked_parallel_example",
-        "G5-MAT-SUB-DIFF-BETWEEN-01": "visual_guidance",
-        "G5-MAT-SUB-HOW-MANY-MORE-01": "visual_guidance",
-    }[skill_id]
-    candidates = []
-    for index, scaffold in enumerate(SCAFFOLDS):
-        candidates.append(
-            {
-                "scaffold_type": scaffold,
-                "eligible": True,
-                "exclusion_reasons": [],
-                "predicted_raw_ig": round(0.08 + (0.04 if scaffold == first else index * 0.01), 6),
-                "uncertainty": 0.20 if abstained else 0.12,
-                "propensity": 1 / 3,
-                **SCAFFOLD_CATALOGUE[scaffold],
-            }
-        )
-    return {
-        "policy_version": POLICY_VERSION,
-        "skill_id": skill_id,
-        "condition": condition,
-        "mode": "deterministic_baseline" if condition == "baseline" else "proposed_shadow",
-        "uses_complete_model1_distribution": condition == "proposed",
-        "objective": "predicted_raw_independence_gain",
-        "reward_source": "valid_post_withdrawal_raw_ig_only",
-        "seed": seed,
-        "selected_action": first,
-        "candidates": candidates,
-    }
 
 
 def worked_steps(game: Mapping[str, object], scaffold_type: str) -> list[str]:

@@ -24,7 +24,8 @@ from app.gamification.application.teardown_receipt import (
 )
 from app.gamification.demo_seed.answers import correct_answer, wrong_answers
 from app.gamification.demo_seed.plan import EpisodeScript, SeedPlan, SkillPlan
-from app.gamification.modeling.support_selection.support_order import reason_family, subject_of
+from app.gamification.modeling.shared.expert_data import expert_reason_family
+from app.gamification.modeling.support_selection.baseline_order import subject_of
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +111,7 @@ class SeedRunner:
             payload, code = self._targeted_wrong(flow, before, skill)
             report.families[f"{skill.skill_id}#{index}"] = (
                 skill.target_family,
-                reason_family(code, subject=subject_of(skill.area_id)),
+                expert_reason_family(code, subject_of(skill.area_id)),
             )
         response = orchestrator.submit_before(
             episode_id,
@@ -236,7 +237,7 @@ class SeedRunner:
         if not candidates:
             raise ValueError(f"NO_WRONG_ANSWER:{skill.skill_id}")
         for payload, code in candidates:
-            if reason_family(code, subject=subject) == skill.target_family:
+            if expert_reason_family(code, subject) == skill.target_family:
                 return payload, code
         return candidates[0]
 

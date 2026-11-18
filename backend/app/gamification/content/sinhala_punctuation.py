@@ -592,7 +592,6 @@ def opening_demonstration(skill_id: str, family: str) -> dict[str, object] | Non
 
 _PLACEMENT_KEYS = {"kind", "schema_version", "placements"}
 _SPAN_KEYS = {"kind", "schema_version", "opening_mark_token_id", "closing_mark_token_id", "start_boundary_id", "end_boundary_id"}
-_LINEBREAK_KEYS = {"kind", "schema_version", "word_token_id", "break_boundary_id", "mark_token_id"}
 SEMANTIC_TO_HYPOTHESIS = {
     "WRONG_MARK": None,  # refined per skill below
     "WRONG_BOUNDARY": None,
@@ -819,21 +818,6 @@ def worked_display(game: Mapping[str, object]) -> dict[str, object]:
 
 
 # --- Models ----------------------------------------------------------------------------------
-
-def infer_belief(error_code: str, *, sparse: bool = False, interaction_summary: Mapping[str, object] | None = None) -> dict[str, object]:
-    return common.infer_belief(error_code, MISCONCEPTIONS, catalogue_version=CATALOGUE_VERSION, sparse=sparse,
-                               interaction_summary=interaction_summary)
-
-
-_AFFINITY = {
-    "visual_guidance": {"sentence_end_internal_dot_confusion", "range_placement_confusion", "parenthetical_span_confusion"},
-    "worked_parallel_example": {"question_declaration_confusion", "exclamation_context_missed", "unsupported_exclamation_choice", "list_pause_comma_confusion"},
-    "step_by_step_guidance": {"missing_abbreviation_dots", "missing_or_reversed_paired_marks", "reporting_clause_inclusion", "quotation_boundary_confusion"},
-}
-
-
-def scaffold_decision(skill_id: str, condition: str, belief: Mapping[str, object], *, seed: int) -> dict[str, object]:
-    return common.scaffold_decision(skill_id, condition, belief, seed=seed, policy_version=POLICY_VERSION, affinity=_AFFINITY)
 
 
 # --- Support copy (draft, newly authored; not textbook language) ------------------------------

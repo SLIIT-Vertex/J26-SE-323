@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -323,87 +322,6 @@ def generate_item(
         error_codes={},
         game_data=game,
     )
-
-
-def infer_belief(
-    error_code: str, *, sparse: bool = False, evidence_quality: float = 1.0
-) -> dict[str, object]:
-    if not 0 <= evidence_quality <= 1:
-        raise ValueError("INVALID_EVIDENCE_QUALITY")
-    probabilities = {code: 0.02 for code in MISCONCEPTIONS}
-    probabilities["unknown_or_other"] = 0.20
-    if sparse or evidence_quality < 0.5:
-        probabilities["unknown_or_other"] = 0.78
-    elif error_code in probabilities and error_code != "unknown_or_other":
-        probabilities[error_code] = 0.62
-    total = sum(probabilities.values())
-    normalized = {key: value / total for key, value in probabilities.items()}
-    top = max(normalized, key=normalized.__getitem__)
-    entropy = -sum(value * math.log(value) for value in normalized.values() if value)
-    abstained = sparse or evidence_quality < 0.5 or top == "unknown_or_other"
-    return {
-        "probabilities": normalized,
-        "confidence": normalized[top],
-        "entropy": entropy,
-        "top_hypothesis": top,
-        "abstained": abstained,
-        "low_confidence": abstained or normalized[top] < 0.5,
-        "evidence_quality": evidence_quality,
-    }
-
-
-def scaffold_decision(
-    skill_id: str, condition: str, belief: dict[str, object], *, seed: int
-) -> dict[str, object]:
-    if skill_id not in SKILLS:
-        raise ValueError("NUMBER_PATTERN_SKILL_NOT_FOUND")
-    top = str(belief["top_hypothesis"])
-    abstained = bool(belief["abstained"])
-    affinity = {
-        "visual_guidance": {"wrong_direction", "difference_order_error", "skips_position"},
-        "worked_parallel_example": {
-            "difference_as_next_term",
-            "additive_multiplicative_confusion",
-            "wrong_multiplier",
-        },
-        "step_by_step_guidance": {
-            "inconsistent_rule",
-            "reapplies_rule_to_first_term",
-            "multiplies_once_then_adds",
-        },
-    }
-    candidates = []
-    for index, scaffold in enumerate(SCAFFOLDS):
-        candidates.append(
-            {
-                "scaffold_type": scaffold,
-                "eligible": True,
-                "exclusion_reasons": [],
-                "predicted_raw_ig": round(
-                    0.07 + index * 0.01 + (0.10 if top in affinity[scaffold] else 0), 6
-                ),
-                "uncertainty": 0.20 if abstained else 0.10,
-                "propensity": 1 / 3,
-                **SCAFFOLD_CATALOGUE[scaffold],
-            }
-        )
-    selected = (
-        "visual_guidance"
-        if condition == "baseline" or abstained
-        else str(max(candidates, key=lambda row: float(row["predicted_raw_ig"]))["scaffold_type"])
-    )
-    return {
-        "policy_version": POLICY_VERSION,
-        "skill_id": skill_id,
-        "condition": condition,
-        "mode": "deterministic_baseline" if condition == "baseline" else "proposed_shadow",
-        "uses_complete_model1_distribution": condition == "proposed",
-        "objective": "predicted_raw_independence_gain",
-        "reward_source": "valid_post_withdrawal_raw_ig_only",
-        "seed": seed,
-        "selected_action": selected,
-        "candidates": candidates,
-    }
 
 
 def package_hash() -> str:

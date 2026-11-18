@@ -1,10 +1,10 @@
-"""The rule-based reference fixtures are complete and still match what the rules return.
+"""The rule-based reference fixtures: the frozen record of what the earlier rules returned.
 
-They freeze today's Model 1 and Model 2 so the research models can be shown to reproduce them.
+They hold today's equivalence targets for the research models. The rules are gone, so the files
+are never rebuilt; these checks keep them complete and unchanged.
 """
 
 import hashlib
-import importlib.util
 import json
 from collections import Counter
 from pathlib import Path
@@ -12,10 +12,12 @@ from pathlib import Path
 import pytest
 
 from app.gamification.application.learning_flow_orchestration import GAME_FLOW_TYPES
-from app.gamification.modeling.support_selection.support_order import subject_of
+from app.gamification.modeling.support_selection.baseline_order import subject_of
 
-ROOT = Path(__file__).resolve().parents[3]
-TOOL = ROOT / "tools" / "gamification" / "learning_flow" / "freeze_rule_based_reference.py"
+FIXTURES = Path(__file__).resolve().parent / "fixtures"
+BELIEFS_FILE = "rule_based_beliefs.json"
+ORDERS_FILE = "rule_based_support_orders.json"
+MANIFEST_FILE = "rule_based_reference_manifest.json"
 SINHALA_CALLS = {
     "motor_corrections",
     "motor_cancelled_drags",
@@ -25,43 +27,29 @@ SINHALA_CALLS = {
 
 
 @pytest.fixture(scope="module")
-def tool():
-    spec = importlib.util.spec_from_file_location(TOOL.stem, TOOL)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-@pytest.fixture(scope="module")
-def stored(tool) -> dict[str, str]:
+def stored() -> dict[str, str]:
     return {
-        name: (tool.FIXTURE_DIRECTORY / name).read_text(encoding="utf-8")
-        for name in (tool.BELIEFS_FILE, tool.ORDERS_FILE)
+        name: (FIXTURES / name).read_text(encoding="utf-8") for name in (BELIEFS_FILE, ORDERS_FILE)
     }
 
 
 @pytest.fixture(scope="module")
-def beliefs(tool, stored):
-    return json.loads(stored[tool.BELIEFS_FILE])
+def beliefs(stored):
+    return json.loads(stored[BELIEFS_FILE])
 
 
 @pytest.fixture(scope="module")
-def orders(tool, stored):
-    return json.loads(stored[tool.ORDERS_FILE])
+def orders(stored):
+    return json.loads(stored[ORDERS_FILE])
 
 
-def test_fixtures_regenerate_byte_for_byte(tool, stored) -> None:
-    assert tool.build_fixtures() == stored
-
-
-def test_manifest_hashes_the_stored_fixtures(tool, stored) -> None:
-    manifest = json.loads((tool.FIXTURE_DIRECTORY / tool.MANIFEST_FILE).read_text("utf-8"))
+def test_manifest_hashes_the_stored_fixtures(stored) -> None:
+    manifest = json.loads((FIXTURES / MANIFEST_FILE).read_text("utf-8"))
     assert manifest["fixtures"] == {
         name: hashlib.sha256(text.encode("utf-8")).hexdigest() for name, text in stored.items()
     }
-    assert manifest["rule_sources"]
-    assert all((ROOT / path).is_file() for path in manifest["rule_sources"])
+    # The rule sources they were frozen from, recorded by commit and hash.
+    assert manifest["rule_sources"] and manifest["source_commit"]
 
 
 def test_every_registered_game_is_frozen(beliefs, orders) -> None:

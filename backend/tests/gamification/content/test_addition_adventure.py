@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 import pytest
 
 from app.gamification.content.addition_adventure import (
@@ -20,8 +18,6 @@ from app.gamification.content.addition_adventure import (
     cumulative_totals,
     expanded_form,
     generate_item,
-    infer_belief,
-    scaffold_decision,
     table_total,
     validate_constructed_response,
 )
@@ -151,34 +147,3 @@ def test_direct_manipulation_response_is_scored_from_server_item(skill) -> None:
         list_field = next(key for key in ("totals", "selected_cells") if key in malformed)
         malformed[list_field] = [*malformed[list_field], *malformed[list_field][:1]]
     assert validate_constructed_response(item, malformed)[0] is False
-
-
-def test_model1_normalizes_unknown_and_abstains_for_sparse_evidence() -> None:
-    belief = infer_belief("carry_omitted", sparse=False, evidence_quality=0.9)
-    assert math.isclose(sum(belief["probabilities"].values()), 1.0)
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert belief["top_hypothesis"] == "carry_omitted"
-    assert not belief["abstained"]
-
-    sparse = infer_belief("carry_omitted", sparse=True, evidence_quality=0.2)
-    assert sparse["top_hypothesis"] == "unknown_or_other"
-    assert sparse["abstained"]
-    assert sparse["low_confidence"]
-
-
-def test_model2_isolated_baseline_logs_all_candidates_and_safe_fallback() -> None:
-    belief = infer_belief("carry_omitted", evidence_quality=1.0)
-    baseline = scaffold_decision("G5-MAT-C06-L01-O01", "baseline", belief, seed=2)
-    proposed = scaffold_decision("G5-MAT-C06-L01-O01", "proposed", belief, seed=2)
-    assert baseline["uses_complete_model1_distribution"] is False
-    assert proposed["uses_complete_model1_distribution"] is True
-    assert len(proposed["candidates"]) == 3
-    assert math.isclose(sum(row["propensity"] for row in proposed["candidates"]), 1.0)
-    assert {row["scaffold_type"] for row in proposed["candidates"]} == set(SCAFFOLDS)
-    assert proposed["objective"] == "predicted_raw_independence_gain"
-    assert proposed["reward_source"] == "valid_post_withdrawal_raw_ig_only"
-
-    sparse = infer_belief("unknown_or_other", sparse=True, evidence_quality=0.0)
-    fallback = scaffold_decision("G5-MAT-C06-L01-O01", "proposed", sparse, seed=2)
-    assert fallback["mode"] == "proposed_shadow_conservative_fallback"
-    assert fallback["selected_action"] == "visual_guidance"

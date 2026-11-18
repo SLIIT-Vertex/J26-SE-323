@@ -17,8 +17,9 @@ choose the order (Model 2 does), and does not calculate Model 3 (the measurement
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
+from typing import Protocol
 from uuid import uuid4
 
 from app.gamification.application.support_builders import (
@@ -28,9 +29,18 @@ from app.gamification.application.support_builders import (
     SupportPlan,
 )
 from app.gamification.content.support_types import ENGLISH_TAG_KEYS
-from app.gamification.modeling.support_selection.support_order import SupportOrderDecision
 
 SUPPORT_ROUND_SCHEMA_VERSION = "support-round-v1"
+
+
+class ChosenHelpOrder(Protocol):
+    """The help order an episode runs: the bandit's, or the comparison group's fixed order."""
+
+    @property
+    def order(self) -> Sequence[str]: ...
+
+    @property
+    def first(self) -> str: ...
 
 
 class SupportRoundError(ValueError):
@@ -78,7 +88,7 @@ class SupportRoundService:
     def start(
         self,
         state: dict[str, object],
-        decision: SupportOrderDecision,
+        decision: ChosenHelpOrder,
         first_plan: SupportPlan,
         at: datetime,
     ) -> None:

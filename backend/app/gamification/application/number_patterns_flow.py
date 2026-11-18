@@ -19,9 +19,7 @@ from app.gamification.content.number_patterns import (
     NumberPatternItem,
     generate_item,
     generate_simpler_item,
-    infer_belief,
     package_hash,
-    scaffold_decision,
     validate_constructed_response,
 )
 
@@ -49,8 +47,6 @@ class NumberPatternsFlow(AreaGameFlow):
     skills = SKILLS
     generate_item = staticmethod(generate_item)
     generate_simpler_item = staticmethod(generate_simpler_item)
-    infer_belief = staticmethod(infer_belief)
-    scaffold_decision = staticmethod(scaffold_decision)
     package_hash = staticmethod(package_hash)
     validate_constructed_response = staticmethod(validate_constructed_response)
     missing_skill_error = "NUMBER_PATTERN_SKILL_NOT_FOUND"
@@ -103,21 +99,6 @@ class NumberPatternsFlow(AreaGameFlow):
             ):
                 raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
         return summary
-
-    def _infer_belief(
-        self,
-        error_code: str,
-        *,
-        response_time_ms: int | None,
-        interaction_summary: Mapping[str, object] | None,
-    ) -> dict[str, object]:
-        summary = interaction_summary or {}
-        quality = float(summary.get("evidence_quality", 0.35 if not summary else 0.8))
-        return self.infer_belief(
-            error_code,
-            sparse=response_time_ms is None and not summary,
-            evidence_quality=max(0.0, min(1.0, quality)),
-        )
 
     @staticmethod
     def _missingness(

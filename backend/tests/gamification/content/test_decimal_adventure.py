@@ -4,12 +4,10 @@ import pytest
 
 from app.gamification.content.decimal_adventure import (
     ATOMIC_SKILLS,
-    MISCONCEPTIONS,
     correct_response,
     decimal_to_tenths,
     generate_item,
     generate_reading_matches,
-    infer_belief,
     tenths_to_decimal,
     validate_constructed_response,
     validate_selected_sections,
@@ -67,9 +65,6 @@ def test_fraction_structure_and_first_error_are_authoritative():
     correct, error, normalized = validate_constructed_response(item, response)
     assert correct is False and error == "denominator_hundred"
     assert normalized["_feedback_column"] == "fraction"
-    belief = infer_belief(error)
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert sum(belief["probabilities"].values()) == pytest.approx(1)
 
 
 def test_public_items_have_no_answer_fields_and_parallel_revisions_are_immutable():

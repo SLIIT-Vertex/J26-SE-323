@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from itertools import pairwise
 
 import pytest
@@ -8,12 +7,8 @@ import pytest
 from app.gamification.content.number_patterns import (
     ATOMIC_SKILLS,
     EQUIVALENCE_VERSION,
-    MISCONCEPTIONS,
-    SCAFFOLDS,
     TEXTBOOK_FAMILIES,
     generate_item,
-    infer_belief,
-    scaffold_decision,
     validate_constructed_response,
 )
 
@@ -72,16 +67,3 @@ def test_decreasing_and_multiplier_limits_match_the_photographs() -> None:
         assert all(left > right >= 0 for left, right in pairwise(values))
         assert descending.game_data["rule"] in {2, 4}
     assert {row.rule for row in ATOMIC_SKILLS if row.operation == "multiply"} == {2, 3, 4, 5}
-
-
-def test_models_record_complete_catalogues_and_isolate_baseline() -> None:
-    belief = infer_belief("wrong_multiplier", evidence_quality=0.9)
-    assert math.isclose(sum(belief["probabilities"].values()), 1.0)
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert belief["top_hypothesis"] == "wrong_multiplier"
-    baseline = scaffold_decision(ATOMIC_SKILLS[2].skill_id, "baseline", belief, seed=2)
-    proposed = scaffold_decision(ATOMIC_SKILLS[2].skill_id, "proposed", belief, seed=2)
-    assert baseline["uses_complete_model1_distribution"] is False
-    assert proposed["uses_complete_model1_distribution"] is True
-    assert {row["scaffold_type"] for row in proposed["candidates"]} == set(SCAFFOLDS)
-    assert proposed["reward_source"] == "valid_post_withdrawal_raw_ig_only"

@@ -164,18 +164,7 @@ def test_vowel_mode_lets_two_papili_share_one_destination() -> None:
         p.validate_constructed_response(item, answer)
 
 
-def test_model1_distribution_normalizes_and_falls_back_safely() -> None:
-    belief = p.infer_belief("short_long_confusion")
-    assert abs(sum(belief["probabilities"].values()) - 1) < 1e-9
-    assert set(belief["probabilities"]) == set(p.MISCONCEPTIONS)
-    assert belief["top_hypothesis"] == "short_long_confusion"
-    sparse = p.infer_belief("short_long_confusion", sparse=True)
-    assert sparse["top_hypothesis"] == p.UNKNOWN and sparse["abstained"]
-    motor = p.infer_belief("short_long_confusion", interaction_summary={"correction_count": 5})
-    assert motor["motor_difficulty_suspected"] and motor["low_confidence"]
-    assert motor["confidence"] < belief["confidence"]
-    clipped = p.infer_belief("sign_name_confusion", interaction_summary={"rendering_issue_reported": True})
-    assert clipped["top_hypothesis"] == p.UNKNOWN
+def test_unknown_code_maps_to_the_shared_code() -> None:
     assert p.UNKNOWN_CODE_MAPPING["shared_code"] == "unknown_or_other"
 
 

@@ -1,20 +1,13 @@
 from __future__ import annotations
 
-import math
-
 import pytest
 
 from app.gamification.content.subtraction_adventure import (
     ATOMIC_SKILLS,
     EQUIVALENCE_VERSION,
-    MISCONCEPTIONS,
-    SCAFFOLDS,
     TEXTBOOK_PAIRS,
     analyze_subtraction,
-    apply_interaction_evidence,
     generate_item,
-    infer_belief,
-    scaffold_decision,
     validate_constructed_response,
     worked_steps,
 )
@@ -177,23 +170,3 @@ def test_constructed_payloads_reject_malformed_evidence() -> None:
     assert validate_constructed_response(story, total)[1] == "calculates_total_for_difference"
     short = _expanded(expanded, subtrahend_terms=list(expanded.game_data["subtrahend_terms"])[:-1])
     assert validate_constructed_response(expanded, short)[0] is False
-
-
-def test_public_belief_catalogue_and_support_defaults() -> None:
-    belief = infer_belief("fails_to_exchange", evidence_quality=0.9)
-    assert math.isclose(sum(belief["probabilities"].values()), 1)
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert belief["top_hypothesis"] == "fails_to_exchange"
-    refined = apply_interaction_evidence("unknown_or_other", {"started_from_ones": False})
-    assert refined == "starts_from_left"
-    assert apply_interaction_evidence("fails_to_exchange", {"started_from_ones": False}) == "fails_to_exchange"
-    for skill in ATOMIC_SKILLS:
-        decision = scaffold_decision(skill.skill_id, "baseline", belief, seed=3)
-        proposed = scaffold_decision(skill.skill_id, "proposed", belief, seed=3)
-        assert decision["uses_complete_model1_distribution"] is False
-        assert proposed["uses_complete_model1_distribution"] is True
-        assert {row["scaffold_type"] for row in proposed["candidates"]} == set(SCAFFOLDS)
-        if skill.skill_id in {"G5-MAT-C07-L01-O01", "G5-MAT-C07-L01-O02"}:
-            assert decision["selected_action"] == "worked_parallel_example"
-        else:
-            assert decision["selected_action"] == "visual_guidance"

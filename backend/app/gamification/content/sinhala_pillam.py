@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import random
 import unicodedata
 from collections import Counter
@@ -1138,104 +1137,8 @@ def feedback_si(game: Mapping[str, object], correct: bool) -> str:
 
 # --- Model 1 ---------------------------------------------------------------------------------
 
-_MOTOR_CORRECTIONS = 3
-_MOTOR_CANCELS = 2
-
-
-def infer_belief(
-    error_code: str,
-    *,
-    sparse: bool = False,
-    interaction_summary: Mapping[str, object] | None = None,
-) -> dict[str, object]:
-    """A full normalized distribution over the catalogue, with a safe unknown fallback.
-
-    Motor difficulty (many corrected drags or cancelled drags) and a reported clipped glyph are
-    not linguistic evidence: they move mass to ``unknown_or_other`` and are recorded as flags.
-    """
-
-    summary = interaction_summary or {}
-    motor = (
-        int(summary.get("correction_count", 0) or 0) >= _MOTOR_CORRECTIONS
-        or int(summary.get("cancelled_drag_count", 0) or 0) >= _MOTOR_CANCELS
-    )
-    rendering = bool(summary.get("rendering_issue_reported", False))
-    primary = error_code if error_code in MISCONCEPTIONS else UNKNOWN
-    weights = {code: 1.0 for code in MISCONCEPTIONS}
-    if sparse or rendering:
-        weights[UNKNOWN] = 8.0
-    elif primary != UNKNOWN:
-        weights[primary] = 3.0 if motor else 9.0
-        weights[UNKNOWN] = 3.0 if motor else 1.5
-    else:
-        weights[UNKNOWN] = 6.0
-    total = sum(weights.values())
-    probabilities = {code: weight / total for code, weight in weights.items()}
-    top = max(probabilities, key=probabilities.__getitem__)
-    confidence = probabilities[top]
-    entropy = -sum(p * math.log(p) for p in probabilities.values() if p > 0)
-    return {
-        "probabilities": probabilities,
-        "unknown_probability": probabilities[UNKNOWN],
-        "top_hypothesis": top,
-        "confidence": confidence,
-        "entropy": entropy,
-        "abstained": top == UNKNOWN,
-        "low_confidence": sparse or rendering or motor or confidence < 0.5,
-        "motor_difficulty_suspected": motor,
-        "rendering_failure_suspected": rendering,
-        "evidence_window": "unsupported_before_only",
-        "unknown_code_mapping": dict(UNKNOWN_CODE_MAPPING),
-        "catalogue_version": CATALOGUE_VERSION,
-    }
-
 
 # --- Model 2 reference decision ----------------------------------------------------------------
-
-_AFFINITY = {
-    "visual_guidance": {"sign_name_confusion", "papili_allograph_confusion", "gaeta_single_double_confusion"},
-    "worked_parallel_example": {"wrong_vowel_association", "kombu_family_confusion", "short_long_confusion"},
-    "step_by_step_guidance": {"compound_component_missing", "compound_component_extra"},
-}
-
-
-def scaffold_decision(
-    skill_id: str, condition: str, belief: Mapping[str, object], *, seed: int
-) -> dict[str, object]:
-    """Predicted raw IG and uncertainty for every candidate; selection is fixed in baseline."""
-
-    top = str(belief.get("top_hypothesis"))
-    abstained = bool(belief.get("abstained"))
-    candidates = [
-        {
-            "scaffold_type": scaffold,
-            "eligible": True,
-            "exclusion_reasons": [],
-            "predicted_raw_ig": round(0.06 + (0.08 if top in _AFFINITY[scaffold] else 0.0), 6),
-            "uncertainty": 0.2 if abstained else 0.1,
-            "propensity": 1.0 if condition == "baseline" and scaffold == "visual_guidance" else None,
-        }
-        for scaffold in SCAFFOLDS
-    ]
-    if condition == "baseline":
-        selected, mode = "visual_guidance", "deterministic_baseline"
-    elif abstained:
-        selected, mode = "visual_guidance", "proposed_shadow_conservative_fallback"
-    else:
-        selected = max(candidates, key=lambda c: float(c["predicted_raw_ig"]))["scaffold_type"]
-        mode = "proposed_shadow"
-    return {
-        "policy_version": POLICY_VERSION,
-        "skill_id": skill_id,
-        "condition": condition,
-        "mode": mode,
-        "objective": "predicted_raw_independence_gain",
-        "uses_complete_model1_distribution": condition != "baseline",
-        "seed": seed,
-        "exploration": None,
-        "selected_action": selected,
-        "candidates": candidates,
-    }
 
 
 # --- Support copy (newly authored draft, not textbook language) --------------------------------

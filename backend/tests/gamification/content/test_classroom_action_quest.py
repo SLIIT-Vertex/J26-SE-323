@@ -3,7 +3,6 @@ from app.gamification.content.classroom_action_quest import (
     SKILLS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -44,10 +43,3 @@ def test_wrong_landmark_is_structured_misconception_evidence() -> None:
     correct, error, _ = validate_constructed_response(item, response)
     assert correct is False
     assert error == "wall_vs_blackboard_noun_confusion"
-
-
-def test_belief_is_normalized_and_retains_unknown() -> None:
-    belief = infer_belief("bend_vs_sit_confusion")
-    probabilities = belief["probabilities"]
-    assert "unknown_or_other" in probabilities
-    assert abs(sum(probabilities.values()) - 1.0) < 1e-9

@@ -68,6 +68,29 @@ def test_every_frozen_belief_is_reproduced(models) -> None:
         assert belief["reason_family"] == expected_family["reason_family"]
 
 
+def test_every_area_reads_listed_and_unlisted_codes_and_flags_thin_evidence(models) -> None:
+    """Each game reads a listed mistake as a full distribution over its codes, an unlisted one as
+    ``unknown_or_other``, and an answer with no timing as uncertain (Sinhala ignores timing)."""
+
+    for area_id, area in AREAS.items():
+        codes = area["codes"]
+        plain = "timed" if "timed" in area["inputs"] else "no_interaction_signal"
+        listed = next(code for code in codes if code != "unknown_or_other")
+        readings = {
+            code: _predict(models[area_id], {"area_id": area_id, "error_code": code, "input": plain})
+            for code in (listed, "code_not_in_any_catalogue")
+        }
+        for belief in readings.values():
+            assert set(belief["probabilities"]) == set(codes), area_id
+            assert sum(belief["probabilities"].values()) == pytest.approx(1)
+        assert _model1_label(readings["code_not_in_any_catalogue"]) == "unknown_or_other", area_id
+        if area["subject"] != "SIN":
+            thin = _predict(
+                models[area_id], {"area_id": area_id, "error_code": listed, "input": "untimed"}
+            )
+            assert _model1_uncertain(thin), area_id
+
+
 def test_sinhala_ignores_response_time(models) -> None:
     for record in BELIEFS["game_belief"]:
         if record["input"] != "no_interaction_signal":

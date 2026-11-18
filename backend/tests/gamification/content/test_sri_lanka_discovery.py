@@ -1,11 +1,9 @@
 import pytest
 
 from app.gamification.content.sri_lanka_discovery import (
-    MISCONCEPTIONS,
     SKILLS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -45,11 +43,3 @@ def test_wrong_group_is_structured_evidence() -> None:
     correct, error, _ = validate_constructed_response(item, response)
     assert correct is False
     assert error == "place_vs_cultural_object_confusion"
-
-
-def test_belief_is_normalized_and_retains_unknown() -> None:
-    belief = infer_belief("national_category_vs_exemplar_confusion")
-    probabilities = belief["probabilities"]
-    assert set(probabilities) == set(MISCONCEPTIONS)
-    assert abs(sum(probabilities.values()) - 1.0) < 1e-9
-    assert "unknown_or_other" in probabilities

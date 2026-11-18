@@ -7,6 +7,7 @@ from. They were taken from the rule-based games and no teacher has reviewed them
 import hashlib
 import json
 from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 
 from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
@@ -39,3 +40,21 @@ def read_verified_expert_file(
     if actual != expected:
         raise ValueError(f"{path} does not match its manifest hash")
     return json.loads(content), actual
+
+
+@cache
+def _reason_families() -> Mapping[str, object]:
+    manifest = read_expert_manifest(EXPERT_MODEL_DATA_DIRECTORY)
+    families, _sha256 = read_verified_expert_file(
+        EXPERT_MODEL_DATA_DIRECTORY, manifest, "reason_families.json"
+    )
+    assert isinstance(families, Mapping)
+    return families
+
+
+def expert_reason_family(label: str | None, subject: str) -> str:
+    """A Model 1 label's reason family, from the checked expert data both models read."""
+
+    table = _reason_families()["subjects"][subject]  # type: ignore[index]
+    row = table["labels"].get(label or "")
+    return str((row or table["missing_label"])["reason_family"])

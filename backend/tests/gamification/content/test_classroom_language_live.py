@@ -1,11 +1,9 @@
 import pytest
 
 from app.gamification.content.classroom_language_live import (
-    MISCONCEPTIONS,
     SOURCE_GROUPS,
     correct_response,
     generate_item,
-    infer_belief,
     public_game_data,
     validate_constructed_response,
 )
@@ -52,13 +50,9 @@ def test_command_activity_is_fictional_and_uses_opaque_scene_state():
     assert not ({"camera", "microphone", "motion", "gaze"} & public.keys())
 
 
-def test_strict_schema_and_sparse_normalized_belief():
+def test_strict_schema():
     item = generate_item("G5-ENG-CLASS-QUESTION-04", role="unsupported_before", seed=17)
     malformed = correct_response(item.game_data)
     malformed["unexpected"] = True
     with pytest.raises(ValueError, match="MALFORMED_CLASSROOM_LANGUAGE_RESPONSE"):
         validate_constructed_response(item, malformed)
-    belief = infer_belief("unregistered", sparse=True)
-    assert belief["predicted_label"] == "unknown_or_other"
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert sum(belief["probabilities"].values()) == pytest.approx(1.0)

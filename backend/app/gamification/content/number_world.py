@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import math
 import random
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -491,93 +490,6 @@ def generate_item(
         error_codes=codes,
         game_data=game_data,
     )
-
-
-def infer_belief(error_code: str, *, sparse: bool = False) -> dict[str, object]:
-    probabilities = {code: 0.03 for code in MISCONCEPTIONS}
-    probabilities["unknown_or_other"] = 0.20 if not sparse else 0.73
-    if not sparse and error_code in probabilities and error_code != "unknown_or_other":
-        probabilities[error_code] = 0.53
-    total = sum(probabilities.values())
-    normalized = {key: value / total for key, value in probabilities.items()}
-    top = max(normalized, key=normalized.__getitem__)
-    entropy = -sum(value * math.log(value) for value in normalized.values() if value)
-    return {
-        "probabilities": normalized,
-        "confidence": normalized[top],
-        "entropy": entropy,
-        "top_hypothesis": top,
-        "abstained": sparse or top == "unknown_or_other",
-        "low_confidence": sparse or normalized[top] < 0.5,
-    }
-
-
-_SCAFFOLD_BASE_PREDICTION = 0.08
-_SCAFFOLD_INDEX_INCREMENT = 0.01
-_SCAFFOLD_AFFINITY_BONUS = 0.09
-_SCAFFOLD_UNCERTAINTY_ABSTAINED = 0.18
-_SCAFFOLD_UNCERTAINTY_NORMAL = 0.09
-_SCAFFOLD_UNIFORM_PROPENSITY = 1 / 3
-
-
-def scaffold_decision(
-    skill_id: str, condition: str, belief: dict[str, object], *, seed: int
-) -> dict[str, object]:
-    top = str(belief["top_hypothesis"])
-    abstained = bool(belief["abstained"])
-    affinity = {
-        "visual_guidance": {
-            "place_shift_left",
-            "place_shift_right",
-            "zero_placeholder_omitted",
-            "first_visible_digit_only",
-        },
-        "worked_parallel_example": {
-            "digit_as_represented_value",
-            "expanded_term_omitted_or_misplaced",
-        },
-        "step_by_step_guidance": {
-            "counts_places_from_wrong_direction",
-            "leading_zero_first",
-            "ascending_descending_reversed",
-        },
-    }
-    candidates = []
-    for index, scaffold in enumerate(SCAFFOLDS):
-        predicted = _SCAFFOLD_BASE_PREDICTION + index * _SCAFFOLD_INDEX_INCREMENT + (_SCAFFOLD_AFFINITY_BONUS if top in affinity[scaffold] else 0.0)
-        candidates.append(
-            {
-                "scaffold_type": scaffold,
-                "eligible": True,
-                "exclusion_reasons": [],
-                "predicted_raw_ig": round(predicted, 6),
-                "uncertainty": _SCAFFOLD_UNCERTAINTY_ABSTAINED if abstained else _SCAFFOLD_UNCERTAINTY_NORMAL,
-                "propensity": _SCAFFOLD_UNIFORM_PROPENSITY,
-            }
-        )
-    if condition == "baseline":
-        selected = "visual_guidance"
-        used_model1 = False
-        mode = "deterministic_baseline"
-    elif abstained:
-        selected = "visual_guidance"
-        used_model1 = True
-        mode = "proposed_shadow_conservative_fallback"
-    else:
-        selected = max(candidates, key=lambda row: float(row["predicted_raw_ig"]))["scaffold_type"]
-        used_model1 = True
-        mode = "proposed_shadow"
-    return {
-        "policy_version": POLICY_VERSION,
-        "skill_id": skill_id,
-        "condition": condition,
-        "mode": mode,
-        "uses_complete_model1_distribution": used_model1,
-        "objective": "predicted_raw_independence_gain",
-        "seed": seed,
-        "selected_action": selected,
-        "candidates": candidates,
-    }
 
 
 def package_hash() -> str:

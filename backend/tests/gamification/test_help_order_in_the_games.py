@@ -36,11 +36,8 @@ from app.gamification.modeling.support_selection.baseline_order import (
     BaselineOrder,
     fixed_order,
 )
+from app.gamification.modeling.support_selection.game_bandit import loop_credit
 from app.gamification.modeling.support_selection.game_bandit_ledger import DecisionSnapshot
-from app.gamification.modeling.support_selection.support_order import (
-    ORDER_POLICY_VERSION,
-    credited_support,
-)
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 from tests.gamification.helpers.support_loop_helpers import wrong_answer
@@ -269,7 +266,8 @@ def test_a_decision_snapshot_commits_and_rolls_back_with_its_episode(monkeypatch
 
 
 def test_the_baseline_module_reproduces_every_frozen_baseline_record() -> None:
-    assert BASELINE_RECORD_VERSION == ORDER_POLICY_VERSION
+    # The version every frozen baseline record carries.
+    assert BASELINE_RECORD_VERSION == ORDERS["order_policy_version"] == "support-order-v3"
     checked = 0
     for decision in ORDERS["decisions"]:
         if decision["condition"] != "baseline":
@@ -290,7 +288,7 @@ def test_credited_help_matches_the_ledger_rule() -> None:
     store = InMemoryGameHelpBanditStore.with_expert_start("MAT")
     _, orchestrator, _ = _world(store)
     first, _ = _helped(_seed(orchestrator), "proposed")
-    winner, failed = credited_support(first)
+    winner, failed = loop_credit(first)
     credited = [
         entry.support
         for _, entry, _ in store.ledger(store.approved("MAT").model_version_id)

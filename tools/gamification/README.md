@@ -133,32 +133,8 @@ are never committed. The builder never changes a review status.
 
 ## Rule-based reference fixtures
 
-`learning_flow/freeze_rule_based_reference.py` freezes what today's rule-based Model 1 and Model 2
-return for every game in `GAME_FLOW_TYPES`, so a replacement model can be shown to reproduce them
-before it learns anything new. It writes three files to `backend/tests/gamification/fixtures/`:
-
-- `rule_based_beliefs.json`: each game's `infer_belief` for every code it lists and one it does
-  not, the belief the game really builds for every kind of input it can receive (through its own
-  belief hook and the learner prior), and the learner prior over fixed answer histories;
-- `rule_based_support_orders.json`: the reason family of every label, and the help-order record
-  for each subject, reason family, Learning State reading, help history and set of drawable
-  helps, with the order each Sinhala package really delivers;
-- `rule_based_reference_manifest.json`: the source commit, whether the worktree was dirty, and
-  SHA-256 hashes of the fixtures and of the rule source files.
-
-```bash
-PYTHONPATH=backend python3 tools/gamification/learning_flow/freeze_rule_based_reference.py
-PYTHONPATH=backend python3 tools/gamification/learning_flow/freeze_rule_based_reference.py --check
-```
-
-The fixtures hold no commit hash, so a second run writes the same bytes; `--check` fails if they
-differ from a fresh build. `test_rule_based_reference_fixtures.py` runs the same comparison.
-
-`learning_flow/replay_stored_rule_decisions.py` replays every stored episode in the configured
-database through the same rules and prints how many Model 1 beliefs and Model 2 orders match,
-grouped by subject, environment and version. It reads in a read-only transaction and prints counts
-only:
-
-```bash
-PYTHONPATH=backend python3 tools/gamification/learning_flow/replay_stored_rule_decisions.py
-```
+`backend/tests/gamification/fixtures/rule_based_*.json` are the frozen record of what the earlier
+rule-based Model 1 and Model 2 returned for every game, from the commit named in
+`rule_based_reference_manifest.json`. The research models were shown to reproduce them before they
+learned anything new. The rules and the tool that froze them are gone, so the files are never
+regenerated; `test_rule_based_reference_fixtures.py` keeps them complete and checks their hashes.

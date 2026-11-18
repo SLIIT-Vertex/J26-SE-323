@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-import math
-
 import pytest
 
 from app.gamification.content.fraction_adventure import (
     ATOMIC_SKILLS,
-    MISCONCEPTIONS,
     generate_item,
-    infer_belief,
     validate_constructed_response,
 )
 
@@ -84,9 +80,3 @@ def test_strict_payload_rejects_unknown_fields_and_discriminators(mutation) -> N
     payload = response_for(item) | mutation
     with pytest.raises(ValueError):
         validate_constructed_response(item, payload)
-
-
-def test_complete_normalized_misconception_distribution() -> None:
-    belief = infer_belief("unequal_group_sizes", evidence_quality=0.9)
-    assert set(belief["probabilities"]) == set(MISCONCEPTIONS)
-    assert math.isclose(sum(belief["probabilities"].values()), 1.0)

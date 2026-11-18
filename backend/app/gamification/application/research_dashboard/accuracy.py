@@ -10,8 +10,8 @@ from app.gamification.modeling.support_selection.game_bandit import (
     PROVISIONAL_FAILED_ROUND_WEIGHT,
     PROVISIONAL_UNINFORMED_PRECISION,
     load_help_order_expert_data,
+    loop_credit,
 )
-from app.gamification.modeling.support_selection.support_order import credited_support
 
 MIN_SESSIONS = 20
 CALIBRATION_PAIRS = 30
@@ -250,7 +250,7 @@ def accuracy_report(runs, *, all_runs=None, help_order=None):
         mode = decision.get("support_selection_mode")
         if mode in {"learned_post_withdrawal_preference", "bandit_greedy"}:
             learned.append(success)
-        winner, failed = credited_support(s)
+        winner, failed = loop_credit(s)
         # The help-order bandit's prediction for the help the fair test credits, against the gain.
         predicted = dict(decision.get("predicted_gain") or {}).get(winner)
         gain = (s.get("measurement") or {}).get("raw_independence_gain")
