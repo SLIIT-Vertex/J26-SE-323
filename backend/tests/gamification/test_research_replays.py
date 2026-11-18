@@ -254,3 +254,25 @@ def test_simulators_no_longer_send_an_evidence_quality(played) -> None:
     rng = random.Random(1)
     assert "evidence_quality" not in simulated_cohort._summary(flow, rng)
     assert "evidence_quality" not in SeedRunner._summary(flow, rng)
+
+
+def test_an_approval_refreshes_the_cached_accuracy_report() -> None:
+    engine = create_engine("sqlite+pysqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    session = Session(engine)
+    now = datetime.now(UTC)
+    session.add(
+        LearnerModel(id=LEARNER, grade=5, preferred_language="si", created_at=now, updated_at=now)
+    )
+    session.commit()
+    service = ResearchDashboardService(SqlAlchemyResearchDashboardReader(session))
+
+    def approved():
+        evidence_rows = service.accuracy(LEARNER)["models"][1]["evidence"]
+        return {row["subject"]: row["approved"] for row in evidence_rows}
+
+    assert approved() == {"MAT": False, "ENG": False, "SIN": False}
+    approve_expert_start(session, "MAT")
+    # No game changed, yet the report follows the approval.
+    assert approved() == {"MAT": True, "ENG": False, "SIN": False}
+    session.close()

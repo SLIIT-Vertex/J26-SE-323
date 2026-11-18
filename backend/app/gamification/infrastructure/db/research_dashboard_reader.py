@@ -14,8 +14,10 @@ from app.gamification.infrastructure.db.game_help_bandit_store import (
 )
 from app.gamification.infrastructure.db.learning_flow_store import digest
 from app.gamification.infrastructure.db.models import (
+    GameHelpBanditStateModel,
     LearningFlowEpisodeRunModel,
     LearningFlowSupportRoundModel,
+    ModelVersionModel,
 )
 from app.shared.learner.model import LearnerModel
 
@@ -92,6 +94,26 @@ class SqlAlchemyResearchDashboardReader:
         """What one episode taught the help-order bandit, in applied order."""
 
         return SqlAlchemyGameHelpBanditStore(self.session).ledger_for_episode(episode_id)
+
+    def help_order_version(self) -> tuple[tuple[str, str, str, int], ...]:
+        """Every help-order artifact's approval and ledger position: enough to tell whether an
+        approval changed, without loading any artifact."""
+
+        rows = self.session.execute(
+            select(
+                ModelVersionModel.model_name,
+                ModelVersionModel.artifact_sha256,
+                ModelVersionModel.approval_status,
+                GameHelpBanditStateModel.ledger_position,
+            )
+            .outerjoin(
+                GameHelpBanditStateModel,
+                GameHelpBanditStateModel.model_version_id == ModelVersionModel.id,
+            )
+            .where(ModelVersionModel.model_name.like("game-help-order-bandit:%"))
+            .order_by(ModelVersionModel.model_name, ModelVersionModel.artifact_sha256)
+        ).all()
+        return tuple((str(r[0]), str(r[1]), str(r[2]), int(r[3] or 0)) for r in rows)
 
     def help_order_subjects(self) -> dict[str, dict[str, object]]:
         """Each subject's approved help-order bandit: its parameters, ledger and decisions."""

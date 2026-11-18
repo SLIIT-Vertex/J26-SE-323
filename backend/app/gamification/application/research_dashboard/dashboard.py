@@ -355,9 +355,10 @@ class ResearchDashboardService:
 
     def accuracy(self, learner_id):
         # The report follows the database: it is rebuilt whenever any stored game (this child's
-        # or another's, which the population checks use) has changed, and reused only while none
-        # has.
+        # or another's, which the population checks use) has changed, or a help-order artifact
+        # was approved, and reused only while neither has.
         versions = getattr(self._reader, "run_versions", None)
+        help_order_version = getattr(self._reader, "help_order_version", None)
         fingerprint = (
             versions()
             if versions
@@ -366,7 +367,11 @@ class ResearchDashboardService:
                 for r in self._reader.all_runs()
             )
         )
-        key = (str(learner_id), fingerprint)
+        key = (
+            str(learner_id),
+            fingerprint,
+            help_order_version() if help_order_version else (),
+        )
         cached = _ACCURACY_CACHE.get(key)
         if cached:
             return cached[1]
