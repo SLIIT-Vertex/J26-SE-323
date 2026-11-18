@@ -91,7 +91,7 @@ the event order is complete.
 | Model | Question | Output |
 | --- | --- | --- |
 | Model 1 | Why is this learner likely struggling? | A distribution over the reviewed catalogue, including `unknown_or_other`, plus confidence and the evidence used |
-| Model 2 | Which eligible help should be shown, and in which order? | The help order for the episode, why the first help leads (Model 1 reason, learning state, or a learned post-withdrawal preference), and the decision record. The pilot API's bandit also stores a predicted reward and uncertainty for every eligible scaffold |
+| Model 2 | Which eligible help should be shown, and in which order? | The help order for the episode and its decision record: each drawable help's predicted valid Independence Gain, the bandit artifact hash and ledger position it decided with, and the Model 1 reason family and Learning State it saw. Without an approved artifact the fixed order is used (`no_approved_policy`). The pilot API's bandit also stores a predicted reward and uncertainty for every eligible scaffold |
 | Model 3 | Did unsupported performance improve after support was removed? | Validity, the before and after proportions, raw Independence Gain, and whether the policy may update |
 
 Model 3 is the measurement engine. Supported correctness is not its reward.

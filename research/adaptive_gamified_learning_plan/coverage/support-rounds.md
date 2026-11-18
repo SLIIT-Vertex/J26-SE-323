@@ -1,8 +1,10 @@
 # Multi-help support rounds: Mathematics and English
 
-Development only. Nothing here is educator-reviewed, every episode stays
-`model_ingestion_eligible: false`, and Sinhala and Environmental Studies games keep their single-help
-flow in this pass.
+Development only. Nothing here is educator-reviewed. An answer is released to Knowledge Tracing
+only from a pilot episode of a learner with research consent. The three Sinhala games run the same
+loop with their own authored help order (visual, worked, guided;
+`backend/app/gamification/application/engine/sinhala_area_flow.py`, `AUTHORED_SEQUENCE`) and are
+not described here. Environmental Studies areas play as fixture rounds without a help loop.
 
 **The server chooses the help type and the help order. The phone only renders the returned
 `scaffold_type`.** The phone posts the supported answer (`/support/answer`) and the end of a

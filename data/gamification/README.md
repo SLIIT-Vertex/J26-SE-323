@@ -39,7 +39,7 @@ The full area table is in `frontend/src/features/areas/README.md`.
 | Folder | What it is |
 |---|---|
 | `support-selection/v1/` | Model 2 artifact and its synthetic evaluation |
-| `expert-model-data/v1/` | provisional expert starting data for the research Model 1 and Model 2, taken from today's rule-based models; never learner evidence |
+| `expert-model-data/v1/` | provisional expert starting data for the research Model 1 and Model 2, taken from the earlier rule-based models; never learner evidence |
 | `synthetic-model-data/v1/` | fictional model-development data (details below); never learner evidence |
 | `evaluation-protocol/v1/` | the frozen evaluation protocol |
 

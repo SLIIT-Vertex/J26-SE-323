@@ -329,8 +329,8 @@ stay inside the game. No other component reads them, and the game publishes no c
 4. **The crosswalk and the area parents are drafts.** All 548 crosswalk rows are unreviewed;
    238 are low confidence. `areas.json` parents are not reviewed either.
 5. **ADR-0010**, cited as the source of the crosswalk rule, is not in the repository.
-6. **Mastery and curriculum adapters are not wired** (§8, §9). `architecture.md` describes the game
-   as consuming mastery; today it does not.
+6. **Mastery and curriculum adapters are not wired** (§8, §9). Wiring either is a decision for the
+   game owner, with the Knowledge Tracing or Adaptive Tutor owner.
 7. **Knowledge Tracing's open item "levels for six games" is done**: every atomic skill now
    declares a level.
 8. **Shared development learner** (§2.1): a game can fall back to another development learner.

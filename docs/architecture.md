@@ -24,10 +24,10 @@ There is one shared PostgreSQL database, not a database per module. Ownership is
 | Owner | Shared key | Current or planned owned data |
 | --- | --- | --- |
 | `shared/learner` | `learner_id` (UUID) | grade and preferred language |
-| `knowledge_tracing` | references `learner_id` | separately owned research data; gamification reads mastery only through `MasteryProvider` |
+| `knowledge_tracing` | references `learner_id` | separately owned research data; reads the game's scored answers from `learner_evidence_outbox`; the game does not read mastery yet |
 | `learner_state` | references `learner_id` | learner-state inference data |
 | `adaptive_tutor` | references `learner_id` | separately owned prototype; not consumed by gamification |
-| `gamification` | references `learner_id` | skills, content, attempts, support, models, episodes, outcomes, consent, rewards, and learner-skill summaries; consumes Knowledge Tracing `MasteryProvider` and Learner State `SupportNeedProvider` via application contracts; uses shared `app.curriculum`; publishes learner evidence |
+| `gamification` | references `learner_id` | skills, content, attempts, support, models, episodes, outcomes, consent, rewards, and learner-skill summaries; records scored answers through Learner State's `GameAnswerRecorder` and reads its `SupportNeedProvider` for Model 2's Learning State input; publishes scored answers to `learner_evidence_outbox`, which Knowledge Tracing reads; adapters for Knowledge Tracing's `MasteryProvider` and the shared `app.curriculum` retriever exist but are not wired. See [connections to the other components](adaptive-gamified-learning/connections-to-other-components.md) |
 
 The shared learner table exists now. A module must own its tables and
 migrations; it must not duplicate the learner profile. Cross-module behavior should use an
@@ -58,11 +58,12 @@ inside the module that owns them. It does not create embeddings or research-spec
 The gamification module is the Grade 5 Sinhala-medium mobile learning loop defined in
 [the component definition](adaptive-gamified-learning/README.md). It owns game episodes,
 scaffolds, misconception beliefs, Independence Gain, and policy updates. It does not own mastery,
-learner-state fusion, or tutoring. Shared curriculum passages are read through `app.curriculum`.
+learner-state fusion, or tutoring. Shared curriculum passages are to be read through
+`app.curriculum`; the adapter exists but no running path uses it yet.
 Draft records are rejected for child delivery. Development HTTP routes under
-`/api/v1/development/learning-flow` exercise one draft skill and a read of the 55-area draft
-mission catalog. The 16 mathematics missions carry 65 medium-confidence outcome slots.
-Sinhala missions carry 8 high-confidence draft items and 76 held slots. Environmental
+`/api/v1/development/learning-flow` run the 37 development area games and a read of the 54-area
+draft mission catalog. The 16 mathematics missions carry 65 medium-confidence outcome slots.
+Sinhala missions carry 7 high-confidence draft items and 66 held slots. Environmental
 Studies missions carry 117 held slots. A held slot stores the traced string and does not
 add a child question.
 Those reads require `allow_draft` and do not authorize a child release.
