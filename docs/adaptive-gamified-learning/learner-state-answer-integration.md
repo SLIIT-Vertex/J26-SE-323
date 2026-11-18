@@ -161,7 +161,7 @@ The result reaches the child in two ways:
   differ by reading. Its expert start keeps the earlier adjustments (`disengaged`, or `confused`
   while Model 1 is uncertain, puts the simpler version first; `confused` moves the worked example
   earlier), and it then learns from valid Independence Gain. A missing or stale reading counts as
-  "not available", and the baseline condition never reads it. The reading is wired in
+  "not available", and the baseline condition never uses it. The reading is wired in
   `api/learning_flow_router.py` through `infrastructure/gateways/research_learning_state.py`.
 
 Request fields (both optional, both part of the idempotency fingerprint when sent):

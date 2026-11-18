@@ -184,6 +184,8 @@ Durable, offline-safe telemetry and native process-death recovery remain open wo
 
 The answer-time learner-state, visual-feature, consent, and learner-evidence contract is
 documented in [Learner-state integration at answer submission](learner-state-answer-integration.md).
+How the game connects to every other component, and how each game skill maps to the Universal
+Skill Nodes: [Connections to the other components](connections-to-other-components.md).
 
 ## 7. Before a child uses it
 
