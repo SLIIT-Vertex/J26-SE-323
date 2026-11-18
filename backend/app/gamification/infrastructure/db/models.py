@@ -1257,3 +1257,95 @@ class LearningFlowAuditEventModel(Base):
     reason_codes_json: Mapped[list[str]] = mapped_column(JsonType, nullable=False)
     metadata_json: Mapped[dict[str, object]] = mapped_column(JsonType, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class GameHelpBanditStateModel(Base):
+    """The learned state of one approved help-order bandit: its artifact plus the ledger so far.
+
+    Rebuilding the artifact with the ledger applied in order gives exactly ``parameters_json``.
+    Learning takes a row lock here, so two children finishing together cannot lose an update.
+    """
+
+    __tablename__ = "game_help_bandit_states"
+    __table_args__ = (
+        CheckConstraint("ledger_position >= 0", name="ck_game_help_bandit_states_position"),
+        CheckConstraint("length(artifact_sha256) = 64", name="ck_game_help_bandit_states_artifact"),
+        CheckConstraint(
+            "length(parameters_sha256) = 64", name="ck_game_help_bandit_states_parameters"
+        ),
+        Index("ix_game_help_bandit_states_subject", "subject"),
+    )
+
+    model_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("model_versions.id"), primary_key=True
+    )
+    subject: Mapped[str] = mapped_column(String(8), nullable=False)
+    artifact_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    ledger_position: Mapped[int] = mapped_column(Integer, nullable=False)
+    parameters_json: Mapped[dict[str, object]] = mapped_column(JsonType, nullable=False)
+    parameters_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class GameHelpBanditSnapshotModel(Base):
+    """The context of every help the bandit scored for one episode, and the inputs behind it."""
+
+    __tablename__ = "game_help_bandit_snapshots"
+    __table_args__ = (
+        UniqueConstraint("episode_id", name="uq_game_help_bandit_snapshots_episode"),
+        CheckConstraint(
+            "length(snapshot_sha256) = 64", name="ck_game_help_bandit_snapshots_sha256"
+        ),
+    )
+
+    snapshot_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    episode_id: Mapped[UUID] = mapped_column(
+        ForeignKey("learning_flow_episode_runs.episode_id"), nullable=False
+    )
+    model_version_id: Mapped[UUID] = mapped_column(ForeignKey("model_versions.id"), nullable=False)
+    subject: Mapped[str] = mapped_column(String(8), nullable=False)
+    context_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    snapshot_json: Mapped[dict[str, object]] = mapped_column(JsonType, nullable=False)
+    snapshot_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class GameHelpBanditLedgerModel(Base):
+    """One applied observation, append-only, numbered in the order it was applied.
+
+    The position key makes two updates at the same place impossible, and the episode key makes
+    a second copy of an episode's observation for the same help impossible.
+    """
+
+    __tablename__ = "game_help_bandit_ledger"
+    __table_args__ = (
+        UniqueConstraint(
+            "model_version_id",
+            "episode_id",
+            "help_type",
+            name="uq_game_help_bandit_ledger_episode_help",
+        ),
+        CheckConstraint("position >= 1", name="ck_game_help_bandit_ledger_position"),
+        CheckConstraint(
+            "role IN ('credited', 'failed_round')", name="ck_game_help_bandit_ledger_role"
+        ),
+        CheckConstraint("weight >= 0", name="ck_game_help_bandit_ledger_weight"),
+        Index("ix_game_help_bandit_ledger_episode", "episode_id"),
+    )
+
+    model_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("model_versions.id"), primary_key=True
+    )
+    position: Mapped[int] = mapped_column(Integer, primary_key=True)
+    episode_id: Mapped[UUID] = mapped_column(
+        ForeignKey("learning_flow_episode_runs.episode_id"), nullable=False
+    )
+    snapshot_id: Mapped[UUID] = mapped_column(
+        ForeignKey("game_help_bandit_snapshots.snapshot_id"), nullable=False
+    )
+    help_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    weight: Mapped[float] = mapped_column(Float, nullable=False)
+    credit_rule_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    applied_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
