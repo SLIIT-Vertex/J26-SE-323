@@ -86,6 +86,16 @@ Every value is a provisional expert assumption. The builder refuses to run while
 fixtures have uncommitted changes, and the manifest pins their hashes and the commit that last
 changed them, so a second run writes the same bytes.
 
+## Help-order bandit against today's orders
+
+`support_selection/compare_bandit_with_rule_orders.py` compares the games' expert-initialised
+help-order bandit with the frozen rule-based orders. With no history the two must agree exactly
+(that is tested); for each frozen history pattern it prints how often they agree on the first help:
+
+```bash
+PYTHONPATH=backend python3 tools/gamification/support_selection/compare_bandit_with_rule_orders.py
+```
+
 ## Skill review package
 
 `skills/build_skill_review_package.py` builds the development skill-review package from the

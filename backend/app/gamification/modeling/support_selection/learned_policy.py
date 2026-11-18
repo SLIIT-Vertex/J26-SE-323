@@ -69,16 +69,26 @@ class LinUCBPolicy:
         chosen = _choose(propensities, random.Random(seed))
         return chosen, propensities
 
-    def update(self, context: BanditContext, arm: str, reward: float) -> None:
+    def update(self, context: BanditContext, arm: str, reward: float, weight: float = 1.0) -> None:
+        """Weighted ridge update: ``A += weight·x·xᵀ`` and ``b += weight·reward·x``.
+
+        Weight 1 is the plain update. A smaller weight counts the observation as weaker evidence;
+        weight 0 changes nothing.
+        """
+
+        if not math.isfinite(weight) or weight < 0:
+            raise ValueError("update weight must be a finite number of at least zero")
+        if weight == 0:
+            return
         vector = _vector(context)
         state = self._state(arm, len(vector))
         matrix = state["A"]
         target = state["b"]
         assert isinstance(matrix, list) and isinstance(target, list)
         for row_index, row_value in enumerate(vector):
-            target[row_index] += reward * row_value
+            target[row_index] += weight * reward * row_value
             for column_index, column_value in enumerate(vector):
-                matrix[row_index][column_index] += row_value * column_value
+                matrix[row_index][column_index] += weight * row_value * column_value
 
     def parameters(self) -> dict[str, object]:
         return {

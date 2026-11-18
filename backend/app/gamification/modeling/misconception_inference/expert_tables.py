@@ -5,12 +5,9 @@ games. Each area has one table; every skill of the area uses it, because the mod
 skill. Every file is checked against the package manifest before it is used.
 """
 
-import hashlib
-import json
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
-from app.gamification.data_paths import GAMIFICATION_DATA_DIRECTORY
 from app.gamification.modeling.misconception_inference.bayesian_model import (
     GAME_FACTOR_WEIGHTS,
     GAME_MODEL_VERSION,
@@ -18,21 +15,14 @@ from app.gamification.modeling.misconception_inference.bayesian_model import (
     band_evidence_key,
 )
 from app.gamification.modeling.misconception_inference.game_belief import GameBeliefSettings
+from app.gamification.modeling.shared.expert_data import (
+    EXPERT_MODEL_DATA_DIRECTORY,
+    EXPERT_MODEL_DATA_VERSION,
+    read_expert_manifest,
+    read_verified_expert_file,
+)
 
-EXPERT_MODEL_DATA_DIRECTORY = GAMIFICATION_DATA_DIRECTORY / "expert-model-data" / "v1"
-EXPERT_MODEL_DATA_VERSION = "expert-model-data-v1"
-EXPERT_EVIDENCE_STATUS = "provisional_expert_assumption"
-
-
-def _verified(directory: Path, manifest: Mapping[str, object], path: str) -> tuple[object, str]:
-    expected = manifest["files"].get(path)  # type: ignore[union-attr]
-    if expected is None:
-        raise KeyError(f"{path} is not in the expert model data manifest")
-    content = (directory / path).read_bytes()
-    actual = hashlib.sha256(content).hexdigest()
-    if actual != expected:
-        raise ValueError(f"{path} does not match its manifest hash")
-    return json.loads(content), actual
+__all__ = ["EXPERT_MODEL_DATA_DIRECTORY", "load_game_misconception_model"]
 
 
 def load_game_misconception_model(
@@ -46,19 +36,14 @@ def load_game_misconception_model(
     skills = tuple(dict.fromkeys(skill_ids))
     if not skills:
         raise ValueError(f"{area_id} needs at least one skill")
-    manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
-    if (
-        manifest.get("package_version") != EXPERT_MODEL_DATA_VERSION
-        or manifest.get("evidence_status") != EXPERT_EVIDENCE_STATUS
-    ):
-        raise ValueError("expert model data must be the provisional expert package")
+    manifest = read_expert_manifest(directory)
     table_path = f"misconception_tables/{area_id}.json"
     hashes = {}
-    table, hashes[table_path] = _verified(directory, manifest, table_path)
-    settings, hashes["misconception_settings.json"] = _verified(
+    table, hashes[table_path] = read_verified_expert_file(directory, manifest, table_path)
+    settings, hashes["misconception_settings.json"] = read_verified_expert_file(
         directory, manifest, "misconception_settings.json"
     )
-    families, hashes["reason_families.json"] = _verified(
+    families, hashes["reason_families.json"] = read_verified_expert_file(
         directory, manifest, "reason_families.json"
     )
     assert isinstance(table, Mapping) and isinstance(settings, Mapping)

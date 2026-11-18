@@ -1548,6 +1548,11 @@
   "meaning": "Expected valid Independence Gain of each help type before any child's data. Sorting the drawable helps by it gives today's order.",
   "own_success_rate_gain": 0.3,
   "package_version": "expert-model-data-v1",
+  "previous_first_not_transferred_gain": {
+    "ENG": 0.0,
+    "MAT": 0.0,
+    "SIN": -0.15
+  },
   "prior_strength": 8,
   "tie_rule": "Gains within tie_tolerance of each other count as equal; the help earlier in the cell's order wins.",
   "tie_tolerance": 1e-09,

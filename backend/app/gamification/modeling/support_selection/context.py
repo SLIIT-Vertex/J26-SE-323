@@ -17,6 +17,8 @@ from app.gamification.domain.types import FeatureSnapshotId, SupportActionType
 from app.gamification.modeling.shared.contracts import MisconceptionDistribution
 
 CONTEXT_VERSION = "bandit-context-v1"
+# The games' help-order bandit; its vector is built in ``game_bandit``.
+GAME_CONTEXT_VERSION = "area-bandit-context-v1"
 TEMPLATE_BINS = 4
 _SNAPSHOT_NAMESPACE = UUID("c4a11c04-4b21-4c4a-8f4e-0b1c4d4e4f40")
 HISTORY_TYPES = tuple(action.value for action in SupportActionType)
@@ -81,7 +83,7 @@ class BanditContext:
     def __post_init__(self) -> None:
         if len(self.names) != len(self.values):
             raise ValueError("context names and values must have the same length")
-        if self.version != CONTEXT_VERSION:
+        if self.version not in (CONTEXT_VERSION, GAME_CONTEXT_VERSION):
             raise ValueError("unsupported bandit context version")
 
     def without_belief_block(self) -> "BanditContext":

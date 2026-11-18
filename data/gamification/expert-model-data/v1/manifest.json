@@ -41,7 +41,7 @@
     "misconception_tables/G5-AREA-SIN-02.json": "453050bca8da37257f17ec53ad52b6fd114190c6947e3e21fc74dbf26914de50",
     "misconception_tables/G5-AREA-SIN-03.json": "cb5907dd7bf15ba80db9725be8fde01a93afed38cb8cf8ff5d30f5d372e0ef3f",
     "reason_families.json": "9b8494daee12f093009afea312ccb4b632d4fabfe8f68e71fa84dd7cf2592bd7",
-    "support_gains.json": "9aa640d668d116bcc95ce88859935e1c6d70b3c63c71dc0b30d8fc37b294624a"
+    "support_gains.json": "8025f1c119db6cd549d331fff4f78e5136a6bd53542807fe5ecbb103a1acc2c8"
   },
   "generator": "tools/gamification/datasets/build_expert_model_data.py",
   "package_version": "expert-model-data-v1",

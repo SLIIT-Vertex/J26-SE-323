@@ -281,6 +281,37 @@ def _gains(order: list[str]) -> dict[str, float]:
     }
 
 
+def _previous_first_gain(orders: Mapping[str, object], subject: str) -> float:
+    """Expert start for "the previous episode's first help was not followed by an unaided success".
+
+    Read from the frozen orders: where the rules then move that help from first to last (the
+    Sinhala cursor), the value drops it just below the last help; where they leave the order
+    unchanged, it is 0.
+    """
+
+    def order(history: str) -> list[str]:
+        decision = next(
+            d
+            for d in orders["decisions"]  # type: ignore[union-attr]
+            if d["subject"] == subject
+            and d["condition"] == "proposed"
+            and d["helps"] == "all_eligible"
+            and d["learning_state"] == "not_available"
+            and not d["model1_uncertain"]
+            and d["history"] == history
+        )
+        source = decision["delivered"] if subject == "SIN" else decision["decision"]
+        return list(source["support_order"])
+
+    before, after = order("none"), order("helped_but_not_independent")
+    if after == before:
+        return 0.0
+    if after != before[1:] + before[:1]:
+        raise ValueError(f"{subject} reacts to a first help that did not transfer in a new way")
+    span = GAIN_DECREMENT * (len(before) - 1)
+    return round(-(span + GAIN_DECREMENT), 10)
+
+
 def _support_gains(orders: Mapping[str, object]) -> dict[str, object]:
     decisions = [
         d
@@ -344,6 +375,9 @@ def _support_gains(orders: Mapping[str, object]) -> dict[str, object]:
         "gain_decrement": GAIN_DECREMENT,
         "prior_strength": PRIOR_STRENGTH,
         "own_success_rate_gain": OWN_SUCCESS_RATE_GAIN,
+        "previous_first_not_transferred_gain": {
+            subject: _previous_first_gain(orders, subject) for subject in SUBJECTS
+        },
         "tie_tolerance": TIE_TOLERANCE,
         "tie_rule": "Gains within tie_tolerance of each other count as equal; the help earlier in "
         "the cell's order wins.",
