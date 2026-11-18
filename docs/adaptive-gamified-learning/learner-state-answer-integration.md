@@ -156,12 +156,13 @@ The result reaches the child in two ways:
 - The recorded answer returns the learner-state action. The app shows the matching
   `LearnerSupportPrompt` during the game (`frontend/src/features/learner-state/game/supportPrompts.ts`),
   unless the build sets `VITE_LEARNER_STATE_PROMPTS=off`.
-- In the proposed condition, a current-session Learning State reading may change Model 2's help
-  order (`modeling/support_selection/support_order.py`): `disengaged`, or `confused` while Model
-  1 is uncertain, puts the simpler version first; `confused` moves the worked example earlier. A
-  missing or stale reading changes nothing, and the baseline condition never reads it. The
-  reading is wired in `api/learning_flow_router.py` through
-  `infrastructure/gateways/research_learning_state.py`.
+- In the proposed condition, a current-session Learning State reading is part of Model 2's
+  context (`modeling/support_selection/game_bandit.py`): the help-order bandit's predicted gains
+  differ by reading. Its expert start keeps the earlier adjustments (`disengaged`, or `confused`
+  while Model 1 is uncertain, puts the simpler version first; `confused` moves the worked example
+  earlier), and it then learns from valid Independence Gain. A missing or stale reading counts as
+  "not available", and the baseline condition never reads it. The reading is wired in
+  `api/learning_flow_router.py` through `infrastructure/gateways/research_learning_state.py`.
 
 Request fields (both optional, both part of the idempotency fingerprint when sent):
 

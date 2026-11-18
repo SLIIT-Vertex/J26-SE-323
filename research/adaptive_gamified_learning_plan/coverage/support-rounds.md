@@ -15,13 +15,15 @@ never carry their answer; a help stage carries its own item's answer so the boar
 
 ## The orders
 
-Model 2 puts first the type that answers Model 1's reason for the difficulty. The other types follow
-the subject's fallback order, skipping types already used in the episode and types this game cannot
-render for this item. In the proposed condition, the type with the best record of *valid
-post-withdrawal* outcomes for this learner and skill moves to the front instead. Supported
-correctness is stored for audit but is never that signal. The baseline condition uses the fallback
-order unchanged. Code: `backend/app/gamification/modeling/support_selection/support_order.py`
-(`MATHEMATICS_ORDER`, `ENGLISH_ORDER`, `LEAD_BY_REASON`).
+In the proposed condition, Model 2 is a help-order bandit that starts from these orders: before it
+has learned anything, it puts first the type that answers Model 1's reason for the difficulty and
+the other types follow the subject's fallback order, skipping types already used in the episode
+and types this game cannot render for this item. It then learns from *valid post-withdrawal*
+outcomes of every child's proposed episodes, and from this learner's own record on the skill.
+Supported correctness is stored for audit but is never that signal. The baseline condition uses
+the fallback order unchanged. Code: `backend/app/gamification/modeling/support_selection/baseline_order.py`
+(`MATHEMATICS_ORDER`, `ENGLISH_ORDER`), `game_bandit.py`, and the starting gains in
+`data/gamification/expert-model-data/v1/support_gains.json`.
 
 | Position | Mathematics | English |
 |---|---|---|
@@ -50,7 +52,8 @@ the full set. So the simpler version moves up to second. Guided questions and a 
 the meaning follow. Prerequisite repair (the area's earlier word skill) and the worked example (a
 different word set linked in full) stay last, for the same reasons as in Mathematics.
 
-**First type by Model 1's reason.** Each subject groups its Model 1 labels into five kinds of
+**First type by Model 1's reason** (the bandit's starting order). Each subject groups its Model 1
+labels into five kinds of
 difficulty, and each kind leads with one type. The grouping differs by subject; for example, an
 English `*_word_visual_confusion` is a misread picture, while a Mathematics `*_confusion` is usually
 two units or two operations treated as one.
@@ -89,7 +92,7 @@ type. The phone must remove the support frame, any highlight, any worked solutio
 answer state and every input handler. It then acknowledges `all_support_removed`,
 `answer_revealing_state_cleared` and `input_handlers_cleared`, and only then does the server present
 a fresh, unseen unsupported-after item. Model 3 measures that item alone. The chosen order, the
-types used and that outcome are stored for Model 2's later preference.
+types used and that outcome are stored, and a valid proposed episode then teaches Model 2.
 
 **ACID.** Each request is one transaction. It covers the score, one `learning_flow_support_rounds`
 row per delivered type, the episode state and the idempotency receipt. The episode row is locked

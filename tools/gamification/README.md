@@ -75,7 +75,7 @@ cannot authorize research claims or child-facing model activation.
 `datasets/build_expert_model_data.py` builds `data/gamification/expert-model-data/v1/` from the
 frozen rule-based reference fixtures (see below), never by calling the rules: per-area Model 1
 likelihood tables by evidence band, the shared band and uncertainty settings, each subject's
-reason-family map, and the Model 2 expected gains that reproduce today's help order:
+reason-family map, and the Model 2 expected gains that reproduce the earlier rules' help order:
 
 ```bash
 PYTHONPATH=backend python3 tools/gamification/datasets/build_expert_model_data.py
@@ -86,10 +86,10 @@ Every value is a provisional expert assumption. The builder refuses to run while
 fixtures have uncommitted changes, and the manifest pins their hashes and the commit that last
 changed them, so a second run writes the same bytes.
 
-## Help-order bandit against today's orders
+## Help-order bandit against the earlier rule orders
 
 `support_selection/compare_bandit_with_rule_orders.py` compares the games' expert-initialised
-help-order bandit with the frozen rule-based orders. With no history the two must agree exactly
+help-order bandit with the frozen orders of the earlier rules. With no history the two must agree exactly
 (that is tested); for each frozen history pattern it prints how often they agree on the first help:
 
 ```bash

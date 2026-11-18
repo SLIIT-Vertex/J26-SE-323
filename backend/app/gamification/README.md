@@ -26,7 +26,7 @@ gamification/
     episode_use_cases.py, session_play.py, delivery.py, policy_update.py, …   the pilot API path
     records.py, ports.py         records and ports shared by both paths
   content/
-    <slug>.py  × 37              per area: items, answer checking, authored Model 1/2 rules
+    <slug>.py  × 37              per area: items, answer checking, help content, misconception catalogue
     loader.py, records.py, catalog.py, *_catalog.py, playable_area_package.py   package loaders
   modeling/                      Model 1, Model 2, Model 3 (see modeling/README.md)
   domain/                        episode state machine and value types
@@ -58,7 +58,7 @@ flow. Every step below is a method of `AreaGameFlow` in `application/engine/area
 | 5 | `submit_supported`, `complete_support` | Help rounds (`support_rounds.py`, `support_builders/`) |
 | 6 | `withdraw` | Every trace of help is removed and confirmed |
 | 7 | `present_after`, `submit_after` | Fresh unsupported after item |
-| 8 | `submit_after` | **Model 3**: `measure_withdrawn_episode` → Independence Gain and validity |
+| 8 | `submit_after` | **Model 3**: `measure_withdrawn_episode` → Independence Gain and validity; a valid proposed episode then teaches the subject's help-order bandit once (`learn_from_episode`) |
 
 ## Where is…?
 
