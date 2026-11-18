@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
@@ -55,10 +55,11 @@ def test_line_break_fails_closed_before_reservation():
         )
 
 
-def test_failed_retry_advances_cursor():
+def test_a_first_help_that_did_not_transfer_moves_to_the_end():
     flow, _, learner = world()
     first, _, _ = play(flow, learner, p, "G5-SIN-PUNC-END-01", "proposed", wrong, after_correct=False)
     second, _, _ = play(flow, learner, p, "G5-SIN-PUNC-END-01", "proposed", wrong)
     a, b = state(flow, first), state(flow, second)
-    assert b["support_cursor"]["unresolved"] and b["model2"]["support_order"][0] != a["model2"]["support_order"][0]
-    assert UUID(b["support_cursor"]["source_episode_id"]) == first
+    # The package cursor is gone; the bandit moves on from the help that did not transfer.
+    assert "support_cursor" not in b and b["model2"]["support_selection_mode"] == "bandit_greedy"
+    assert b["model2"]["support_order"][-1] == a["model2"]["support_order"][0]

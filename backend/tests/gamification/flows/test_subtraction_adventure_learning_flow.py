@@ -12,6 +12,7 @@ from app.gamification.application.learning_flow_orchestration import (
 )
 from app.gamification.content.subtraction_adventure import ATOMIC_SKILLS
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
+from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 from tests.gamification.helpers.support_loop_helpers import finish_help
@@ -44,6 +45,7 @@ def service():
         SqlAlchemyLearningFlowStore(session),
         probe_gateway=LocalProbeGateway(),
         evidence_publisher=publisher,
+        help_bandit=InMemoryGameHelpBanditStore.with_expert_start("MAT"),
     )
     yield flow, publisher
     session.close()
@@ -216,10 +218,15 @@ def test_preference_is_exact_skill_specific(service) -> None:
     _opened, _result, other, support = _run(
         flow, "G5-MAT-C07-L01-O02", condition="proposed", correct_after=False, suffix="pref-two"
     )
-    # Skill one's independent success says nothing about skill two.
+    # Skill one's independent success is not this child's record on skill two: the shared bandit
+    # may learn from it, but skill two's decision carries no own-record feature.
     assert support == other["model2"]["support_order"][0]
-    assert other["model2"]["support_selection_mode"] != "learned_post_withdrawal_preference"
-    assert other["model2"]["learner_activity_support_preference"]["supported_correctness_used"] is False
+    assert other["model2"]["support_selection_mode"] == "bandit_greedy"
+    store = flow._area_flows["G5-AREA-MAT-04"]._help_bandit
+    snapshot = store.snapshot_for(UUID(other["episode_id"])).snapshot
+    assert not any(
+        name.startswith("own:") for vector in snapshot.vectors.values() for name in vector
+    )
 
 
 

@@ -19,6 +19,7 @@ from app.gamification.infrastructure.db.research_dashboard_reader import (
 from app.shared.database.base import Base
 from app.shared.database.session import get_db
 from app.shared.learner.model import LearnerModel
+from tests.gamification.helpers.help_bandit_helpers import approve_expert_start
 from tests.gamification.helpers.support_loop_helpers import wrong_answer
 
 LEARNER = UUID("00000000-0000-4000-8000-000000000721")
@@ -44,6 +45,7 @@ def world():
         LearnerModel(id=LEARNER, grade=5, preferred_language="si", created_at=now, updated_at=now)
     )
     session.commit()
+    approve_expert_start(session)
     orchestrator = get_learning_flow_orchestrator(session)
     plan = build_plan(CONFIG, {"G5-AREA-MAT-03": ["G5-MAT-PAT-DIFF-ASC-01"]})
     SeedRunner(orchestrator, plan).run()
@@ -65,15 +67,18 @@ def test_overview_excludes_scripted_sessions_instead_of_relabelling_them(world):
 
 def test_trace_explains_every_model_from_the_stored_record(world):
     _, _, service = world
+    # The latest episode on the skill (newest first): the bandit ordered it with the earlier one
+    # on record.
     episode = next(
         row
         for row in service.episodes(LEARNER)["episodes"]
-        if row["selection_mode"] == "learned_post_withdrawal_preference"
+        if row["selection_mode"] == "bandit_greedy"
     )
 
     trace = service.trace(UUID(str(episode["episode_id"])))
 
     assert trace["model1"]["headline"].startswith("Most likely reason:")
+    assert "predicted each help's gain" in " ".join(trace["model2"]["steps"])
     assert "earlier fair tests" in " ".join(trace["model2"]["steps"])
     assert trace["model2"]["order"][0] == episode["first_help"]
     assert "help is then removed" in trace["rounds"][0]["rule"]

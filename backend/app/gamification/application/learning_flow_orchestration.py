@@ -39,6 +39,7 @@ from app.gamification.application.engine.area_flow import AreaFlowError
 from app.gamification.application.everyday_object_quest_flow import EverydayObjectQuestFlow
 from app.gamification.application.family_word_constellation_flow import FamilyWordConstellationFlow
 from app.gamification.application.fraction_adventure_flow import FractionAdventureFlow
+from app.gamification.application.game_help_order import GameHelpBanditStore
 from app.gamification.application.heritage_museum_quest_flow import HeritageMuseumQuestFlow
 from app.gamification.application.information_station_flow import InformationStationFlow
 from app.gamification.application.island_food_festival_flow import IslandFoodFestivalFlow
@@ -316,6 +317,7 @@ class LearningFlowOrchestrator:
         learner_state: LearnerStateAnswerGateway | None = None,
         camera_consent: ConsentStore | None = None,
         support_need_provider: LearningStateReader | None = None,
+        help_bandit: GameHelpBanditStore | None = None,
     ) -> None:
         self._store = store
         self._probe = probe_gateway
@@ -330,6 +332,7 @@ class LearningFlowOrchestrator:
                 learner_state=learner_state,
                 camera_consent=camera_consent,
                 support_need_provider=support_need_provider,
+                help_bandit=help_bandit,
             )
             for flow_type in GAME_FLOW_TYPES
         )

@@ -305,7 +305,9 @@ def _read_back(obs: Observation, state) -> None:
     obs.first_help = (model2.get("support_order") or [None])[0]
     obs.selection_mode = model2.get("support_selection_mode")
     preference = (model2.get("learner_activity_support_preference") or {}).get("preferred_support")
-    obs.preferred_after = preference
+    # The help-order bandit has no separate preference: the help it leads with, given this child's
+    # record, is what it has learned for them.
+    obs.preferred_after = obs.first_help if obs.selection_mode == "bandit_greedy" else preference
     measurement = state.get("measurement") or {}
     gain = measurement.get("raw_independence_gain")
     obs.measured_gain = None if gain is None else str(gain)

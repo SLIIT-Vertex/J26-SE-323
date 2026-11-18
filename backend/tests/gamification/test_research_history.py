@@ -17,6 +17,7 @@ from app.gamification.infrastructure.db.research_dashboard_reader import (
 from app.gamification.validation.simulated_cohort import Assumptions, report, run_cohort
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.helpers.help_bandit_helpers import approve_expert_start
 
 CHILD = UUID("00000000-0000-4000-8000-0000000000c1")
 
@@ -139,6 +140,7 @@ def test_simulated_learners_measure_each_model_against_known_answers():
     engine = create_engine("sqlite+pysqlite:///:memory:")
     Base.metadata.create_all(engine)
     session = Session(engine)
+    approve_expert_start(session)
     assumptions = Assumptions(learners=2, sessions_per_skill=2)
 
     result = run_cohort(session, get_learning_flow_orchestrator(session), assumptions)

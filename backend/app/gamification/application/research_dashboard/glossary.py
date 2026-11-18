@@ -67,6 +67,8 @@ MODE_NAMES = {
     "learned_post_withdrawal_preference": "This child's past results guided the choice",
     "model1_reason_lead_unrenderable_fallback": "The first available help was used",
     "learning_state_lead": "How the child seemed during this game guided the choice",
+    "bandit_greedy": "The help with the highest predicted gain came first",
+    "no_approved_policy": "No help-order model is approved yet, so the fixed order was used",
 }
 EXCLUSIONS = {
     "early_exit": "The child left before finishing",

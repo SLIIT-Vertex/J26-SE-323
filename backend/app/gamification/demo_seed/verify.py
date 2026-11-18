@@ -19,9 +19,14 @@ from sqlalchemy import Uuid, bindparam, select, text
 from sqlalchemy.orm import Session
 
 from app.gamification.application.engine.area_flow import _model1_label, _model1_uncertain
+from app.gamification.application.game_help_order import BANDIT_GREEDY, NO_APPROVED_POLICY
 from app.gamification.application.learning_flow_orchestration import LearningFlowOrchestrator
 from app.gamification.content.support_types import SUPPORT_TYPES
+from app.gamification.infrastructure.db.game_help_bandit_store import (
+    SqlAlchemyGameHelpBanditStore,
+)
 from app.gamification.infrastructure.db.models import (
+    GameHelpBanditLedgerModel,
     LearningFlowEpisodeRunModel,
     LearningFlowSupportRoundModel,
 )
@@ -30,6 +35,7 @@ from app.gamification.modeling.misconception_inference.learner_prior import (
     apply_learner_prior,
     prior_errors,
 )
+from app.gamification.modeling.support_selection.baseline_order import fixed_order
 from app.gamification.modeling.support_selection.support_order import (
     LEAD_BY_REASON,
     SUBJECT_ORDERS,
@@ -113,11 +119,13 @@ def verify(
         if episode.seeded and (seed_version is None or episode.state["seed_source"] == seed_version)
     ]
     flows = orchestrator._area_flows
+    bandits = SqlAlchemyGameHelpBanditStore(session)
+    ledger = _ledger_by_episode(session)
     checks = [
         *_model1_checks(seeded, flows, episodes),
-        *_model2_checks(seeded, episodes),
+        *_model2_checks(seeded, episodes, bandits, ledger),
         *_loop_checks(seeded),
-        *_model3_checks(seeded, episodes),
+        *_model3_checks(seeded, episodes, ledger),
         *_learner_state_checks(session, learner_id, seeded, flows),
         *_coverage_checks(seeded, expected_skills),
     ]
@@ -261,7 +269,12 @@ def _prior_history(
     )
 
 
-def _model2_checks(seeded: Sequence[Episode], everything: Sequence[Episode]) -> list[Check]:
+def _model2_checks(
+    seeded: Sequence[Episode],
+    everything: Sequence[Episode],
+    bandits: SqlAlchemyGameHelpBanditStore,
+    ledger: Mapping[str, Sequence[tuple[str, str, float, float]]],
+) -> list[Check]:
     decisions = [
         episode
         for episode in seeded
@@ -297,6 +310,21 @@ def _model2_checks(seeded: Sequence[Episode], everything: Sequence[Episode]) -> 
         model1 = state.get("model1") if isinstance(state.get("model1"), Mapping) else {}
         history = _prior_history(episode, everything)
         recompute.checked += 1
+        if model2.get("support_selection_mode") in (BANDIT_GREEDY, NO_APPROVED_POLICY):
+            problem = _recompute_bandit_order(bandits, state, model2, everything)
+            if problem:
+                _fail(recompute, episode_id, problem)
+            # A positive score only ever comes from an after-question answered alone.
+            for _support, _role, score, _weight in ledger.get(episode_id, ()):
+                no_supported_reward.checked += 1
+                if score > 0 and not _independent(state):
+                    _fail(no_supported_reward, episode_id, "positive score without independence")
+            modes[str(model2["support_selection_mode"])] += 1
+            first_types[str(model2["support_order"][0])] += 1
+            loop = state.get("support_loop")
+            if isinstance(loop, Mapping):
+                used_types.update(loop.get("types_used") or [])
+            continue
         try:
             expected = choose_support_order(
                 subject=subject,
@@ -382,22 +410,91 @@ def _model2_checks(seeded: Sequence[Episode], everything: Sequence[Episode]) -> 
         reachable.failures.append(
             f"never delivered: {sorted(set(SUPPORT_TYPES) - set(used_types))}"
         )
+    # A rule-based learned preference only; the help-order bandit has none to compare.
+    rule_ordered = any(mode not in (BANDIT_GREEDY, NO_APPROVED_POLICY) for mode in modes)
     isolation = Check(
         "model2",
         "Preferences are per skill: different skills learned different types",
-        len(set(preferred_by_skill.values())) > 1,
+        len(set(preferred_by_skill.values())) > 1 or not rule_ordered,
         checked=len(preferred_by_skill),
-        detail=f"preferred types across skills: {dict(Counter(preferred_by_skill.values()))}",
+        detail=f"preferred types across skills: {dict(Counter(preferred_by_skill.values()))}"
+        if rule_ordered
+        else "not applicable: every order came from the help-order bandit",
     )
     paths = Check(
         "model2",
         "Decision paths taken",
         {"baseline_fixed_order", "model1_reason_lead", "learned_post_withdrawal_preference"}
-        <= set(modes),
+        <= set(modes)
+        or {"baseline_fixed_order", BANDIT_GREEDY} <= set(modes),
         checked=len(decisions),
         detail=str(dict(modes)),
     )
     return [recompute, baseline, lead, learned, no_supported_reward, reachable, isolation, paths]
+
+
+def _ledger_by_episode(session: Session) -> dict[str, list[tuple[str, str, float, float]]]:
+    """Every applied bandit observation, by episode: help type, role, score and weight."""
+
+    rows: dict[str, list[tuple[str, str, float, float]]] = defaultdict(list)
+    for row in session.scalars(select(GameHelpBanditLedgerModel)):
+        rows[str(row.episode_id)].append((row.help_type, row.role, row.score, row.weight))
+    return rows
+
+
+def _recompute_bandit_order(
+    bandits: SqlAlchemyGameHelpBanditStore,
+    state: Mapping[str, object],
+    model2: Mapping[str, object],
+    everything: Sequence[Episode],
+) -> str | None:
+    """Rebuild the decision from the artifact and the ledger at that moment; ``None`` if equal."""
+
+    eligible = list(model2["eligible_actions"])  # type: ignore[call-overload]
+    renderable = list(model2.get("renderable_actions") or eligible)  # type: ignore[call-overload]
+    if model2["support_selection_mode"] == NO_APPROVED_POLICY:
+        expected = list(fixed_order(subject_of(str(state["area_id"])), eligible, renderable))
+        stored = list(model2["support_order"])  # type: ignore[call-overload]
+        return None if expected == stored else f"fixed order {expected} != stored {stored}"
+    snapshot = bandits.snapshot_for(UUID(str(state["episode_id"])))
+    if snapshot is None or str(snapshot.snapshot_id) != model2.get("snapshot_id"):
+        return "no matching decision snapshot"
+    inputs = snapshot.snapshot.inputs
+    model1 = state.get("model1") if isinstance(state.get("model1"), Mapping) else {}
+    if (
+        inputs["model1_label"] != _model1_label(model1)  # type: ignore[arg-type]
+        or inputs["model1_uncertain"] != _model1_uncertain(model1)  # type: ignore[arg-type]
+        or list(inputs["eligible"]) != eligible  # type: ignore[call-overload]
+        or list(inputs["renderable"]) != renderable  # type: ignore[call-overload]
+    ):
+        return "snapshot inputs differ from the episode's record"
+    by_id = {str(other.state["episode_id"]): other.state for other in everything}
+    ids = [str(value) for value in inputs["history_episode_ids"]]  # type: ignore[union-attr]
+    if any(value not in by_id for value in ids):
+        return "a history episode is missing"
+    bandit = bandits.rebuild(
+        snapshot.model_version_id,
+        upto=int(model2["ledger_position"]),  # type: ignore[call-overload]
+    )
+    chosen = bandit.order(
+        model1_label=inputs["model1_label"],  # type: ignore[arg-type]
+        model1_uncertain=bool(inputs["model1_uncertain"]),
+        learning_state_input=inputs["learning_state_input"],  # type: ignore[arg-type]
+        history=[by_id[value] for value in ids],
+        eligible=eligible,
+        renderable=renderable,
+    )
+    if list(chosen.order) != list(model2["support_order"]):  # type: ignore[call-overload]
+        return f"order: stored {model2['support_order']} != {list(chosen.order)}"
+    if chosen.reason_family != model2.get("reason_family"):
+        return f"reason family: stored {model2.get('reason_family')} != {chosen.reason_family}"
+    stored_gain = dict(model2.get("predicted_gain") or {})  # type: ignore[call-overload]
+    if set(stored_gain) != set(chosen.predicted_gain) or any(
+        not math.isclose(float(stored_gain[support]), gain, abs_tol=1e-12)
+        for support, gain in chosen.predicted_gain.items()
+    ):
+        return "predicted gains differ"
+    return None
 
 
 def _types(state: Mapping[str, object]) -> list[str]:
@@ -480,7 +577,11 @@ def _loop_checks(seeded: Sequence[Episode]) -> list[Check]:
 # Model 3 ----------------------------------------------------------------------------------------
 
 
-def _model3_checks(seeded: Sequence[Episode], everything: Sequence[Episode]) -> list[Check]:
+def _model3_checks(
+    seeded: Sequence[Episode],
+    everything: Sequence[Episode],
+    ledger: Mapping[str, Sequence[tuple[str, str, float, float]]],
+) -> list[Check]:
     formula = Check(
         "model3",
         "Gain = after earned/maximum − before earned/maximum, recomputed from the stored scores",
@@ -512,6 +613,12 @@ def _model3_checks(seeded: Sequence[Episode], everything: Sequence[Episode]) -> 
         measurement = state.get("measurement")
         authority.checked += 1
         status = state.get("policy_update_status")
+        if ledger.get(episode_id) and (
+            episode.status == "invalidated" or state["condition"] != "proposed"
+        ):
+            _fail(
+                authority, episode_id, "a baseline or invalid episode reached the bandit's ledger"
+            )
         if episode.status == "invalidated":
             if updates or status != "not_authorized_invalid":
                 _fail(
@@ -562,7 +669,17 @@ def _model3_checks(seeded: Sequence[Episode], everything: Sequence[Episode]) -> 
             or updates[0].get("reward_source") != "valid_raw_independence_gain"
         ):
             _fail(authority, episode_id, f"update {updates} for gain {stored_gain}")
-        if _independent(state):
+        if (
+            _independent(state)
+            and dict(state.get("model2") or {}).get("support_selection_mode") == BANDIT_GREEDY
+        ):
+            closed.checked += 1
+            winner = credited_support(state)[0]
+            if winner is not None and (winner, "credited", float(stored_gain)) not in {
+                (support, role, score) for support, role, score, _ in ledger.get(episode_id, ())
+            }:
+                _fail(closed, episode_id, f"{winner} +{stored_gain} not in the bandit's ledger")
+        elif _independent(state):
             later = [
                 other
                 for other in by_skill[str(state["skill_id"])]

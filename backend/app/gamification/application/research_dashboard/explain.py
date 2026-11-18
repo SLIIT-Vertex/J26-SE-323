@@ -126,6 +126,21 @@ def explain_model2(state):
             "The comparison group uses the subject's fixed help order.",
             "Past results do not change this order.",
         ]
+    elif mode == "bandit_greedy":
+        steps = [
+            f"Likely reason: {FAMILY_NAMES.get(family, FAMILY_NAMES['unclear'])}.",
+            (
+                "The help-order model predicted each help's gain from the likely reason, how the "
+                "child seemed and this child's earlier fair tests on this skill, and put the highest "
+                "first."
+            ),
+            *([state_sentence] if state_sentence else []),
+        ]
+    elif mode == "no_approved_policy":
+        steps = [
+            "No help-order model is approved for this subject yet.",
+            "The subject's fixed help order was used, as in the comparison group.",
+        ]
     return {
         "headline": f"First help: {name(order[0])}",
         "why": MODE_NAMES.get(mode, "The recorded help choice") + ".",

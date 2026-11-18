@@ -16,6 +16,7 @@ from app.gamification.application.learning_flow_orchestration import (
 )
 from app.gamification.application.teardown_receipt import simulated_receipt
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
+from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 
@@ -32,7 +33,8 @@ def world():
     session.commit()
     publisher = RecordingEvidencePublisher()
     flow = LearningFlowOrchestrator(
-        SqlAlchemyLearningFlowStore(session), probe_gateway=LocalProbeGateway(), evidence_publisher=publisher
+        SqlAlchemyLearningFlowStore(session), probe_gateway=LocalProbeGateway(), evidence_publisher=publisher,
+        help_bandit=InMemoryGameHelpBanditStore.with_expert_start("SIN"),
     )
     return flow, publisher, learner
 

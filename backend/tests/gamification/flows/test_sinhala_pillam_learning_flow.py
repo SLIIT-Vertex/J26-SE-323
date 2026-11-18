@@ -14,6 +14,7 @@ from app.gamification.application.learning_flow_orchestration import (
 from app.gamification.application.teardown_receipt import simulated_receipt
 from app.gamification.content import sinhala_pillam as p
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
+from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 
@@ -31,7 +32,8 @@ def _world():
     session.commit()
     publisher = RecordingEvidencePublisher()
     flow = LearningFlowOrchestrator(
-        SqlAlchemyLearningFlowStore(session), probe_gateway=LocalProbeGateway(), evidence_publisher=publisher
+        SqlAlchemyLearningFlowStore(session), probe_gateway=LocalProbeGateway(), evidence_publisher=publisher,
+        help_bandit=InMemoryGameHelpBanditStore.with_expert_start("SIN"),
     )
     return flow, publisher, learner
 
@@ -232,17 +234,17 @@ def test_refusals_are_machine_readable_and_revision_bound():
     assert len(_state(flow, episode)["attempts"]) == 1
 
 
-def test_failed_independent_retry_advances_the_cursor_and_drops_a_failed_preference():
+def test_a_first_help_that_did_not_transfer_moves_to_the_end():
     flow, _, learner = _world()
     skill = "G5-SIN-PIL-NAME-01"
     first, _ = _play(flow, learner, skill, "proposed", after_correct=False)
     first_state = _state(flow, first)
     second, _ = _play(flow, learner, skill, "proposed")
     second_state = _state(flow, second)
-    cursor = second_state["support_cursor"]
-    assert cursor["unresolved"] is True and cursor["source_episode_id"] == first_state["episode_id"]
-    assert second_state["model2"]["selection_reason"] == "activity_support_escalation"
-    assert second_state["model2"]["support_order"][0] != first_state["model2"]["support_order"][0]
+    # The package cursor is gone; the bandit moves on from the help that did not transfer.
+    assert "support_cursor" not in second_state
+    assert second_state["model2"]["support_selection_mode"] == "bandit_greedy"
+    assert second_state["model2"]["support_order"][-1] == first_state["model2"]["support_order"][0]
 
 
 def test_baseline_never_reads_history():

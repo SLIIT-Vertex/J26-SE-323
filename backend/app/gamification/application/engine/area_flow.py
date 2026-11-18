@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
@@ -27,6 +27,12 @@ from typing import Protocol
 from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
 
 from app.gamification.application.consent_gate import research_consent_granted
+from app.gamification.application.game_help_order import (
+    GameHelpBanditStore,
+    GameHelpOrderChoice,
+    choose_game_help_order,
+    learn_from_episode,
+)
 from app.gamification.application.learner_state_answers import record_scored_answer
 from app.gamification.application.learning_state_input import (
     LearningStateReader,
@@ -52,10 +58,11 @@ from app.gamification.modeling.misconception_inference.expert_tables import (
     load_game_misconception_model,
 )
 from app.gamification.modeling.misconception_inference.game_belief import learner_answer_window
-from app.gamification.modeling.support_selection.support_order import (
-    choose_support_order,
-    subject_of,
+from app.gamification.modeling.support_selection.baseline_order import (
+    BaselineOrder,
+    baseline_order,
 )
+from app.gamification.modeling.support_selection.support_order import subject_of
 
 PROTOCOL_VERSION = "adaptive-episode-v1"
 
@@ -242,6 +249,7 @@ class AreaGameFlow:
         learner_state: LearnerStateAnswerGateway | None = None,
         camera_consent: ConsentStore | None = None,
         support_need_provider: LearningStateReader | None = None,
+        help_bandit: GameHelpBanditStore | None = None,
     ) -> None:
         self._store = store
         self._probe = probe
@@ -250,7 +258,9 @@ class AreaGameFlow:
         self._learner_state = learner_state
         self._camera_consent = camera_consent
         self._support_need_provider = support_need_provider
+        self._help_bandit = help_bandit
         self._support_rounds = SupportRoundService()
+        self._audit_notes: list[str] = []
 
     def open(
         self,
@@ -645,6 +655,11 @@ class AreaGameFlow:
                 if update_authorized
                 else ("not_authorized_baseline" if valid else "not_authorized_invalid")
             )
+            if state["condition"] == "proposed":
+                learned = self._teach_bandit(state, at)
+                decision["bandit_update"] = learned
+                if learned == "not_applied_unscored_help":
+                    state["policy_update_status"] = learned
             if update_authorized:
                 state["policy_updates"].append(
                     {  # type: ignore[union-attr]
@@ -764,23 +779,18 @@ class AreaGameFlow:
             history = self._store.support_history(
                 learner_id=UUID(str(state["learner_id"])), skill_id=str(state["skill_id"])
             )
-        try:
-            order = choose_support_order(
-                subject=subject_of(self.area_id),
-                condition=str(state["condition"]),
-                model1_label=_model1_label(belief),
-                model1_uncertain=_model1_uncertain(belief),
-                eligible=eligible,
-                renderable=tuple(plans),
-                history=history,
-                learning_state_input=read_learning_state(
-                    self._support_need_provider, learner_id=UUID(str(state["learner_id"])),
-                    skill_id=self.universal_skill_id,
-                    session_id=str(state.get("learning_state_session_id", state["session_id"])), at=at,
-                ),
-            )
-        except ValueError as error:
-            raise AreaFlowError(str(error)) from error
+        reading = read_learning_state(
+            self._support_need_provider, learner_id=UUID(str(state["learner_id"])),
+            skill_id=self.universal_skill_id,
+            session_id=str(state.get("learning_state_session_id", state["session_id"])), at=at,
+        )
+        order: GameHelpOrderChoice | BaselineOrder
+        if state["condition"] == "proposed":
+            order = self._bandit_order(state, belief, reading, history, eligible, tuple(plans), at)
+            selection = {**order.as_record(), "learning_state_input": dict(reading)}
+        else:
+            order = self._baseline_order(eligible, tuple(plans))
+            selection = order.as_record()
         state["model2"] = {
             "decision_id": str(uuid4()),
             "context_snapshot_id": str(uuid4()),
@@ -796,7 +806,7 @@ class AreaGameFlow:
             "reference_decision": dict(content_decision),
             "eligible_actions": list(eligible),
             "renderable_actions": list(plans),
-            **order.as_record(),
+            **selection,
         }
         state["supported_correctness"] = None
         _event(state, "difficulty_detected", at, evidence_id=str(evidence_id))
@@ -816,6 +826,51 @@ class AreaGameFlow:
             state, previous_attempt_correct=None
         )
         return response
+
+    def _bandit_order(
+        self,
+        state: Mapping[str, object],
+        belief: Mapping[str, object],
+        reading: Mapping[str, object],
+        history: Sequence[Mapping[str, object]],
+        eligible: Sequence[str],
+        renderable: Sequence[str],
+        at: datetime,
+    ) -> GameHelpOrderChoice:
+        """Model 2 in the proposed condition: the subject's approved help-order bandit."""
+
+        try:
+            return choose_game_help_order(
+                self._help_bandit,
+                subject=subject_of(self.area_id),
+                episode_id=UUID(str(state["episode_id"])),
+                model1_label=_model1_label(belief),
+                model1_uncertain=_model1_uncertain(belief),
+                learning_state_input=reading,
+                history=history,
+                eligible=eligible,
+                renderable=renderable,
+                now=at,
+            )
+        except ValueError as error:
+            raise AreaFlowError(str(error)) from error
+
+    def _baseline_order(self, eligible: Sequence[str], renderable: Sequence[str]) -> BaselineOrder:
+        """The comparison group's fixed order; it never reads history or Model 1."""
+
+        try:
+            return baseline_order(subject_of(self.area_id), eligible, renderable)
+        except ValueError as error:
+            raise AreaFlowError(str(error)) from error
+
+    def _teach_bandit(self, state: Mapping[str, object], at: datetime) -> str:
+        """Teach the subject's bandit this finished episode, once; never fail the child's episode."""
+
+        try:
+            return learn_from_episode(self._help_bandit, state, now=at)
+        except ValueError:
+            self._audit_notes.append("NOT_APPLIED_UNSCORED_HELP")
+            return "not_applied_unscored_help"
 
     def _open_follow_up(
         self,
@@ -1192,6 +1247,7 @@ class AreaGameFlow:
             if phase(state) != expected:
                 raise AreaFlowError("EPISODE_STATE_CONFLICT")
             old_count = len(state["events"])
+            self._audit_notes = []
             try:
                 response = transition(state, at)
             except SupportRoundError as error:
@@ -1204,7 +1260,7 @@ class AreaGameFlow:
                 state=state,
                 new_events=tuple(state["events"][old_count:]),
                 audit_type=str(state["status"]),
-                audit_reasons=("DEVELOPMENT_ONLY",),
+                audit_reasons=("DEVELOPMENT_ONLY", *self._audit_notes),
                 idempotency_key=key,
                 request_sha256=_digest(request),
                 response=response,

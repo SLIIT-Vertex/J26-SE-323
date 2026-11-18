@@ -69,10 +69,12 @@ def test_every_seeded_decision_replays_exactly(tool, seeded) -> None:
     assert result["episodes_read"] > 0
     model1 = {row["outcome"] for row in result["model1"]}
     model2 = {row["outcome"] for row in result["model2"]}
-    # Model 1 beliefs now come from the Bayesian model, so only Model 2 replays as a rule.
+    # Model 1 beliefs come from the Bayesian model and proposed help orders from the bandit, so
+    # only the baseline's fixed order still replays as a rule.
     assert model1 == {"not_rule_based"}, result["model1"]
-    assert model2 == {"match"}, result["model2"]
-    assert {row["subject"] for row in result["model2"]} == {"MAT", "ENG", "SIN"}
+    assert model2 == {"match", "not_rule_based"}, result["model2"]
+    matched = {row["subject"] for row in result["model2"] if row["outcome"] == "match"}
+    assert matched == {"MAT", "ENG", "SIN"}
 
 
 def test_a_changed_stored_order_is_reported(tool, seeded) -> None:
@@ -84,7 +86,7 @@ def test_a_changed_stored_order_is_reported(tool, seeded) -> None:
     row = next(
         row
         for row in seeded.scalars(select(LearningFlowEpisodeRunModel))
-        if "model2" in row.state_json
+        if "model2" in row.state_json and row.condition == "baseline"
     )
     stored = row.state_json["model2"]
     stored["support_order"] = list(reversed(stored["support_order"]))

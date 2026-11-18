@@ -18,6 +18,7 @@ from app.gamification.content.number_world import (
     validate_constructed_response,
 )
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
+from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
 from app.gamification.modeling.support_selection.support_order import credited_support
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
@@ -41,6 +42,7 @@ def service():
         SqlAlchemyLearningFlowStore(session),
         probe_gateway=LocalProbeGateway(),
         evidence_publisher=publisher,
+        help_bandit=InMemoryGameHelpBanditStore.with_expert_start("MAT"),
     )
     yield flow, publisher
     session.close()
@@ -190,7 +192,7 @@ def test_a_client_attempt_count_never_changes_the_server_order(service):
     # Help escalates inside the episode, round by round, not by a count the phone sends.
     state = flow.reconstruct(episode_id)["state"]
     assert response["support"]["scaffold_type"] == state["model2"]["support_order"][0]
-    assert state["model2"]["support_selection_mode"] == "model1_reason_lead"
+    assert state["model2"]["support_selection_mode"] == "bandit_greedy"
     assert "attempt_count" not in state["model2"]
 
 
@@ -220,20 +222,19 @@ def test_future_episode_starts_with_support_that_previously_led_to_independent_s
     )
     state = flow.reconstruct(episode_id)["state"]
     assert response["support"]["scaffold_type"] == learned[0]
-    assert state["model2"]["support_selection_mode"] == "learned_post_withdrawal_preference"
-    assert state["model2"]["learner_activity_support_preference"]["preferred_support"] == (
-        learned[0]
-    )
+    assert state["model2"]["support_selection_mode"] == "bandit_greedy"
+    assert state["model2"]["support_order"][0] == learned[0]
 
 
 def test_a_prior_independent_failure_is_not_a_preference(service):
     flow, _ = service
     skill = "G5-MAT-NUM-POSITION-01"
-    _finish(
+    *_, failed = _finish(
         flow,
         _open(flow, skill, key_suffix="failed-first-support"),
         after_correct=False,
     )
+    not_independent, _ = credited_support(failed)
 
     opened = _open(flow, skill, key_suffix="resume-escalation")
     episode_id = UUID(opened["episode_id"])
@@ -249,8 +250,8 @@ def test_a_prior_independent_failure_is_not_a_preference(service):
     # Help that did not lead to independent success earns no place at the front.
     state = flow.reconstruct(episode_id)["state"]
     assert response["support"]["scaffold_type"] == state["model2"]["support_order"][0]
-    assert state["model2"]["support_selection_mode"] == "model1_reason_lead"
-    assert state["model2"]["learner_activity_support_preference"]["preferred_support"] is None
+    assert state["model2"]["support_selection_mode"] == "bandit_greedy"
+    assert state["model2"]["support_order"][0] != not_independent
 
 
 @pytest.mark.parametrize("skill", [skill.skill_id for skill in ATOMIC_SKILLS])

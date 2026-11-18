@@ -8,12 +8,13 @@ played it. Baseline and invalid episodes teach it nothing.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
+from app.gamification.modeling.support_selection.baseline_order import fixed_order
 from app.gamification.modeling.support_selection.game_bandit import (
     CREDIT_RULE_VERSION,
     GAME_POLICY_VERSION,
@@ -26,7 +27,6 @@ from app.gamification.modeling.support_selection.game_bandit_ledger import (
     ledger_entries,
     snapshot_of,
 )
-from app.gamification.modeling.support_selection.support_order import SUBJECT_ORDERS
 
 BANDIT_GREEDY = "bandit_greedy"
 NO_APPROVED_POLICY = "no_approved_policy"
@@ -106,22 +106,8 @@ class GameHelpOrderChoice:
         return record
 
 
-def fixed_order(
-    subject: str, eligible: Iterable[str], renderable: Iterable[str]
-) -> tuple[str, ...]:
-    """The subject's fixed order restricted to the helps this area offers and can draw."""
-
-    offered, drawable = set(eligible), set(renderable)
-    order = tuple(
-        support for support in SUBJECT_ORDERS[subject] if support in offered and support in drawable
-    )
-    if not order:
-        raise ValueError("NO_RENDERABLE_SUPPORT")
-    return order
-
-
 def choose_game_help_order(
-    store: GameHelpBanditStore,
+    store: GameHelpBanditStore | None,
     *,
     subject: str,
     episode_id: UUID,
@@ -133,10 +119,13 @@ def choose_game_help_order(
     renderable: Sequence[str],
     now: datetime,
 ) -> GameHelpOrderChoice:
-    """The proposed condition's order: the approved bandit's, or the fixed order without one."""
+    """The proposed condition's order: the approved bandit's, or the fixed order without one.
 
-    approved = store.approved(subject)
-    if approved is None:
+    No store at all counts as no approved artifact.
+    """
+
+    approved = None if store is None else store.approved(subject)
+    if store is None or approved is None:
         return GameHelpOrderChoice(
             order=fixed_order(subject, eligible, renderable),
             selection_mode=NO_APPROVED_POLICY,
@@ -182,16 +171,19 @@ def choose_game_help_order(
 
 
 def learn_from_episode(
-    store: GameHelpBanditStore, state: Mapping[str, object], *, now: datetime
+    store: GameHelpBanditStore | None, state: Mapping[str, object], *, now: datetime
 ) -> str:
-    """Teach the subject's bandit one finished episode, once. Returns what happened."""
+    """Teach the subject's bandit one finished episode, once. Returns what happened.
+
+    Raises ``ValueError`` when a help was shown that the decision never scored.
+    """
 
     if state.get("condition") != "proposed":
         return "baseline_condition"
     if state.get("validity") != "valid":
         return "not_valid"
-    stored = store.snapshot_for(UUID(str(state["episode_id"])))
-    if stored is None:
+    stored = None if store is None else store.snapshot_for(UUID(str(state["episode_id"])))
+    if store is None or stored is None:
         return "no_bandit_decision"
     approved = store.approved(stored.snapshot.subject)
     if approved is None or approved.model_version_id != stored.model_version_id:

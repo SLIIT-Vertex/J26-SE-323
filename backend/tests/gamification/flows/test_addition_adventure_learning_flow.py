@@ -13,6 +13,7 @@ from app.gamification.application.learning_flow_orchestration import (
 )
 from app.gamification.content.addition_adventure import ATOMIC_SKILLS, MISCONCEPTIONS, SCAFFOLDS
 from app.gamification.infrastructure.db.learning_flow_store import SqlAlchemyLearningFlowStore
+from app.gamification.infrastructure.game_help_bandit_memory import InMemoryGameHelpBanditStore
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
 from tests.gamification.helpers.support_loop_helpers import (
@@ -40,6 +41,7 @@ def service():
         SqlAlchemyLearningFlowStore(session),
         probe_gateway=probe,
         evidence_publisher=publisher,
+        help_bandit=InMemoryGameHelpBanditStore.with_expert_start("MAT"),
     )
     yield flow, publisher, probe
     session.close()

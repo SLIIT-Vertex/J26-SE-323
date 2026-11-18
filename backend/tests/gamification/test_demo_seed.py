@@ -19,6 +19,7 @@ from app.gamification.demo_seed.verify import verify
 from app.gamification.infrastructure.db.models import LearningFlowEpisodeRunModel
 from app.shared.database.base import Base
 from app.shared.learner.model import LearnerModel
+from tests.gamification.helpers.help_bandit_helpers import approve_expert_start
 
 SEED_FILE = Path(__file__).resolve().parents[2] / "demo_seeds" / "shared_learner_demo_v1.yaml"
 LEARNER = UUID("00000000-0000-4000-8000-000000000721")
@@ -44,6 +45,7 @@ def world():
         LearnerModel(id=LEARNER, grade=5, preferred_language="si", created_at=now, updated_at=now)
     )
     session.commit()
+    approve_expert_start(session)
     yield session, get_learning_flow_orchestrator(session)
     session.close()
 
@@ -87,6 +89,14 @@ def test_seed_plays_through_the_real_models_and_every_check_passes(world):
     }
     assert failing == {}
     assert checks["Decision paths taken"].checked > 0
+    # The proposed orders came from the approved bandit and were recomputed from its ledger.
+    assert "bandit_greedy" in checks["Decision paths taken"].detail
+    assert (
+        checks[
+            "Every valid +1 is counted for its help types in the next decision on that skill"
+        ].checked
+        > 0
+    )
 
 
 def test_running_the_seed_again_changes_nothing(world):

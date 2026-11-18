@@ -45,6 +45,9 @@ from app.gamification.infrastructure.db.consent_store import (
     CONSENT_CONTRACT,
     SqlAlchemyConsentStore,
 )
+from app.gamification.infrastructure.db.game_help_bandit_store import (
+    SqlAlchemyGameHelpBanditStore,
+)
 from app.gamification.infrastructure.db.learning_flow_gateways import (
     SqlAlchemyLearningFlowEvidencePublisher,
     SqlAlchemyProbeGateway,
@@ -406,6 +409,9 @@ def get_learning_flow_orchestrator(db: Session = Depends(get_db)) -> LearningFlo
         ),
         camera_consent=SqlAlchemyConsentStore(db),
         support_need_provider=ResearchLearningStateGateway(stored_learning_state_provider(db)),
+        # Same session as the episode: a decision's snapshot and an episode's ledger rows commit or
+        # roll back with it.
+        help_bandit=SqlAlchemyGameHelpBanditStore(db),
     )
 
 

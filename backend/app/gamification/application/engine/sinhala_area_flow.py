@@ -16,7 +16,6 @@ A package is one content module (``content``) with the interface documented on
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import replace
 from datetime import datetime
 from types import ModuleType
 from uuid import UUID, uuid4
@@ -26,10 +25,9 @@ from app.gamification.application.engine.area_flow import (
     AreaGameFlow,
     _attempts,
     _event,
-    _model1_label,
-    _model1_uncertain,
     _presentations,
 )
+from app.gamification.application.game_help_order import GameHelpOrderChoice
 from app.gamification.application.learning_state_input import read_learning_state
 from app.gamification.application.support_builders import (
     SupportBuildContext,
@@ -43,10 +41,8 @@ from app.gamification.application.teardown_receipt import (
 from app.gamification.application.teardown_receipt import TRUE_FLAGS as _TEARDOWN_TRUE_FLAGS
 from app.gamification.application.teardown_receipt import ZERO_COUNTS as _TEARDOWN_ZERO_COUNTS
 from app.gamification.content.area_support_catalog import assignment
-from app.gamification.modeling.support_selection.support_order import (
-    SupportOrderDecision,
-    choose_support_order,
-)
+from app.gamification.modeling.support_selection.baseline_order import BaselineOrder
+from app.gamification.modeling.support_selection.support_order import SupportOrderDecision
 
 AUTHORED_SEQUENCE = ("visual_guidance", "worked_parallel_example", "step_by_step_guidance")
 SUPPORT_TITLES_SI = {
@@ -387,35 +383,43 @@ class SinhalaAreaFlow(AreaGameFlow):
         eligible = tuple(s for s in assignment(self.area_id).eligible_support_types if s in AUTHORED_SEQUENCE)
         plans = self._support_rounds.renderable_plans(context, eligible)
         proposed = state["condition"] == "proposed"
-        try:
-            decision = choose_support_order(
-                subject="SIN",
-                condition=str(state["condition"]),
-                model1_label=_model1_label(belief),
-                model1_uncertain=_model1_uncertain(belief),
-                eligible=eligible,
-                renderable=tuple(plans),
-                # Baseline never reads outcomes, so it can never learn from IG.
-                history=own_history if proposed else (),
-                learning_state_input=read_learning_state(
-                    self._support_need_provider, learner_id=learner_id,
-                    skill_id=self.universal_skill_id,
-                    session_id=str(state.get("learning_state_session_id", state["session_id"])), at=at,
-                ),
-            )
-        except ValueError as error:
-            raise AreaFlowError(str(error)) from error
-        cursor = _support_cursor(own_history, proposed=proposed)
+        reading = read_learning_state(
+            self._support_need_provider, learner_id=learner_id,
+            skill_id=self.universal_skill_id,
+            session_id=str(state.get("learning_state_session_id", state["session_id"])), at=at,
+        )
         authored = tuple(s for s in AUTHORED_SEQUENCE if s in plans)
-        order, reason = activity_order(decision, authored=authored, cursor=cursor, proposed=proposed)
-        decision = replace(decision, order=order)
-        cursor_record = {
-            "cursor_version": CURSOR_VERSION,
-            "authored_sequence": list(authored),
-            "start_position": authored.index(order[0]),
-            **cursor,
-        }
-        state["support_cursor"] = cursor_record
+        selection: dict[str, object]
+        decision: GameHelpOrderChoice | BaselineOrder
+        if proposed:
+            # The bandit's order replaces the package cursor; the cursor's knowledge ("move on from
+            # a first help that did not transfer") is a feature of the bandit's context.
+            decision = self._bandit_order(state, belief, reading, own_history, eligible, tuple(plans), at)
+            reason = decision.selection_mode
+            selection = {**decision.as_record(), "learning_state_input": dict(reading)}
+        else:
+            if not authored:
+                raise AreaFlowError("NO_RENDERABLE_SUPPORT")
+            # The comparison group always starts the authored sequence; baseline never reads outcomes.
+            decision = BaselineOrder(authored)
+            cursor = _support_cursor(own_history, proposed=False)
+            reason = "activity_default"
+            cursor_record = {
+                "cursor_version": CURSOR_VERSION,
+                "authored_sequence": list(authored),
+                "start_position": 0,
+                **cursor,
+            }
+            state["support_cursor"] = cursor_record
+            selection = {
+                "support_cursor": cursor_record,
+                "selection_reason": reason,
+                "selection_reasons_by_position": [
+                    reason if index == 0 else "activity_support_escalation"
+                    for index in range(len(authored))
+                ],
+                **decision.as_record(),
+            }
         state["model2"] = {
             "decision_id": str(uuid4()),
             "context_snapshot_id": str(uuid4()),
@@ -437,12 +441,7 @@ class SinhalaAreaFlow(AreaGameFlow):
                 if isinstance(s, Mapping) and s.get("scaffold_type") not in eligible
             ],
             "renderable_actions": list(plans),
-            "support_cursor": cursor_record,
-            "selection_reason": reason,
-            "selection_reasons_by_position": [
-                reason if index == 0 else "activity_support_escalation" for index in range(len(order))
-            ],
-            **decision.as_record(),
+            **selection,
         }
         state["supported_correctness"] = None
         _event(state, "difficulty_detected", at, evidence_id=str(evidence_id))

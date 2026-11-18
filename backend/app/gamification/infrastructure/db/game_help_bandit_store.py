@@ -282,8 +282,11 @@ class SqlAlchemyGameHelpBanditStore:
             for row in rows
         )
 
-    def rebuild(self, model_version_id: UUID) -> GameHelpBandit:
-        """The approved artifact with the whole ledger applied in order."""
+    def rebuild(self, model_version_id: UUID, *, upto: int | None = None) -> GameHelpBandit:
+        """The approved artifact with the ledger applied in order, up to ``upto`` if given.
+
+        ``upto`` is a decision's recorded ledger position: the state the bandit decided from.
+        """
 
         artifact = self.session.get(ModelVersionModel, model_version_id)
         if artifact is None:
@@ -291,6 +294,8 @@ class SqlAlchemyGameHelpBanditStore:
         rows = self.ledger(model_version_id)
         if [position for position, _, _ in rows] != list(range(1, len(rows) + 1)):
             raise GameHelpBanditStoreError("LEDGER_GAP")
+        if upto is not None:
+            rows = rows[:upto]
         snapshots: dict[UUID, DecisionSnapshot] = {}
         for _, _, snapshot_id in rows:
             if snapshot_id not in snapshots:

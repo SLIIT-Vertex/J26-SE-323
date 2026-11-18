@@ -37,6 +37,7 @@ from app.gamification.application.engine.sinhala_area_flow import (
     _support_cursor,
     activity_order,
 )
+from app.gamification.application.game_help_order import BANDIT_GREEDY, NO_APPROVED_POLICY
 from app.gamification.application.learning_flow_orchestration import GAME_FLOW_TYPES
 from app.gamification.infrastructure.db.models import LearningFlowEpisodeRunModel
 from app.gamification.modeling.misconception_inference.bayesian_model import GAME_MODEL_VERSION
@@ -103,10 +104,13 @@ def replay_model1(state: Mapping[str, object]) -> str:
 
 
 def replay_model2(state: Mapping[str, object], history: Iterable[Mapping[str, object]]) -> str:
-    """``match``, ``differs:<fields>``, ``older_policy:<version>`` or ``not_replayable:<reason>``.
+    """``match``, ``differs:<fields>``, ``older_policy:<version>``, ``not_rule_based`` or
+    ``not_replayable:<reason>``.
 
     ``history`` is the learner's completed episodes of the skill that finished before this
-    episode's decision, oldest first, as the store returned them at the time.
+    episode's decision, oldest first, as the store returned them at the time. Orders chosen by the
+    help-order bandit, or the fixed order given while a subject has no approved bandit, are not
+    rule decisions and are counted as ``not_rule_based``.
     """
 
     flow_type = _flow_type(state)
@@ -116,6 +120,8 @@ def replay_model2(state: Mapping[str, object], history: Iterable[Mapping[str, ob
         return "not_replayable:unknown_game"
     if not isinstance(stored, Mapping) or not isinstance(model1, Mapping):
         return "not_replayable:no_decision"
+    if stored.get("support_selection_mode") in (BANDIT_GREEDY, NO_APPROVED_POLICY):
+        return "not_rule_based"
     version = stored.get("order_policy_version")
     if version != ORDER_POLICY_VERSION:
         return f"older_policy:{version}"
