@@ -1,0 +1,613 @@
+/* Nimo's Midnight Monster Café. Design space 1920×1080; --px is one design pixel. */
+.monster-cafe {
+	--cafe-ink: #3a2346;
+	--cafe-cream: #fff4e2;
+	--cafe-pink: #ff8fc0;
+	--cafe-gold: #ffc93c;
+	position: absolute;
+	inset: 0;
+	background:
+		#e9a07a url("/curriculum/game/G5-AREA-MAT-04/bg-cafe.webp") center / cover
+		no-repeat;
+	color: var(--cafe-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholder shapes (until the art is ready) ---- */
+
+.cafe-shape {
+	display: inline-block;
+	border-radius: 30%;
+	background: #f2c48d;
+	box-shadow: inset 0 calc(var(--px) * -8) 0 rgb(0 0 0 / 15%);
+}
+
+.cafe-shape[data-art="packet"] {
+	border-radius: 18%;
+	background: #ffb23c;
+}
+
+.cafe-shape[data-art="box"] {
+	border-radius: 14%;
+	background: #a77be8;
+}
+
+.cafe-shape[data-art="crate"] {
+	border-radius: 10%;
+	background: #c98a4b;
+}
+
+.cafe-shape[data-art^="monster"] {
+	border-radius: 50% 50% 40% 40%;
+	background:
+		radial-gradient(
+			circle at 50% 35%,
+			#fff 0 12%,
+			#1d1d28 13% 18%,
+			transparent 19%
+		),
+		var(--tone, #8fd14f);
+}
+
+.cafe-shape[data-art="nimoChef"] {
+	border-radius: 45% 45% 30% 30%;
+	background:
+		radial-gradient(ellipse at 50% 12%, #fff 0 22%, transparent 23%),
+		radial-gradient(circle at 50% 38%, #3f8fe0 0 26%, transparent 27%),
+		radial-gradient(ellipse at 50% 75%, #fff 0 30%, transparent 31%), #3f8fe0;
+}
+
+/* Emoji snacks: the font size sets their size. */
+.cafe-emoji {
+	display: inline-grid;
+	place-items: center;
+	font-size: calc(var(--px) * 56);
+	line-height: 1;
+}
+
+/* Emoji snacks in a pile are bigger than drawn pieces: they have no outline to carry them. */
+.snack-piece.cafe-emoji {
+	width: auto;
+	height: auto;
+	font-size: calc(var(--px) * 58);
+}
+
+/* ---- Monster Order Mayhem (the order counter) ---- */
+
+.cafe-orders {
+	position: absolute;
+	inset: 0;
+}
+
+.cafe-scroll,
+.snack-message {
+	margin: 0;
+	padding: calc(var(--px) * 14) calc(var(--px) * 36);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 26);
+	background: var(--wood);
+	font-size: calc(var(--px) * 40);
+	font-weight: 700;
+	text-align: center;
+}
+
+.cafe-scroll {
+	position: absolute;
+	top: calc(var(--px) * 24);
+	left: 50%;
+	max-width: calc(var(--px) * 1240);
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.cafe-orders[data-outcome="correct"] .cafe-scroll {
+	background: #d9f7c9;
+}
+
+.cafe-nimo {
+	position: absolute;
+	bottom: calc(var(--px) * 20);
+	left: calc(var(--px) * 20);
+	width: calc(var(--px) * 360);
+	height: calc(var(--px) * 520);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+/* Right of the order board, standing on the painted counter. */
+.cafe-monsters {
+	position: absolute;
+	top: calc(var(--px) * 350);
+	right: calc(var(--px) * 16);
+	display: flex;
+	gap: calc(var(--px) * 4);
+}
+
+.cafe-monster {
+	width: calc(var(--px) * 200);
+	height: calc(var(--px) * 250);
+	min-height: 0;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	animation: cafe-bob 1.6s ease-in-out infinite;
+	animation-delay: calc(var(--seat) * 220ms);
+}
+
+.cafe-monster-art {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.cafe-monsters[data-mood="happy"] .cafe-monster {
+	animation: cafe-jump 420ms ease-out infinite alternate;
+	animation-delay: calc(var(--seat) * 120ms);
+}
+
+.cafe-monsters[data-mood="puzzled"] .cafe-monster {
+	animation: cafe-tilt 260ms ease-in-out 4;
+}
+
+.cafe-monsters[data-mood="eating"] .cafe-monster {
+	animation: cafe-munch 200ms ease-in-out 2;
+}
+
+.cafe-ticket {
+	position: absolute;
+	top: calc(var(--px) * 130);
+	left: calc(var(--px) * 400);
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 16);
+	width: calc(var(--px) * 820);
+	padding: calc(var(--px) * 22);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 30);
+	background: var(--cafe-cream);
+	box-shadow: 0 calc(var(--px) * 12) 0 rgb(0 0 0 / 16%);
+}
+
+.cafe-ticket-snack {
+	position: absolute;
+	top: calc(var(--px) * -40);
+	left: calc(var(--px) * -40);
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 110);
+}
+
+.cafe-ticket-snack > * {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	font-size: calc(var(--px) * 120);
+}
+
+.cafe-story-pick {
+	display: flex;
+	gap: calc(var(--px) * 20);
+}
+
+.cafe-order-card {
+	display: grid;
+	justify-items: center;
+	min-width: calc(var(--px) * 330);
+	min-height: calc(var(--px) * 120);
+	padding: calc(var(--px) * 8) calc(var(--px) * 20);
+	border: calc(var(--px) * 6) solid #d9b9e8;
+	border-radius: calc(var(--px) * 24);
+	background: #fff;
+	color: inherit;
+	font: inherit;
+	font-size: calc(var(--px) * 30);
+}
+
+.cafe-order-card strong {
+	font-size: calc(var(--px) * 56);
+}
+
+.cafe-order-card[aria-pressed="true"] {
+	border-color: var(--cafe-gold);
+	box-shadow: 0 0 calc(var(--px) * 24) var(--cafe-gold);
+}
+
+.cafe-board {
+	display: grid;
+	grid-template-columns: calc(var(--px) * 230) repeat(
+			var(--columns),
+			calc(var(--px) * 120)
+		);
+	align-items: center;
+	justify-items: center;
+	gap: calc(var(--px) * 6) calc(var(--px) * 12);
+}
+
+.cafe-board-label {
+	justify-self: end;
+	font-size: calc(var(--px) * 32);
+	font-weight: 700;
+	text-align: right;
+}
+
+.cafe-board-place {
+	font-size: calc(var(--px) * 28);
+	font-weight: 700;
+	color: #8a5d9e;
+}
+
+.cafe-board-digit {
+	position: relative;
+	display: grid;
+	place-items: center;
+	height: calc(var(--px) * 96);
+	font-size: calc(var(--px) * 72);
+	font-weight: 800;
+}
+
+.cafe-board-digit[data-changed] > span {
+	color: #b8a0c4;
+	text-decoration: line-through;
+	text-decoration-thickness: calc(var(--px) * 6);
+}
+
+.cafe-board-digit small {
+	position: absolute;
+	top: calc(var(--px) * -26);
+	right: calc(var(--px) * -24);
+	color: #e2457a;
+	font-size: calc(var(--px) * 42);
+}
+
+.cafe-open,
+.cafe-answer,
+.cafe-pad button,
+.cafe-again,
+.snack-open,
+.snack-give,
+.snack-again,
+.fluff-bring,
+.fluff-pile {
+	min-height: 0;
+	border: 0;
+	color: inherit;
+	font: inherit;
+}
+
+.cafe-open {
+	width: calc(var(--px) * 96);
+	height: calc(var(--px) * 76);
+	padding: calc(var(--px) * 4);
+	border-radius: calc(var(--px) * 18);
+	background: #f6e3fb;
+}
+
+.cafe-open > * {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.cafe-open[aria-pressed="true"] {
+	background: var(--cafe-gold);
+	box-shadow: 0 0 calc(var(--px) * 20) var(--cafe-gold);
+}
+
+.cafe-answer {
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 110);
+	border: calc(var(--px) * 6) dashed #d39bbd;
+	border-radius: calc(var(--px) * 20);
+	background: #fff;
+	font-size: calc(var(--px) * 66);
+	font-weight: 800;
+}
+
+/* Read-only boards (the fluffball progress board) still show the digits clearly. */
+.cafe-answer:disabled {
+	opacity: 1;
+	color: var(--cafe-ink);
+}
+
+.cafe-answer[aria-pressed="true"] {
+	border-style: solid;
+	border-color: var(--cafe-gold);
+	box-shadow: 0 0 calc(var(--px) * 20) var(--cafe-gold);
+}
+
+.cafe-answer[data-ghost] {
+	color: #c9b3d4;
+}
+
+.cafe-pad {
+	position: absolute;
+	bottom: calc(var(--px) * 28);
+	left: calc(var(--px) * 400);
+	display: flex;
+	gap: calc(var(--px) * 10);
+}
+
+.cafe-pad button {
+	width: calc(var(--px) * 88);
+	height: calc(var(--px) * 100);
+	border-radius: calc(var(--px) * 26);
+	background: var(--cafe-cream);
+	box-shadow: 0 calc(var(--px) * 8) 0 #d39bbd;
+	font-size: calc(var(--px) * 56);
+	font-weight: 800;
+}
+
+.cafe-pad button:disabled,
+.cafe-again:disabled {
+	opacity: 0.5;
+}
+
+.cafe-actions {
+	position: absolute;
+	right: calc(var(--px) * 40);
+	bottom: calc(var(--px) * 170);
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 20);
+}
+
+.cafe-again,
+.snack-again {
+	min-height: calc(var(--px) * 100);
+	padding: 0 calc(var(--px) * 30);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 50);
+	background: var(--wood);
+	font-size: calc(var(--px) * 36);
+	font-weight: 700;
+}
+
+.cafe-send {
+	min-width: calc(var(--px) * 340);
+}
+
+/* ---- Magical Snack Swap ---- */
+
+.snack-swap,
+.fluff-feast {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 18);
+	width: 100%;
+	max-width: calc(var(--px) * 1080);
+}
+
+.snack-message {
+	font-size: calc(var(--px) * 34);
+}
+
+.snack-order {
+	display: flex;
+	gap: calc(var(--px) * 24);
+	margin: 0;
+	font-size: calc(var(--px) * 40);
+	font-weight: 800;
+}
+
+.snack-order-chip {
+	padding: calc(var(--px) * 6) calc(var(--px) * 22);
+	border-radius: calc(var(--px) * 20);
+	background: var(--cafe-cream);
+}
+
+.snack-trays {
+	display: grid;
+	grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+	gap: calc(var(--px) * 14);
+	width: 100%;
+}
+
+.snack-tray {
+	display: grid;
+	justify-items: center;
+	align-content: start;
+	gap: calc(var(--px) * 10);
+	padding: calc(var(--px) * 14);
+	border: calc(var(--px) * 6) solid #e7c9f0;
+	border-radius: calc(var(--px) * 28);
+	background: rgb(255 255 255 / 88%);
+}
+
+.snack-tray[data-short] {
+	animation: cafe-tilt 220ms ease-in-out 3;
+	border-color: #ff8f8f;
+}
+
+.snack-tray[data-burst] {
+	animation: snack-burst 520ms ease-out;
+}
+
+.snack-tray-name {
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+	color: #8a5d9e;
+}
+
+.snack-tray-pile {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-content: flex-start;
+	gap: calc(var(--px) * 4);
+	min-height: calc(var(--px) * 170);
+}
+
+.snack-piece {
+	width: calc(var(--px) * 52);
+	height: calc(var(--px) * 52);
+	object-fit: contain;
+}
+
+.snack-count {
+	font-size: calc(var(--px) * 64);
+	font-weight: 800;
+}
+
+.snack-open,
+.snack-give {
+	width: 100%;
+	min-height: calc(var(--px) * 84);
+	border-radius: calc(var(--px) * 24);
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+}
+
+.snack-open {
+	background: #f6e3fb;
+}
+
+.snack-give {
+	background: var(--go);
+	color: #fff;
+}
+
+.snack-give[data-given] {
+	background: #cfe9c4;
+	color: var(--cafe-ink);
+}
+
+.snack-open:disabled {
+	opacity: 0.45;
+}
+
+[data-ghost].snack-open,
+[data-ghost].fluff-bring,
+[data-ghost].cafe-open {
+	outline: calc(var(--px) * 6) dashed var(--cafe-gold);
+	outline-offset: calc(var(--px) * 4);
+}
+
+/* ---- Feed the Fluffballs ---- */
+
+.fluff-board .cafe-board {
+	transform: scale(0.75);
+	transform-origin: top center;
+	margin-bottom: calc(var(--px) * -110);
+}
+
+.fluff-board {
+	padding: calc(var(--px) * 12);
+	border-radius: calc(var(--px) * 26);
+	background: rgb(255 244 226 / 92%);
+}
+
+.fluff-feast .cafe-monsters {
+	position: static;
+}
+
+.fluff-feast .cafe-monsters .cafe-monster {
+	width: calc(var(--px) * 170);
+	height: calc(var(--px) * 180);
+}
+
+.fluff-plate {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: calc(var(--px) * 18);
+	width: 100%;
+	padding: calc(var(--px) * 16) calc(var(--px) * 24);
+	border: calc(var(--px) * 6) solid #d9b9e8;
+	border-radius: calc(var(--px) * 30);
+	background: rgb(255 255 255 / 92%);
+}
+
+.fluff-left {
+	display: grid;
+	justify-items: center;
+	font-size: calc(var(--px) * 28);
+	font-weight: 700;
+}
+
+.fluff-left strong {
+	min-width: calc(var(--px) * 120);
+	padding: 0 calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 22);
+	background: #fff3b8;
+	font-size: calc(var(--px) * 72);
+	text-align: center;
+}
+
+.fluff-pile {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--px) * 6);
+	min-height: calc(var(--px) * 110);
+	padding: calc(var(--px) * 8);
+	border-radius: calc(var(--px) * 20);
+	background: transparent;
+}
+
+.fluff-pile .snack-piece {
+	width: calc(var(--px) * 48);
+	height: calc(var(--px) * 48);
+	font-size: calc(var(--px) * 44);
+}
+
+.fluff-pile .snack-piece.cafe-emoji {
+	width: auto;
+	height: auto;
+	font-size: calc(var(--px) * 68);
+}
+
+.fluff-eaten {
+	font-size: calc(var(--px) * 34);
+	font-weight: 800;
+}
+
+.fluff-bring {
+	grid-column: 1 / -1;
+	min-height: calc(var(--px) * 90);
+	padding: 0 calc(var(--px) * 30);
+	border-radius: calc(var(--px) * 45);
+	background: var(--cafe-gold);
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+}
+
+@keyframes cafe-bob {
+	50% {
+		transform: translateY(calc(var(--px) * -10));
+	}
+}
+
+@keyframes cafe-jump {
+	to {
+		transform: translateY(calc(var(--px) * -40));
+	}
+}
+
+@keyframes cafe-tilt {
+	25% {
+		transform: rotate(-7deg);
+	}
+	75% {
+		transform: rotate(7deg);
+	}
+}
+
+@keyframes cafe-munch {
+	50% {
+		transform: scale(1.08, 0.92);
+	}
+}
+
+@keyframes snack-burst {
+	40% {
+		transform: scale(1.06);
+		box-shadow: 0 0 calc(var(--px) * 40) var(--cafe-gold);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.cafe-monster,
+	.snack-tray[data-short],
+	.snack-tray[data-burst] {
+		animation: none;
+	}
+}

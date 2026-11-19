@@ -86,7 +86,7 @@ what the game sends. "Universal node" is where Knowledge Tracing files the answe
 | `G5-AREA-MAT-01` | Nimo's Wacky Toybox (`number_world_flow.py`) | 4 | `MAT-NUM` | `MAT-NUM` | yes |
 | `G5-AREA-MAT-02` | Nimo's Sky Adventure (`addition_adventure_flow.py`) | 3 | `MAT-OPS` | `MAT-OPS` | yes |
 | `G5-AREA-MAT-03` | Number Patterns (`number_patterns_flow.py`) | 4 | `APT-PAT` | `APT-PAT` | yes |
-| `G5-AREA-MAT-04` | Subtraction Adventure (`subtraction_adventure_flow.py`) | 6 | `MAT-OPS` | `MAT-OPS` | yes |
+| `G5-AREA-MAT-04` | Subtraction (`subtraction_adventure_flow.py`) | 5 | `MAT-OPS` | `MAT-OPS` | yes |
 | `G5-AREA-MAT-05` | Fraction Adventure (`fraction_adventure_flow.py`) | 7 | `MAT-FRC` | `MAT-FRC` | yes |
 | `G5-AREA-MAT-06` | Multiplication Adventure (`multiplication_adventure_flow.py`) | 5 | `MAT-OPS` | `MAT-OPS` | yes |
 | `G5-AREA-MAT-07` | Time Adventure (`time_adventure_flow.py`) | 5 | **`MAT-TIME`** | `MAT-TIM` | yes |

@@ -1,4 +1,4 @@
-"""Durable Subtraction Adventure profile for the reusable adaptive-game flow."""
+"""Durable Subtraction profile (Nimo's Midnight Monster Café) for the reusable adaptive-game flow."""
 
 from __future__ import annotations
 
@@ -86,8 +86,6 @@ class SubtractionAdventureFlow(AreaGameFlow):
             )
         else:
             public.update(minuend=game["minuend"], subtrahend=game["subtrahend"])
-        if item.skill_id == "G5-MAT-SUB-EXPANDED-01":
-            public["representation"] = "expanded"
         return public
 
     @staticmethod
@@ -222,16 +220,7 @@ class SubtractionAdventureFlow(AreaGameFlow):
             )
         response: dict[str, object] | None
         kind = str(game["response_kind"])
-        if kind == "expanded_subtraction":
-            response = {
-                "kind": "expanded_subtraction",
-                "minuend_terms": list(analysed["minuend_terms"]),  # type: ignore[arg-type]
-                "subtrahend_terms": list(analysed["subtrahend_terms"]),  # type: ignore[arg-type]
-                "adjusted_minuend_terms": list(analysed["adjusted_terms"]),  # type: ignore[arg-type]
-                "result_terms": list(analysed["result_terms"]),  # type: ignore[arg-type]
-                "result": analysed["result"],
-            }
-        elif kind == "difference_story":
+        if kind == "difference_story":
             response = {
                 "kind": "difference_story",
                 "relationship": game["relationship"],

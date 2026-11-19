@@ -1,4 +1,4 @@
-"""Draft, source-linked Subtraction Adventure content for Grade 5 Sinhala maths.
+"""Draft, source-linked Subtraction (Nimo's Midnight Monster Café) content for Grade 5 Sinhala maths.
 
 Photographed textbook structures are preserved as deterministic constructed-response
 families. This module does not persist learner identity and never trusts a client score.
@@ -27,7 +27,8 @@ SCORING_VERSION = "g5-mat-subtraction-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-subtraction-parallel-v1"
 SCAFFOLD_VERSION = "g5-mat-subtraction-scaffolds-v1"
 
-Chapter = Literal["place_value_board", "regrouping_workshop", "difference_story"]
+# Every mission is a monster café order; no-regrouping is reached only as help.
+Chapter = Literal["monster_orders", "fluffball_feast"]
 ScaffoldType = Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
 Place = Literal["thousands", "hundreds", "tens", "ones"]
 Relationship = Literal["difference_between", "how_many_more"]
@@ -62,7 +63,7 @@ class AtomicSkill:
 ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-MAT-SUB-NO-REGROUP-01",
-        "place_value_board",
+        "fluffball_feast",
         "ස්ථාන අගය එකට ගැලපූ අඩු කිරීම",
         "easy",
         "G5-MAT-C07-L01",
@@ -70,17 +71,8 @@ ATOMIC_SKILLS = (
         "column_subtraction",
     ),
     AtomicSkill(
-        "G5-MAT-SUB-EXPANDED-01",
-        "place_value_board",
-        "විහිදුණු ආකාරයෙන් අඩු කිරීම",
-        "easy_medium",
-        "G5-MAT-C07-L01",
-        "provisional_source_linked",
-        "expanded_subtraction",
-    ),
-    AtomicSkill(
         "G5-MAT-C07-L01-O01",
-        "regrouping_workshop",
+        "monster_orders",
         "ගෙන ඒම් එකක් සහිත අඩු කිරීම",
         "medium",
         "G5-MAT-C07-L01-O01",
@@ -89,7 +81,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-C07-L01-O02",
-        "regrouping_workshop",
+        "monster_orders",
         "ගෙන ඒම් දෙකක් සහිත අඩු කිරීම",
         "medium_hard",
         "G5-MAT-C07-L01-O02",
@@ -98,7 +90,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-SUB-DIFF-BETWEEN-01",
-        "difference_story",
+        "monster_orders",
         "කාණ්ඩ දෙකක වෙනස",
         "medium",
         "G5-MAT-C07-L01-O03",
@@ -108,7 +100,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-SUB-HOW-MANY-MORE-01",
-        "difference_story",
+        "monster_orders",
         "කොපමණ වැඩියිද",
         "medium",
         "G5-MAT-C07-L01-O03",
@@ -166,57 +158,58 @@ SCAFFOLD_CATALOGUE = {
     for scaffold in SCAFFOLDS
 }
 
+# Two monsters' orders at the midnight café. `asset` names the snack the game draws.
 STORY_CONTEXTS: dict[Relationship, tuple[dict[str, object], ...]] = {
     "difference_between": (
         {
-            "context_id": "station_flow",
-            "scene": "station",
-            "asset": "/curriculum/game/G5-AREA-MAT-01/route-boat.png",
-            "first_label_si": "ඇතුළු වූ මගීන්",
-            "second_label_si": "පිටව ගිය මගීන්",
-            "prompt_si": "මගීන් ඇතුළු වූ සංඛ්‍යාව සහ පිටව ගිය සංඛ්‍යාව අතර වෙනස සොයන්න.",
+            "context_id": "cupcake_orders",
+            "scene": "cafe",
+            "asset": "cupcake",
+            "first_label_si": "ගූගූගේ කප්කේක් ඇණවුම",
+            "second_label_si": "පිංකිගේ කප්කේක් ඇණවුම",
+            "prompt_si": "කප්කේක් ඇණවුම් දෙක අතර වෙනස කීයද?",
         },
         {
-            "context_id": "library_flow",
-            "scene": "library",
-            "asset": "/curriculum/game/G5-AREA-MAT-02/empty-fruit-basket.png",
-            "first_label_si": "ගෙනා පොත්",
-            "second_label_si": "බාර දුන් පොත්",
-            "prompt_si": "ගෙනා පොත් ගණන සහ බාර දුන් පොත් ගණන අතර වෙනස සොයන්න.",
+            "context_id": "cookie_orders",
+            "scene": "cafe",
+            "asset": "cookie",
+            "first_label_si": "බුබුගේ කුකී ඇණවුම",
+            "second_label_si": "ගූගූගේ කුකී ඇණවුම",
+            "prompt_si": "කුකී ඇණවුම් දෙක අතර වෙනස කීයද?",
         },
         {
-            "context_id": "bus_flow",
-            "scene": "bus",
-            "asset": "/curriculum/game/G5-AREA-MAT-02/tuk-tuk.png",
-            "first_label_si": "බස් රථයට නැග්ග අය",
-            "second_label_si": "බස් රථයෙන් බැස්ස අය",
-            "prompt_si": "බස් රථයට නැග්ග සංඛ්‍යාව සහ බැස්ස සංඛ්‍යාව අතර වෙනස සොයන්න.",
+            "context_id": "donut_orders",
+            "scene": "cafe",
+            "asset": "donut",
+            "first_label_si": "පිංකිගේ ඩෝනට් ඇණවුම",
+            "second_label_si": "බුබුගේ ඩෝනට් ඇණවුම",
+            "prompt_si": "ඩෝනට් ඇණවුම් දෙක අතර වෙනස කීයද?",
         },
     ),
     "how_many_more": (
         {
-            "context_id": "fruit_baskets",
-            "scene": "fruits",
-            "asset": "/curriculum/game/G5-AREA-MAT-02/fruit-tokens.png",
-            "first_label_si": "පළමු කූඩයේ පළතුරු",
-            "second_label_si": "දෙවන කූඩයේ පළතුරු",
-            "prompt_si": "පළමු කූඩයේ පළතුරු දෙවන කූඩයට වඩා කොපමණ වැඩියිද?",
+            "context_id": "cookie_eaters",
+            "scene": "cafe",
+            "asset": "cookie",
+            "first_label_si": "ගූගූ කෑ කුකී",
+            "second_label_si": "බුබු කෑ කුකී",
+            "prompt_si": "වැඩිපුර කෑවේ කවුද? කීයකින් වැඩිද?",
         },
         {
-            "context_id": "seedling_trays",
-            "scene": "seedlings",
-            "asset": "/curriculum/game/G5-AREA-MAT-02/cargo-parcel.png",
-            "first_label_si": "පළමු තැටියේ පැළ",
-            "second_label_si": "දෙවන තැටියේ පැළ",
-            "prompt_si": "පළමු තැටියේ පැළ දෙවන තැටියට වඩා කොපමණ වැඩියිද?",
+            "context_id": "cupcake_eaters",
+            "scene": "cafe",
+            "asset": "cupcake",
+            "first_label_si": "පිංකි කෑ කප්කේක්",
+            "second_label_si": "ගූගූ කෑ කප්කේක්",
+            "prompt_si": "වැඩිපුර කෑවේ කවුද? කීයකින් වැඩිද?",
         },
         {
-            "context_id": "class_groups",
-            "scene": "groups",
-            "asset": "/curriculum/game/G5-AREA-MAT-02/school-building-token-a.png",
-            "first_label_si": "අ පන්තියේ ළමයි",
-            "second_label_si": "ආ පන්තියේ ළමයි",
-            "prompt_si": "අ පන්තියේ ළමයි ආ පන්තියට වඩා කොපමණ වැඩියිද?",
+            "context_id": "donut_eaters",
+            "scene": "cafe",
+            "asset": "donut",
+            "first_label_si": "බුබු කෑ ඩෝනට්",
+            "second_label_si": "පිංකි කෑ ඩෝනට්",
+            "prompt_si": "වැඩිපුර කෑවේ කවුද? කීයකින් වැඩිද?",
         },
     ),
 }
@@ -315,7 +308,6 @@ def _family_seed(skill_id: str, seed: int) -> random.Random:
 # Simpler version: the fewest columns and exchanges that still practise the same skill.
 _SIMPLER_PROFILES: dict[str, tuple[int, tuple[str, ...], bool]] = {
     "G5-MAT-SUB-NO-REGROUP-01": (2, (), False),
-    "G5-MAT-SUB-EXPANDED-01": (3, (), False),
     "G5-MAT-C07-L01-O01": (3, ("ones",), False),
     "G5-MAT-C07-L01-O02": (3, ("tens", "ones"), True),
 }
@@ -338,11 +330,6 @@ def _profile(skill: AtomicSkill, family: random.Random) -> dict[str, object]:
         width = family.choice((2, 3, 4))
         zero_indexes = (family.randrange(1, width - 1),) if width >= 3 and family.randrange(2) else ()
         destinations: tuple[str, ...] = ()
-        sequential = False
-    elif skill.skill_id == "G5-MAT-SUB-EXPANDED-01":
-        width = family.choice((3, 4))
-        zero_indexes = (width - 2,) if family.randrange(2) else ()
-        destinations = ()
         sequential = False
     elif skill.skill_id == "G5-MAT-C07-L01-O01":
         width = family.choice((3, 4))
@@ -502,55 +489,6 @@ def validate_constructed_response(
         if kind != "column_subtraction" or set(response) != allowed or digits is None or exchanges is None:
             return False, "unknown_or_other", normalized
         error = _column_error(analysed, digits, exchanges)
-    elif skill.response_kind == "expanded_subtraction":
-        allowed = {
-            "kind",
-            "minuend_terms",
-            "subtrahend_terms",
-            "adjusted_minuend_terms",
-            "result_terms",
-            "result",
-        }
-        fields = {
-            "minuend_terms": _ints(response.get("minuend_terms")),
-            "subtrahend_terms": _ints(response.get("subtrahend_terms")),
-            "adjusted_minuend_terms": _ints(response.get("adjusted_minuend_terms")),
-            "result_terms": _ints(response.get("result_terms")),
-        }
-        result = response.get("result")
-        normalized.update({key: value if value is not None else [] for key, value in fields.items()})
-        normalized["result"] = result
-        if (
-            kind != "expanded_subtraction"
-            or set(response) != allowed
-            or any(value is None for value in fields.values())
-            or type(result) is not int
-        ):
-            return False, "unknown_or_other", normalized
-        width = int(analysed["width"])
-        if any(len(value) != width for value in fields.values()):  # type: ignore[arg-type]
-            error = (
-                "omits_internal_zero"
-                if 0 in analysed["subtrahend_terms"] or 0 in analysed["result_terms"]  # type: ignore[operator]
-                else "incomplete_response"
-            )
-        elif any(term < 0 or term > 9000 for value in fields.values() for term in value):  # type: ignore[union-attr]
-            error = "unknown_or_other"
-        elif (
-            fields["minuend_terms"] != list(analysed["minuend_terms"])  # type: ignore[arg-type]
-            or fields["subtrahend_terms"] != list(analysed["subtrahend_terms"])  # type: ignore[arg-type]
-            or fields["adjusted_minuend_terms"] != list(analysed["adjusted_terms"])  # type: ignore[arg-type]
-            or fields["result_terms"] != list(analysed["result_terms"])  # type: ignore[arg-type]
-            or result != analysed["result"]
-        ):
-            if fields["result_terms"] == list(reversed(analysed["result_terms"])):  # type: ignore[arg-type]
-                error = "digits_wrong_order"
-            elif result == int(game["minuend"]) + int(game["subtrahend"]):
-                error = "uses_addition_instead"
-            else:
-                error = "unknown_or_other"
-        else:
-            error = "correct"
     else:
         allowed = {
             "kind",
@@ -660,9 +598,7 @@ def generate_item(
         "result_terms": analysed["result_terms"],
         "borrow_across_zero": False,
     }
-    prompt = "ස්ථාන අගය තීරු ගැලපී අඩු කර පිළිතුර ගොඩනඟන්න."
-    if skill.response_kind == "expanded_subtraction":
-        prompt = "සංඛ්‍යා දෙක විහිදුණු ආකාරයට ලියා අඩු කරන්න."
+    prompt = "රාක්ෂයෝ කෑවට පස්සේ කෑම කීයක් ඉතිරිද?"
     if skill.relationship is not None:
         contexts = STORY_CONTEXTS[skill.relationship]
         context_index = family.randrange(len(contexts))

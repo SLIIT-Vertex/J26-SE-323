@@ -54,16 +54,7 @@ def service():
 def _payload(item, *, correct: bool):
     game = item["game_data"]
     kind = game["response_kind"]
-    if kind == "expanded_subtraction":
-        payload = {
-            "kind": kind,
-            "minuend_terms": list(game["minuend_terms"]),
-            "subtrahend_terms": list(game["subtrahend_terms"]),
-            "adjusted_minuend_terms": list(game["adjusted_terms"]),
-            "result_terms": list(game["result_terms"]),
-            "result": game["result"] if correct else game["result"] + 1,
-        }
-    elif kind == "difference_story":
+    if kind == "difference_story":
         payload = {
             "kind": kind,
             "relationship": game["relationship"],

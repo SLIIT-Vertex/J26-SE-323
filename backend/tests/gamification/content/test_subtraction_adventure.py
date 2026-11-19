@@ -22,20 +22,6 @@ def _column(item, *, digits=None, exchanges=None):
     }
 
 
-def _expanded(item, **overrides):
-    game = item.game_data
-    payload = {
-        "kind": "expanded_subtraction",
-        "minuend_terms": list(game["minuend_terms"]),
-        "subtrahend_terms": list(game["subtrahend_terms"]),
-        "adjusted_minuend_terms": list(game["adjusted_terms"]),
-        "result_terms": list(game["result_terms"]),
-        "result": game["result"],
-    }
-    payload.update(overrides)
-    return payload
-
-
 def _story(item, **overrides):
     game = item.game_data
     payload = {
@@ -67,15 +53,14 @@ def test_textbook_place_value_examples_are_preserved_and_distinguished() -> None
     assert analyze_subtraction(425, 319)["result"] == 106
     across = analyze_subtraction(1000, 1)
     assert across["borrow_across_zero"] is True
-    assert [row.skill_id for row in ATOMIC_SKILLS] == [
-        "G5-MAT-SUB-NO-REGROUP-01",
-        "G5-MAT-SUB-EXPANDED-01",
-        "G5-MAT-C07-L01-O01",
-        "G5-MAT-C07-L01-O02",
-        "G5-MAT-SUB-DIFF-BETWEEN-01",
-        "G5-MAT-SUB-HOW-MANY-MORE-01",
+    assert [(row.skill_id, row.chapter) for row in ATOMIC_SKILLS] == [
+        ("G5-MAT-SUB-NO-REGROUP-01", "fluffball_feast"),
+        ("G5-MAT-C07-L01-O01", "monster_orders"),
+        ("G5-MAT-C07-L01-O02", "monster_orders"),
+        ("G5-MAT-SUB-DIFF-BETWEEN-01", "monster_orders"),
+        ("G5-MAT-SUB-HOW-MANY-MORE-01", "monster_orders"),
     ]
-    assert ATOMIC_SKILLS[3].source_status == "draft_medium_confidence_repository_not_photograph"
+    assert ATOMIC_SKILLS[2].source_status == "draft_medium_confidence_repository_not_photograph"
     steps = worked_steps({"minuend": 685, "subtrahend": 339, "response_kind": "column_subtraction"}, "worked_parallel_example")
     assert "15 − 9 = 6." in steps
     assert "6 − 3 = 3." in steps
@@ -118,13 +103,12 @@ def test_items_are_deterministic_equivalent_and_answer_free(skill) -> None:
 def test_regroup_counts_and_zero_borrowing_are_exact() -> None:
     for seed in range(25):
         plain = generate_item("G5-MAT-SUB-NO-REGROUP-01", role="unsupported_before", seed=seed)
-        expanded = generate_item("G5-MAT-SUB-EXPANDED-01", role="unsupported_before", seed=seed)
         one = generate_item("G5-MAT-C07-L01-O01", role="unsupported_before", seed=seed)
         two = generate_item("G5-MAT-C07-L01-O02", role="unsupported_before", seed=seed)
-        assert plain.game_data["regroup_count"] == expanded.game_data["regroup_count"] == 0
+        assert plain.game_data["regroup_count"] == 0
         assert one.game_data["regroup_count"] == 1
         assert two.game_data["regroup_count"] == 2
-        for item in (plain, expanded, one, two):
+        for item in (plain, one, two):
             analysed = analyze_subtraction(item.game_data["minuend"], item.game_data["subtrahend"])
             assert analysed["borrow_across_zero"] is False
             assert analysed["regroup_count"] == item.game_data["regroup_count"]
@@ -133,10 +117,8 @@ def test_regroup_counts_and_zero_borrowing_are_exact() -> None:
 
 def test_constructed_payloads_reject_malformed_evidence() -> None:
     column = generate_item("G5-MAT-C07-L01-O01", role="unsupported_before", seed=4)
-    expanded = generate_item("G5-MAT-SUB-EXPANDED-01", role="unsupported_before", seed=4)
     story = generate_item("G5-MAT-SUB-DIFF-BETWEEN-01", role="unsupported_before", seed=4)
     assert validate_constructed_response(column, _column(column))[0] is True
-    assert validate_constructed_response(expanded, _expanded(expanded))[0] is True
     assert validate_constructed_response(story, _story(story))[0] is True
     wrong_kind = _column(column)
     wrong_kind["kind"] = "regroup_carry"
@@ -168,5 +150,16 @@ def test_constructed_payloads_reject_malformed_evidence() -> None:
     assert validate_constructed_response(story, swapped)[1] == "smaller_quantity_as_minuend"
     total = _story(story, result=story.game_data["first_value"] + story.game_data["second_value"])
     assert validate_constructed_response(story, total)[1] == "calculates_total_for_difference"
-    short = _expanded(expanded, subtrahend_terms=list(expanded.game_data["subtrahend_terms"])[:-1])
-    assert validate_constructed_response(expanded, short)[0] is False
+
+
+def test_expanded_form_is_no_longer_played() -> None:
+    with pytest.raises(ValueError):
+        generate_item("G5-MAT-SUB-EXPANDED-01", role="unsupported_before", seed=1)
+
+
+def test_story_orders_are_monster_cafe_orders() -> None:
+    for skill_id in ("G5-MAT-SUB-DIFF-BETWEEN-01", "G5-MAT-SUB-HOW-MANY-MORE-01"):
+        for seed in range(20):
+            game = generate_item(skill_id, role="unsupported_before", seed=seed).game_data
+            assert game["scene"] == "cafe"
+            assert game["asset"] in {"cupcake", "cookie", "donut"}

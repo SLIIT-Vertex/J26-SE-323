@@ -12,7 +12,6 @@
   "direct_draft_skill_ids": ["G5-MAT-C07-L01-O01", "G5-MAT-C07-L01-O02"],
   "provisional_atomic_skill_ids": [
     "G5-MAT-SUB-NO-REGROUP-01",
-    "G5-MAT-SUB-EXPANDED-01",
     "G5-MAT-SUB-DIFF-BETWEEN-01",
     "G5-MAT-SUB-HOW-MANY-MORE-01"
   ],

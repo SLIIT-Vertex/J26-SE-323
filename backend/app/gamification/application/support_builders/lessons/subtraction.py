@@ -1,5 +1,4 @@
-"""Subtraction Adventure (G5-AREA-MAT-04): column subtraction with exchanges, expanded form, and
-difference stories."""
+"""Subtraction (G5-AREA-MAT-04): column subtraction with exchanges and difference stories."""
 
 from __future__ import annotations
 
@@ -20,7 +19,6 @@ from app.gamification.application.support_builders.lessons.common import (
 
 AREA_ID = "G5-AREA-MAT-04"
 NO_EXCHANGE_SKILL = "G5-MAT-SUB-NO-REGROUP-01"
-EXPANDED_SKILL = "G5-MAT-SUB-EXPANDED-01"
 ONE_EXCHANGE_SKILL = "G5-MAT-C07-L01-O01"
 DIFFERENCE_SKILL = "G5-MAT-SUB-DIFF-BETWEEN-01"
 
@@ -63,27 +61,6 @@ def lesson(game: Game, solution: Solution) -> Lesson | None:
                 expanded(bottom),
                 "එකම ස්ථානයේ කොටසින් කොටස අඩු කරන්න.",
             ),
-        )
-    if kind == "expanded_subtraction":
-        top_terms = int_list(solution.get("minuend_terms"))
-        bottom_terms = int_list(solution.get("subtrahend_terms"))
-        adjusted = int_list(solution.get("adjusted_minuend_terms"))
-        results = int_list(solution.get("result_terms"))
-        steps = [
-            f"{num(top)} = " + " + ".join(map(num, top_terms)) + ".",
-            f"{num(bottom)} = " + " + ".join(map(num, bottom_terms)) + ".",
-        ]
-        if adjusted and adjusted != top_terms:
-            steps.append("ණයට ගැනීමෙන් පසු: " + " + ".join(map(num, adjusted)) + ".")
-        steps.extend(
-            f"{num(a)} − {num(b)} = {num(c)}."
-            for a, b, c in zip(adjusted or top_terms, bottom_terms, results, strict=False)
-        )
-        return Lesson(
-            steps=tuple(steps),
-            answer=" + ".join(map(num, results)) + f" = {num(result)}",
-            hints=tuple(steps[:2]),
-            another_view=columns[:2],
         )
     if kind == "difference_story":
         labels = {

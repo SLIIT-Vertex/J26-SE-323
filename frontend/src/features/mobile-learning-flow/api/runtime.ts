@@ -199,11 +199,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 													? ["bubble_rush"]
 													: game.schema_version ===
 															"subtraction-adventure-item-v1"
-														? [
-																"place_value_board",
-																"regrouping_workshop",
-																"difference_story",
-															]
+														? ["monster_orders", "fluffball_feast"]
 														: game.schema_version ===
 																"multiplication-adventure-item-v1"
 															? [

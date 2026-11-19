@@ -1812,19 +1812,6 @@ p {
 	font-weight: 900;
 	text-align: center;
 }
-.manipulation-board {
-	display: grid;
-	gap: 0.85rem;
-	margin: 0.9rem 0;
-	padding: 0.9rem;
-	border: 2px solid #d8c8ff;
-	border-radius: 20px;
-	background: #fffefa;
-}
-.manipulation-board button {
-	min-width: 44px;
-	min-height: 44px;
-}
 .cargo-source {
 	display: flex;
 	align-items: center;
@@ -2576,119 +2563,9 @@ p {
 	}
 }
 
-.subtraction-adventure {
-	width: min(100%, 44rem);
-	margin-inline: auto;
-	overflow-x: clip;
-}
-.subtraction-board,
-.column-working,
-.expanded-working,
-.story-scene {
-	min-width: 0;
-}
-.expanded-working {
-	border: 0;
-	margin: 0;
-	padding: 0;
-	min-inline-size: 0;
-}
-.subtraction-table {
-	width: 100%;
-	table-layout: fixed;
-	border-collapse: collapse;
-	background: #fffdf6;
-}
-.subtraction-adventure .subtraction-table th,
-.subtraction-adventure .subtraction-table td {
-	padding: 0.2rem;
-	text-align: center;
-	vertical-align: bottom;
-}
-.subtraction-adventure .subtraction-table th {
-	font-size: clamp(0.72rem, 3vw, 0.95rem);
-}
-.touch-target,
-.subtraction-adventure .primary-action {
+.touch-target {
 	min-width: 48px;
 	min-height: 48px;
-}
-.subtraction-adventure .subtraction-table input,
-.subtraction-adventure .expanded-working input,
-.subtraction-adventure .exchange-controls button,
-.subtraction-adventure .story-quantity button {
-	width: 100%;
-	min-width: 48px;
-	min-height: 48px;
-	font-size: 1.2rem;
-}
-.exchange-controls,
-.story-scene,
-.expanded-row {
-	display: grid;
-	gap: 0.5rem;
-}
-.expanded-terms {
-	display: flex;
-	align-items: flex-end;
-	gap: 0.2rem;
-	min-width: 0;
-}
-.expanded-terms label {
-	display: grid;
-	flex: 1 1 48px;
-	min-width: 48px;
-	gap: 0.15rem;
-}
-.expanded-plus {
-	min-width: 1rem;
-	min-height: 48px;
-	display: grid;
-	place-items: center;
-	font-size: 1.25rem;
-}
-.story-scene {
-	grid-template-columns: 1fr;
-}
-.subtraction-adventure .story-quantity img {
-	width: 4.5rem;
-	height: auto;
-}
-.subtraction-adventure .exchange-controls div {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
-}
-.exchange-controls button[aria-pressed="true"],
-.story-quantity button[aria-pressed="true"] {
-	outline: 3px solid #1d4ed8;
-}
-.subtraction-adventure button:focus-visible,
-.subtraction-adventure input:focus-visible {
-	outline: 3px solid #1d4ed8;
-	outline-offset: 2px;
-}
-.exchange-token.is-moving {
-	animation: subtraction-exchange 420ms ease;
-}
-.subtraction-adventure[data-reduced-motion="true"] .exchange-token,
-.subtraction-board[data-reduced-motion="true"] .exchange-token {
-	animation: none;
-}
-@keyframes subtraction-exchange {
-	from {
-		transform: translateY(-8px);
-		opacity: 0.4;
-	}
-	to {
-		transform: none;
-		opacity: 1;
-	}
-}
-@media (prefers-reduced-motion: reduce) {
-	.exchange-token.is-moving {
-		animation: none;
-	}
 }
 .multiplication-adventure {
 	width: min(100%, 44rem);
@@ -2768,7 +2645,6 @@ p {
 }
 /* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .multiplication-table-board th,
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .multiplication-table-board td {
 	padding: 0.28em 0;
 	border-radius: 4px;
@@ -2790,7 +2666,6 @@ p {
 }
 .multiplication-adventure .product-input,
 .multiplication-adventure .result-digit,
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .story-expression input {
 	width: 100%;
 	min-width: 48px;
@@ -2827,7 +2702,6 @@ p {
 	font-size: 0.85rem;
 	font-weight: 800;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .multiplication-columns tbody td {
 	font-size: clamp(1.35rem, 7vw, 2rem);
 	font-weight: 900;
@@ -2847,7 +2721,6 @@ p {
 }
 
 /* Story: a small picture, then the groups as rows of counters. */
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .multiplication-story > img {
 	justify-self: center;
 	width: auto;
@@ -2906,7 +2779,6 @@ p {
 	font-size: 1.5rem;
 	font-weight: 900;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .story-expression input {
 	min-width: 0;
 }
