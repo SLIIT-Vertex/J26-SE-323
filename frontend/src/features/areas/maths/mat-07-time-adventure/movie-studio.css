@@ -1,0 +1,793 @@
+/* Nimo's Silly Movie Studio. Design space 1920×1080; --px is one design pixel. */
+.movie-studio {
+	--studio-ink: #2d2350;
+	--studio-cream: #fff7e6;
+	--studio-gold: #ffc93c;
+	--studio-purple: #7d55d6;
+	position: absolute;
+	inset: 0;
+	background:
+		#e8c88f url("/curriculum/game/G5-AREA-MAT-07/bg-studio.webp") center / cover no-repeat;
+	color: var(--studio-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholders and shared pieces ---- */
+
+.studio-shape {
+	display: inline-block;
+	border-radius: 30%;
+	background: #e7defb;
+}
+
+.studio-shape[data-art="owl"] {
+	border-radius: 50% 50% 40% 40%;
+	background:
+		radial-gradient(
+			circle at 35% 35%,
+			#fff 0 10%,
+			#2d2350 11% 15%,
+			transparent 16%
+		),
+		radial-gradient(
+			circle at 65% 35%,
+			#fff 0 10%,
+			#2d2350 11% 15%,
+			transparent 16%
+		),
+		#a8743f;
+}
+
+.studio-icon {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	vertical-align: -0.15em;
+	background: currentColor;
+	mask-size: contain;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	-webkit-mask-size: contain;
+	-webkit-mask-repeat: no-repeat;
+	-webkit-mask-position: center;
+}
+
+.studio-scroll,
+.studio-message {
+	margin: 0;
+	padding: calc(var(--px) * 12) calc(var(--px) * 32);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 26);
+	background: var(--wood);
+	font-weight: 700;
+	text-align: center;
+}
+
+.studio-scroll {
+	position: absolute;
+	top: calc(var(--px) * 22);
+	left: 50%;
+	z-index: 2;
+	max-width: calc(var(--px) * 1240);
+	font-size: calc(var(--px) * 38);
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.studio-message {
+	font-size: calc(var(--px) * 32);
+}
+
+/* Toon actors: a strip of nine frames; the move picks the frames. */
+.studio-actor {
+	display: block;
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 200);
+	background-repeat: no-repeat;
+	background-size: 900% 100%;
+	background-position-x: calc(var(--frame) * 12.5%);
+}
+
+.studio-actor[data-move="cheer"] {
+	animation: actor-cheer 500ms steps(1) infinite;
+}
+
+.studio-actor[data-move="walk"] {
+	animation: actor-walk 600ms steps(1) infinite;
+}
+
+/* ---- The analogue clock ---- */
+
+.studio-clock {
+	display: block;
+	width: 100%;
+	height: auto;
+	touch-action: none;
+}
+
+.studio-clock-rim {
+	fill: var(--studio-gold);
+	stroke: #b9831c;
+	stroke-width: 6;
+}
+
+.studio-clock-face {
+	fill: var(--studio-cream);
+}
+
+.studio-clock-five {
+	stroke: var(--studio-ink);
+	stroke-width: 5;
+}
+
+.studio-clock-one {
+	stroke: #b9a7d9;
+	stroke-width: 2;
+}
+
+.studio-clock-number {
+	fill: var(--studio-ink);
+	font-size: 34px;
+	font-weight: 800;
+}
+
+.studio-clock-hour,
+.studio-clock-minute,
+.studio-clock-ghost line {
+	stroke-linecap: round;
+}
+
+.studio-clock-hour {
+	stroke: #3f8fe0;
+	stroke-width: 16;
+}
+
+.studio-clock-minute {
+	stroke: #ff5fa2;
+	stroke-width: 10;
+}
+
+.studio-clock-ghost line {
+	stroke: rgb(255 201 60 / 55%);
+	stroke-width: 12;
+}
+
+.studio-clock-grip {
+	fill: rgb(255 255 255 / 1%);
+	cursor: grab;
+}
+
+.studio-clock-pin {
+	fill: var(--studio-purple);
+}
+
+/* ---- Movie Time Mayhem (the movie set) ---- */
+
+.movie-mayhem {
+	position: absolute;
+	inset: 0;
+}
+
+/* The set's shop fronts show above the scene card, which stands in front of their base. */
+.movie-set {
+	position: absolute;
+	top: calc(var(--px) * 120);
+	left: 50%;
+	width: calc(var(--px) * 1040);
+	height: calc(var(--px) * 430);
+	object-fit: contain;
+	object-position: bottom;
+	transform: translateX(-50%);
+}
+
+/* The actor waits in the open space under the owl, clear of the scene card. */
+.movie-actor {
+	position: absolute;
+	top: calc(var(--px) * 420);
+	right: calc(var(--px) * 70);
+	z-index: 1;
+	width: calc(var(--px) * 190);
+	height: calc(var(--px) * 254);
+}
+
+.movie-mayhem[data-outcome="correct"] .movie-actor {
+	animation:
+		actor-cheer 500ms steps(1) infinite,
+		actor-hop 500ms ease-in-out infinite alternate;
+}
+
+.movie-nimo {
+	position: absolute;
+	bottom: calc(var(--px) * 10);
+	left: calc(var(--px) * 10);
+	z-index: 1;
+	width: calc(var(--px) * 340);
+	height: calc(var(--px) * 500);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.movie-owl {
+	position: absolute;
+	top: calc(var(--px) * 130);
+	right: calc(var(--px) * 40);
+	width: calc(var(--px) * 240);
+	height: calc(var(--px) * 260);
+	object-fit: contain;
+}
+
+.scene-card {
+	position: absolute;
+	top: calc(var(--px) * 470);
+	left: calc(var(--px) * 380);
+	z-index: 1;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 12);
+	width: calc(var(--px) * 1160);
+	padding: calc(var(--px) * 44) calc(var(--px) * 40) calc(var(--px) * 30);
+	box-sizing: border-box;
+	border: calc(var(--px) * 36) solid transparent;
+	border-image:
+		url("/curriculum/game/G5-AREA-MAT-07/kit/panel.png") 40 fill /
+		calc(var(--px) * 36) stretch;
+}
+
+.scene-ribbon {
+	position: absolute;
+	top: calc(var(--px) * -70);
+	left: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 10);
+	padding-bottom: calc(var(--px) * 22);
+	box-sizing: border-box;
+	width: calc(var(--px) * 380);
+	height: calc(var(--px) * 96);
+	background:
+		url("/curriculum/game/G5-AREA-MAT-07/kit/ribbon.png") center / contain
+		no-repeat;
+	color: #fff;
+	font-size: calc(var(--px) * 34);
+	font-weight: 800;
+	text-shadow: 0 calc(var(--px) * 3) 0 rgb(0 0 0 / 30%);
+	transform: translateX(-50%);
+}
+
+.scene-times {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 18);
+}
+
+.scene-time {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 4);
+	padding: calc(var(--px) * 8) calc(var(--px) * 22);
+	border: calc(var(--px) * 5) solid #c9b3f0;
+	border-radius: calc(var(--px) * 22);
+	background: #f3edff;
+}
+
+.scene-time small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+	color: var(--studio-purple);
+}
+
+.scene-time strong {
+	font-size: calc(var(--px) * 52);
+}
+
+.scene-ask {
+	border-color: var(--studio-gold);
+	background: #fff6d6;
+}
+
+.scene-arrow {
+	font-size: calc(var(--px) * 46);
+	font-weight: 800;
+	color: var(--studio-purple);
+}
+
+.scene-exchange,
+.film-add,
+.film-remove,
+.ff-step,
+.ff-again,
+.puppet-period,
+.puppet-buttons button,
+.unit-card,
+.clock-wheel button {
+	min-height: 0;
+	border: 0;
+	color: inherit;
+	font: inherit;
+}
+
+.scene-exchange {
+	padding: calc(var(--px) * 10) calc(var(--px) * 24);
+	border: calc(var(--px) * 5) dashed #c9b3f0;
+	border-radius: calc(var(--px) * 30);
+	background: #fff;
+	font-size: calc(var(--px) * 28);
+	font-weight: 700;
+}
+
+.scene-exchange[aria-pressed="true"] {
+	border-style: solid;
+	border-color: var(--studio-gold);
+	background: #fff1c2;
+}
+
+.scene-send {
+	position: absolute;
+	right: calc(var(--px) * 30);
+	bottom: calc(var(--px) * 40);
+	z-index: 1;
+	min-width: calc(var(--px) * 320);
+}
+
+/* The filmstrip builder. */
+.filmstrip-builder {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 10);
+}
+
+.filmstrip {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 4);
+	min-width: calc(var(--px) * 600);
+	min-height: calc(var(--px) * 86);
+	padding: calc(var(--px) * 8) calc(var(--px) * 16);
+	border-block: calc(var(--px) * 12) dotted #fff;
+	background: #3b2f5c;
+}
+
+.filmstrip-empty {
+	color: #c9bde8;
+	font-size: calc(var(--px) * 26);
+}
+
+.film-piece {
+	display: grid;
+	place-items: center;
+	height: calc(var(--px) * 60);
+	border-radius: calc(var(--px) * 8);
+	background: #8fd3ff;
+	font-size: calc(var(--px) * 24);
+	font-weight: 800;
+}
+
+.film-piece[data-minutes="60"] {
+	width: calc(var(--px) * 74);
+	border-radius: 50%;
+	background: var(--studio-gold);
+}
+
+.film-piece[data-minutes="10"] {
+	width: calc(var(--px) * 46);
+}
+
+.film-piece[data-minutes="5"] {
+	width: calc(var(--px) * 30);
+	background: #c8ecff;
+}
+
+.filmstrip-total {
+	font-size: calc(var(--px) * 40);
+}
+
+.filmstrip-buttons {
+	display: flex;
+	gap: calc(var(--px) * 12);
+}
+
+.film-add {
+	min-height: calc(var(--px) * 84);
+	padding: 0 calc(var(--px) * 22);
+	border-radius: calc(var(--px) * 24);
+	background: var(--studio-purple);
+	color: #fff;
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.film-add[data-minutes="60"] {
+	background: #e0a21c;
+}
+
+.film-remove {
+	width: calc(var(--px) * 84);
+	min-height: calc(var(--px) * 84);
+	border-radius: 50%;
+	background: var(--wood);
+	font-size: calc(var(--px) * 36);
+}
+
+/* Hours and minutes wheels. */
+.clock-wheels {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 12);
+}
+
+.clock-wheel {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	border-radius: calc(var(--px) * 20);
+	background: var(--studio-ink);
+}
+
+.clock-wheel button {
+	width: calc(var(--px) * 110);
+	min-height: calc(var(--px) * 50);
+	background: transparent;
+	color: var(--studio-gold);
+	font-size: calc(var(--px) * 30);
+}
+
+.clock-wheel strong {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 96);
+	border-radius: calc(var(--px) * 14);
+	background: var(--studio-cream);
+	font-size: calc(var(--px) * 52);
+}
+
+.clock-colon {
+	position: absolute;
+	right: calc(var(--px) * -14);
+	top: 40%;
+	font-size: calc(var(--px) * 46);
+	font-weight: 800;
+}
+
+/* ---- Fast Forward & Rewind ---- */
+
+.fast-forward,
+.puppet-show {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+	max-width: calc(var(--px) * 1080);
+}
+
+.ff-screen {
+	display: grid;
+	grid-template-columns: auto auto auto auto;
+	align-items: center;
+	gap: calc(var(--px) * 24);
+	padding: calc(var(--px) * 18) calc(var(--px) * 28);
+	border: calc(var(--px) * 30) solid transparent;
+	border-image:
+		url("/curriculum/game/G5-AREA-MAT-07/kit/panel.png") 40 fill /
+		calc(var(--px) * 30) stretch;
+}
+
+.ff-screen .studio-clock {
+	width: calc(var(--px) * 260);
+}
+
+.ff-digital,
+.ff-moved {
+	display: grid;
+	justify-items: center;
+}
+
+.ff-digital small,
+.ff-moved small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+	color: var(--studio-purple);
+}
+
+.ff-digital strong {
+	font-size: calc(var(--px) * 76);
+}
+
+.ff-moved strong {
+	font-size: calc(var(--px) * 40);
+}
+
+.fast-forward[data-flash] .ff-digital strong {
+	animation: ff-flash 500ms ease-out;
+}
+
+.ff-tree {
+	display: grid;
+	place-items: end center;
+	width: calc(var(--px) * 120);
+	height: calc(var(--px) * 220);
+}
+
+.ff-tree-art {
+	height: calc(var(--px) * (80 + 140 * var(--grow)));
+	object-fit: contain;
+	transition: height 300ms ease-out;
+}
+
+.ff-track {
+	position: relative;
+	width: calc(var(--px) * 900);
+	height: calc(var(--px) * 110);
+}
+
+.ff-reel {
+	position: absolute;
+	inset: calc(var(--px) * 40) 0 0;
+	border-block: calc(var(--px) * 12) dotted #fff;
+	border-radius: calc(var(--px) * 10);
+	background: #3b2f5c;
+}
+
+.ff-pawn {
+	position: absolute;
+	top: 0;
+	width: calc(var(--px) * 56);
+	height: calc(var(--px) * 70);
+	transform: translateX(-50%);
+	transition: left 250ms ease-out;
+}
+
+.ff-pawn img {
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.ff-target {
+	opacity: 0.7;
+}
+
+.ff-buttons {
+	display: flex;
+	gap: calc(var(--px) * 14);
+}
+
+.ff-step {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 10);
+	min-height: calc(var(--px) * 96);
+	padding: 0 calc(var(--px) * 26);
+	border-radius: calc(var(--px) * 48);
+	color: #fff;
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+}
+
+.ff-step[data-direction="rewind"] {
+	background: var(--studio-purple);
+}
+
+.ff-step[data-direction="forward"] {
+	background: #3fb34f;
+}
+
+.ff-again {
+	width: calc(var(--px) * 96);
+	min-height: calc(var(--px) * 96);
+	border-radius: 50%;
+	background: var(--wood);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- The Tick-Tock Puppet Show ---- */
+
+.puppet-stage {
+	position: relative;
+	display: grid;
+	grid-template-columns: calc(var(--px) * 420) auto;
+	align-items: center;
+	gap: calc(var(--px) * 40);
+	padding: calc(var(--px) * 30) calc(var(--px) * 60);
+	border-radius: calc(var(--px) * 36);
+	background:
+		linear-gradient(90deg, #c0392b 0 6%, transparent 6% 94%, #c0392b 94%),
+		linear-gradient(#8fd3ff, #c9ecff);
+	transition: background 400ms;
+}
+
+.puppet-show[data-night] .puppet-stage {
+	background:
+		linear-gradient(90deg, #c0392b 0 6%, transparent 6% 94%, #c0392b 94%),
+		linear-gradient(#24305e, #4b3f88);
+}
+
+.puppet-sky {
+	position: absolute;
+	top: calc(var(--px) * -40);
+	left: calc(var(--px) * -10);
+	width: calc(var(--px) * 120);
+	height: calc(var(--px) * 120);
+	object-fit: contain;
+	animation: puppet-bob 1.6s ease-in-out infinite alternate;
+}
+
+.puppet-cloud {
+	position: absolute;
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 90);
+	object-fit: contain;
+	opacity: 0.9;
+}
+
+.puppet-cloud-1 {
+	top: calc(var(--px) * 20);
+	right: calc(var(--px) * 120);
+}
+
+.puppet-cloud-2 {
+	bottom: calc(var(--px) * 20);
+	right: calc(var(--px) * 40);
+}
+
+.puppet-show[data-cheer] .puppet-sky {
+	animation: actor-hop 400ms ease-in-out infinite alternate;
+}
+
+.puppet-board {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 14);
+	padding: calc(var(--px) * 20) calc(var(--px) * 30);
+	border-radius: calc(var(--px) * 26);
+	background: var(--studio-cream);
+}
+
+.puppet-reading {
+	font-size: calc(var(--px) * 84);
+}
+
+.puppet-periods {
+	display: grid;
+	gap: calc(var(--px) * 10);
+}
+
+.puppet-period {
+	min-height: calc(var(--px) * 76);
+	padding: 0 calc(var(--px) * 20);
+	border: calc(var(--px) * 5) solid #c9b3f0;
+	border-radius: calc(var(--px) * 24);
+	background: #fff;
+	font-size: calc(var(--px) * 28);
+	font-weight: 700;
+}
+
+.puppet-period[aria-pressed="true"] {
+	border-color: var(--studio-gold);
+	background: #fff1c2;
+}
+
+.puppet-buttons {
+	display: flex;
+	gap: calc(var(--px) * 14);
+}
+
+.puppet-buttons button {
+	min-height: calc(var(--px) * 84);
+	padding: 0 calc(var(--px) * 26);
+	border-radius: calc(var(--px) * 42);
+	background: var(--studio-purple);
+	color: #fff;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+[data-ghost].puppet-period,
+[data-ghost].unit-card {
+	outline: calc(var(--px) * 6) dashed var(--studio-gold);
+	outline-offset: calc(var(--px) * 4);
+}
+
+.unit-columns {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: calc(var(--px) * 40);
+	width: 100%;
+}
+
+.unit-column {
+	display: grid;
+	gap: calc(var(--px) * 12);
+}
+
+.unit-card {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	align-items: center;
+	gap: calc(var(--px) * 12);
+	min-height: calc(var(--px) * 96);
+	padding: calc(var(--px) * 8) calc(var(--px) * 18);
+	border: calc(var(--px) * 5) solid #c9b3f0;
+	border-radius: calc(var(--px) * 24);
+	background: #fff;
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+	text-align: left;
+}
+
+.unit-card small {
+	grid-column: 2;
+	color: var(--studio-purple);
+	font-size: calc(var(--px) * 24);
+}
+
+.unit-card[aria-pressed="true"] {
+	border-color: var(--studio-gold);
+	background: #fff1c2;
+}
+
+.unit-card[data-matched] {
+	background: #e6f7dd;
+}
+
+.unit-puppet {
+	grid-row: span 2;
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	object-fit: contain;
+}
+
+@keyframes actor-cheer {
+	0% {
+		background-position-x: calc(5 * 12.5%);
+	}
+	50% {
+		background-position-x: calc(6 * 12.5%);
+	}
+}
+
+@keyframes actor-walk {
+	0% {
+		background-position-x: calc(1 * 12.5%);
+	}
+	25% {
+		background-position-x: calc(2 * 12.5%);
+	}
+	50% {
+		background-position-x: calc(3 * 12.5%);
+	}
+	75% {
+		background-position-x: calc(4 * 12.5%);
+	}
+}
+
+@keyframes actor-hop {
+	to {
+		transform: translateY(calc(var(--px) * -24));
+	}
+}
+
+@keyframes puppet-bob {
+	to {
+		transform: translateY(calc(var(--px) * -12)) rotate(6deg);
+	}
+}
+
+@keyframes ff-flash {
+	40% {
+		color: #e0a21c;
+		transform: scale(1.15);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.studio-actor,
+	.movie-mayhem[data-outcome="correct"] .movie-actor,
+	.puppet-sky,
+	.fast-forward[data-flash] .ff-digital strong {
+		animation: none;
+	}
+}

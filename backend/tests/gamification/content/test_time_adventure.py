@@ -44,3 +44,31 @@ def test_midnight_and_regrouping_are_base_sixty():
     arithmetic = generate_item("G5-MAT-TIME-ARITHMETIC-01", role="unsupported_before", seed=4)
     arithmetic.game_data.update(operation="add", left_hours=3, left_minutes=45, right_hours=2, right_minutes=35)
     assert validate_constructed_response(arithmetic, {"kind": "time_arithmetic", "hours": 6, "minutes": 20, "regrouped": True})[0]
+
+
+def test_movie_scenes_are_missions_and_clocks_are_the_puppet_show():
+    assert [(skill.skill_id, skill.chapter) for skill in ATOMIC_SKILLS] == [
+        ("G5-MAT-TIME-UNITS-01", "puppet_show"),
+        ("G5-MAT-TIME-ANALOG-01", "puppet_show"),
+        ("G5-MAT-TIME-24H-01", "movie_mayhem"),
+        ("G5-MAT-TIME-ELAPSED-01", "movie_mayhem"),
+        ("G5-MAT-TIME-ARITHMETIC-01", "movie_mayhem"),
+    ]
+
+
+@pytest.mark.parametrize("simpler", (False, True))
+def test_duration_sums_vary_and_always_exchange_sixty_minutes(simpler):
+    sums = set()
+    for seed in range(200):
+        game = generate_item(
+            "G5-MAT-TIME-ARITHMETIC-01", role="unsupported_before", seed=seed, simpler=simpler
+        ).game_data
+        left = game["left_hours"] * 60 + game["left_minutes"]
+        right = game["right_hours"] * 60 + game["right_minutes"]
+        assert game["left_minutes"] % 5 == 0 and game["right_minutes"] % 5 == 0
+        if game["operation"] == "add":
+            assert game["left_minutes"] + game["right_minutes"] >= 60
+        else:
+            assert game["left_minutes"] < game["right_minutes"] and left > right
+        sums.add((game["operation"], left, right))
+    assert len(sums) >= 20

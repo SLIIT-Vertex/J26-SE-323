@@ -20,7 +20,8 @@ POLICY_VERSION = "g5-mat-time-deterministic-support-v1"
 SCORING_VERSION = "g5-mat-time-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-time-parallel-v1"
 
-Chapter = Literal["time_tools", "twenty_four_hour_mission", "time_journey"]
+# Movie scenes are the missions; clock reading and unit pairs are played at the puppet show (help).
+Chapter = Literal["movie_mayhem", "puppet_show"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,11 +35,11 @@ class AtomicSkill:
 
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-TIME-UNITS-01", "time_tools", "කාල ඒකක යුගල", "easy", 73, "time_unit_match"),
-    AtomicSkill("G5-MAT-TIME-ANALOG-01", "time_tools", "ඔරලෝසු අත් සකසමු", "easy", 73, "analog_clock"),
-    AtomicSkill("G5-MAT-TIME-24H-01", "twenty_four_hour_mission", "පැය 24 ඔරලෝසුව", "medium", 73, "time_conversion"),
-    AtomicSkill("G5-MAT-TIME-ELAPSED-01", "time_journey", "ගමනේ ගත වූ කාලය", "medium", 74, "elapsed_time"),
-    AtomicSkill("G5-MAT-TIME-ARITHMETIC-01", "time_journey", "කාල අභියෝගය", "hard", 74, "time_arithmetic"),
+    AtomicSkill("G5-MAT-TIME-UNITS-01", "puppet_show", "කාල ඒකක යුගල", "easy", 73, "time_unit_match"),
+    AtomicSkill("G5-MAT-TIME-ANALOG-01", "puppet_show", "ඔරලෝසු අත් සකසමු", "easy", 73, "analog_clock"),
+    AtomicSkill("G5-MAT-TIME-24H-01", "movie_mayhem", "පැය 24 ඔරලෝසුව", "medium", 73, "time_conversion"),
+    AtomicSkill("G5-MAT-TIME-ELAPSED-01", "movie_mayhem", "ගමනේ ගත වූ කාලය", "medium", 74, "elapsed_time"),
+    AtomicSkill("G5-MAT-TIME-ARITHMETIC-01", "movie_mayhem", "කාල අභියෝගය", "hard", 74, "time_arithmetic"),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
 MISCONCEPTIONS = (
@@ -97,6 +98,28 @@ def generate_simpler_item(
     return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
 
 
+def _duration_pair(
+    rng: random.Random, operation: str, *, simpler: bool
+) -> tuple[tuple[int, int], tuple[int, int]]:
+    """Two durations whose sum or difference always needs the one 60-minute exchange.
+
+    Minutes are multiples of 5. The simpler version keeps the exchange with smaller hours.
+    """
+
+    left_hours = rng.randint(1, 2) if simpler else rng.randint(2, 6)
+    right_hours = 1 if simpler else rng.randint(1, 3)
+    if operation == "add":
+        left_minutes = rng.choice(range(30, 60, 5))
+        # The minutes pass 60, so 60 minutes become 1 hour.
+        right_minutes = rng.choice(range(65 - left_minutes, 60, 5))
+    else:
+        left_hours = max(left_hours, right_hours + 1)
+        left_minutes = rng.choice(range(0, 30, 5))
+        # Too few minutes on top, so 1 hour becomes 60 minutes.
+        right_minutes = rng.choice(range(left_minutes + 5, 60, 5))
+    return (left_hours, left_minutes), (right_hours, right_minutes)
+
+
 def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> TimeItem:
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}:
         raise ValueError("TIME_ITEM_REQUEST_INVALID")
@@ -129,7 +152,7 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
             # A whole hour in the afternoon: only the hour changes.
             hour12, minute, period = rng.randint(1, 11), 0, "pm"
         game.update(source_hour=hour12, source_minute=minute, period=period)
-        prompt = "පෙන්වා ඇති වේලාව පැය 24 ආකාරයට සකසන්න."
+        prompt = "දර්ශනය පටන් ගන්න වෙලාව පැය 24 ඔරලෝසුවට සකසමු!"
     elif skill.response_kind == "elapsed_time":
         start_hour, start_minute = rng.choice((7, 8, 9, 13)), rng.choice((0, 10, 20, 30))
         duration_hours, duration_minutes = rng.choice((1, 2, 3)), rng.choice((10, 20, 30))
@@ -137,16 +160,16 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
             start_minute, duration_hours, duration_minutes = 0, 1, rng.choice((0, 30))
         end_total = start_hour * 60 + start_minute + duration_hours * 60 + duration_minutes
         game.update(start_hour=start_hour, start_minute=start_minute, end_hour=end_total // 60, end_minute=end_total % 60)
-        prompt = "ගමනේ ගත වූ පැය සහ මිනිත්තු සකසන්න."
+        prompt = "මේ දර්ශනයට කොච්චර වෙලාවක් ගියාද?"
     else:
         operation = rng.choice(("add", "subtract"))
-        # The simpler version keeps the one regroup this skill is about, with smaller times.
-        if operation == "add":
-            left, right = ((1, 40), (1, 30)) if simpler else ((3, 45), (2, 35))
-        else:
-            left, right = ((3, 10), (1, 30)) if simpler else ((6, 20), (2, 45))
+        left, right = _duration_pair(rng, operation, simpler=simpler)
         game.update(operation=operation, left_hours=left[0], left_minutes=left[1], right_hours=right[0], right_minutes=right[1])
-        prompt = "පැය හා මිනිත්තු වගුව භාවිත කර පිළිතුර සකසන්න."
+        prompt = (
+            "දර්ශන දෙකටම එකට කොච්චර වෙලාවක් ගියාද?"
+            if operation == "add"
+            else "දිගු දර්ශනය කෙටි එකට වඩා කොච්චර දිගද?"
+        )
     revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return TimeItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)
 

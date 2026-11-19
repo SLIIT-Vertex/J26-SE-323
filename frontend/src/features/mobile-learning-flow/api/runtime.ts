@@ -204,11 +204,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																"multiplication-adventure-item-v1"
 															? ["turbo_race", "bowling_buddies"]
 															: game.schema_version === "time-adventure-item-v1"
-																? [
-																		"time_tools",
-																		"twenty_four_hour_mission",
-																		"time_journey",
-																	]
+																? ["movie_mayhem", "puppet_show"]
 																: game.schema_version ===
 																		"division-adventure-item-v1"
 																	? [

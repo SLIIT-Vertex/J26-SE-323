@@ -658,10 +658,13 @@ describe("baseline mobile flow", () => {
 				continue;
 			}
 			if (areaId === "G5-AREA-MAT-07") {
-				await waitForSelector(container, ".time-game-list");
-				expect(container.querySelector(".time-game-list")).not.toBeNull();
-				expect(container.textContent).toContain("කාල මෙවලම්");
-				expect(container.textContent).toContain("අභියෝග 2ක් · පහසු");
+				await waitForSelector(container, "[data-studio-phase]");
+				expect(
+					container
+						.querySelector("[data-studio-phase]")
+						?.getAttribute("data-studio-phase"),
+				).toBe("story");
+				expect(container.textContent).toContain("රූගත කරමු!");
 				await click(container, "ආපසු");
 				continue;
 			}

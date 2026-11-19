@@ -186,7 +186,7 @@ const output =
 	`export interface SubtractionAdventureGameData { schema_version: "subtraction-adventure-item-v1"; chapter: "monster_orders" | "fluffball_feast"; [key: string]: unknown; }\n` +
 	`export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "color_splash_comic" | "sticker_party" | "fold_and_pop"; [key: string]: unknown; }\n` +
 	`export interface MultiplicationAdventureGameData { schema_version: "multiplication-adventure-item-v1"; chapter: "turbo_race" | "bowling_buddies"; [key: string]: unknown; }\n` +
-	`export interface TimeAdventureGameData { schema_version: "time-adventure-item-v1"; chapter: "time_tools" | "twenty_four_hour_mission" | "time_journey"; [key: string]: unknown; }\n` +
+	`export interface TimeAdventureGameData { schema_version: "time-adventure-item-v1"; chapter: "movie_mayhem" | "puppet_show"; [key: string]: unknown; }\n` +
 	`export interface DivisionAdventureGameData { schema_version: "division-adventure-item-v1"; chapter: "equal_share" | "paper_division" | "division_story"; [key: string]: unknown; }\n` +
 	`export interface DistanceAdventureGameData { schema_version: "distance-adventure-item-v1"; chapter: "unit_path" | "distance_calculation" | "distance_problems"; [key: string]: unknown; }\n` +
 	`export interface MoneyAdventureGameData { schema_version: "money-adventure-item-v1"; chapter: "money_recognition" | "money_calculation" | "little_shop"; [key: string]: unknown; }\n` +

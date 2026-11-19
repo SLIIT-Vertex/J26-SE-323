@@ -89,7 +89,7 @@ what the game sends. "Universal node" is where Knowledge Tracing files the answe
 | `G5-AREA-MAT-04` | Subtraction (`subtraction_adventure_flow.py`) | 5 | `MAT-OPS` | `MAT-OPS` | yes |
 | `G5-AREA-MAT-05` | Fractions (`fraction_adventure_flow.py`) | 6 | `MAT-FRC` | `MAT-FRC` | yes |
 | `G5-AREA-MAT-06` | Multiplication (`multiplication_adventure_flow.py`) | 5 | `MAT-OPS` | `MAT-OPS` | yes |
-| `G5-AREA-MAT-07` | Time Adventure (`time_adventure_flow.py`) | 5 | **`MAT-TIME`** | `MAT-TIM` | yes |
+| `G5-AREA-MAT-07` | Time (`time_adventure_flow.py`) | 5 | **`MAT-TIME`** | `MAT-TIM` | yes |
 | `G5-AREA-MAT-08` | Division Adventure (`division_adventure_flow.py`) | 5 | **`MAT-DIV`** | `MAT-OPS` | yes |
 | `G5-AREA-MAT-09` | Distance Adventure (`distance_adventure_flow.py`) | 5 | **`MAT-LENGTH`** | `MAT-LEN` | yes |
 | `G5-AREA-MAT-10` | Money Adventure (`money_adventure_flow.py`) | 5 | `MAT-MON` | `MAT-MON` | yes |
