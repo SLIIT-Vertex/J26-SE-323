@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { GameStoryCard } from "../../../mobile-learning-flow/landscape/GameStoryCard";
 import { LandscapeGameStage } from "../../../mobile-learning-flow/landscape/LandscapeGameStage";
 import {
@@ -11,7 +11,6 @@ import type { AreaGameProps } from "../../registry";
 import { FastForward } from "./FastForward";
 import { MovieMayhem } from "./MovieMayhem";
 import { PuppetShow } from "./PuppetShow";
-import { demoSeen, StudioDemo } from "./StudioDemo";
 import { SCENES, studioArtReady, studioArtUrl } from "./studioArt";
 import {
 	ELAPSED_SKILL_ID,
@@ -60,7 +59,6 @@ export function NimoMovieStudio({
 	api,
 	learnerId,
 	condition,
-	reducedMotion,
 	onBack,
 	onFailure,
 }: AreaGameProps) {
@@ -107,8 +105,6 @@ export function NimoMovieStudio({
 	}, [phase]);
 
 	const tap = () => studioSounds.play("tap");
-	/** How to play: shown by itself before the first scene on this phone, and from the ? button. */
-	const [demo, setDemo] = useState<"first" | "again" | null>(null);
 	const newScene = () => {
 		const skills = missionOrder(lastScene.current);
 		lastScene.current = skills[0] ?? null;
@@ -130,28 +126,17 @@ export function NimoMovieStudio({
 				data-studio-phase={phase}
 				data-episode-id={episode.episodeId ?? undefined}
 			>
-				{phase === "mission" && manifest && !demo && (
+				{phase === "mission" && manifest && (
 					<MovieMayhem
 						key={manifest.revision_id}
 						task={task}
 						prompt={manifest.prompt_si}
 						scene={sceneFor(manifest.revision_id)}
-						onShowHow={() => setDemo("again")}
 						returning={manifest.measurement_role === "unsupported_after"}
 						outcome={episode.outcome}
 						busy={busy}
 						evidence={evidence}
 						onSubmit={(response) => void episode.submitMission(response)}
-					/>
-				)}
-				{demo && (
-					<StudioDemo
-						reducedMotion={reducedMotion}
-						onDone={() => {
-							const first = demo === "first";
-							setDemo(null);
-							if (first) newScene();
-						}}
 					/>
 				)}
 				{phase === "training" && support && (
@@ -184,7 +169,7 @@ export function NimoMovieStudio({
 						action="රූගත කරමු!"
 						busy={busy}
 						onPress={tap}
-						onAction={() => (demoSeen() ? newScene() : setDemo("first"))}
+						onAction={newScene}
 					/>
 				)}
 				{phase === "to-training" && (

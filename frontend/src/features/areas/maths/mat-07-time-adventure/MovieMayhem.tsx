@@ -107,12 +107,9 @@ export function FilmTrack({
 /** The three big "add film" buttons. */
 export function AddButtons({
 	disabled = false,
-	cue,
 	onAdd,
 }: {
 	disabled?: boolean;
-	/** The demo's pointing hand. */
-	cue?: Piece | null;
 	onAdd(piece: Piece): void;
 }) {
 	return (
@@ -123,7 +120,6 @@ export function AddButtons({
 					key={piece}
 					className="film-add"
 					data-minutes={piece}
-					data-cue={cue === piece || undefined}
 					disabled={disabled}
 					aria-label={`${PIECE_NAMES[piece]} ෆිල්ම් එක දාන්න`}
 					onClick={() => onAdd(piece)}
@@ -178,7 +174,6 @@ export function MovieMayhem({
 	outcome,
 	busy,
 	evidence,
-	onShowHow,
 	onSubmit,
 }: {
 	task: StudioTask;
@@ -189,7 +184,6 @@ export function MovieMayhem({
 	outcome: MissionOutcome;
 	busy: boolean;
 	evidence: ReturnType<typeof useMoveEvidence>;
-	onShowHow(): void;
 	onSubmit(response: ConstructedResponse): void;
 }) {
 	const cutting = task.kind === "arith" && task.operation === "subtract";
@@ -301,14 +295,6 @@ export function MovieMayhem({
 				{instruction}
 			</p>
 			<Art art={nimo} className="movie-nimo" />
-			<button
-				type="button"
-				className="movie-how"
-				onClick={onShowHow}
-				aria-label="සෙල්ලම් කරන හැටි බලමු"
-			>
-				?
-			</button>
 			<div className="scene-card">
 				<span className="scene-ribbon">
 					<Icon src={ICONS.clapper} /> දර්ශනය

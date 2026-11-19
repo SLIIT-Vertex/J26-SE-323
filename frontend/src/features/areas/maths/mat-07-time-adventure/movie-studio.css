@@ -193,8 +193,6 @@
 .film-add,
 .film-remove,
 .film-snip,
-.movie-how,
-.demo-skip,
 .ff-step,
 .ff-again,
 .puppet-period,
@@ -781,92 +779,15 @@
 	font-weight: 700;
 }
 
-/* The ? button replays how to play. */
-.movie-how {
-	position: absolute;
-	top: calc(var(--px) * 24);
-	right: calc(var(--px) * 30);
-	z-index: 2;
-	width: calc(var(--px) * 96);
-	height: calc(var(--px) * 96);
-	border-radius: 50%;
-	background: var(--studio-gold);
-	box-shadow: 0 calc(var(--px) * 6) 0 #b9831c;
-	font-size: calc(var(--px) * 52);
-	font-weight: 800;
-}
-
-/* ---- How to play (the demo) ---- */
-
-.studio-demo {
-	position: absolute;
-	inset: 0;
-	z-index: 4;
-	background:
-		url("/curriculum/game/G5-AREA-MAT-07/bg-studio.webp") center / cover
-		no-repeat,
-		#e8c88f;
-}
-
-/* The pointing hand on whatever the demo is doing now. */
-[data-cue] {
-	position: relative;
-	box-shadow: 0 0 0 calc(var(--px) * 6) var(--studio-gold);
-}
-
-[data-cue]::after {
-	content: "👆";
-	position: absolute;
-	bottom: calc(var(--px) * -70);
-	left: 50%;
-	font-size: calc(var(--px) * 64);
-	transform: translateX(-50%);
-	animation: demo-tap 700ms ease-in-out infinite alternate;
-	pointer-events: none;
-}
-
-.demo-film {
-	position: absolute;
-	right: calc(var(--px) * 30);
-	bottom: calc(var(--px) * 160);
-	padding: calc(var(--px) * 18) calc(var(--px) * 30);
-	border-radius: calc(var(--px) * 50);
-	background: var(--go);
-	color: #fff;
-	font-size: calc(var(--px) * 40);
-	font-weight: 800;
-}
-
-.demo-actions {
-	position: absolute;
-	right: calc(var(--px) * 30);
-	bottom: calc(var(--px) * 36);
-}
-
-.demo-skip {
-	min-height: calc(var(--px) * 96);
-	padding: 0 calc(var(--px) * 30);
-	border-radius: calc(var(--px) * 48);
-	background: var(--wood);
-	font-size: calc(var(--px) * 34);
-	font-weight: 700;
-}
-
 .movie-mayhem[data-outcome="correct"] .movie-nimo {
 	animation: actor-hop 400ms ease-in-out infinite alternate;
 }
 
 .movie-mayhem[data-outcome="wrong"] .movie-nimo {
-	animation: demo-wobble 250ms ease-in-out 3;
+	animation: nimo-wobble 250ms ease-in-out 3;
 }
 
-@keyframes demo-tap {
-	to {
-		transform: translate(-50%, calc(var(--px) * -16));
-	}
-}
-
-@keyframes demo-wobble {
+@keyframes nimo-wobble {
 	25% {
 		transform: rotate(-5deg);
 	}
@@ -890,7 +811,6 @@
 @media (prefers-reduced-motion: reduce) {
 	.movie-nimo,
 	.film-flash,
-	[data-cue]::after,
 	.puppet-sky,
 	.fast-forward[data-flash] .ff-digital strong {
 		animation: none;

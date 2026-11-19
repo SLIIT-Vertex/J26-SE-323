@@ -115,7 +115,6 @@ describe("Nimo's Silly Movie Studio", () => {
 
 	beforeEach(() => {
 		vi.useFakeTimers({ shouldAdvanceTime: true });
-		localStorage.clear();
 		host = document.createElement("div");
 		document.body.append(host);
 		root = createRoot(host);
@@ -181,10 +180,6 @@ describe("Nimo's Silly Movie Studio", () => {
 			);
 		});
 		await tap(byText(host, "රූගත කරමු!"));
-		// The first time, Nimo shows how to play (finished at once with reduced motion).
-		expect(host.querySelector(".studio-demo")).not.toBeNull();
-		expect(api.open).not.toHaveBeenCalled();
-		await tap(byText(host, "දැන් ඔබේ වාරය!"));
 		expect(api.open).toHaveBeenCalledWith(
 			expect.objectContaining({
 				area_id: "G5-AREA-MAT-07",
@@ -354,7 +349,6 @@ describe("Movie Time Mayhem film actions", () => {
 					outcome="playing"
 					busy={false}
 					evidence={evidence}
-					onShowHow={() => undefined}
 					onSubmit={onSubmit}
 				/>,
 			),
