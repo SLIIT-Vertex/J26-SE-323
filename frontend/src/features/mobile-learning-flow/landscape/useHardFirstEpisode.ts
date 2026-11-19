@@ -47,7 +47,7 @@ export function useHardFirstEpisode({
 	summaryFields,
 }: Pick<AreaGameProps, "api" | "learnerId" | "condition" | "onFailure"> & {
 	areaId: string;
-	/** The hard mission's skill. */
+	/** The hard mission's skill (the default for `startMission`). */
 	skillId: string;
 	/** Right after the server scores a mission answer (for sounds and animation). */
 	onMissionResult?(correct: boolean): void;
@@ -122,23 +122,40 @@ export function useHardFirstEpisode({
 		[evidence, onFailure],
 	);
 
-	const startMission = async () => {
-		const opened = await run(() =>
-			api.open(
-				{
-					learner_id: learnerId,
-					session_id: crypto.randomUUID(),
-					grade: 5,
-					medium: "si",
-					condition,
-					environment: "development",
-					allow_draft: true,
-					area_id: areaId,
-					atomic_skill_id: skillId,
-				},
-				crypto.randomUUID(),
-			),
-		);
+	/**
+	 * Open a new episode. A game that varies its mission passes the skills to try in order: when
+	 * the learner has already had every fresh item of one, the next skill is tried instead.
+	 */
+	const startMission = async (
+		missionSkills: string | readonly string[] = skillId,
+	) => {
+		const skills = typeof missionSkills === "string" ? [missionSkills] : missionSkills;
+		const opened = await run(async () => {
+			for (const [index, missionSkillId] of skills.entries()) {
+				try {
+					return await api.open(
+						{
+							learner_id: learnerId,
+							session_id: crypto.randomUUID(),
+							grade: 5,
+							medium: "si",
+							condition,
+							environment: "development",
+							allow_draft: true,
+							area_id: areaId,
+							atomic_skill_id: missionSkillId,
+						},
+						crypto.randomUUID(),
+					);
+				} catch (error) {
+					const usedUp =
+						(error as { code?: unknown } | null)?.code ===
+						"PROBE_ALREADY_RESERVED_OR_EXPOSED";
+					if (!usedUp || index === skills.length - 1) throw error;
+				}
+			}
+			throw new ContractError("MISSING_MANIFEST");
+		});
 		if (!opened) return;
 		setEpisodeId(opened.episode_id);
 		setSupport(null);
@@ -293,7 +310,7 @@ export function useHardFirstEpisode({
 		outcome,
 		busy,
 		evidence,
-		/** Open a new episode on the hard mission. */
+		/** Open a new episode on the hard mission (or on the first of the given skills that opens). */
 		startMission,
 		submitMission,
 		answerTraining,

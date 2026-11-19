@@ -90,6 +90,13 @@ def diagnose(game: Game, solution: Solution, response: Mapping[str, object]) -> 
     if not given or given == wanted:
         return None
     sign, step, words = _rule(solution)
+    if response.get("kind") != solution.get("kind"):
+        # Adding where the pattern multiplies (or the reverse): practise the simpler pattern.
+        return Diagnosis(
+            you_did="ඔබ " + ("එකතු කිරීමේ" if sign == "×" else "ගුණ කිරීමේ") + " නීතියක් තෝරා ගත්තා.",
+            went_wrong=f"මෙහි නීතිය: {words}.",
+            prerequisite_skill_id=DOUBLE_SKILL if sign == "×" else ADD_SKILL,
+        )
     known = [term for term in (as_int(term) for term in game.get("visible_terms", [])) if term is not None]  # type: ignore[union-attr]
     # Adding the gap between the last two known terms, instead of multiplying, is the usual slip.
     added_gap = len(known) >= 2 and given[0] == known[-1] + (known[-1] - known[-2])

@@ -79,7 +79,13 @@ export function useGameSoundMuted(): boolean {
  */
 export function playTone(
 	frequency: number,
-	options: { duration?: number; delay?: number; volume?: number } = {},
+	options: {
+		duration?: number;
+		delay?: number;
+		volume?: number;
+		/** Slide to this frequency over the note (a bubble blip, a slide whistle). */
+		glideTo?: number;
+	} = {},
 ): void {
 	if (muted) return;
 	const ready = audioContext();
@@ -100,7 +106,12 @@ export function playTone(
 	] as const) {
 		const oscillator = ready.createOscillator();
 		oscillator.type = "sine";
-		oscillator.frequency.value = frequency * multiple;
+		oscillator.frequency.setValueAtTime(frequency * multiple, start);
+		if (options.glideTo)
+			oscillator.frequency.exponentialRampToValueAtTime(
+				options.glideTo * multiple,
+				start + duration,
+			);
 		const partial = ready.createGain();
 		partial.gain.value = level;
 		oscillator.connect(partial).connect(gain);

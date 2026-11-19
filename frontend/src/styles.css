@@ -2471,109 +2471,7 @@ p {
 	background: linear-gradient(180deg, #effff8, #fff8df);
 }
 
-/* Number Pattern Adventure: portrait-first sequence construction. */
-.number-pattern-adventure {
-	width: min(100%, 44rem);
-	margin-inline: auto;
-	overflow-x: clip;
-}
-
-.pattern-chapter-cards > button {
-	min-height: 9.5rem;
-}
-
-.pattern-chapter-cards img {
-	width: clamp(5rem, 30vw, 8rem);
-	height: clamp(5rem, 30vw, 8rem);
-	object-fit: contain;
-}
-
-/* The title sits beside the picture, inside its own card. */
-/* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
-.pattern-chapter-cards span {
-	flex: 1;
-	color: #35275a;
-}
-
-.pattern-chapter-cards small {
-	justify-self: start;
-	padding: 0.25rem 0.65rem;
-	border-radius: 999px;
-	background: color-mix(in srgb, var(--card-tone) 18%, white);
-}
-
-.pattern-board {
-	position: relative;
-	display: grid;
-	gap: 1rem;
-	padding: clamp(0.75rem, 3vw, 1.25rem);
-	border: 3px solid #d8c9ff;
-	border-radius: 1.75rem;
-	background: rgba(255, 252, 241, 0.96);
-}
-
-.pattern-machine {
-	width: min(100%, 32rem);
-	max-height: clamp(6rem, 24vw, 13rem);
-	margin-inline: auto;
-	object-fit: contain;
-}
-
-.pattern-rule-builder {
-	display: flex;
-	align-items: end;
-	justify-content: center;
-	gap: 0.75rem;
-	min-width: 0;
-	padding: 0.85rem;
-	border: 2px solid #56cbb0;
-	border-radius: 1.25rem;
-	background: #edfff9;
-}
-
-.pattern-rule-builder legend {
-	padding-inline: 0.5rem;
-	font-weight: 900;
-	color: #35275a;
-}
-
-.pattern-operation-buttons {
-	display: flex;
-	gap: 0.5rem;
-}
-
-.pattern-operation-buttons button,
-.pattern-fixed-operation,
-.pattern-rule-builder input,
-.pattern-node input {
-	width: 3.25rem;
-	height: 3.25rem;
-	min-width: 48px;
-	min-height: 48px;
-	border: 3px solid #6556a0;
-	border-radius: 1rem;
-	background: white;
-	color: #35275a;
-	font: inherit;
-	font-size: 1.35rem;
-	font-weight: 900;
-	text-align: center;
-}
-
-.pattern-operation-buttons button[aria-pressed="true"] {
-	border-color: #0ba68f;
-	background: #d9fff4;
-	box-shadow: 0 0 0 4px rgba(11, 166, 143, 0.18);
-}
-
-.pattern-rule-builder label {
-	display: grid;
-	gap: 0.3rem;
-	justify-items: center;
-	font-weight: 800;
-}
-
-.pattern-sequence,
+/* Worked pattern routes in the shared support renderer. */
 .worked-pattern-route {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2583,7 +2481,6 @@ p {
 	list-style: none;
 }
 
-.pattern-sequence li,
 .worked-pattern-route li {
 	position: relative;
 	display: flex;
@@ -2592,7 +2489,6 @@ p {
 	min-width: 0;
 }
 
-.pattern-node,
 .worked-pattern-route strong {
 	display: grid;
 	place-items: center;
@@ -2609,49 +2505,27 @@ p {
 	color: #35275a;
 }
 
-.pattern-node input {
-	width: 100%;
-	height: 100%;
-	border: 0;
-	border-radius: 50%;
-	background: transparent;
-}
-
-.pattern-arrow {
-	position: absolute;
-	right: -0.45rem;
-	font-size: 1.35rem;
-	font-weight: 900;
-	color: #0ba68f;
-}
-
-.pattern-sequence li:nth-child(3) .pattern-arrow,
 .worked-pattern-route li:nth-child(3) > span {
 	transform: translateX(50%) rotate(90deg);
 	top: calc(100% + 0.35rem);
 	right: 50%;
 }
 
-.pattern-sequence li:nth-child(4),
 .worked-pattern-route li:nth-child(4) {
 	grid-row: 2;
 	grid-column: 3;
 }
 
-.pattern-sequence li:nth-child(5),
 .worked-pattern-route li:nth-child(5) {
 	grid-row: 2;
 	grid-column: 2;
 }
 
-.pattern-sequence li:nth-child(6),
 .worked-pattern-route li:nth-child(6) {
 	grid-row: 2;
 	grid-column: 1;
 }
 
-.pattern-sequence li:nth-child(4) .pattern-arrow,
-.pattern-sequence li:nth-child(5) .pattern-arrow,
 .worked-pattern-route li:nth-child(4) > span,
 .worked-pattern-route li:nth-child(5) > span {
 	left: -0.45rem;
@@ -2680,23 +2554,8 @@ p {
 }
 
 @media (max-width: 360px) {
-	.pattern-rule-builder {
-		align-items: center;
-		flex-wrap: wrap;
-	}
-	.pattern-sequence,
 	.worked-pattern-route {
 		column-gap: 0.2rem;
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.number-pattern-adventure *,
-	.number-pattern-adventure *::before,
-	.number-pattern-adventure *::after {
-		scroll-behavior: auto;
-		animation-duration: 0.01ms;
-		transition-duration: 0.01ms;
 	}
 }
 @media (max-width: 420px) {

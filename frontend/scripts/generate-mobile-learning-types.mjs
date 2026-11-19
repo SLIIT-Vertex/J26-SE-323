@@ -182,7 +182,7 @@ const output =
 	`export interface PublicOption { option_id: string; text_si: string; }\n` +
 	`export interface NumberWorldGameData { schema_version: "number-world-item-v1"; chapter: "costume_shop" | "bead_bounce" | "toy_parade"; [key: string]: unknown; }\n` +
 	`export interface AdditionAdventureGameData { schema_version: "addition-adventure-item-v1"; chapter: "crystal_flight" | "number_factory" | "sky_city"; [key: string]: unknown; }\n` +
-	`export interface NumberPatternGameData { schema_version: "number-pattern-item-v1"; chapter: "number_step_trail" | "multiplication_bridge" | "pattern_power_machine"; [key: string]: unknown; }\n` +
+	`export interface NumberPatternGameData { schema_version: "number-pattern-item-v1"; chapter: "bubble_rush"; [key: string]: unknown; }\n` +
 	`export interface SubtractionAdventureGameData { schema_version: "subtraction-adventure-item-v1"; chapter: "place_value_board" | "regrouping_workshop" | "difference_story"; [key: string]: unknown; }\n` +
 	`export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "equal_share_studio" | "quarter_orchard" | "tenths_mosaic"; [key: string]: unknown; }\n` +
 	`export interface MultiplicationAdventureGameData { schema_version: "multiplication-adventure-item-v1"; chapter: "table_explorer" | "column_workshop" | "story_mission"; [key: string]: unknown; }\n` +

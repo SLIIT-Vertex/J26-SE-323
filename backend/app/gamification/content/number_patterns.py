@@ -1,4 +1,4 @@
-"""Draft, source-linked Number Pattern Adventure content for Grade 5 Sinhala maths.
+"""Draft, source-linked Number Patterns (Bubble Rush) content for Grade 5 Sinhala maths.
 
 The photographed textbook pages are represented as deterministic constructed-response
 families.  This module contains no persistence, learner identity, or client-trusted scoring.
@@ -26,7 +26,8 @@ SCORING_VERSION = "g5-mat-number-patterns-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-number-patterns-parallel-v1"
 SCAFFOLD_VERSION = "g5-mat-number-patterns-scaffolds-v1"
 
-Chapter = Literal["number_step_trail", "multiplication_bridge", "pattern_power_machine"]
+# Every pattern is a Bubble Rush mission; its help games are chosen by the help type.
+Chapter = Literal["bubble_rush"]
 ScaffoldType = Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
 
 
@@ -45,8 +46,8 @@ class AtomicSkill:
 ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-MAT-PAT-DIFF-ASC-01",
-        "number_step_trail",
-        "වැඩිවන පොදු අන්තර රටා",
+        "bubble_rush",
+        "දෙක බැගින් වැඩිවන රටා",
         "easy",
         "G5-MAT-C02-L01-O02",
         "66",
@@ -55,8 +56,8 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-PAT-DIFF-DESC-01",
-        "number_step_trail",
-        "අඩුවන පොදු අන්තර රටා",
+        "bubble_rush",
+        "දෙක බැගින් අඩුවන රටා",
         "easy",
         "G5-MAT-C02-L01",
         "supplied exercise",
@@ -65,7 +66,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-PAT-RATIO-2-01",
-        "multiplication_bridge",
+        "bubble_rush",
         "දෙගුණ වන සංඛ්‍යා රටා",
         "medium",
         "G5-MAT-C02-L02-O01",
@@ -74,28 +75,8 @@ ATOMIC_SKILLS = (
         2,
     ),
     AtomicSkill(
-        "G5-MAT-PAT-RATIO-3-01",
-        "multiplication_bridge",
-        "තුන්ගුණ වන සංඛ්‍යා රටා",
-        "medium",
-        "G5-MAT-C02-L02-O01",
-        "66",
-        "multiply",
-        3,
-    ),
-    AtomicSkill(
-        "G5-MAT-PAT-RATIO-4-01",
-        "pattern_power_machine",
-        "හතරගුණ වන සංඛ්‍යා රටා",
-        "hard",
-        "G5-MAT-C02-L02-O01",
-        "supplied exercise",
-        "multiply",
-        4,
-    ),
-    AtomicSkill(
         "G5-MAT-PAT-RATIO-5-01",
-        "pattern_power_machine",
+        "bubble_rush",
         "පස්ගුණ වන සංඛ්‍යා රටා",
         "hard",
         "G5-MAT-C02-L02-O01",
@@ -110,16 +91,18 @@ TEXTBOOK_FAMILIES: dict[str, tuple[tuple[int, ...], ...]] = {
     "G5-MAT-PAT-DIFF-ASC-01": (
         (1, 3, 5, 7, 9, 11),
         (2, 4, 6, 8, 10, 12),
-        (4, 8, 12, 16, 20, 24),
         (13, 15, 17, 19, 21, 23),
         (32, 34, 36, 38, 40, 42),
         (148, 150, 152, 154, 156, 158),
         (333, 335, 337, 339, 341, 343),
     ),
-    "G5-MAT-PAT-DIFF-DESC-01": ((12, 10, 8, 6, 4, 2), (25, 21, 17, 13, 9)),
+    "G5-MAT-PAT-DIFF-DESC-01": (
+        (12, 10, 8, 6, 4, 2),
+        (30, 28, 26, 24, 22, 20),
+        (61, 59, 57, 55, 53, 51),
+        (100, 98, 96, 94, 92, 90),
+    ),
     "G5-MAT-PAT-RATIO-2-01": ((5, 10, 20, 40, 80), (7, 14, 28, 56, 112), (8, 16, 32, 64, 128)),
-    "G5-MAT-PAT-RATIO-3-01": ((1, 3, 9, 27, 81), (2, 6, 18, 54, 162)),
-    "G5-MAT-PAT-RATIO-4-01": ((3, 12, 48, 192), (7, 28, 112, 448), (5, 20, 80, 320)),
     "G5-MAT-PAT-RATIO-5-01": ((4, 20, 100, 500), (8, 40, 200, 1000), (7, 35, 175, 875)),
 }
 
@@ -221,7 +204,13 @@ def validate_constructed_response(
         normalized["multiplier"] = response.get("multiplier")
         rule_valid = response.get("multiplier") == rule
     if response.get("kind") != expected_kind:
-        return False, "unknown_or_other", normalized
+        # A rule of the other kind (adding where the pattern multiplies, or the reverse).
+        other_kind = response.get("kind") in {
+            "constant_difference_pattern",
+            "constant_ratio_pattern",
+        }
+        error = "additive_multiplicative_confusion" if other_kind else "unknown_or_other"
+        return False, error, normalized
     if set(response) != allowed_fields:
         return False, "unknown_or_other", normalized
     if len(terms) != len(expected):
@@ -245,6 +234,28 @@ def validate_constructed_response(
 
 
 SIMPLER_TERM_COUNT = 4
+FRESH_ADDITIVE_STEPS = 30
+
+
+def _fresh_start(
+    base: tuple[int, ...], operation: str, rule: int, rng: random.Random
+) -> int:
+    """A start for an after item: not the before item's, of a similar size, in range."""
+
+    first, count = base[0], len(base)
+    if operation == "multiply":
+        starts = [
+            start
+            for start in range(max(2, first // 2), first * 2 + 1)
+            if start != first and start * rule ** (count - 1) <= 1_000
+        ]
+    else:
+        starts = [
+            first + rule * step
+            for step in range(1, FRESH_ADDITIVE_STEPS + 1)
+            if first + rule * (step + count) <= 1_000
+        ]
+    return rng.choice(starts)
 
 
 def generate_simpler_item(
@@ -281,10 +292,15 @@ def generate_item(
         sequence = _sequence(start, skill.operation, rule, SIMPLER_TERM_COUNT)
     elif role == "unsupported_before":
         sequence = base
-    elif skill.operation == "multiply":
-        sequence = families[(family_index + 1) % len(families)]
     else:
-        sequence = _sequence(base[0] + rule, skill.operation, rule, len(base))
+        # Each after item is shown to a learner only once, so it comes from a pool of starts of a
+        # similar size (same rule, same length), not from the few photographed rows alone.
+        sequence = _sequence(
+            _fresh_start(base, skill.operation, rule, family_rng),
+            skill.operation,
+            rule,
+            len(base),
+        )
     missing_count = 1 if simpler else 2
     missing_indices = tuple(range(len(sequence) - missing_count, len(sequence)))
     visible_terms: tuple[int | None, ...] = tuple(

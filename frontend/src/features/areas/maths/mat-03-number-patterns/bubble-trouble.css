@@ -1,0 +1,588 @@
+/* Nimo's Bubble Trouble. Design space 1920×1080; --px is one design pixel. */
+.bubble-trouble {
+	--sea-ink: #2a1f5c;
+	--bubble-edge: #ffffff;
+	--bubble-fill: rgb(214 245 255 / 55%);
+	--bubble-gold: #ffc93c;
+	--coral: #ff7aa8;
+	position: absolute;
+	inset: 0;
+	background:
+		#1d8fd6 url("/curriculum/game/G5-AREA-MAT-03/bg-reef-race.webp") center /
+		cover no-repeat;
+	color: var(--sea-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Bubble Rush (the race) ---- */
+
+.bubble-rush,
+.bubble-canvas {
+	position: absolute;
+	inset: 0;
+}
+
+.bubble-trail {
+	position: absolute;
+	top: calc(var(--px) * 22);
+	left: 50%;
+	display: flex;
+	gap: calc(var(--px) * 26);
+	margin: 0;
+	padding: 0;
+	transform: translateX(-50%);
+	list-style: none;
+}
+
+.bubble-trail li,
+.pattern-strip li {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 132);
+	height: calc(var(--px) * 132);
+	border: calc(var(--px) * 7) solid var(--bubble-edge);
+	border-radius: 50%;
+	background:
+		radial-gradient(circle at 32% 28%, #fff 0 8%, transparent 9%),
+		var(--bubble-fill);
+	box-shadow: 0 0 calc(var(--px) * 18) rgb(255 255 255 / 70%);
+	font-size: calc(var(--px) * 50);
+	font-weight: 800;
+}
+
+.bubble-trail li[data-blank],
+.pattern-strip li[data-blank] {
+	border-color: var(--bubble-gold);
+	border-style: dashed;
+}
+
+.bubble-trail li[data-empty],
+.pattern-strip li[data-empty] {
+	color: #7a5bd6;
+}
+
+.bubble-rule-badge {
+	position: absolute;
+	top: calc(var(--px) * 170);
+	left: calc(var(--px) * 40);
+	display: grid;
+	place-content: center;
+	justify-items: center;
+	width: calc(var(--px) * 140);
+	height: calc(var(--px) * 140);
+	margin: 0;
+	border: calc(var(--px) * 7) solid #8a5a12;
+	border-radius: 50%;
+	background: var(--bubble-gold);
+	font-size: calc(var(--px) * 54);
+	font-weight: 800;
+}
+
+.bubble-rule-badge small {
+	font-size: calc(var(--px) * 30);
+	line-height: 1;
+}
+
+.bubble-scroll {
+	position: absolute;
+	top: calc(var(--px) * 176);
+	left: 50%;
+	max-width: calc(var(--px) * 1100);
+	margin: 0;
+	padding: calc(var(--px) * 14) calc(var(--px) * 36);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 26);
+	background: var(--wood);
+	box-shadow: 0 calc(var(--px) * 8) 0 rgb(0 0 0 / 18%);
+	font-size: calc(var(--px) * 42);
+	font-weight: 700;
+	text-align: center;
+	white-space: nowrap;
+	transform: translateX(-50%);
+}
+
+.bubble-rush[data-outcome="correct"] .bubble-scroll {
+	background: #d9f7c9;
+}
+
+/* The scene handles taps and drags; these buttons serve keyboards and screen readers. */
+.bubble-ring-hit {
+	position: absolute;
+	width: calc(var(--px) * 140);
+	height: calc(var(--px) * 140);
+	min-height: 0;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	pointer-events: none;
+}
+
+.bubble-ring-hit:focus-visible {
+	outline: calc(var(--px) * 8) solid var(--bubble-gold);
+}
+
+/* Under the submarine, clear of the rings and the octopus. */
+.bubble-actions {
+	position: absolute;
+	left: calc(var(--px) * 40);
+	bottom: calc(var(--px) * 36);
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 24);
+}
+
+.bubble-again {
+	min-height: calc(var(--px) * 110);
+	padding: 0 calc(var(--px) * 34);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 55);
+	background: var(--wood);
+	color: var(--sea-ink);
+	font-size: calc(var(--px) * 40);
+	font-weight: 700;
+}
+
+.bubble-again:disabled {
+	opacity: 0.5;
+}
+
+.bubble-finish {
+	min-width: calc(var(--px) * 360);
+}
+
+/* ---- Training boards ---- */
+
+.pattern-strip {
+	display: flex;
+	justify-content: center;
+	gap: calc(var(--px) * 18);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.pattern-strip li {
+	width: calc(var(--px) * 116);
+	height: calc(var(--px) * 116);
+	font-size: calc(var(--px) * 44);
+}
+
+/* Jellyfish Copy Party */
+
+.jelly-party {
+	display: grid;
+	gap: calc(var(--px) * 22);
+	justify-items: center;
+	width: 100%;
+	max-width: calc(var(--px) * 1080);
+}
+
+.jelly-message,
+.tiki-call {
+	margin: 0;
+	padding: calc(var(--px) * 12) calc(var(--px) * 30);
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 255 255 / 85%);
+	font-size: calc(var(--px) * 38);
+	font-weight: 700;
+	text-align: center;
+}
+
+.jelly-stage {
+	display: grid;
+	grid-template-columns: 1fr auto auto auto 1.4fr;
+	align-items: center;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+	min-height: calc(var(--px) * 330);
+}
+
+.jelly-arrow {
+	color: var(--bubble-gold);
+	font-size: calc(var(--px) * 70);
+	text-shadow: 0 calc(var(--px) * 4) 0 #8a5a12;
+}
+
+.jelly-groups {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: calc(var(--px) * 10);
+}
+
+.jelly-group {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: calc(var(--px) * 4);
+	max-width: calc(var(--px) * 230);
+	padding: calc(var(--px) * 12);
+	border: calc(var(--px) * 5) solid var(--bubble-edge);
+	border-radius: calc(var(--px) * 40);
+	background: var(--bubble-fill);
+	animation: jelly-pop 420ms ease-out both;
+}
+
+.jelly-group b {
+	font-size: calc(var(--px) * 46);
+}
+
+.jelly-groups[data-copies="1"] .jelly-group {
+	animation: none;
+}
+
+.jelly {
+	width: calc(var(--px) * 44);
+	height: calc(var(--px) * 50);
+	object-fit: contain;
+	animation: jelly-bob 1.6s ease-in-out infinite;
+}
+
+.jelly-shape {
+	display: inline-block;
+	border-radius: 50% 50% 30% 30%;
+	background:
+		repeating-linear-gradient(
+			90deg,
+			#d7a6ff 0 calc(var(--px) * 5),
+			transparent calc(var(--px) * 5) calc(var(--px) * 9)
+		)
+		bottom / 80% 40% no-repeat,
+		radial-gradient(circle at 50% 30%, #f1d9ff 0 45%, transparent 46%) top /
+		100% 70% no-repeat;
+}
+
+.jelly-shell-slot {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 200);
+	height: calc(var(--px) * 200);
+	border: calc(var(--px) * 5) dashed rgb(255 255 255 / 70%);
+	border-radius: 50%;
+}
+
+.jelly-shell-slot[data-active] {
+	border-style: solid;
+	border-color: var(--bubble-gold);
+	box-shadow: 0 0 calc(var(--px) * 40) var(--bubble-gold);
+}
+
+.jelly-shell {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 170);
+	height: calc(var(--px) * 150);
+}
+
+.jelly-shell img,
+.jelly-shell-shape {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.jelly-shell-shape {
+	border-radius: 50% 50% 18% 18%;
+	background: repeating-conic-gradient(
+		from 270deg at 50% 100%,
+		#ffb3d1 0 8deg,
+		#ff8fbd 8deg 16deg
+	);
+	box-shadow: inset 0 calc(var(--px) * -10) 0 #e26a9e;
+}
+
+.jelly-shell-tag {
+	position: relative;
+	padding: calc(var(--px) * 2) calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 18);
+	background: #fff8e8;
+	font-size: calc(var(--px) * 46);
+	font-weight: 800;
+}
+
+.jelly-shell[data-multiplier="3"] img,
+.jelly-shell[data-multiplier="3"] .jelly-shell-shape {
+	filter: hue-rotate(60deg) saturate(1.3);
+}
+
+.jelly-shell[data-multiplier="4"] img,
+.jelly-shell[data-multiplier="4"] .jelly-shell-shape {
+	filter: hue-rotate(-60deg);
+}
+
+.jelly-shell[data-multiplier="5"] img,
+.jelly-shell[data-multiplier="5"] .jelly-shell-shape {
+	filter: hue-rotate(-140deg);
+}
+
+.jelly-result {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 10);
+}
+
+.jelly-result[data-wrong] .jelly-groups {
+	animation: jelly-giggle 280ms ease-in-out 3;
+}
+
+.jelly-target,
+.jelly-total {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 140);
+	padding: calc(var(--px) * 10) calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 26);
+	background: #fff8e8;
+	font-size: calc(var(--px) * 56);
+	font-weight: 800;
+}
+
+.jelly-shells {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 26);
+}
+
+.jelly-shell-button,
+.jelly-again,
+.tiki-choice,
+.tiki-watch {
+	min-height: calc(var(--px) * 110);
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+}
+
+.jelly-shell-button {
+	padding: calc(var(--px) * 6);
+	border-radius: calc(var(--px) * 30);
+}
+
+.jelly-shell-button:disabled {
+	opacity: 0.45;
+}
+
+.jelly-shell-button[data-found] {
+	opacity: 1;
+	box-shadow: 0 0 calc(var(--px) * 36) var(--bubble-gold);
+}
+
+.jelly-again {
+	width: calc(var(--px) * 110);
+	border-radius: 50%;
+	background: var(--wood);
+	font-size: calc(var(--px) * 50);
+}
+
+[data-ghost].jelly-shell-button,
+[data-ghost].tiki-choice {
+	outline: calc(var(--px) * 6) dashed var(--bubble-gold);
+	outline-offset: calc(var(--px) * 6);
+}
+
+/* Crab's Bubble Steps */
+
+.tiki-steps {
+	display: grid;
+	gap: calc(var(--px) * 26);
+	justify-items: center;
+	width: 100%;
+	max-width: calc(var(--px) * 1080);
+}
+
+.tiki-path {
+	display: grid;
+	grid-template-columns: repeat(var(--shells), minmax(0, 1fr));
+	align-items: end;
+	width: 100%;
+	min-height: calc(var(--px) * 400);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.tiki-shell {
+	position: relative;
+	display: grid;
+	place-items: center;
+	height: calc(var(--px) * 230);
+}
+
+.tiki-shell-art,
+.tiki-shell-shape {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.tiki-shell-shape {
+	inset: 0 calc(var(--px) * 12);
+	width: auto;
+	border-radius: 50% 50% 22% 22%;
+	background: repeating-conic-gradient(
+		from 270deg at 50% 100%,
+		#ffe3c4 0 9deg,
+		#ffc9a0 9deg 18deg
+	);
+	box-shadow: inset 0 calc(var(--px) * -10) 0 #e59a6a;
+}
+
+/* The number sits on the shell, above the rock it stands on. */
+.tiki-shell b {
+	position: relative;
+	top: -14%;
+	padding: 0 calc(var(--px) * 12);
+	border-radius: calc(var(--px) * 18);
+	background: rgb(255 248 232 / 88%);
+	font-size: calc(var(--px) * 44);
+	font-weight: 800;
+}
+
+.tiki-shell[data-blank] b {
+	color: #7a5bd6;
+}
+
+.tiki-shell[data-next] .tiki-shell-shape,
+.tiki-shell[data-next] .tiki-shell-art {
+	filter: drop-shadow(0 0 calc(var(--px) * 18) var(--bubble-gold));
+}
+
+.tiki-hop {
+	position: absolute;
+	top: calc(var(--px) * -40);
+	left: 0;
+	padding: calc(var(--px) * 4) calc(var(--px) * 14);
+	border: calc(var(--px) * 4) dashed #fff;
+	border-bottom: 0;
+	border-radius: calc(var(--px) * 40) calc(var(--px) * 40) 0 0;
+	color: #fff;
+	font-size: calc(var(--px) * 36);
+	font-weight: 800;
+	text-shadow: 0 calc(var(--px) * 3) 0 var(--sea-ink);
+	transform: translateX(-50%);
+}
+
+.tiki {
+	position: absolute;
+	bottom: calc(var(--px) * 170);
+	left: 50%;
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 130);
+	object-fit: contain;
+	transform: translateX(-50%);
+	animation: tiki-hop 520ms ease-out;
+}
+
+.tiki-shape {
+	border-radius: 50% 50% 40% 40%;
+	background:
+		radial-gradient(
+			circle at 35% 18%,
+			#fff 0 9%,
+			#1d1d28 10% 14%,
+			transparent 15%
+		),
+		radial-gradient(
+			circle at 65% 18%,
+			#fff 0 9%,
+			#1d1d28 10% 14%,
+			transparent 15%
+		),
+		radial-gradient(ellipse at 50% 65%, #ff6a3d 0 55%, transparent 56%);
+}
+
+.tiki-steps[data-wobble] .tiki {
+	animation: tiki-wobble 220ms ease-in-out 4;
+}
+
+.tiki-choices {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 16) calc(var(--px) * 20);
+	font-size: calc(var(--px) * 36);
+	font-weight: 700;
+}
+
+/* The question sits on its own line above the number bubbles. */
+.tiki-choices > span {
+	flex-basis: 100%;
+	color: #fff;
+	text-align: center;
+	text-shadow: 0 calc(var(--px) * 3) 0 var(--sea-ink);
+}
+
+.tiki-choice {
+	width: calc(var(--px) * 124);
+	height: calc(var(--px) * 124);
+	border: calc(var(--px) * 7) solid var(--bubble-edge);
+	border-radius: 50%;
+	background: var(--bubble-fill);
+	font-size: calc(var(--px) * 42);
+	font-weight: 800;
+}
+
+.tiki-watch {
+	padding: 0 calc(var(--px) * 34);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 55);
+	background: var(--wood);
+	font-size: calc(var(--px) * 36);
+	font-weight: 700;
+}
+
+@keyframes jelly-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.3);
+	}
+}
+
+@keyframes jelly-bob {
+	50% {
+		transform: translateY(calc(var(--px) * -6));
+	}
+}
+
+@keyframes jelly-giggle {
+	25% {
+		transform: rotate(-6deg);
+	}
+	75% {
+		transform: rotate(6deg);
+	}
+}
+
+@keyframes tiki-hop {
+	40% {
+		transform: translate(-50%, calc(var(--px) * -70));
+	}
+}
+
+@keyframes tiki-wobble {
+	25% {
+		transform: translateX(-50%) rotate(-12deg);
+	}
+	75% {
+		transform: translateX(-50%) rotate(12deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.jelly,
+	.jelly-group,
+	.tiki,
+	.jelly-result[data-wrong] .jelly-groups,
+	.tiki-steps[data-wobble] .tiki {
+		animation: none;
+	}
+}

@@ -196,11 +196,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 											: game.schema_version === "addition-adventure-item-v1"
 												? ["crystal_flight", "number_factory", "sky_city"]
 												: game.schema_version === "number-pattern-item-v1"
-													? [
-															"number_step_trail",
-															"multiplication_bridge",
-															"pattern_power_machine",
-														]
+													? ["bubble_rush"]
 													: game.schema_version ===
 															"subtraction-adventure-item-v1"
 														? [

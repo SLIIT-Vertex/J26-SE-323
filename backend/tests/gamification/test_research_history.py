@@ -107,7 +107,7 @@ def test_a_game_being_played_appears_straight_away(world):
         environment="development",
         allow_draft=True,
         area_id="G5-AREA-MAT-03",
-        atomic_skill_id="G5-MAT-PAT-RATIO-3-01",
+        atomic_skill_id="G5-MAT-PAT-RATIO-5-01",
         idempotency_key="now-open",
     )
 

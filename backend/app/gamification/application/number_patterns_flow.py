@@ -1,4 +1,4 @@
-"""Durable adaptive-game profile for the Number Pattern Adventure."""
+"""Durable adaptive-game profile for Number Patterns (Nimo's Bubble Trouble)."""
 
 from __future__ import annotations
 
