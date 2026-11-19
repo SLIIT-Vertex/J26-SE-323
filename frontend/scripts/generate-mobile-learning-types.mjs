@@ -180,7 +180,7 @@ const output =
 	`export interface TelemetryEvent { event_id: UUID; sequence: number; version: 1; client_occurred_at: string; payload: Record<string, string | number | boolean>; }\n` +
 	`export interface TelemetryBatch { batch_id: UUID; first_sequence: number; events: TelemetryEvent[]; }\n` +
 	`export interface PublicOption { option_id: string; text_si: string; }\n` +
-	`export interface NumberWorldGameData { schema_version: "number-world-item-v1"; chapter: "place_value_harbour" | "firefly_abacus" | "kite_workshop" | "river_route_rally"; [key: string]: unknown; }\n` +
+	`export interface NumberWorldGameData { schema_version: "number-world-item-v1"; chapter: "costume_shop" | "bead_bounce" | "toy_parade"; [key: string]: unknown; }\n` +
 	`export interface AdditionAdventureGameData { schema_version: "addition-adventure-item-v1"; chapter: "crystal_flight" | "number_factory" | "sky_city"; [key: string]: unknown; }\n` +
 	`export interface NumberPatternGameData { schema_version: "number-pattern-item-v1"; chapter: "number_step_trail" | "multiplication_bridge" | "pattern_power_machine"; [key: string]: unknown; }\n` +
 	`export interface SubtractionAdventureGameData { schema_version: "subtraction-adventure-item-v1"; chapter: "place_value_board" | "regrouping_workshop" | "difference_story"; [key: string]: unknown; }\n` +

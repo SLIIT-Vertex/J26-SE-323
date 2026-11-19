@@ -48,7 +48,7 @@ function areaGame<Screen extends string, Module>(
 
 export const AREA_GAMES = [
 	// Mathematics
-	areaGame("G5-AREA-MAT-01", "number-world", () => import("./maths/mat-01-number-world/NumberWorldJourney"), "NumberWorldJourney"),
+	areaGame("G5-AREA-MAT-01", "number-world", () => import("./maths/mat-01-number-world/NimoToybox"), "NimoToybox"),
 	areaGame("G5-AREA-MAT-02", "addition-adventure", () => import("./maths/mat-02-addition-adventure/NimoSkyAdventure"), "NimoSkyAdventure"),
 	areaGame("G5-AREA-MAT-03", "number-pattern-adventure", () => import("./maths/mat-03-number-patterns/NumberPatternJourney"), "NumberPatternJourney"),
 	areaGame("G5-AREA-MAT-04", "subtraction-adventure", () => import("./maths/mat-04-subtraction-adventure/SubtractionAdventureJourney"), "SubtractionAdventureJourney"),

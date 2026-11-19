@@ -1,0 +1,504 @@
+/* Nimo's Wacky Toybox. Sizes are design pixels of the 1920×1080 stage: calc(var(--px) * N). */
+.toybox {
+	position: absolute;
+	inset: 0;
+	background:
+		#f6c98f url("/curriculum/game/G5-AREA-MAT-01/bg-toy-stage.webp") center /
+		cover no-repeat;
+	font-size: calc(var(--px) * 40);
+}
+
+.toy-parade,
+.toy-canvas {
+	position: absolute;
+	inset: 0;
+}
+
+.toy-scroll {
+	position: absolute;
+	top: calc(var(--px) * 28);
+	left: calc(var(--px) * 440);
+	width: calc(var(--px) * 1040);
+	margin: 0;
+	padding: calc(var(--px) * 22) calc(var(--px) * 36);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 28);
+	background: var(--wood);
+	box-shadow: 0 calc(var(--px) * 10) 0 rgb(0 0 0 / 18%);
+	font-size: calc(var(--px) * 44);
+	font-weight: 700;
+	text-align: center;
+}
+
+.toy-parade[data-outcome="correct"] .toy-scroll {
+	background: #d9f7c9;
+}
+
+.toy-parade[data-outcome="wrong"] .toy-scroll {
+	background: #ffe2c2;
+}
+
+/* The stage handles touches; these buttons are for keyboards and screen readers. */
+.toy-hit,
+.toy-slot {
+	position: absolute;
+	padding: 0;
+	border: 0;
+	border-radius: calc(var(--px) * 30);
+	background: transparent;
+	pointer-events: none;
+}
+
+.toy-hit {
+	width: calc(var(--px) * 230);
+	height: calc(var(--px) * 230);
+}
+
+.toy-slot {
+	width: calc(var(--px) * 280);
+	height: calc(var(--px) * 230);
+}
+
+.toy-direction {
+	position: absolute;
+	top: calc(var(--px) * 196);
+	left: 50%;
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 18);
+	margin: 0;
+	padding: calc(var(--px) * 8) calc(var(--px) * 28);
+	border-radius: calc(var(--px) * 40);
+	background: rgb(255 250 240 / 92%);
+	font-size: calc(var(--px) * 38);
+	font-weight: 700;
+	transform: translateX(-50%);
+}
+
+.toy-arrow {
+	color: #d94b4b;
+	font-size: calc(var(--px) * 48);
+}
+
+.toy-start {
+	position: absolute;
+	top: calc(var(--px) * 660);
+	right: calc(var(--px) * 30);
+	min-width: calc(var(--px) * 330);
+}
+
+/* Bead Bounce, build mode: the reused wooden frame with beads stacked on its rods. */
+.bead-toy {
+	display: grid;
+	gap: calc(var(--px) * 10);
+	width: calc(var(--px) * 1080);
+}
+
+.bead-frame {
+	position: relative;
+	aspect-ratio: 2172 / 1000;
+}
+
+.bead-frame img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: fill;
+}
+
+.bead-frame-shape {
+	position: absolute;
+	inset: 0;
+	border: calc(var(--px) * 26) solid #c9873f;
+	border-radius: calc(var(--px) * 24);
+	background: rgb(80 60 40 / 25%);
+}
+
+.bead-rod {
+	position: absolute;
+	top: 12%;
+	bottom: 14.5%;
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	gap: 1.5%;
+	width: 11%;
+	padding: 0 0 2%;
+	border: 0;
+	background: transparent;
+	transform: translateX(-50%);
+}
+
+.bead {
+	flex: 0 0 9%;
+	width: 92%;
+	border-radius: 50% / 45%;
+	background: hsl(calc(var(--rod) * 58 + 10) 85% 58%);
+	box-shadow:
+		inset 0 calc(var(--px) * -6) 0 rgb(0 0 0 / 18%),
+		inset 0 calc(var(--px) * 6) 0 rgb(255 255 255 / 35%);
+	transition: transform 0.15s ease;
+	animation: bead-drop 0.25s ease-out;
+}
+
+/* With the bead art, one red bead is recoloured for each rod. */
+.bead-toy[data-bead-art] .bead:not([data-ghost]) {
+	background:
+		url("/curriculum/game/G5-AREA-MAT-01/bead.webp") center / 100% 100%
+		no-repeat;
+	box-shadow: none;
+	filter: hue-rotate(calc(var(--rod) * 58deg));
+}
+
+.bead[data-ghost] {
+	background: transparent;
+	box-shadow: none;
+	outline: calc(var(--px) * 4) dashed rgb(255 255 255 / 70%);
+	animation: none;
+}
+
+@keyframes bead-drop {
+	from {
+		transform: translateY(-120%) scale(0.9);
+	}
+}
+
+.bead-controls {
+	position: relative;
+	height: calc(var(--px) * 150);
+}
+
+.bead-control {
+	position: absolute;
+	top: 0;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 6);
+	transform: translateX(-50%);
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+}
+
+.bead-control span {
+	padding: calc(var(--px) * 2) calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 20);
+	background: var(--wood);
+}
+
+.bead-control button {
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 90);
+	padding: 0;
+	border: 0;
+	border-radius: calc(var(--px) * 20);
+	background: #3b7dd8;
+	box-shadow: 0 calc(var(--px) * 5) 0 #1f4f96;
+	color: #fff;
+	font-size: calc(var(--px) * 56);
+}
+
+.bead-readout {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: calc(var(--px) * 24);
+	margin: 0;
+	padding: calc(var(--px) * 10) calc(var(--px) * 30);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+	font-size: calc(var(--px) * 36);
+	font-weight: 700;
+}
+
+.bead-readout strong {
+	font-size: calc(var(--px) * 72);
+	font-variant-numeric: tabular-nums;
+}
+
+/* Bead Bounce, compare mode. */
+.bead-compare {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 18);
+	width: calc(var(--px) * 1080);
+}
+
+.bead-compare-direction {
+	margin: 0;
+	padding: calc(var(--px) * 8) calc(var(--px) * 28);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+	font-size: calc(var(--px) * 38);
+	font-weight: 700;
+}
+
+.bead-compare-toys,
+.bead-compare-slots {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+}
+
+.bead-compare-toy {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 8);
+	padding: calc(var(--px) * 14);
+	border: calc(var(--px) * 6) solid #50607a;
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 250 240 / 95%);
+	color: var(--ink);
+}
+
+.bead-compare-toy[aria-pressed="true"] {
+	border-color: var(--gold);
+	box-shadow: 0 0 calc(var(--px) * 24) var(--gold);
+}
+
+.bead-compare-toy[data-placed] {
+	opacity: 0.5;
+}
+
+.bead-compare-head {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 8);
+}
+
+.bead-compare-head img {
+	width: auto;
+	height: calc(var(--px) * 70);
+}
+
+.bead-compare-toy strong {
+	font-size: calc(var(--px) * 54);
+	font-variant-numeric: tabular-nums;
+}
+
+.mini-abacus,
+.mini-places {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	gap: calc(var(--px) * 6);
+	width: 100%;
+}
+
+.mini-rod {
+	display: flex;
+	flex-direction: column-reverse;
+	align-items: center;
+	gap: calc(var(--px) * 3);
+	height: calc(var(--px) * 230);
+	border-bottom: calc(var(--px) * 6) solid #c9873f;
+	background: linear-gradient(
+		90deg,
+		transparent 46%,
+		#d9b07a 46% 54%,
+		transparent 54%
+	);
+}
+
+.mini-rod i {
+	width: 80%;
+	height: calc(var(--px) * 20);
+	border-radius: 50%;
+	background: hsl(calc(var(--rod) * 58 + 10) 85% 58%);
+}
+
+.mini-places em {
+	font-size: calc(var(--px) * 22);
+	font-style: normal;
+	text-align: center;
+}
+
+.bead-compare-slot {
+	min-height: calc(var(--px) * 110);
+	border: calc(var(--px) * 6) dashed #fff;
+	border-radius: calc(var(--px) * 24);
+	background: rgb(34 52 84 / 70%);
+	color: #fff;
+	font-size: calc(var(--px) * 52);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.bead-compare-slot [data-ghost] {
+	color: rgb(255 255 255 / 35%);
+}
+
+/* Costume shop: the rack, the digit on its pedestal, and what the costume makes it worth. */
+.costume-shop {
+	display: grid;
+	grid-template-columns: calc(var(--px) * 300) 1fr calc(var(--px) * 300);
+	grid-template-rows: auto 1fr;
+	gap: calc(var(--px) * 20);
+	width: calc(var(--px) * 1080);
+	height: calc(var(--px) * 820);
+}
+
+.costume-number {
+	grid-column: 1 / -1;
+	justify-self: center;
+	display: flex;
+	gap: calc(var(--px) * 8);
+	margin: 0;
+	padding: calc(var(--px) * 10) calc(var(--px) * 24);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+	font-size: calc(var(--px) * 64);
+	font-weight: 700;
+}
+
+.costume-number span[data-target] {
+	padding: 0 calc(var(--px) * 10);
+	border-radius: calc(var(--px) * 14);
+	background: var(--gold);
+}
+
+.costume-rack {
+	display: grid;
+	align-content: start;
+	gap: calc(var(--px) * 12);
+	margin: 0;
+	padding: calc(var(--px) * 14);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(247 227 181 / 95%);
+	overflow-y: auto;
+}
+
+.costume {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 12);
+	min-height: calc(var(--px) * 110);
+	padding: calc(var(--px) * 8) calc(var(--px) * 12);
+	border: calc(var(--px) * 5) solid #d8bf8a;
+	border-radius: calc(var(--px) * 20);
+	background: #fffaf0;
+	color: var(--ink);
+	text-align: left;
+}
+
+.costume img,
+.costume-shape {
+	flex: 0 0 auto;
+	width: calc(var(--px) * 80);
+	height: calc(var(--px) * 80);
+	object-fit: contain;
+}
+
+.costume-shape {
+	display: block;
+	border-radius: 35% 35% 20% 20%;
+}
+
+.costume-tag {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	font-size: calc(var(--px) * 28);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+
+.costume[aria-pressed="true"] {
+	border-color: var(--go);
+	box-shadow: 0 0 calc(var(--px) * 20) var(--go);
+}
+
+.costume[data-hint] {
+	outline: calc(var(--px) * 5) dashed rgb(60 181 74 / 45%);
+}
+
+.digit-buddy {
+	position: relative;
+	display: grid;
+	place-items: center;
+	align-self: center;
+	justify-self: center;
+	width: calc(var(--px) * 360);
+	height: calc(var(--px) * 520);
+}
+
+.buddy-digit {
+	color: #9b5de5;
+	font-family: "Fredoka Variable", sans-serif;
+	font-size: calc(var(--px) * 440);
+	font-weight: 700;
+	line-height: 1;
+	-webkit-text-stroke: calc(var(--px) * 10) #5b2a9a;
+}
+
+.buddy-face {
+	position: absolute;
+	top: 38%;
+	display: flex;
+	gap: calc(var(--px) * 40);
+}
+
+.buddy-face i {
+	width: calc(var(--px) * 26);
+	height: calc(var(--px) * 34);
+	border-radius: 50%;
+	background: #1d1d28;
+}
+
+.buddy-face b {
+	position: absolute;
+	top: calc(var(--px) * 46);
+	left: 50%;
+	width: calc(var(--px) * 50);
+	height: calc(var(--px) * 24);
+	border-bottom: calc(var(--px) * 8) solid #1d1d28;
+	border-radius: 0 0 50% 50%;
+	transform: translateX(-50%);
+}
+
+.buddy-costume {
+	position: absolute;
+	top: 0;
+	width: calc(var(--px) * 220);
+	height: calc(var(--px) * 160);
+	object-fit: contain;
+	animation: costume-on 0.35s ease-out;
+}
+
+@keyframes costume-on {
+	from {
+		transform: translateY(calc(var(--px) * -80)) scale(0.6);
+		opacity: 0;
+	}
+}
+
+.costume-card {
+	display: grid;
+	align-content: center;
+	justify-items: center;
+	gap: calc(var(--px) * 12);
+	align-self: center;
+	margin: 0;
+	padding: calc(var(--px) * 24);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 28);
+	background: var(--wood);
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+	text-align: center;
+}
+
+.costume-card strong {
+	font-size: calc(var(--px) * 60);
+	font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bead,
+	.buddy-costume {
+		animation: none;
+	}
+}

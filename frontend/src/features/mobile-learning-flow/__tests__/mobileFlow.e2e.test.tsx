@@ -430,22 +430,19 @@ describe("baseline mobile flow", () => {
 
 		await click(container, "ගණිතය");
 		await click(container, "සංඛ්‍යා");
-		await waitForSelector(container, "[data-number-world-step]");
+		await waitForSelector(container, "[data-toy-phase]");
 		expect(
 			container
-				.querySelector("[data-number-world-step]")
-				?.getAttribute("data-number-world-step"),
-		).toBe("chapters");
-		expect(container.textContent).toContain("ස්ථාන අගය සොයා ගණක රාමුව හදමු");
-		expect(container.textContent).toContain("විහිදුණු සංඛ්‍යාවෙන් ලක්ෂය තෙක් යමු");
-		expect(container.textContent).toContain("විශාලම හා කුඩාම සංඛ්‍යා හදමු");
-		expect(container.textContent).toContain("සංඛ්‍යා");
+				.querySelector("[data-toy-phase]")
+				?.getAttribute("data-toy-phase"),
+		).toBe("story");
+		expect(container.textContent).toContain("නිමෝගේ අරුම පුදුම සෙල්ලම් ලෝකය");
 		expect(container.textContent).not.toContain("සංඛ්‍යා ක්‍රීඩා මාර්ගය");
 		expect(
-			container.querySelector(".number-world .adventure-back-action svg"),
+			container.querySelector(".toybox ~ .landscape-back-button svg"),
 		).not.toBeNull();
 		expect(
-			container.querySelector(".number-world .adventure-back-action")
+			container.querySelector(".toybox ~ .landscape-back-button")
 				?.textContent,
 		).toBe("");
 		expect(container.textContent).not.toContain("G5-AREA-MAT-01");
@@ -639,11 +636,11 @@ describe("baseline mobile flow", () => {
 			}
 			await click(container, areaName);
 			if (areaId === "G5-AREA-MAT-01") {
-				await waitForSelector(container, "[data-number-world-step]");
+				await waitForSelector(container, "[data-toy-phase]");
 				expect(
-					container.querySelector("[data-number-world-step]"),
+					container.querySelector("[data-toy-phase]"),
 				).not.toBeNull();
-				expect(container.textContent).toContain("විහිදුණු සංඛ්‍යාවෙන් ලක්ෂය තෙක් යමු");
+				expect(container.textContent).toContain("පෙළපාළියට යමු!");
 				await click(container, "ආපසු");
 				continue;
 			}

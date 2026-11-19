@@ -32,7 +32,7 @@ rename them.
 
 | Area | Title | Folder | Component | Backend flow (`application/`) | Backend content | Data (`data/gamification/`) |
 |---|---|---|---|---|---|---|
-| `G5-AREA-MAT-01` | සංඛ්‍යා | [`maths/mat-01-number-world/`](maths/mat-01-number-world/) | `NumberWorldJourney.tsx` | `number_world_flow.py` | `content/number_world.py` | `grade5-number-world/` |
+| `G5-AREA-MAT-01` | සංඛ්‍යා | [`maths/mat-01-number-world/`](maths/mat-01-number-world/) | `NimoToybox.tsx` | `number_world_flow.py` | `content/number_world.py` | `grade5-number-world/` |
 | `G5-AREA-MAT-02` | එකතු කිරීම | [`maths/mat-02-addition-adventure/`](maths/mat-02-addition-adventure/) | `NimoSkyAdventure.tsx` | `addition_adventure_flow.py` | `content/addition_adventure.py` | `grade5-addition-adventure/` |
 | `G5-AREA-MAT-03` | සංඛ්‍යා රටා | [`maths/mat-03-number-patterns/`](maths/mat-03-number-patterns/) | `NumberPatternJourney.tsx` | `number_patterns_flow.py` | `content/number_patterns.py` | `grade5-number-patterns/` |
 | `G5-AREA-MAT-04` | අඩු කිරීම | [`maths/mat-04-subtraction-adventure/`](maths/mat-04-subtraction-adventure/) | `SubtractionAdventureJourney.tsx` | `subtraction_adventure_flow.py` | `content/subtraction_adventure.py` | `grade5-subtraction-adventure/` |

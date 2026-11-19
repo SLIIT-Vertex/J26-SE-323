@@ -4,4 +4,5 @@ export const NIMO = {
 	cheer: "/curriculum/game/shared/nimo/nimo-cheer.webp",
 	think: "/curriculum/game/shared/nimo/nimo-think.webp",
 	plane: "/curriculum/game/shared/nimo/nimo-plane.webp",
+	director: "/curriculum/game/shared/nimo/nimo-director.webp",
 } as const;

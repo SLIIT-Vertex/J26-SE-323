@@ -189,10 +189,9 @@ function parseManifest(value: unknown): PresentationManifest | null {
 										? ["clue_path", "clue_bridge", "word_secret_box"]
 										: game.schema_version === "number-world-item-v1"
 											? [
-													"place_value_harbour",
-													"firefly_abacus",
-													"kite_workshop",
-													"river_route_rally",
+													"costume_shop",
+													"bead_bounce",
+													"toy_parade",
 												]
 											: game.schema_version === "addition-adventure-item-v1"
 												? ["crystal_flight", "number_factory", "sky_city"]

@@ -1,4 +1,7 @@
-"""Draft, source-linked content and deterministic mechanics for Grade 5 Number World.
+"""Draft, source-linked content and deterministic mechanics for Nimo's Wacky Toybox (Numbers).
+
+Four skills, one per toy: ordering numbers (the Toy Parade, played first), building a number on the
+six-rod bead toy (Bead Bounce), and the place and value of a digit (the Costume Shop).
 
 This package is deliberately blocked from production.  It gives the durable learning-flow
 orchestrator a skill-area-specific item bank, Model-1 catalogue, and scaffold catalogue without
@@ -25,12 +28,7 @@ POLICY_VERSION = "g5-mat-number-world-raw-ig-shadow-v1"
 SCORING_VERSION = "g5-mat-number-world-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-number-world-parallel-v1"
 
-Chapter = Literal[
-    "place_value_harbour",
-    "firefly_abacus",
-    "kite_workshop",
-    "river_route_rally",
-]
+Chapter = Literal["costume_shop", "bead_bounce", "toy_parade"]
 ScaffoldType = Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
 
 
@@ -48,7 +46,7 @@ class AtomicSkill:
 ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-MAT-NUM-POSITION-01",
-        "place_value_harbour",
+        "costume_shop",
         "ඉලක්කමේ ස්ථානය හා ස්ථානීය අගය",
         "easy",
         "G5-MAT-C01-L01-O01",
@@ -57,7 +55,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-NUM-REPRESENTED-01",
-        "place_value_harbour",
+        "costume_shop",
         "ඉලක්කමෙන් නිරූපිත අගය",
         "easy",
         "G5-MAT-C01-L01-O03",
@@ -65,17 +63,8 @@ ATOMIC_SKILLS = (
         "draft_trace_medium_confidence",
     ),
     AtomicSkill(
-        "G5-MAT-NUM-100000-01",
-        "place_value_harbour",
-        "100 000 තෙක් සංඛ්‍යා",
-        "easy",
-        "G5-MAT-C01-L01-O02",
-        "2",
-        "draft_trace_medium_confidence",
-    ),
-    AtomicSkill(
         "G5-MAT-NUM-ABACUS-01",
-        "firefly_abacus",
+        "bead_bounce",
         "ස්ථානීය අගය වගුව හා ගණක රාමුව",
         "medium",
         "G5-MAT-C01-L01-K02",
@@ -83,37 +72,10 @@ ATOMIC_SKILLS = (
         "draft_content_point_high_confidence",
     ),
     AtomicSkill(
-        "G5-MAT-NUM-EXPAND-01",
-        "firefly_abacus",
-        "සංඛ්‍යා ගොඩනැගීම හා විහිදුවීම",
-        "medium",
-        "G5-MAT-C01-L01-O04",
-        "2",
-        "draft_trace_medium_confidence",
-    ),
-    AtomicSkill(
-        "G5-MAT-NUM-EXTREME-01",
-        "kite_workshop",
-        "දී ඇති ඉලක්කම්වලින් විශාලතම හා කුඩාතම සංඛ්‍යාව",
-        "medium",
-        "G5-MAT-C01-L01-O02",
-        "2",
-        "draft_activity_mapping_requires_educator_review",
-    ),
-    AtomicSkill(
-        "G5-MAT-NUM-LEADING-ZERO-01",
-        "kite_workshop",
-        "කුඩාතම සංඛ්‍යාවේ මුල් ශූන්‍ය රීතිය",
-        "medium",
-        "G5-MAT-C01-L01-O02",
-        "2",
-        "draft_activity_mapping_requires_educator_review",
-    ),
-    AtomicSkill(
         "G5-MAT-NUM-ORDER-01",
-        "river_route_rally",
+        "toy_parade",
         "99 999 තෙක් ආරෝහණ හා අවරෝහණ පිළිවෙළ",
-        "medium",
+        "hard",
         "G5-MAT-C01-L02",
         "xiv",
         "draft_trace_high_confidence",
@@ -167,34 +129,10 @@ def place_values(number: int) -> tuple[int, ...]:
     return tuple(int(digit) * (10**index) for index, digit in enumerate(reversed(str(number))))
 
 
-def expanded_terms(number: int) -> tuple[int, ...]:
-    terms = tuple(value for value in reversed(place_values(number)) if value)
-    return terms or (0,)
-
-
-def expanded_form(number: int) -> str:
-    return " + ".join(str(value) for value in expanded_terms(number))
-
-
 def abacus_digits(number: int) -> tuple[int, int, int, int, int, int]:
     if number < 0 or number > 999_999:
         raise ValueError("NUMBER_OUT_OF_RANGE")
     return tuple(int(value) for value in f"{number:06d}")  # type: ignore[return-value]
-
-
-def construct_extreme(digits: tuple[int, ...], *, greatest: bool) -> int:
-    if not 3 <= len(digits) <= 5 or any(digit < 0 or digit > 9 for digit in digits):
-        raise ValueError("INVALID_DIGITS")
-    if greatest:
-        ordered = sorted(digits, reverse=True)
-    else:
-        ordered = sorted(digits)
-        if ordered[0] == 0:
-            first_nonzero = next((i for i, value in enumerate(ordered) if value), None)
-            if first_nonzero is None:
-                raise ValueError("LEADING_ZERO_ONLY")
-            ordered[0], ordered[first_nonzero] = ordered[first_nonzero], ordered[0]
-    return int("".join(map(str, ordered)))
 
 
 def order_numbers(values: tuple[int, ...], *, ascending: bool) -> tuple[int, ...]:
@@ -259,12 +197,6 @@ def validate_constructed_response(
             "digit_as_represented_value" if represented == game["digit"] else "place_shift_right"
         )
         expected_kind = "drag_to_slot"
-    elif skill_id.endswith("100000-01"):
-        value = response.get("constructed_number")
-        correct = type(value) is int and value == game.get("number")
-        normalized["constructed_number"] = value
-        error = "zero_placeholder_omitted"
-        expected_kind = "constructed_number"
     elif skill_id.endswith("ABACUS-01"):
         rods = response.get("rods")
         expected = tuple(
@@ -279,29 +211,6 @@ def validate_constructed_response(
         normalized["rods"] = rods if valid_rods else []
         error = "zero_placeholder_omitted" if valid_rods else "counts_places_from_wrong_direction"
         expected_kind = "bead_placement"
-    elif skill_id.endswith("EXPAND-01"):
-        terms = response.get("terms")
-        expected = expanded_terms(int(game["number"]))
-        valid_terms = isinstance(terms, list) and all(type(value) is int for value in terms)
-        correct = valid_terms and tuple(terms) == expected
-        normalized["terms"] = terms if valid_terms else []
-        error = "expanded_term_omitted_or_misplaced"
-        expected_kind = "expanded_form"
-    elif skill_id.endswith(("EXTREME-01", "LEADING-ZERO-01")):
-        digits = response.get("digits")
-        supplied = tuple(int(value) for value in game["digits"])
-        valid_digits = (
-            isinstance(digits, list)
-            and len(digits) == len(supplied)
-            and all(type(value) is int and 0 <= value <= 9 for value in digits)
-            and sorted(digits) == sorted(supplied)
-        )
-        leading_zero = bool(valid_digits and digits[0] == 0)
-        expected = construct_extreme(supplied, greatest=bool(game["greatest"]))
-        correct = valid_digits and not leading_zero and int("".join(map(str, digits))) == expected
-        normalized.update(digits=digits if valid_digits else [], leading_zero=leading_zero)
-        error = "leading_zero_first" if leading_zero else "ascending_descending_reversed"
-        expected_kind = "digit_order"
     else:
         order = response.get("order")
         supplied = tuple(int(value) for value in game["values"])
@@ -332,15 +241,7 @@ def generate_simpler_item(
     return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
 
 
-def _spaced(value: int) -> str:
-    """``39 999``: thousands separated by a space, as the games print numbers."""
-
-    return f"{value:,}".replace(",", " ")
-
-
-def generate_item(
-    skill_id: str, *, role: str, seed: int, simpler: bool = False
-) -> NumberWorldItem:
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> NumberWorldItem:
     if skill_id not in SKILLS:
         raise ValueError("NUMBER_WORLD_SKILL_NOT_FOUND")
     if role not in {"unsupported_before", "unsupported_after"}:
@@ -381,32 +282,8 @@ def generate_item(
             (str(digit * 10 ** (power + 1)), "place_shift_left"),
         ]
         game_data.update(number=number, digit=digit, place=power)
-    elif skill_id.endswith("100000-01"):
-        # A random round milestone, one below it given: 39 999 + 1 = 40 000, 7 999 + 1 = 8 000,
-        # up to 99 999 + 1 = 100 000. The simpler version stays at three and four digits.
-        power = rng.choice((2, 3) if simpler else (3, 4, 4))
-        lead = rng.randint(1, 9)
-        if not simpler and rng.random() < 0.2:
-            power, lead = 5, 1
-        number = lead * 10**power
-        base = number - 1
-        answer = str(number)
-        prompt = f"රටාව බලන්න. {_spaced(base)} ට 1ක් එකතු කළ විට ලැබෙන සංඛ්‍යාව තෝරන්න."
-        distractors = [
-            (str(number // 10), "zero_placeholder_omitted"),
-            (str(base + 10), "zero_placeholder_omitted"),
-            (str(number * 10), "counts_places_from_wrong_direction"),
-        ]
-        game_data.update(
-            number=number,
-            milestone=True,
-            milestone_steps=tuple(lead * 10**k for k in range(1, power + 1)),
-            milestone_choices=(number // 10, number, number * 10),
-        )
     elif skill_id.endswith("ABACUS-01"):
-        number = rng.choice(
-            (205, 370, 904, 610) if simpler else (40_205, 50_070, 70_304, 90_010)
-        )
+        number = rng.choice((205, 370, 904, 610) if simpler else (40_205, 50_070, 70_304, 90_010))
         answer = str(number)
         prompt = f"{number:,} සංඛ්‍යාව දඬු හයේ ගණක රාමුවේ සාදන්න."
         distractors = [
@@ -415,41 +292,9 @@ def generate_item(
             (str(min(999_999, number * 10)), "place_shift_left"),
         ]
         game_data.update(number=number, rods=abacus_digits(number))
-    elif skill_id.endswith("EXPAND-01"):
-        number = rng.choice(
-            (305, 406, 280, 704) if simpler else (42_305, 70_406, 90_080, 18_204)
-        )
-        answer = expanded_form(number)
-        prompt = f"{number:,} සංඛ්‍යාව ස්ථානීය අගය වගුවෙන් විහිදුවන්න."
-        terms = answer.split(" + ")
-        distractors = [
-            (" + ".join(terms[:-1]), "expanded_term_omitted_or_misplaced"),
-            (str(number), "digit_as_represented_value"),
-            (expanded_form(number // 10), "place_shift_right"),
-        ]
-        game_data.update(number=number, expanded=answer)
-    elif skill_id.endswith(("EXTREME-01", "LEADING-ZERO-01")):
-        count = 3 if simpler else rng.randint(3, 5)
-        digits = rng.sample(range(1, 10), count - 1)
-        digits.insert(rng.randrange(count), 0)
-        greatest = skill_id.endswith("EXTREME-01")
-        answer = str(construct_extreme(tuple(digits), greatest=greatest))
-        prompt = f"{digits} → {'විශාලතම' if greatest else 'කුඩාතම'} සංඛ්‍යාව"
-        zero_first = "".join(map(str, sorted(digits)))
-        distractors = [
-            (zero_first, "leading_zero_first"),
-            (
-                str(construct_extreme(tuple(digits), greatest=not greatest)),
-                "ascending_descending_reversed",
-            ),
-            (str(int("".join(map(str, digits)))), "first_visible_digit_only"),
-        ]
-        game_data.update(digits=digits, greatest=greatest)
     else:
         prefix = rng.randint(1, 8) * 1000
-        values = tuple(
-            prefix + value for value in rng.sample(range(10, 990), 3 if simpler else 4)
-        )
+        values = tuple(prefix + value for value in rng.sample(range(10, 990), 3 if simpler else 4))
         ascending = rng.choice((True, False))
         ordered = order_numbers(values, ascending=ascending)
         answer = ",".join(map(str, ordered))

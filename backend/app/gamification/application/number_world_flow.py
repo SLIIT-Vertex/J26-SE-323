@@ -27,8 +27,6 @@ from app.gamification.content.number_world import (
     SKILLS,
     UNIVERSAL_SKILL_ID,
     NumberWorldItem,
-    construct_extreme,
-    expanded_form,
     generate_item,
     generate_simpler_item,
     order_numbers,
@@ -87,18 +85,8 @@ class NumberWorldFlow(AreaGameFlow):
         public: dict[str, object] = {"chapter": item.chapter}
         if item.skill_id.endswith(("POSITION-01", "REPRESENTED-01")):
             public.update(number=game["number"], digit=game["digit"])
-        elif item.skill_id.endswith("100000-01"):
-            # The givens of the milestone ladder: the number one below the milestone and the
-            # choices. Both are already in the prompt and the options.
-            public.update(
-                milestone=True,
-                milestone_base=int(game["number"]) - 1,
-                milestone_choices=list(game["milestone_choices"]),
-            )
-        elif item.skill_id.endswith(("ABACUS-01", "EXPAND-01")):
+        elif item.skill_id.endswith("ABACUS-01"):
             public["number"] = game["number"]
-        elif item.skill_id.endswith(("EXTREME-01", "LEADING-ZERO-01")):
-            public.update(digits=game["digits"], greatest=game["greatest"])
         else:
             public.update(values=game["values"], ascending=game["ascending"])
         return public
@@ -129,15 +117,6 @@ class NumberWorldFlow(AreaGameFlow):
                 "එය තිබෙන ස්ථානයේ අගය බලමු.",
                 "ඉලක්කම × ස්ථානීය අගය ගණනය කරමු.",
             )
-        elif skill_id.endswith("100000-01"):
-            response = {"kind": "constructed_number", "constructed_number": int(game["number"])}
-            target = int(game["number"])
-            spaced = f"{target - 1:,}".replace(",", " ")
-            steps = (
-                f"{spaced} හි එකක තැනට එකක් එකතු කරමු.",
-                "සෑම 9ක්ම 0 වී ඊළඟ තැනට එකක් ගෙන යමු.",
-                f"එවිට {target:,} ලැබේ.".replace(",", " "),
-            )
         elif skill_id.endswith("ABACUS-01"):
             rods = [int(value) for value in game["rods"]]  # type: ignore[union-attr]
             response = {"kind": "bead_placement", "rods": rods}
@@ -145,24 +124,6 @@ class NumberWorldFlow(AreaGameFlow):
                 "දඬු හයේ ස්ථාන වම් සිට දකුණට හඳුනා ගනිමු.",
                 "සෑම ඉලක්කමකටම එම දඬුවේ පබළු තබමු.",
                 "පබළු ගණන් කර සම්පූර්ණ සංඛ්‍යාව නැවත බලමු.",
-            )
-        elif skill_id.endswith("EXPAND-01"):
-            terms = [int(part) for part in expanded_form(int(game["number"])).split(" + ")]
-            response = {"kind": "expanded_form", "terms": terms}
-            steps = (
-                "සංඛ්‍යාවේ ඉලක්කම් ස්ථාන වගුවේ තබමු.",
-                "සෑම ඉලක්කමක්ම එහි ස්ථානීය අගයෙන් විහිදුවමු.",
-                "ශූන්‍ය ස්ථාන හැර විහිදුණු එකතුව පරීක්ෂා කරමු.",
-            )
-        elif skill_id.endswith(("EXTREME-01", "LEADING-ZERO-01")):
-            supplied = tuple(int(value) for value in game["digits"])  # type: ignore[union-attr]
-            result = construct_extreme(supplied, greatest=bool(game["greatest"]))
-            digits = [int(value) for value in str(result)]
-            response = {"kind": "digit_order", "digits": digits}
-            steps = (
-                "දී ඇති ඉලක්කම් සියල්ල හඳුනා ගනිමු.",
-                "අවශ්‍ය දිශාවට ඉලක්කම් එකින් එක සකස් කරමු.",
-                "මුලට 0 නොතබා සම්පූර්ණ සංඛ්‍යාව පරීක්ෂා කරමු.",
             )
         else:
             supplied_values = tuple(int(value) for value in game["values"])  # type: ignore[union-attr]

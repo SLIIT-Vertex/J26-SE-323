@@ -8,10 +8,9 @@ import type {
 } from "../api/generated";
 
 const chapters = [
-	["number-world-support-v1", "place_value_harbour"],
-	["number-world-support-v1", "firefly_abacus"],
-	["number-world-support-v1", "kite_workshop"],
-	["number-world-support-v1", "river_route_rally"],
+	["number-world-support-v1", "costume_shop"],
+	["number-world-support-v1", "bead_bounce"],
+	["number-world-support-v1", "toy_parade"],
 	["addition-adventure-support-v1", "crystal_flight"],
 	["addition-adventure-support-v1", "number_factory"],
 	["addition-adventure-support-v1", "sky_city"],

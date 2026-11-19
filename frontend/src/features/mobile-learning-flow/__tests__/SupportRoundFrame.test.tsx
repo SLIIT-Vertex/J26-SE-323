@@ -57,7 +57,7 @@ function support(
 				returns_to_failed_item: false,
 				game: {
 					schema_version: "number-world-item-v1",
-					chapter: "place_value_harbour",
+					chapter: "costume_shop",
 					skill_id: "G5-MAT-NUM-POSITION-01",
 					number: 52014,
 					digit: 2,
