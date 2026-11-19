@@ -450,11 +450,13 @@ describe("baseline mobile flow", () => {
 
 		await click(container, "ආපසු");
 		await click(container, "භාග");
-		await waitForSelector(container, ".fraction-game-card");
-		expect(container.textContent).toContain("සමාන බෙදීමේ මැදිරිය");
-		expect(container.textContent).toContain("කාල පලතුරු වත්ත");
-		expect(container.textContent).toContain("දහයෙන් මෝසෙයික්");
-		expect(container.querySelectorAll(".fraction-game-card")).toHaveLength(3);
+		await waitForSelector(container, "[data-book-phase]");
+		expect(
+			container
+				.querySelector("[data-book-phase]")
+				?.getAttribute("data-book-phase"),
+		).toBe("story");
+		expect(container.textContent).toContain("නිමෝගේ මැජික් චිත්‍ර පොත");
 		expect(rounds.open).not.toHaveBeenCalled();
 		expect(service.open).not.toHaveBeenCalled();
 		await act(async () => root.unmount());

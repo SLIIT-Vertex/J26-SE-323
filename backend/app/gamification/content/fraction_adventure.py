@@ -21,7 +21,8 @@ SCORING_VERSION = "g5-mat-fraction-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-fraction-parallel-v1"
 SCAFFOLD_VERSION = "g5-mat-fraction-scaffolds-v1"
 
-Chapter = Literal["equal_share_studio", "quarter_orchard", "tenths_mosaic"]
+# Nimo's magic picture book: the comic (missions), the sticker party and fold-and-pop (help).
+Chapter = Literal["color_splash_comic", "sticker_party", "fold_and_pop"]
 ScaffoldType = Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
 
 
@@ -40,7 +41,7 @@ class AtomicSkill:
 ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-MAT-FRC-HALF-WHOLE-01",
-        "equal_share_studio",
+        "fold_and_pop",
         "සම්පූර්ණයක බාගය",
         "easy",
         "G5-MAT-C03-L01",
@@ -50,7 +51,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-C03-L01-O01",
-        "equal_share_studio",
+        "sticker_party",
         "සමූහයක බාගය",
         "easy",
         "G5-MAT-C03-L01-O01",
@@ -60,7 +61,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-FRC-QUARTER-WHOLE-01",
-        "quarter_orchard",
+        "fold_and_pop",
         "සම්පූර්ණයක කාල",
         "easy",
         "G5-MAT-C03-L01",
@@ -70,7 +71,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-C03-L01-O02",
-        "quarter_orchard",
+        "sticker_party",
         "සමූහයක කාල",
         "medium",
         "G5-MAT-C03-L01-O02",
@@ -80,7 +81,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-FRC-QUARTER-TABLE-01",
-        "quarter_orchard",
+        "color_splash_comic",
         "කාල සම්බන්ධතා වගුව",
         "medium",
         "G5-MAT-C03-L01-O02",
@@ -90,18 +91,8 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-FRC-TENTHS-BUILD-01",
-        "tenths_mosaic",
+        "color_splash_comic",
         "දහයෙන් කොටස් සෑදීම",
-        "medium",
-        "G5-MAT-C03-L01-O03",
-        70,
-        "provisional_unreviewed",
-        "tenths_representation",
-    ),
-    AtomicSkill(
-        "G5-MAT-FRC-TENTHS-READ-01",
-        "tenths_mosaic",
-        "දහයෙන් කොටස් කියවීම",
         "medium",
         "G5-MAT-C03-L01-O03",
         70,
@@ -224,7 +215,7 @@ def generate_item(
             columns=["whole", "one_quarter", "two_quarters", "three_quarters"],
         )
         prompt = f"{total} සඳහා කාල සම්බන්ධතා වගුව සම්පූර්ණ කරන්න."
-    elif skill_id == "G5-MAT-FRC-TENTHS-BUILD-01":
+    else:
         numerator = rng.randint(1, 2) if simpler else rng.randint(1, 9)
         game.update(
             representation=rng.choice(("strip", "circle")),
@@ -234,17 +225,6 @@ def generate_item(
             stimulus_shaded_indices=[],
         )
         prompt = f"දහයෙන් {numerator} කොටස් පාට කරන්න."
-    else:
-        numerator = rng.randint(1, 3) if simpler else rng.randint(1, 9)
-        # The simpler version shades the first parts in a row, which are easier to count.
-        indices = list(range(numerator)) if simpler else sorted(rng.sample(range(10), numerator))
-        game.update(
-            representation=rng.choice(("strip", "circle")),
-            denominator=10,
-            region_count=10,
-            stimulus_shaded_indices=indices,
-        )
-        prompt = "පාට කළ දහයෙන් කොටස් ගණන භාගයක් ලෙස සකසන්න."
     revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return FractionItem(
         item_id=f"{skill_id}:{role}",

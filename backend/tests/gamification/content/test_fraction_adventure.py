@@ -80,3 +80,19 @@ def test_strict_payload_rejects_unknown_fields_and_discriminators(mutation) -> N
     payload = response_for(item) | mutation
     with pytest.raises(ValueError):
         validate_constructed_response(item, payload)
+
+
+def test_picture_book_skills_and_their_games() -> None:
+    assert [(row.skill_id, row.chapter) for row in ATOMIC_SKILLS] == [
+        ("G5-MAT-FRC-HALF-WHOLE-01", "fold_and_pop"),
+        ("G5-MAT-C03-L01-O01", "sticker_party"),
+        ("G5-MAT-FRC-QUARTER-WHOLE-01", "fold_and_pop"),
+        ("G5-MAT-C03-L01-O02", "sticker_party"),
+        ("G5-MAT-FRC-QUARTER-TABLE-01", "color_splash_comic"),
+        ("G5-MAT-FRC-TENTHS-BUILD-01", "color_splash_comic"),
+    ]
+
+
+def test_reading_shaded_tenths_is_no_longer_played() -> None:
+    with pytest.raises(ValueError):
+        generate_item("G5-MAT-FRC-TENTHS-READ-01", role="unsupported_before", seed=1)

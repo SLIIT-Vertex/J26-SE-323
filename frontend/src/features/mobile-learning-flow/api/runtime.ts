@@ -402,11 +402,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																																													"fictional_profile_reply_lab",
 																																													"show_and_tell_conversation",
 																																												]
-																																											: [
-																																													"equal_share_studio",
-																																													"quarter_orchard",
-																																													"tenths_mosaic",
-																																												];
+																																											: ["color_splash_comic", "sticker_party", "fold_and_pop"];
 						if (!allowedChapters.includes(chapter))
 							throw new ContractError("STALE_OR_INCOMPATIBLE_MANIFEST");
 						return game as PresentationManifest["game"];

@@ -8,7 +8,7 @@
   "source_pages": [69, 70],
   "source_parents": ["G5-MAT-C03-L01", "G5-MAT-C03-L01-O01", "G5-MAT-C03-L01-O02", "G5-MAT-C03-L01-O03"],
   "reused_atomic_skill_ids": ["G5-MAT-C03-L01-O01"],
-  "provisional_atomic_skill_ids": ["G5-MAT-FRC-HALF-WHOLE-01", "G5-MAT-FRC-QUARTER-WHOLE-01", "G5-MAT-FRC-QUARTER-TABLE-01", "G5-MAT-FRC-TENTHS-BUILD-01", "G5-MAT-FRC-TENTHS-READ-01"],
+  "provisional_atomic_skill_ids": ["G5-MAT-FRC-HALF-WHOLE-01", "G5-MAT-FRC-QUARTER-WHOLE-01", "G5-MAT-FRC-QUARTER-TABLE-01", "G5-MAT-FRC-TENTHS-BUILD-01"],
   "development_only_atomic_skill_ids": ["G5-MAT-C03-L01-O02"],
   "mapping_version": "g5-mat-fraction-source-mapping-v1",
   "catalogue_version": "g5-mat-fraction-misconceptions-v1",

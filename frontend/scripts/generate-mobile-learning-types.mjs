@@ -184,7 +184,7 @@ const output =
 	`export interface AdditionAdventureGameData { schema_version: "addition-adventure-item-v1"; chapter: "crystal_flight" | "number_factory" | "sky_city"; [key: string]: unknown; }\n` +
 	`export interface NumberPatternGameData { schema_version: "number-pattern-item-v1"; chapter: "bubble_rush"; [key: string]: unknown; }\n` +
 	`export interface SubtractionAdventureGameData { schema_version: "subtraction-adventure-item-v1"; chapter: "monster_orders" | "fluffball_feast"; [key: string]: unknown; }\n` +
-	`export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "equal_share_studio" | "quarter_orchard" | "tenths_mosaic"; [key: string]: unknown; }\n` +
+	`export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "color_splash_comic" | "sticker_party" | "fold_and_pop"; [key: string]: unknown; }\n` +
 	`export interface MultiplicationAdventureGameData { schema_version: "multiplication-adventure-item-v1"; chapter: "table_explorer" | "column_workshop" | "story_mission"; [key: string]: unknown; }\n` +
 	`export interface TimeAdventureGameData { schema_version: "time-adventure-item-v1"; chapter: "time_tools" | "twenty_four_hour_mission" | "time_journey"; [key: string]: unknown; }\n` +
 	`export interface DivisionAdventureGameData { schema_version: "division-adventure-item-v1"; chapter: "equal_share" | "paper_division" | "division_story"; [key: string]: unknown; }\n` +
