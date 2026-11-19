@@ -5,6 +5,7 @@
 
 import type PhaserNamespace from "phaser";
 import { readyArt, type SkyArtKey } from "./skyArt";
+import { skySounds } from "./skySounds";
 
 export const FLIGHT_WIDTH = 1200;
 export const FLIGHT_HEIGHT = 560;
@@ -105,8 +106,15 @@ function createFlightScene(
 			onReady(this);
 		}
 
+		private lastZip = 0;
+
 		private steer(pointer: PhaserNamespace.Input.Pointer) {
 			this.target = new Phaser.Math.Vector2(pointer.worldX, pointer.worldY);
+			// A little engine zip when Nimo changes course, at most about once a second.
+			if (this.time.now - this.lastZip > 1100) {
+				this.lastZip = this.time.now;
+				skySounds.play("fly", { volume: 0.35 });
+			}
 		}
 
 		update() {

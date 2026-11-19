@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect } from "react";
+import { setGameSoundMuted, useGameSoundMuted } from "./gameAudio";
 import { lockOrientation } from "./orientation";
 import "./landscape-game-stage.css";
 
@@ -6,6 +7,7 @@ import "./landscape-game-stage.css";
  * A full-screen 16:9 game stage. While it is mounted the phone is turned to landscape and the app
  * menus are covered; leaving it turns the phone back to portrait. Children are laid out in a
  * 1920×1080 design space: CSS inside the stage can use `calc(var(--px) * N)` for N design pixels.
+ * The sound button beside the back button mutes every game's sounds and remembers the choice.
  */
 export function LandscapeGameStage({
 	label,
@@ -16,6 +18,7 @@ export function LandscapeGameStage({
 	onBack(): void;
 	children: ReactNode;
 }) {
+	const muted = useGameSoundMuted();
 	useEffect(() => {
 		void lockOrientation("landscape");
 		return () => {
@@ -34,6 +37,22 @@ export function LandscapeGameStage({
 				>
 					<svg aria-hidden="true" viewBox="0 0 24 24">
 						<path d="m15 18-6-6 6-6" />
+					</svg>
+				</button>
+				<button
+					type="button"
+					className="landscape-back-button landscape-sound-button"
+					aria-label={muted ? "ශබ්දය දාන්න" : "ශබ්දය නවත්වන්න"}
+					aria-pressed={muted}
+					onClick={() => setGameSoundMuted(!muted)}
+				>
+					<svg aria-hidden="true" viewBox="0 0 24 24">
+						<path d="M4 9h4l5-4v14l-5-4H4z" />
+						{muted ? (
+							<path d="m17 9 5 6m0-6-5 6" />
+						) : (
+							<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+						)}
 					</svg>
 				</button>
 			</div>

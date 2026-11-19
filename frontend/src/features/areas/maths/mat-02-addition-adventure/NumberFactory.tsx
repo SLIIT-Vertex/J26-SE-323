@@ -13,6 +13,7 @@ import {
 	PLACE_NAME_BY_POWER,
 	solveFactory,
 } from "./factoryRules";
+import { skySounds } from "./skySounds";
 import type { useMoveEvidence } from "./useMoveEvidence";
 
 type Evidence = ReturnType<typeof useMoveEvidence>;
@@ -96,16 +97,22 @@ export function NumberFactory({
 		const next = feed(current.current, addends, index);
 		if (next === current.current) return;
 		evidence.note("move");
+		// The number's blocks clatter into their bins one after another.
+		for (const delay of [0, 0.12, 0.24])
+			skySounds.play("feed", { delay, volume: 0.8 });
 		update(next);
 		scene.current?.show(next.counts, { type: "feed" });
 	};
 
 	const pullLever = (power: number) => {
 		evidence.note("carry");
+		skySounds.play("lever");
 		if (!canBundle(current.current, power)) {
+			skySounds.play("refuse", { delay: 0.1, volume: 0.6 });
 			scene.current?.refuse(power);
 			return;
 		}
+		skySounds.play("bundle", { delay: 0.15 });
 		const next = bundle(current.current, power);
 		update(next);
 		scene.current?.show(next.counts, { type: "bundle", from: power });
@@ -114,6 +121,7 @@ export function NumberFactory({
 	/** One tap turns a place's output digit on by one: ? → 0 → 1 … 9 → 0. */
 	const turnWheel = (power: number) => {
 		evidence.note("digit", power);
+		skySounds.play("tick");
 		setOutput((digits) =>
 			digits.map((digit, at) =>
 				at !== power ? digit : digit === null ? 0 : (digit + 1) % 10,

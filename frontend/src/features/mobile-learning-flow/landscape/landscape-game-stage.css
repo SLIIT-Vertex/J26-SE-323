@@ -39,6 +39,15 @@
 	cursor: pointer;
 }
 
+.landscape-sound-button {
+	left: calc(var(--px) * 140);
+}
+
+.landscape-sound-button[aria-pressed="true"] {
+	background: #8a94a8;
+	box-shadow: 0 calc(var(--px) * 6) 0 #5a6378;
+}
+
 .landscape-back-button svg {
 	width: 60%;
 	height: 60%;

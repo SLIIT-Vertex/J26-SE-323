@@ -7,6 +7,7 @@
 import type PhaserNamespace from "phaser";
 import { readyArt, SKY_CITY_ART, type SkyArtKey } from "./skyArt";
 import { CRATE_LABELS } from "./skyRules";
+import { skySounds } from "./skySounds";
 
 export const WIDTH = 1920;
 export const HEIGHT = 1080;
@@ -215,6 +216,9 @@ function createSkyCityScene(
 					this.add.rectangle(0, 80, 140, 44, 0x8a5a2b),
 				]);
 			}
+			this.time.delayedCall(index * 500, () =>
+				skySounds.play("whoosh", { volume: 0.5 }),
+			);
 			this.move({
 				targets: ship,
 				x: targetX,
@@ -284,6 +288,9 @@ function createSkyCityScene(
 				crate.setVisible(false).disableInteractive();
 				return;
 			}
+			this.time.delayedCall(options.reducedMotion ? 0 : 260, () =>
+				skySounds.play("crate-land"),
+			);
 			this.move({
 				targets: crate,
 				y: DOCK_Y,

@@ -11,6 +11,7 @@ import { ContractError } from "../../../mobile-learning-flow/api/runtime";
 import { LandscapeGameStage } from "../../../mobile-learning-flow/landscape/LandscapeGameStage";
 import { type MissionOutcome, SkyCityMission } from "./SkyCityMission";
 import { artUrl, type SkyArtKey } from "./skyArt";
+import { skySounds } from "./skySounds";
 import { CITY_SKILL_ID, readAddends, SKY_AREA_ID } from "./skyRules";
 import { TrainingGround } from "./TrainingGround";
 import { useMoveEvidence } from "./useMoveEvidence";
@@ -63,6 +64,18 @@ export function NimoSkyAdventure({
 	);
 
 	useEffect(() => () => clearTimeout(pause.current), []);
+	useEffect(() => skySounds.preload(), []);
+
+	// Each story moment has its own little tune.
+	useEffect(() => {
+		if (phase === "to-training")
+			skySounds.play("jingle-train", { steady: true });
+		if (phase === "training") skySounds.play("whoosh");
+		if (phase === "return") skySounds.play("jingle-return", { steady: true });
+		if (phase === "withdrawing") skySounds.play("fly");
+		if (phase === "victory") skySounds.play("jingle-victory", { steady: true });
+		if (phase === "rest") skySounds.play("jingle-rest", { steady: true });
+	}, [phase]);
 
 	const run = useCallback(
 		async <T,>(operation: () => Promise<T>): Promise<T | undefined> => {
@@ -148,6 +161,13 @@ export function NimoSkyAdventure({
 		}
 		const correct = score.correct === true;
 		setOutcome(correct ? "correct" : "wrong");
+		if (correct) {
+			skySounds.play("gate-open");
+			skySounds.play("jingle-open", { delay: 0.35, steady: true });
+			skySounds.play("sparkle", { delay: 0.8, volume: 0.6 });
+		} else {
+			skySounds.play("gate-locked");
+		}
 		const help = next.status === "support_active" ? next.support : null;
 		if (help) setSupport(help);
 		clearTimeout(pause.current);
@@ -170,6 +190,12 @@ export function NimoSkyAdventure({
 			return;
 		}
 		if (next.support) {
+			skySounds.play(
+				round?.previous_attempt_correct === false ? "hmm" : "sparkle",
+				{
+					volume: 0.7,
+				},
+			);
 			setSupport(next.support);
 			evidence.reset();
 		}
@@ -382,7 +408,10 @@ function StoryCard({
 						type="button"
 						className="sky-action"
 						disabled={busy}
-						onClick={onAction}
+						onClick={() => {
+							skySounds.play("tap");
+							onAction();
+						}}
 					>
 						{action}
 					</button>

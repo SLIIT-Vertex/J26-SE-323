@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ConstructedResponse } from "../../../mobile-learning-flow/api/generated";
 import { type CrystalFlightHandle, mountCrystalFlight } from "./crystalScene";
 import { collect, crystalResponse, stepEnergy } from "./crystalRules";
+import { skySounds } from "./skySounds";
 import type { useMoveEvidence } from "./useMoveEvidence";
 
 type Evidence = ReturnType<typeof useMoveEvidence>;
@@ -54,6 +55,7 @@ export function CrystalFlight({
 			reducedMotion,
 			onCollect: (index) => {
 				latest.current.evidence.note("move");
+				chime(latest.current.collected.length);
 				setCollected((current) => collect(current, index));
 			},
 		})
@@ -75,12 +77,14 @@ export function CrystalFlight({
 	const collectFromButton = (index: number) => {
 		if (collected.includes(index)) return;
 		evidence.note("move");
+		chime(collected.length);
 		scene.current?.collect(index);
 		setCollected((current) => collect(current, index));
 	};
 
 	const turn = (delta: 1 | -1) => {
 		evidence.note("digit", 0);
+		skySounds.play("tick");
 		setEnergy((current) => stepEnergy(current, delta));
 	};
 
@@ -137,4 +141,13 @@ export function CrystalFlight({
 			</div>
 		</div>
 	);
+}
+
+/** Each crystal chimes a little higher than the one before. */
+function chime(alreadyCollected: number) {
+	skySounds.play("crystal", {
+		rate: 1 + alreadyCollected * 0.15,
+		steady: true,
+	});
+	skySounds.play("sparkle", { delay: 0.08, volume: 0.35 });
 }

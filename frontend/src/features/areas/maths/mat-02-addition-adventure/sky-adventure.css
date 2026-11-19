@@ -342,14 +342,14 @@
 	position: absolute;
 	inset: 0;
 	background:
-		#8e9bb3 url("/curriculum/game/G5-AREA-MAT-02/bg-number-factory.webp")
-		center / cover no-repeat;
+		#8e9bb3 url("/curriculum/game/G5-AREA-MAT-02/bg-number-factory.webp") center
+		/ cover no-repeat;
 }
 
 .sky-training[data-training-place="crystal-sky"] .sky-training-backdrop {
 	background:
-		#4aa8f0 url("/curriculum/game/G5-AREA-MAT-02/bg-crystal-sky.webp")
-		center / cover no-repeat;
+		#4aa8f0 url("/curriculum/game/G5-AREA-MAT-02/bg-crystal-sky.webp") center /
+		cover no-repeat;
 }
 
 .sky-training-title {

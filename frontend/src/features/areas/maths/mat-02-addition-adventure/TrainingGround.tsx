@@ -9,6 +9,7 @@ import { SupportRoundFrame } from "../../../mobile-learning-flow/SupportRoundFra
 import { CrystalFlight } from "./CrystalFlight";
 import { NumberFactory } from "./NumberFactory";
 import { readAddends } from "./skyRules";
+import { skySounds } from "./skySounds";
 import type { useMoveEvidence } from "./useMoveEvidence";
 
 const MENTAL_SKILL_ID = "G5-MAT-ADD-MENTAL-01";
@@ -87,7 +88,11 @@ export function TrainingGround({
 						type="button"
 						className="sky-action"
 						disabled={busy || response === null}
-						onClick={() => response && onAnswer(response, activity)}
+						onClick={() => {
+							if (!response) return;
+							skySounds.play("tap");
+							onAnswer(response, activity);
+						}}
 					>
 						බලමු!
 					</button>

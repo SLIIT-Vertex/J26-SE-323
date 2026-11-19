@@ -9,6 +9,7 @@ import {
 	equationText,
 	lockResponse,
 } from "./skyRules";
+import { skySounds } from "./skySounds";
 import type { useMoveEvidence } from "./useMoveEvidence";
 
 export type MissionOutcome = "playing" | "correct" | "wrong";
@@ -55,6 +56,7 @@ export function SkyCityMission({
 			reducedMotion,
 			onCrateLoaded: (index) => {
 				latest.current.evidence.note("move");
+				skySounds.play("crate-load");
 				setLoaded((current) =>
 					current.includes(index) ? current : [...current, index],
 				);
@@ -88,6 +90,7 @@ export function SkyCityMission({
 	const loadFromBoard = (index: number) => {
 		if (loaded.includes(index)) return;
 		evidence.note("move");
+		skySounds.play("crate-load");
 		scene.current?.loadCrate(index);
 		setLoaded((current) => [...current, index]);
 	};
@@ -154,6 +157,7 @@ export function SkyCityMission({
 						lock={lock}
 						disabled={busy || outcome !== "playing"}
 						onAction={(action) => {
+							skySounds.play(action.type === "carry" ? "spark" : "tick");
 							evidence.note(action.type, action.place);
 							setLock((current) => applyLockAction(current, action));
 						}}
@@ -162,7 +166,11 @@ export function SkyCityMission({
 						type="button"
 						className="sky-action"
 						disabled={busy || !response || outcome !== "playing"}
-						onClick={() => response && onSubmit(response)}
+						onClick={() => {
+							if (!response) return;
+							skySounds.play("tap");
+							onSubmit(response);
+						}}
 					>
 						දොර අරින්න
 					</button>
