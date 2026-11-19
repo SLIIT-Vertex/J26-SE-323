@@ -195,13 +195,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 													"river_route_rally",
 												]
 											: game.schema_version === "addition-adventure-item-v1"
-												? [
-														"fruit_catch",
-														"tuk_tuk_journey",
-														"carrying_crane",
-														"market_delivery_planner",
-														"festival_data_detective",
-													]
+												? ["crystal_flight", "number_factory", "sky_city"]
 												: game.schema_version === "number-pattern-item-v1"
 													? [
 															"number_step_trail",

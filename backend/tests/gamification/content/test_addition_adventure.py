@@ -7,66 +7,45 @@ from app.gamification.content.addition_adventure import (
     EQUIVALENCE_VERSION,
     MISCONCEPTIONS,
     SCAFFOLDS,
-    TEXTBOOK_COLUMN_EXAMPLES,
-    TEXTBOOK_CONTEXT_EXAMPLES,
     TEXTBOOK_FACTS,
-    TEXTBOOK_SCHOOL_TABLE,
-    TEXTBOOK_SEEDLING_TABLE,
-    TEXTBOOK_TRAIL_ADDENDS,
-    TEXTBOOK_TRAIL_START,
     carrying_count,
-    cumulative_totals,
     expanded_form,
     generate_item,
-    table_total,
+    generate_simpler_item,
     validate_constructed_response,
 )
 
 
-def test_textbook_evidence_fixtures_preserve_the_photographed_examples() -> None:
+def test_textbook_facts_preserve_the_photographed_examples() -> None:
     assert TEXTBOOK_FACTS == ((8, 3), (11, 5), (17, 5), (3, 6), (2, 3), (4, 3))
-    assert TEXTBOOK_TRAIL_START == 82
-    assert cumulative_totals(TEXTBOOK_TRAIL_ADDENDS, start=TEXTBOOK_TRAIL_START) == (
-        109,
-        121,
-        141,
-        398,
-        970,
-        2_202,
-        4_032,
-    )
-    assert tuple(sum(values) for values in TEXTBOOK_COLUMN_EXAMPLES) == (7_620, 9_695, 9_110)
-    assert tuple(sum(values) for values in TEXTBOOK_CONTEXT_EXAMPLES) == (11_549, 2_158)
-    assert TEXTBOOK_SEEDLING_TABLE == (
-        (382, 728, 298),
-        (527, 541, 754),
-        (892, 824, 997),
-    )
-    assert tuple(sum(row) for row in TEXTBOOK_SEEDLING_TABLE[:2]) == (1_408, 1_822)
-    assert sum(row[0] for row in TEXTBOOK_SEEDLING_TABLE) == 1_801
-    assert sum(row[2] for row in TEXTBOOK_SEEDLING_TABLE) == 2_049
-    assert tuple(sum(row) for row in TEXTBOOK_SCHOOL_TABLE) == (873, 946, 918)
-    assert sum(row[0] for row in TEXTBOOK_SCHOOL_TABLE) == 922
-    assert abs(
-        sum(row[1] for row in TEXTBOOK_SCHOOL_TABLE)
-        - sum(row[2] for row in TEXTBOOK_SCHOOL_TABLE)
-    ) == 5
 
 
-def test_addition_catalogue_is_distinct_complete_and_draft_source_linked() -> None:
-    assert len(ATOMIC_SKILLS) == 9
-    assert len({row.skill_id for row in ATOMIC_SKILLS}) == 9
+def test_three_skills_one_per_place_in_the_story() -> None:
+    assert [(row.skill_id, row.chapter) for row in ATOMIC_SKILLS] == [
+        ("G5-MAT-ADD-MENTAL-01", "crystal_flight"),
+        ("G5-MAT-C06-L01-O01", "number_factory"),
+        ("G5-MAT-C06-L01-O03", "sky_city"),
+    ]
     assert {row.source_node_id for row in ATOMIC_SKILLS}.issuperset(
-        {"G5-MAT-C06-L01-O01", "G5-MAT-C06-L01-O02", "G5-MAT-C06-L01-O03"}
+        {"G5-MAT-C06-L01-O01", "G5-MAT-C06-L01-O03"}
     )
     assert "unknown_or_other" in MISCONCEPTIONS
-    assert "place_shift_left" not in MISCONCEPTIONS
-    assert "maximum_row_aggregation_error" in MISCONCEPTIONS
+    assert "carry_omitted" in MISCONCEPTIONS
     assert SCAFFOLDS == (
         "visual_guidance",
         "worked_parallel_example",
         "step_by_step_guidance",
     )
+
+
+def test_dropped_skills_are_not_playable() -> None:
+    for skill_id in (
+        "G5-MAT-C06-L01-O02",
+        "G5-MAT-ADD-RUNNING-TOTAL-01",
+        "G5-MAT-ADD-TABLE-TOTAL-01",
+    ):
+        with pytest.raises(ValueError, match="ADDITION_SKILL_NOT_FOUND"):
+            generate_item(skill_id, role="unsupported_before", seed=1)
 
 
 @pytest.mark.parametrize("skill", ATOMIC_SKILLS, ids=lambda row: row.skill_id)
@@ -84,34 +63,28 @@ def test_items_are_deterministic_fresh_and_parallel(skill) -> None:
     assert all(code == "correct" or code in MISCONCEPTIONS for code in before.error_codes.values())
 
 
-def test_exact_carrying_complexities_and_addend_counts() -> None:
-    exactly_two = generate_item("G5-MAT-C06-L01-O01", role="unsupported_before", seed=3)
-    multi = generate_item("G5-MAT-C06-L01-O02", role="unsupported_before", seed=3)
-    three = generate_item("G5-MAT-C06-L01-O03", role="unsupported_before", seed=3)
-    assert exactly_two.game_data["carrying_count"] == 2
-    assert multi.game_data["carrying_count"] > 2
-    assert three.game_data["addend_count"] == 3
-    assert three.game_data["carrying_count"] >= 2
+@pytest.mark.parametrize("seed", range(12))
+def test_factory_and_city_use_three_digit_numbers_with_matching_carries(seed: int) -> None:
+    factory = generate_item("G5-MAT-C06-L01-O01", role="unsupported_before", seed=seed)
+    city = generate_item("G5-MAT-C06-L01-O03", role="unsupported_before", seed=seed)
+    city_after = generate_item("G5-MAT-C06-L01-O03", role="unsupported_after", seed=seed)
+    assert len(factory.game_data["addends"]) == 2
+    assert factory.game_data["carrying_count"] == 2
+    assert len(city.game_data["addends"]) == 3
+    assert city.game_data["carrying_count"] in {2, 3}
+    assert city_after.game_data["carrying_count"] == city.game_data["carrying_count"]
+    for item in (factory, city, city_after):
+        assert all(100 <= value <= 999 for value in item.game_data["addends"])
+    simpler = generate_simpler_item("G5-MAT-C06-L01-O03", seed=seed)
+    assert len(simpler.game_data["addends"]) == 3
+    assert simpler.game_data["carrying_count"] == 1
+
+
+def test_carrying_and_expanded_arithmetic() -> None:
+    assert carrying_count((382, 728, 298)) == 3
+    assert carrying_count((458, 379)) == 2
     assert carrying_count((1_234, 1_111)) == 0
-
-
-def test_expanded_cumulative_and_table_arithmetic() -> None:
     assert expanded_form(4_205) == (4_000, 200, 5)
-    assert cumulative_totals((12, 18, 30)) == (12, 30, 60)
-    assert cumulative_totals((27, 12, 20), start=82) == (109, 121, 141)
-    table = ((10, 20), (30, 40))
-    assert table_total(table, ((0, 1), (1, 1))) == 60
-
-
-def test_word_problem_and_table_answer_keys_are_server_derivable() -> None:
-    context = generate_item("G5-MAT-ADD-CONTEXT-01", role="unsupported_before", seed=7)
-    expected = sum(context.game_data["addends"])
-    assert dict(context.options)[context.correct_option_id] == str(expected)
-
-    table = generate_item("G5-MAT-ADD-TABLE-TOTAL-01", role="unsupported_before", seed=7)
-    matrix = tuple(tuple(row) for row in table.game_data["table"])
-    cells = tuple(tuple(cell) for cell in table.game_data["selected_cells"])
-    assert dict(table.options)[table.correct_option_id] == str(table_total(matrix, cells))
 
 
 @pytest.mark.parametrize("skill", ATOMIC_SKILLS, ids=lambda row: row.skill_id)
@@ -120,30 +93,26 @@ def test_direct_manipulation_response_is_scored_from_server_item(skill) -> None:
     game = item.game_data
     if skill.skill_id.endswith("MENTAL-01"):
         response = {"kind": "combine_quantities", "combined": True, "total": sum(game["addends"])}
-    elif "C06" in skill.skill_id:
-        response = {"kind": "regroup_carry", "total": sum(game["addends"]), "carry_count": game["carrying_count"], "aligned": True}
-    elif skill.skill_id.endswith("RUNNING-TOTAL-01"):
-        response = {"kind": "route_progression", "totals": list(game["cumulative_totals"])}
-    elif skill.skill_id.endswith("CONTEXT-01"):
-        response = {"kind": "cargo_loading", "selected_indices": list(range(len(game["addends"]))), "total": sum(game["addends"])}
     else:
-        matrix = tuple(tuple(row) for row in game["table"])
-        if game["target_type"] == "difference":
-            left, right = game["comparison_rows"]
-            total = abs(sum(matrix[left]) - sum(matrix[right]))
-        elif game["target_type"] == "maximum_row":
-            total = max(sum(row) for row in matrix)
-        else:
-            total = table_total(matrix, tuple(tuple(cell) for cell in game["selected_cells"]))
-        response = {"kind": "data_cell_selection", "selected_cells": [f"r{row}c{column}" for row, column in game["selected_cells"]], "total": total}
+        response = {
+            "kind": "regroup_carry",
+            "total": sum(game["addends"]),
+            "carry_count": game["carrying_count"],
+            "aligned": True,
+        }
     assert validate_constructed_response(item, response)[0] is True
     assert validate_constructed_response(item, {**response, "kind": "drag_to_slot"})[0] is False
     assert validate_constructed_response(item, {"kind": response["kind"]})[0] is False
-    malformed = dict(response)
-    numeric = next((key for key in ("total", "carry_count") if key in malformed), None)
-    if numeric:
-        malformed[numeric] = True
-    else:
-        list_field = next(key for key in ("totals", "selected_cells") if key in malformed)
-        malformed[list_field] = [*malformed[list_field], *malformed[list_field][:1]]
-    assert validate_constructed_response(item, malformed)[0] is False
+    assert validate_constructed_response(item, {**response, "total": True})[0] is False
+
+
+def test_a_missed_carry_is_scored_as_carry_omitted() -> None:
+    item = generate_item("G5-MAT-C06-L01-O03", role="unsupported_before", seed=5)
+    game = item.game_data
+    response = {
+        "kind": "regroup_carry",
+        "total": sum(game["addends"]),
+        "carry_count": game["carrying_count"] - 1,
+        "aligned": True,
+    }
+    assert validate_constructed_response(item, response)[:2] == (False, "carry_omitted")

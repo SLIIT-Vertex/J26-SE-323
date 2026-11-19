@@ -226,7 +226,7 @@ def test_designed_simpler_version_is_the_same_skill_scoreable_and_smaller(area, 
 @pytest.mark.parametrize(
     ("area", "skill"),
     (
-        ("G5-AREA-MAT-02", "G5-MAT-C06-L01-O02"),
+        ("G5-AREA-MAT-02", "G5-MAT-C06-L01-O03"),
         ("G5-AREA-ENG-01", "G5-ENG-BEH-POSTURE-01"),
         ("G5-AREA-ENG-06", "G5-ENG-FOOD-VOCAB-01"),
         ("G5-AREA-ENG-17", "G5-ENG-CLASS-FUNCTION-01"),

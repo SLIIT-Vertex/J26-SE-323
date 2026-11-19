@@ -181,7 +181,7 @@ const output =
 	`export interface TelemetryBatch { batch_id: UUID; first_sequence: number; events: TelemetryEvent[]; }\n` +
 	`export interface PublicOption { option_id: string; text_si: string; }\n` +
 	`export interface NumberWorldGameData { schema_version: "number-world-item-v1"; chapter: "place_value_harbour" | "firefly_abacus" | "kite_workshop" | "river_route_rally"; [key: string]: unknown; }\n` +
-	`export interface AdditionAdventureGameData { schema_version: "addition-adventure-item-v1"; chapter: "fruit_catch" | "tuk_tuk_journey" | "carrying_crane" | "market_delivery_planner" | "festival_data_detective"; [key: string]: unknown; }\n` +
+	`export interface AdditionAdventureGameData { schema_version: "addition-adventure-item-v1"; chapter: "crystal_flight" | "number_factory" | "sky_city"; [key: string]: unknown; }\n` +
 	`export interface NumberPatternGameData { schema_version: "number-pattern-item-v1"; chapter: "number_step_trail" | "multiplication_bridge" | "pattern_power_machine"; [key: string]: unknown; }\n` +
 	`export interface SubtractionAdventureGameData { schema_version: "subtraction-adventure-item-v1"; chapter: "place_value_board" | "regrouping_workshop" | "difference_story"; [key: string]: unknown; }\n` +
 	`export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "equal_share_studio" | "quarter_orchard" | "tenths_mosaic"; [key: string]: unknown; }\n` +

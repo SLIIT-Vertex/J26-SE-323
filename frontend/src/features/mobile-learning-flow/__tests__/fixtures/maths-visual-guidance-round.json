@@ -62,7 +62,7 @@
     "game": {
      "schema_version": "addition-adventure-item-v1",
      "skill_id": "G5-MAT-C06-L01-O01",
-     "chapter": "carrying_crane",
+     "chapter": "number_factory",
      "addends": [
       4597,
       3023

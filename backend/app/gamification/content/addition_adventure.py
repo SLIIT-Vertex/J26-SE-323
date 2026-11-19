@@ -1,8 +1,10 @@
-"""Draft, source-linked Addition Adventure content for Grade 5 Sinhala mathematics.
+"""Draft, source-linked content for Nimo's Sky Adventure, the Grade 5 Sinhala addition game.
 
-Only the three carrying outcomes are direct curriculum outcomes.  The remaining targets are
-provisional activity mappings retained for educator review.  This module is deterministic and
-contains no HTTP, persistence, learner identity, or client-trusted scoring code.
+Three skills: quick addition facts (the crystal flight), adding two three-digit numbers with two
+carries (the Number Factory), and adding three three-digit numbers with carrying (the Sky City
+mission). The two carrying skills are direct curriculum outcomes; quick facts is a provisional
+activity mapping kept for educator review. This module is deterministic and contains no HTTP,
+persistence, learner identity, or client-trusted scoring code.
 """
 
 from __future__ import annotations
@@ -26,34 +28,12 @@ SCORING_VERSION = "g5-mat-addition-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-addition-parallel-v1"
 SCAFFOLD_VERSION = "g5-mat-addition-scaffolds-v1"
 
-# Source-page examples are kept as auditable content fixtures. Runtime items use
-# deterministic parallel variants so the unsupported-after probe is fresh.
+# Source-page facts are kept as auditable content fixtures. Runtime items use deterministic
+# parallel variants so the unsupported-after probe is fresh.
 TEXTBOOK_FACTS = ((8, 3), (11, 5), (17, 5), (3, 6), (2, 3), (4, 3))
 # Simpler-version facts: smaller than every textbook fact and within ten, so no bridge is needed.
 SIMPLER_FACTS = ((2, 1), (1, 3), (2, 2))
-SIMPLER_RUNNING_STOPS = 4
-TEXTBOOK_TRAIL_START = 82
-TEXTBOOK_TRAIL_ADDENDS = (27, 12, 20, 257, 572, 1_232, 1_830)
-TEXTBOOK_COLUMN_EXAMPLES = ((4_597, 3_023), (6_237, 3_458), (5_321, 3_789))
-TEXTBOOK_CONTEXT_EXAMPLES = ((2_521, 3_218, 5_810), (720, 725, 713))
-TEXTBOOK_SEEDLING_TABLE = (
-    (382, 728, 298),
-    (527, 541, 754),
-    (892, 824, 997),
-)
-TEXTBOOK_SCHOOL_TABLE = (
-    (281, 288, 304),
-    (344, 306, 296),
-    (297, 311, 310),
-)
-
-Chapter = Literal[
-    "fruit_catch",
-    "tuk_tuk_journey",
-    "carrying_crane",
-    "market_delivery_planner",
-    "festival_data_detective",
-]
+Chapter = Literal["crystal_flight", "number_factory", "sky_city"]
 ScaffoldType = Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
 
 
@@ -71,7 +51,7 @@ class AtomicSkill:
 ATOMIC_SKILLS = (
     AtomicSkill(
         "G5-MAT-ADD-MENTAL-01",
-        "fruit_catch",
+        "crystal_flight",
         "මානසික එකතු කිරීම හා කොටස් කිරීම",
         "easy",
         "G5-MAT-U103-A001",
@@ -80,7 +60,7 @@ ATOMIC_SKILLS = (
     ),
     AtomicSkill(
         "G5-MAT-C06-L01-O01",
-        "carrying_crane",
+        "number_factory",
         "ගෙනයාම අවස්ථා දෙකක් සහිත සංඛ්‍යා දෙකක් එකතු කිරීම",
         "medium",
         "G5-MAT-C06-L01-O01",
@@ -88,67 +68,13 @@ ATOMIC_SKILLS = (
         "draft_trace_medium_confidence",
     ),
     AtomicSkill(
-        "G5-MAT-C06-L01-O02",
-        "carrying_crane",
-        "ගෙනයාම අවස්ථා දෙකකට වැඩි සංඛ්‍යා දෙකක් එකතු කිරීම",
-        "medium",
-        "G5-MAT-C06-L01-O02",
-        "12",
-        "draft_trace_medium_confidence",
-    ),
-    AtomicSkill(
         "G5-MAT-C06-L01-O03",
-        "carrying_crane",
+        "sky_city",
         "ගෙනයාම සහිත සංඛ්‍යා තුනක් එකතු කිරීම",
-        "medium_hard",
+        "hard",
         "G5-MAT-C06-L01-O03",
         "12",
         "draft_trace_medium_confidence",
-    ),
-    AtomicSkill(
-        "G5-MAT-ADD-RUNNING-TOTAL-01",
-        "tuk_tuk_journey",
-        "පියවරෙන් පියවර සමුච්චිත එකතුව තබා ගැනීම",
-        "medium",
-        "G5-MAT-U103-A004",
-        "11",
-        "draft_activity_mapping_requires_educator_review",
-    ),
-    AtomicSkill(
-        "G5-MAT-ADD-CONTEXT-01",
-        "market_delivery_planner",
-        "එකතු කිරීමේ වාක්‍ය ගැටලු විසඳීම",
-        "medium",
-        "G5-MAT-U103-A006",
-        "13",
-        "draft_activity_mapping_requires_educator_review",
-    ),
-    AtomicSkill(
-        "G5-MAT-ADD-TABLE-TOTAL-01",
-        "festival_data_detective",
-        "වගුවක අදාළ අගයන් තෝරා එකතුව සෙවීම",
-        "medium",
-        "G5-MAT-U103-A002",
-        "9",
-        "draft_activity_mapping_requires_educator_review",
-    ),
-    AtomicSkill(
-        "G5-MAT-ADD-TABLE-DIFFERENCE-01",
-        "festival_data_detective",
-        "වගු එකතු දෙකක් සසඳා වෙනස සෙවීම",
-        "hard",
-        "G5-MAT-U103-A002",
-        "9",
-        "draft_activity_mapping_requires_educator_review",
-    ),
-    AtomicSkill(
-        "G5-MAT-ADD-TABLE-MAX-01",
-        "festival_data_detective",
-        "වගුවක පේළි එකතු සසඳා විශාලතම එකතුව හඳුනා ගැනීම",
-        "hard",
-        "G5-MAT-U103-A002",
-        "65",
-        "draft_activity_mapping_requires_educator_review",
     ),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
@@ -236,35 +162,6 @@ def expanded_form(value: int) -> tuple[int, ...]:
     )[::-1]
 
 
-def cumulative_totals(values: tuple[int, ...], *, start: int = 0) -> tuple[int, ...]:
-    if not 2 <= len(values) <= 7 or any(value < 0 or value > 9_999 for value in values):
-        raise ValueError("INVALID_CUMULATIVE_VALUES")
-    if start < 0 or start > 99_999:
-        raise ValueError("INVALID_CUMULATIVE_START")
-    running = start
-    result = []
-    for value in values:
-        running += value
-        result.append(running)
-    return tuple(result)
-
-
-def table_total(table: tuple[tuple[int, ...], ...], cells: tuple[tuple[int, int], ...]) -> int:
-    if not table or not cells:
-        raise ValueError("EMPTY_TABLE_SELECTION")
-    width = len(table[0])
-    if width == 0 or any(len(row) != width for row in table):
-        raise ValueError("INVALID_TABLE")
-    try:
-        return sum(table[row][column] for row, column in cells)
-    except IndexError as error:
-        raise ValueError("INVALID_TABLE_CELL") from error
-
-
-def _cell_ids(cells: tuple[tuple[int, int], ...]) -> tuple[str, ...]:
-    return tuple(f"r{row}c{column}" for row, column in cells)
-
-
 def validate_constructed_response(
     item: AdditionItem | Mapping[str, object], response: Mapping[str, object]
 ) -> tuple[bool, str, dict[str, object]]:
@@ -284,7 +181,7 @@ def validate_constructed_response(
         normalized.update(total=total, combined=combined)
         error = "fact_recall_or_decomposition_error"
         expected_kind = "combine_quantities"
-    elif skill_id in {"G5-MAT-C06-L01-O01", "G5-MAT-C06-L01-O02", "G5-MAT-C06-L01-O03"}:
+    elif skill_id in {"G5-MAT-C06-L01-O01", "G5-MAT-C06-L01-O03"}:
         total = response.get("total")
         carries = response.get("carry_count")
         aligned = response.get("aligned") is True
@@ -303,56 +200,8 @@ def validate_constructed_response(
         else:
             error = "carry_not_included_in_next_column"
         expected_kind = "regroup_carry"
-    elif skill_id == "G5-MAT-ADD-RUNNING-TOTAL-01":
-        totals = response.get("totals")
-        expected = list(
-            cumulative_totals(
-                tuple(int(value) for value in game["stops"]),
-                start=int(game.get("start", 0)),
-            )
-        )
-        valid = isinstance(totals, list) and all(type(value) is int for value in totals)
-        correct = valid and totals == expected
-        normalized["totals"] = totals if valid else []
-        error = "running_total_reset"
-        expected_kind = "route_progression"
-    elif skill_id == "G5-MAT-ADD-CONTEXT-01":
-        total = response.get("total")
-        selected = response.get("selected_indices")
-        expected_indices = list(range(len(game["addends"])))
-        valid_selection = (
-            isinstance(selected, list)
-            and all(type(value) is int for value in selected)
-            and sorted(selected) == expected_indices
-        )
-        correct = type(total) is int and valid_selection and total == sum(game["addends"])
-        normalized.update(total=total, selected_indices=selected if valid_selection else [])
-        error = "third_addend_omitted" if not valid_selection else "carry_omitted"
-        expected_kind = "cargo_loading"
     else:
-        selected = response.get("selected_cells")
-        total = response.get("total")
-        expected_cells = _cell_ids(tuple(tuple(cell) for cell in game["selected_cells"]))
-        valid_selection = (
-            isinstance(selected, list)
-            and all(isinstance(value, str) and len(value) <= 8 for value in selected)
-            and sorted(selected) == sorted(expected_cells)
-        )
-        table = tuple(tuple(int(value) for value in row) for row in game["table"])
-        if game["target_type"] == "difference":
-            left, right = tuple(int(value) for value in game["comparison_rows"])
-            expected_total = abs(sum(table[left]) - sum(table[right]))
-        elif game["target_type"] == "maximum_row":
-            expected_total = max(sum(row) for row in table)
-        else:
-            expected_total = table_total(table, tuple(tuple(cell) for cell in game["selected_cells"]))
-        correct = type(total) is int and valid_selection and total == expected_total
-        normalized.update(total=total, selected_cells=selected if isinstance(selected, list) else [])
-        if not valid_selection and game["target_type"] == "maximum_row":
-            error = "maximum_row_aggregation_error"
-        else:
-            error = "wrong_table_cells_selected" if not valid_selection else "operation_selection_error"
-        expected_kind = "data_cell_selection"
+        return False, "unknown_or_other", normalized
 
     if kind != expected_kind:
         return False, "unknown_or_other", normalized
@@ -369,10 +218,16 @@ def _family_seed(skill_id: str, seed: int) -> random.Random:
 
 
 def _addends_with_carries(
-    rng: random.Random, *, count: int, minimum_carries: int, maximum_carries: int
+    rng: random.Random,
+    *,
+    count: int,
+    minimum_carries: int,
+    maximum_carries: int,
+    digits: int,
 ) -> tuple[int, ...]:
+    low, high = 10 ** (digits - 1), 10**digits - 1
     for _ in range(20_000):
-        values = tuple(rng.randint(1_000, 4_999 if count == 3 else 8_999) for _ in range(count))
+        values = tuple(rng.randint(low, high) for _ in range(count))
         carries = carrying_count(values)
         if minimum_carries <= carries <= maximum_carries:
             return values
@@ -407,9 +262,7 @@ def generate_simpler_item(
     return generate_item(skill_id, role="unsupported_before", seed=seed, simpler=True)
 
 
-def generate_item(
-    skill_id: str, *, role: str, seed: int, simpler: bool = False
-) -> AdditionItem:
+def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False) -> AdditionItem:
     if skill_id not in SKILLS:
         raise ValueError("ADDITION_SKILL_NOT_FOUND")
     if role not in {"unsupported_before", "unsupported_after"}:
@@ -434,27 +287,22 @@ def generate_item(
         ]
         game.update(addends=addends, make_ten=bridge, decomposition=(bridge, second - bridge))
         signature = "mental-make-ten"
-    elif skill_id in {"G5-MAT-C06-L01-O01", "G5-MAT-C06-L01-O02", "G5-MAT-C06-L01-O03"}:
+    else:
+        # Three-digit numbers: 458 + 379 in the factory, 382 + 728 + 298 in the city.
+        digits = 3
         if skill_id.endswith("O01"):
             addend_count, low, high, signature = 2, 2, 2, "two-addends-two-carries"
-        elif skill_id.endswith("O02"):
-            target_carries = family_rng.choice((3, 4))
-            addend_count, low, high = 2, target_carries, target_carries
-            signature = f"two-addends-{target_carries}-carries"
         else:
-            target_carries = family_rng.choice((2, 3, 4))
+            # Three three-digit addends carry out of the ones, tens and hundreds at most.
+            target_carries = family_rng.choice((2, 3))
             addend_count, low, high = 3, target_carries, target_carries
             signature = f"three-addends-{target_carries}-carries"
-        source_pair = TEXTBOOK_COLUMN_EXAMPLES[0]
         if simpler:
             # The same column game and addend count with a single carry.
             low = high = 1
-        if skill_id.endswith("O01") and role == "unsupported_before" and seed % 3 == 0 and not simpler:
-            addends = source_pair
-        else:
-            addends = _addends_with_carries(
-                rng, count=addend_count, minimum_carries=low, maximum_carries=high
-            )
+        addends = _addends_with_carries(
+            rng, count=addend_count, minimum_carries=low, maximum_carries=high, digits=digits
+        )
         answer = sum(addends)
         carries = carrying_count(addends)
         prompt = f"{' + '.join(map(str, addends))} නිවැරදිව එකතු කරන්න."
@@ -473,126 +321,6 @@ def generate_item(
             columns=("දහස්", "සිය", "දහය", "එක"),
             expanded_addends=tuple(expanded_form(value) for value in addends),
             representation="column_and_expanded",
-        )
-    elif skill_id == "G5-MAT-ADD-RUNNING-TOTAL-01":
-        variant = family_rng.randrange(4)
-        role_shift = 0 if role == "unsupported_before" else 3
-        start = TEXTBOOK_TRAIL_START + variant * 10 + role_shift
-        values = tuple(
-            value + variant + (1 if role == "unsupported_after" else 0)
-            for value in TEXTBOOK_TRAIL_ADDENDS
-        )
-        if simpler:
-            values = values[:SIMPLER_RUNNING_STOPS]
-        stop_count = len(values)
-        totals = cumulative_totals(values, start=start)
-        answer = totals[-1]
-        prompt = f"{start} සිට එකතු කිරීමේ මාර්ගයේ සියලු සමුච්චිත එකතු ගොඩනඟන්න."
-        distractors = [
-            (values[-1], "running_total_reset"),
-            (sum(values[:-1]), "running_total_reset"),
-            (answer - values[0], "partial_sums_concatenated"),
-        ]
-        game.update(start=start, stops=values, cumulative_totals=totals)
-        signature = f"running-{stop_count}-stops"
-    elif skill_id == "G5-MAT-ADD-CONTEXT-01":
-        addend_count = 3
-        base = TEXTBOOK_CONTEXT_EXAMPLES[family_rng.randrange(len(TEXTBOOK_CONTEXT_EXAMPLES))]
-        shift = family_rng.randrange(0, 4) * 10 + (7 if role == "unsupported_after" else 0)
-        values = tuple(value + shift for value in base)
-        if simpler:
-            # Three two-digit groups instead of three- or four-digit ones.
-            base = min(TEXTBOOK_CONTEXT_EXAMPLES, key=max)
-            values = tuple(value // 10 + shift // 10 for value in base)
-        answer = sum(values)
-        context = "sports_houses" if max(base) < 1_000 else "three_sources"
-        prompt = f"කාණ්ඩ තුනේ {', '.join(map(str, values))} එකතු කර මුළු ගණන සොයන්න."
-        distractors = [
-            (sum(values[:2]), "third_addend_omitted" if addend_count == 3 else "carry_omitted"),
-            (max(values) - min(values), "operation_selection_error"),
-            (answer - 100, "carry_not_included_in_next_column"),
-        ]
-        game.update(addends=values, addend_count=addend_count, context=context)
-        signature = f"context-{addend_count}-addends"
-    else:
-        is_seedling = skill_id.endswith("TOTAL-01")
-        source_table = TEXTBOOK_SEEDLING_TABLE if is_seedling else TEXTBOOK_SCHOOL_TABLE
-        shift = family_rng.randrange(0, 3) * 4 + (3 if role == "unsupported_after" else 0)
-        table = tuple(
-            tuple(
-                value + shift + (row + column if shift else 0)
-                for column, value in enumerate(values)
-            )
-            for row, values in enumerate(source_table)
-        )
-        if simpler:
-            # The same table with two-digit counts.
-            table = tuple(tuple(max(10, value // 10) for value in row) for row in table)
-        if is_seedling:
-            row_labels = ("ජනවාරි", "පෙබරවාරි", "මාර්තු")
-            column_labels = ("වම්බටු", "බණ්ඩක්කා", "මිරිස්")
-            table_context = "seedlings"
-        else:
-            # The photographed source is legible enough for a draft transcription,
-            # but these names remain explicitly blocked on Sinhala human review.
-            row_labels = ("රාසිංදේවී පාසල", "සංඝබෝධි පාසල", "මැද්දුම බණ්ඩාර පාසල")
-            column_labels = ("2022", "2023", "2024")
-            table_context = "schools"
-        if skill_id.endswith("TOTAL-01"):
-            target_type = family_rng.choice(("row", "column"))
-            index = family_rng.randrange(3)
-            cells = (
-                tuple((index, column) for column in range(3))
-                if target_type == "row"
-                else tuple((row, index) for row in range(3))
-            )
-            answer = table_total(table, cells)
-            label = row_labels[index] if target_type == "row" else column_labels[index]
-            prompt = f"{label} සඳහා අදාළ කොටු තෝරා මුළු එකතුව සොයන්න."
-            distractors = [
-                (table_total(table, ((0, index), (1, index))), "wrong_table_cells_selected"),
-                (max(table[row][column] for row, column in cells), "operation_selection_error"),
-                (answer - table[cells[-1][0]][cells[-1][1]], "wrong_table_cells_selected"),
-            ]
-            signature = f"table-{target_type}-total"
-            game.update(target_type=target_type, selected_cells=cells)
-        elif skill_id.endswith("DIFFERENCE-01"):
-            left, right = family_rng.sample(range(3), 2)
-            left_cells = tuple((left, column) for column in range(3))
-            right_cells = tuple((right, column) for column in range(3))
-            left_total = table_total(table, left_cells)
-            right_total = table_total(table, right_cells)
-            answer = abs(left_total - right_total)
-            prompt = f"{row_labels[left]} සහ {row_labels[right]} එකතු දෙක අතර වෙනස සොයන්න."
-            distractors = [
-                (left_total + right_total, "operation_selection_error"),
-                (abs(table[left][0] - table[right][0]), "wrong_table_cells_selected"),
-                (max(left_total, right_total), "operation_selection_error"),
-            ]
-            signature = "table-row-total-difference"
-            game.update(
-                target_type="difference",
-                selected_cells=left_cells + right_cells,
-                comparison_rows=(left, right),
-            )
-        else:
-            row_totals = tuple(sum(row) for row in table)
-            winning_row = max(range(len(row_totals)), key=row_totals.__getitem__)
-            cells = tuple((winning_row, column) for column in range(3))
-            answer = row_totals[winning_row]
-            prompt = "වසර තුනේ වැඩිම මුළු ශිෂ්‍ය සංඛ්‍යාව ඇති පාසලේ පේළිය තෝරන්න."
-            distractors = [
-                (row_totals[(winning_row + 1) % 3], "maximum_row_aggregation_error"),
-                (max(table[winning_row]), "operation_selection_error"),
-                (answer - table[winning_row][-1], "wrong_table_cells_selected"),
-            ]
-            signature = "table-maximum-row"
-            game.update(target_type="maximum_row", selected_cells=cells)
-        game.update(
-            table=table,
-            row_labels=row_labels,
-            column_labels=column_labels,
-            table_context=table_context,
         )
 
     rendered, correct_id, codes = _options(rng, answer, distractors)

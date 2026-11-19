@@ -84,7 +84,7 @@ what the game sends. "Universal node" is where Knowledge Tracing files the answe
 | Area | Game (flow file in `application/`) | Atomic skills | Game label | Universal node | Records Learner State |
 |---|---|---|---|---|---|
 | `G5-AREA-MAT-01` | Number World (`number_world_flow.py`) | 8 | `MAT-NUM` | `MAT-NUM` | yes |
-| `G5-AREA-MAT-02` | Addition Adventure (`addition_adventure_flow.py`) | 9 | `MAT-OPS` | `MAT-OPS` | yes |
+| `G5-AREA-MAT-02` | Nimo's Sky Adventure (`addition_adventure_flow.py`) | 3 | `MAT-OPS` | `MAT-OPS` | yes |
 | `G5-AREA-MAT-03` | Number Patterns (`number_patterns_flow.py`) | 6 | `APT-PAT` | `APT-PAT` | yes |
 | `G5-AREA-MAT-04` | Subtraction Adventure (`subtraction_adventure_flow.py`) | 6 | `MAT-OPS` | `MAT-OPS` | yes |
 | `G5-AREA-MAT-05` | Fraction Adventure (`fraction_adventure_flow.py`) | 7 | `MAT-FRC` | `MAT-FRC` | yes |

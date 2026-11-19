@@ -1,4 +1,4 @@
-"""Durable Addition Adventure profile for the reusable adaptive-game flow."""
+"""Durable profile of Nimo's Sky Adventure (Addition) for the reusable adaptive-game flow."""
 
 from __future__ import annotations
 
@@ -74,23 +74,6 @@ class AdditionAdventureFlow(AreaGameFlow):
             public.update(
                 addends=game["addends"], addend_count=game["addend_count"], columns=game["columns"]
             )
-        elif skill_id == "G5-MAT-ADD-RUNNING-TOTAL-01":
-            public.update(start=game["start"], stops=game["stops"])
-        elif skill_id == "G5-MAT-ADD-CONTEXT-01":
-            public.update(
-                addends=game["addends"], addend_count=game["addend_count"], context=game["context"]
-            )
-        else:
-            public.update(
-                table=game["table"],
-                row_labels=game["row_labels"],
-                column_labels=game["column_labels"],
-                target_type=game["target_type"],
-                table_context=game["table_context"],
-                selection_count=len(game["selected_cells"]),
-            )
-            if "comparison_rows" in game:
-                public["comparison_rows"] = game["comparison_rows"]
         return public
 
     @staticmethod
@@ -102,7 +85,6 @@ class AdditionAdventureFlow(AreaGameFlow):
             "column_actions",
             "carry_actions",
             "alignment_valid",
-            "selected_table_cells",
             "correction_count",
             "undo_count",
             "active_time_ms",
@@ -116,17 +98,7 @@ class AdditionAdventureFlow(AreaGameFlow):
         if not set(summary).issubset(allowed) or len(summary) > 12:
             raise AreaFlowError("PII_OR_ANSWER_DATA_REJECTED")
         for key, value in summary.items():
-            if key == "selected_table_cells":
-                if (
-                    not isinstance(value, list)
-                    or len(value) > 9
-                    or any(
-                        not isinstance(cell, str) or len(cell) > 8 or not cell.startswith("r")
-                        for cell in value
-                    )
-                ):
-                    raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
-            elif key in {"alignment_valid"}:
+            if key == "alignment_valid":
                 if not isinstance(value, bool):
                     raise AreaFlowError("PAYLOAD_OUT_OF_BOUNDS")
             elif key == "evidence_quality":
@@ -152,7 +124,6 @@ class AdditionAdventureFlow(AreaGameFlow):
             "column_actions",
             "carry_actions",
             "alignment_valid",
-            "selected_table_cells",
             "correction_count",
             "undo_count",
             "active_time_ms",
@@ -182,10 +153,6 @@ class AdditionAdventureFlow(AreaGameFlow):
             "addend_count" in before_game or "addend_count" in after_game
         ):
             exclusions.append("INCOMPATIBLE_ADDEND_COUNT")
-        if before_game.get("target_type") != after_game.get("target_type") and (
-            "target_type" in before_game or "target_type" in after_game
-        ):
-            exclusions.append("INCOMPATIBLE_TABLE_OPERATION")
         return exclusions
 
     @staticmethod
@@ -222,63 +189,8 @@ class AdditionAdventureFlow(AreaGameFlow):
                 "දහයක් වූ විට ඊළඟ තීරුවට එකක් ගෙන යමු.",
                 "තීරු සියල්ල එකතු කර පිළිතුර ගොඩනඟමු.",
             )
-        elif skill_id == "G5-MAT-ADD-RUNNING-TOTAL-01":
-            start = int(game["start"])
-            stops = [int(value) for value in game["stops"]]  # type: ignore[union-attr]
-            totals = []
-            running = start
-            for value in stops:
-                running += value
-                totals.append(running)
-            public_game.update(start=start, stops=stops)
-            response = {"kind": "route_progression", "totals": totals}
-            steps = (
-                "ආරම්භක සංඛ්‍යාව තබා ගනිමු.",
-                "ඊළඟ අගය එකතු කර නව එකතුව ලියමු.",
-                "එම එකතුවෙන් මාර්ගය දිගටම ගොඩනඟමු.",
-            )
-        elif skill_id == "G5-MAT-ADD-CONTEXT-01":
-            addends = [int(value) for value in game["addends"]]  # type: ignore[union-attr]
-            public_game.update(addends=addends, context=game["context"])
-            response = {
-                "kind": "cargo_loading",
-                "selected_indices": list(range(len(addends))),
-                "total": sum(addends),
-            }
-            steps = (
-                "අදාළ කාණ්ඩ තුන හඳුනා ගනිමු.",
-                "කාණ්ඩ තුනම එකතු තැටියට ගෙන එමු.",
-                "තීරු අනුව එකතු කර මුළු ගණන සොයමු.",
-            )
         else:
-            table = [[int(value) for value in row] for row in game["table"]]  # type: ignore[union-attr]
-            cells = [tuple(int(part) for part in cell) for cell in game["selected_cells"]]  # type: ignore[union-attr]
-            public_game.update(
-                table=table,
-                row_labels=game["row_labels"],
-                column_labels=game["column_labels"],
-                target_type=game["target_type"],
-                table_context=game["table_context"],
-                selection_count=len(cells),
-            )
-            if game["target_type"] == "difference":
-                left, right = (int(value) for value in game["comparison_rows"])  # type: ignore[union-attr]
-                public_game["comparison_rows"] = [left, right]
-                total = abs(sum(table[left]) - sum(table[right]))
-            elif game["target_type"] == "maximum_row":
-                total = max(sum(row) for row in table)
-            else:
-                total = sum(table[row][column] for row, column in cells)
-            response = {
-                "kind": "data_cell_selection",
-                "selected_cells": [f"r{row}c{column}" for row, column in cells],
-                "total": total,
-            }
-            steps = (
-                "ප්‍රශ්නයේ පේළිය හෝ තීරුව හඳුනා ගනිමු.",
-                "අදාළ කොටු පමණක් තෝරමු.",
-                "තෝරාගත් අගයන් එකතු කර ප්‍රතිඵලය සොයමු.",
-            )
+            raise ValueError("ADDITION_SKILL_NOT_FOUND")
 
         return {
             "mode": "exact_failed_activity",

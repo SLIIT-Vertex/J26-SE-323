@@ -363,18 +363,9 @@ function ExactAdditionExample({
 	const chapter = game.chapter;
 	const reveal = scaffoldType !== "visual_guidance" && response !== null;
 	const addends = numberList(game.addends);
-	const table = Array.isArray(game.table)
-		? game.table.map((row) => numberList(row))
-		: [];
-	const rowLabels = Array.isArray(game.row_labels)
-		? game.row_labels.map(String)
-		: [];
-	const columnLabels = Array.isArray(game.column_labels)
-		? game.column_labels.map(String)
-		: [];
 	let visual: React.ReactNode = null;
 
-	if (chapter === "fruit_catch") {
+	if (chapter === "crystal_flight") {
 		const answer =
 			response?.kind === "combine_quantities" ? response.total : null;
 		visual = (
@@ -403,71 +394,7 @@ function ExactAdditionExample({
 				)}
 			</div>
 		);
-	} else if (chapter === "tuk_tuk_journey") {
-		const start = numberValue(game.start);
-		const stops = numberList(game.stops);
-		const totals =
-			response?.kind === "route_progression" ? response.totals : [];
-		const revealCount = reveal
-			? actions >= 3
-				? stops.length
-				: Math.min(actions, stops.length)
-			: 0;
-		const latestRevealed = Math.max(0, revealCount - 1);
-		visual = (
-			<div className="worked-route-demonstration">
-				<div className="worked-route-start">
-					<small>ආරම්භක අගය</small>
-					<strong>{start}</strong>
-				</div>
-				<ol
-					className="worked-addition-route"
-					aria-label="එකතුව ඉදිරියට ගෙන යන පියවර"
-				>
-					{taggedNumbers(stops).map(({ id, index, value: stop }) => {
-						const previous = index === 0 ? start : totals[index - 1];
-						const showPrevious =
-							index === 0 || (reveal && index <= revealCount);
-						const showResult = reveal && index < revealCount;
-						const state = showResult
-							? "is-complete"
-							: index === revealCount
-								? "is-current"
-								: "";
-						return (
-							<li className={state || undefined} key={id}>
-								<span className="worked-route-arrow" aria-hidden="true">
-									↓
-								</span>
-								<small>පියවර {index + 1}</small>
-								<div className="worked-route-equation">
-									<strong>{showPrevious ? previous : "?"}</strong>
-									<span>+</span>
-									<strong>{stop}</strong>
-									<span>=</span>
-									<strong className="worked-route-total">
-										{showResult ? totals[index] : "?"}
-									</strong>
-								</div>
-								{showResult && index < stops.length - 1 && (
-									<p>
-										<strong>{totals[index]}</strong> ඊළඟ පියවරට ගෙන යමු.
-									</p>
-								)}
-							</li>
-						);
-					})}
-				</ol>
-				<p className="worked-route-explanation" aria-live="polite">
-					{!reveal || actions === 0
-						? `${start} ට ${stops[0]} එකතු කර පළමු නව එකතුව සොයමු.`
-						: actions < 3
-							? `${latestRevealed === 0 ? start : totals[latestRevealed - 1]} + ${stops[latestRevealed]} = ${totals[latestRevealed]}. මේ පිළිතුර ඊළඟ පියවරේ ආරම්භක අගයයි.`
-							: "සෑම පියවරකම ලැබුණු පිළිතුර ඊළඟ එකතුවේ ආරම්භක අගය කරගෙන මාර්ගය දිගටම යමු."}
-				</p>
-			</div>
-		);
-	} else if (chapter === "carrying_crane") {
+	} else if (chapter === "number_factory" || chapter === "sky_city") {
 		const answer = response?.kind === "regroup_carry" ? response.total : null;
 		const columns = columnAddition(addends);
 		const activeColumn = actions <= 1 ? 4 : actions === 2 ? 3 : -1;
@@ -560,74 +487,6 @@ function ExactAdditionExample({
 						{addends.map(formatNumber).join(" + ")} ={" "}
 						{formatNumber(numberValue(answer))}
 					</p>
-				)}
-			</div>
-		);
-	} else if (chapter === "market_delivery_planner") {
-		const answer = response?.kind === "cargo_loading" ? response.total : null;
-		visual = (
-			<div className="worked-cargo">
-				<div>
-					{taggedNumbers(addends).map(({ id, value }) => (
-						<strong className={actions >= 2 ? "is-loaded" : ""} key={id}>
-							📦 {formatNumber(value)}
-						</strong>
-					))}
-				</div>
-				<span aria-hidden="true">→ 🛒</span>
-				{reveal && actions >= 3 && (
-					<p className="worked-answer">
-						{addends.map(formatNumber).join(" + ")} ={" "}
-						{formatNumber(numberValue(answer))}
-					</p>
-				)}
-			</div>
-		);
-	} else if (chapter === "festival_data_detective") {
-		const selected =
-			response?.kind === "data_cell_selection"
-				? new Set(response.selected_cells)
-				: new Set<string>();
-		const answer =
-			response?.kind === "data_cell_selection" ? response.total : null;
-		visual = (
-			<div className="worked-data-table">
-				<table>
-					<thead>
-						<tr>
-							<th scope="col">•</th>
-							{columnLabels.map((label) => (
-								<th scope="col" key={label}>
-									{label}
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody>
-						{table.map((row, rowIndex) => (
-							<tr key={rowLabels[rowIndex] ?? rowIndex}>
-								<th scope="row">{rowLabels[rowIndex]}</th>
-								{row.map((value, columnIndex) => {
-									const id = `r${rowIndex}c${columnIndex}`;
-									return (
-										<td
-											className={
-												reveal && actions >= 2 && selected.has(id)
-													? "is-selected"
-													: ""
-											}
-											key={id}
-										>
-											{value}
-										</td>
-									);
-								})}
-							</tr>
-						))}
-					</tbody>
-				</table>
-				{reveal && actions >= 3 && (
-					<p className="worked-answer">{formatNumber(numberValue(answer))}</p>
 				)}
 			</div>
 		);

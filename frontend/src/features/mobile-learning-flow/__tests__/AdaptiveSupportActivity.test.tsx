@@ -12,11 +12,9 @@ const chapters = [
 	["number-world-support-v1", "firefly_abacus"],
 	["number-world-support-v1", "kite_workshop"],
 	["number-world-support-v1", "river_route_rally"],
-	["addition-adventure-support-v1", "fruit_catch"],
-	["addition-adventure-support-v1", "tuk_tuk_journey"],
-	["addition-adventure-support-v1", "carrying_crane"],
-	["addition-adventure-support-v1", "market_delivery_planner"],
-	["addition-adventure-support-v1", "festival_data_detective"],
+	["addition-adventure-support-v1", "crystal_flight"],
+	["addition-adventure-support-v1", "number_factory"],
+	["addition-adventure-support-v1", "sky_city"],
 ] as const;
 const types = [
 	"visual_guidance",
@@ -130,12 +128,12 @@ describe("adaptive support delivery matrix", () => {
 		const root = createRoot(host);
 		const manifest: AdditionAdventureSupportManifest = {
 			schema_version: "addition-adventure-support-v1",
-			activity_id: "carrying_crane",
+			activity_id: "number_factory",
 			revision_id: "carry-support@v1",
 			deterministic_seed: 9,
 			skill_id: "G5-MAT-C06-L01-O01",
 			scaffold_type: "worked_parallel_example",
-			renderer_id: "carrying_crane:worked_parallel_example",
+			renderer_id: "number_factory:worked_parallel_example",
 			parallel_example_id: "carry:exact-v1",
 			parallel_example_version: "v1",
 			parallel_values: [],
@@ -145,7 +143,7 @@ describe("adaptive support delivery matrix", () => {
 				prompt_si: "5951 + 7371 නිවැරදිව එකතු කරන්න.",
 				game: {
 					schema_version: "addition-adventure-item-v1",
-					chapter: "carrying_crane",
+					chapter: "number_factory",
 					skill_id: "G5-MAT-C06-L01-O01",
 					addends: [5951, 7371],
 				},
@@ -178,67 +176,6 @@ describe("adaptive support delivery matrix", () => {
 		expect(host.textContent).toContain("ගෙනයාම");
 		expect(host.textContent).toContain("5,951 + 7,371 = 13,322");
 		expect(host.querySelectorAll(".worked-sum-row td")).toHaveLength(5);
-
-		await act(async () => root.unmount());
-		host.remove();
-	});
-
-	it("chains each running total into the next addition step", async () => {
-		const host = document.createElement("div");
-		document.body.append(host);
-		const root = createRoot(host);
-		const manifest: AdditionAdventureSupportManifest = {
-			schema_version: "addition-adventure-support-v1",
-			activity_id: "tuk_tuk_journey",
-			revision_id: "route-support@v1",
-			deterministic_seed: 10,
-			skill_id: "G5-MAT-ADD-RUNNING-TOTAL-01",
-			scaffold_type: "worked_parallel_example",
-			renderer_id: "tuk_tuk_journey:worked_parallel_example",
-			parallel_example_id: "route:exact-v1",
-			parallel_example_version: "v1",
-			parallel_values: [],
-			required_actions: 3,
-			worked_example: {
-				mode: "exact_failed_activity",
-				prompt_si: "102 සිට එකතු කිරීමේ මාර්ගය ගොඩනඟන්න.",
-				game: {
-					schema_version: "addition-adventure-item-v1",
-					chapter: "tuk_tuk_journey",
-					skill_id: "G5-MAT-ADD-RUNNING-TOTAL-01",
-					start: 102,
-					stops: [29, 14, 22],
-				},
-				correct_response: {
-					kind: "route_progression",
-					totals: [131, 145, 167],
-				},
-				steps_si: ["ආරම්භය බලමු.", "පිළිතුර ඉදිරියට ගෙන යමු.", "මාර්ගය සම්පූර්ණ කරමු."],
-			},
-		};
-
-		await act(async () =>
-			root.render(
-				<AdaptiveSupportActivity
-					manifest={manifest}
-					onProgress={() => undefined}
-				/>,
-			),
-		);
-		const button = host.querySelector<HTMLButtonElement>(
-			".scaffold-practice > button",
-		);
-		if (!button) throw new Error("support action missing");
-		await act(async () => button.click());
-		expect(host.textContent).toContain("102 + 29 = 131");
-		await act(async () => button.click());
-		expect(host.textContent).toContain("131 + 14 = 145");
-		await act(async () => button.click());
-		expect(
-			host.querySelectorAll(".worked-addition-route .is-complete"),
-		).toHaveLength(3);
-		expect(host.textContent).toContain("145");
-		expect(host.textContent).toContain("167");
 
 		await act(async () => root.unmount());
 		host.remove();

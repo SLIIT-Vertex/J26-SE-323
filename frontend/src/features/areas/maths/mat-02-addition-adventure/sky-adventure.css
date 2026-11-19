@@ -1,0 +1,653 @@
+/* Nimo's Sky Adventure. Sizes are design pixels of the 1920×1080 stage: calc(var(--px) * N). */
+.sky-adventure {
+	--wood: #f7e3b5;
+	--wood-edge: #8a5a2b;
+	--ink: #3a2a1a;
+	--go: #3cb54a;
+	--go-edge: #23812f;
+	--gold: #ffd23f;
+	position: absolute;
+	inset: 0;
+	color: var(--ink);
+	background:
+		#6ec6ff url("/curriculum/game/G5-AREA-MAT-02/bg-sky-city.webp") center /
+		cover no-repeat;
+	font-size: calc(var(--px) * 40);
+}
+
+.sky-adventure button {
+	font-family: inherit;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.sky-adventure button:disabled {
+	cursor: default;
+}
+
+.sky-adventure button:focus-visible {
+	outline: calc(var(--px) * 6) solid var(--gold);
+	outline-offset: calc(var(--px) * 3);
+}
+
+.sky-mission,
+.sky-canvas {
+	position: absolute;
+	inset: 0;
+}
+
+/* Wooden mission scroll, top centre. */
+.sky-scroll {
+	position: absolute;
+	top: calc(var(--px) * 28);
+	left: calc(var(--px) * 520);
+	width: calc(var(--px) * 880);
+	margin: 0;
+	padding: calc(var(--px) * 24) calc(var(--px) * 36);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 28);
+	background: var(--wood);
+	box-shadow: 0 calc(var(--px) * 10) 0 rgb(0 0 0 / 18%);
+	font-size: calc(var(--px) * 44);
+	font-weight: 700;
+	line-height: 1.35;
+	text-align: center;
+}
+
+.sky-mission[data-outcome="correct"] .sky-scroll {
+	background: #d9f7c9;
+}
+
+.sky-mission[data-outcome="wrong"] .sky-scroll {
+	background: #ffe2c2;
+}
+
+/* Delivery board, left. */
+.sky-board {
+	position: absolute;
+	top: calc(var(--px) * 136);
+	left: calc(var(--px) * 40);
+	width: calc(var(--px) * 420);
+	padding: calc(var(--px) * 20);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+}
+
+.sky-board h2 {
+	margin: 0 0 calc(var(--px) * 12);
+	font-size: calc(var(--px) * 38);
+	text-align: center;
+}
+
+.sky-board ul {
+	display: grid;
+	gap: calc(var(--px) * 12);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sky-board li > button {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 20);
+	width: 100%;
+	min-height: calc(var(--px) * 84);
+	padding: 0 calc(var(--px) * 20);
+	border: calc(var(--px) * 4) solid #d8bf8a;
+	border-radius: calc(var(--px) * 18);
+	background: #fffaf0;
+	font-size: calc(var(--px) * 52);
+	font-weight: 700;
+}
+
+.sky-board li > button[data-loaded] {
+	opacity: 0.55;
+}
+
+.sky-crate-letter {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	border-radius: calc(var(--px) * 14);
+	color: #fff;
+	font-size: calc(var(--px) * 40);
+	background: #d64545;
+}
+
+.sky-crate-letter[data-crate="B"] {
+	background: #2f6fc9;
+}
+
+.sky-crate-letter[data-crate="C"] {
+	background: #2e9b4f;
+}
+
+/* Delivered crates, bottom centre: values only, never their total. */
+.sky-chain {
+	position: absolute;
+	bottom: calc(var(--px) * 28);
+	left: calc(var(--px) * 560);
+	display: flex;
+	gap: calc(var(--px) * 12);
+	min-height: calc(var(--px) * 90);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sky-chain li {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 180);
+	padding: 0 calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 45);
+	background: var(--go);
+	box-shadow: 0 calc(var(--px) * 6) 0 var(--go-edge);
+	color: #fff;
+	font-size: calc(var(--px) * 46);
+	font-weight: 700;
+}
+
+/* Warehouse lock, centre over the dock. */
+.sky-mission[data-mission-step="lock"] .sky-chain {
+	display: none;
+}
+
+.sky-lock-panel {
+	position: absolute;
+	top: calc(var(--px) * 190);
+	left: calc(var(--px) * 520);
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 12);
+	width: calc(var(--px) * 880);
+	padding: calc(var(--px) * 24);
+	border: calc(var(--px) * 8) solid #50607a;
+	border-radius: calc(var(--px) * 32);
+	background: rgb(34 52 84 / 92%);
+	color: #fff;
+}
+
+.sky-equation {
+	margin: 0;
+	padding: calc(var(--px) * 8) calc(var(--px) * 32);
+	border-radius: calc(var(--px) * 20);
+	background: var(--wood);
+	color: var(--ink);
+	font-size: calc(var(--px) * 52);
+	font-weight: 700;
+}
+
+.carry-lock-grid {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	display: grid;
+	grid-template-columns: repeat(4, calc(var(--px) * 150));
+	gap: calc(var(--px) * 20);
+}
+
+.carry-lock-column {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 8);
+}
+
+.carry-lock-place {
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+	line-height: 1.2;
+}
+
+.carry-spark {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 80);
+	height: calc(var(--px) * 80);
+	padding: 0;
+	border: calc(var(--px) * 5) dashed #ffe9a3;
+	border-radius: 50%;
+	background: transparent;
+	color: #ffe9a3;
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+	box-sizing: border-box;
+}
+
+.carry-spark[data-carry="1"],
+.carry-spark[data-carry="2"] {
+	border-style: solid;
+	border-color: var(--gold);
+	background: var(--gold);
+	color: var(--ink);
+	box-shadow: 0 0 calc(var(--px) * 24) var(--gold);
+}
+
+.carry-spark.is-empty {
+	border: 0;
+}
+
+/* Touch-sized on small phones; the empty slot keeps the ones column level with the others. */
+.carry-spark,
+.carry-spark.is-empty {
+	min-width: 44px;
+	min-height: 44px;
+}
+
+.carry-wheel-step {
+	width: calc(var(--px) * 130);
+	height: calc(var(--px) * 76);
+	border: 0;
+	border-radius: calc(var(--px) * 20);
+	background: #3b7dd8;
+	box-shadow: 0 calc(var(--px) * 6) 0 #1f4f96;
+	color: #fff;
+	font-size: calc(var(--px) * 40);
+	box-sizing: border-box;
+	padding: 0;
+}
+
+.carry-wheel-step:active {
+	transform: translateY(calc(var(--px) * 4));
+	box-shadow: 0 calc(var(--px) * 2) 0 #1f4f96;
+}
+
+.carry-wheel-digit {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 130);
+	height: calc(var(--px) * 100);
+	border-radius: calc(var(--px) * 20);
+	background: #fffaf0;
+	color: var(--ink);
+	font-size: calc(var(--px) * 72);
+	font-variant-numeric: tabular-nums;
+}
+
+.sky-action {
+	min-width: calc(var(--px) * 420);
+	min-height: calc(var(--px) * 110);
+	padding: 0 calc(var(--px) * 48);
+	border: 0;
+	border-radius: calc(var(--px) * 55);
+	background: var(--go);
+	box-shadow: 0 calc(var(--px) * 10) 0 var(--go-edge);
+	color: #fff;
+	font-size: calc(var(--px) * 50);
+	font-weight: 700;
+}
+
+.sky-action:disabled {
+	filter: grayscale(0.7);
+	opacity: 0.6;
+}
+
+.sky-action:not(:disabled):active {
+	transform: translateY(calc(var(--px) * 6));
+	box-shadow: 0 calc(var(--px) * 4) 0 var(--go-edge);
+}
+
+/* Story cards between scenes. */
+.sky-story {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: grid;
+	place-items: center;
+	background: rgb(15 42 74 / 35%);
+}
+
+.sky-story-nimo {
+	position: absolute;
+	bottom: calc(var(--px) * 40);
+	left: calc(var(--px) * 60);
+	width: auto;
+	height: calc(var(--px) * 460);
+}
+
+.sky-story-card {
+	margin-left: calc(var(--px) * 320);
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 16);
+	width: calc(var(--px) * 1100);
+	padding: calc(var(--px) * 48);
+	border: calc(var(--px) * 10) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 40);
+	background: var(--wood);
+	text-align: center;
+}
+
+.sky-story-card h2 {
+	margin: 0;
+	font-size: calc(var(--px) * 72);
+}
+
+.sky-story-card p {
+	margin: 0;
+	font-size: calc(var(--px) * 46);
+	line-height: 1.4;
+}
+
+/* Training places. */
+.sky-training {
+	position: absolute;
+	inset: 0;
+}
+
+.sky-training-backdrop {
+	position: absolute;
+	inset: 0;
+	background:
+		#8e9bb3 url("/curriculum/game/G5-AREA-MAT-02/bg-number-factory.webp")
+		center / cover no-repeat;
+}
+
+.sky-training[data-training-place="crystal-sky"] .sky-training-backdrop {
+	background:
+		#4aa8f0 url("/curriculum/game/G5-AREA-MAT-02/bg-crystal-sky.webp")
+		center / cover no-repeat;
+}
+
+.sky-training-title {
+	position: absolute;
+	top: calc(var(--px) * 28);
+	left: 50%;
+	margin: 0;
+	padding: calc(var(--px) * 12) calc(var(--px) * 40);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+	font-size: calc(var(--px) * 46);
+	transform: translateX(-50%);
+}
+
+/* Help words on the left, the training game on the right. */
+.sky-training-help {
+	position: absolute;
+	top: calc(var(--px) * 140);
+	bottom: calc(var(--px) * 30);
+	left: calc(var(--px) * 30);
+	width: calc(var(--px) * 510);
+	overflow-y: auto;
+	padding: calc(var(--px) * 22);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(255 250 240 / 95%);
+	font-size: calc(var(--px) * 34);
+	-webkit-overflow-scrolling: touch;
+}
+
+.sky-training-help .support-round-frame {
+	font-size: inherit;
+}
+
+.sky-training-stage {
+	overflow: hidden;
+	position: absolute;
+	top: calc(var(--px) * 120);
+	right: calc(var(--px) * 20);
+	bottom: calc(var(--px) * 16);
+	left: calc(var(--px) * 560);
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: end;
+	gap: calc(var(--px) * 16);
+}
+
+.sky-training-board {
+	display: grid;
+	justify-items: center;
+	align-self: start;
+	min-width: 0;
+}
+
+/* Number Factory. Bins, levers and output wheels share one column grid. */
+.number-factory {
+	display: grid;
+	grid-template-columns: calc(var(--px) * 190) minmax(0, 1fr);
+	gap: calc(var(--px) * 16);
+	width: calc(var(--px) * 1080);
+	padding: calc(var(--px) * 16);
+	border: calc(var(--px) * 6) solid #50607a;
+	border-radius: calc(var(--px) * 28);
+	background: rgb(34 52 84 / 88%);
+	color: #fff;
+}
+
+.factory-feed {
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--px) * 14);
+}
+
+.factory-card {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 10);
+	min-height: calc(var(--px) * 110);
+	padding: 0 calc(var(--px) * 12);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 20);
+	background: var(--wood);
+	color: var(--ink);
+	font-size: calc(var(--px) * 48);
+	font-weight: 700;
+}
+
+.factory-card[data-fed] {
+	opacity: 0.55;
+}
+
+.factory-legend {
+	margin: auto 0 0;
+	padding: calc(var(--px) * 10);
+	border-radius: calc(var(--px) * 16);
+	background: var(--wood);
+	color: var(--ink);
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+	text-align: center;
+}
+
+.factory-row {
+	display: grid;
+	grid-template-columns: repeat(var(--places), 1fr);
+	justify-items: center;
+	align-items: center;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.factory-headers span {
+	padding: calc(var(--px) * 4) calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 30);
+	background: #ffd23f;
+	color: var(--ink);
+	font-size: calc(var(--px) * 32);
+	font-weight: 700;
+}
+
+.factory-machine {
+	display: grid;
+	gap: calc(var(--px) * 10);
+	min-width: 0;
+}
+
+.factory-canvas {
+	position: relative;
+	min-width: 0;
+	width: 100%;
+	aspect-ratio: 1200 / 470;
+}
+
+/* Phaser measures its parent on boot, so the canvas host has a definite size. */
+.canvas-host {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+
+.factory-lever {
+	min-width: calc(var(--px) * 150);
+	min-height: calc(var(--px) * 76);
+	border: 0;
+	border-radius: calc(var(--px) * 20);
+	background: #8a94a8;
+	box-shadow: 0 calc(var(--px) * 6) 0 #5a6378;
+	color: #fff;
+	font-size: calc(var(--px) * 38);
+	font-weight: 700;
+}
+
+.factory-lever[data-ready] {
+	background: #ffb020;
+	box-shadow:
+		0 calc(var(--px) * 6) 0 #b06f00,
+		0 0 calc(var(--px) * 24) #ffd23f;
+	color: var(--ink);
+}
+
+.factory-lever:active {
+	transform: translateY(calc(var(--px) * 4));
+}
+
+.crystal-total strong {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 90);
+	height: calc(var(--px) * 100);
+	border-radius: calc(var(--px) * 18);
+	background: #fffaf0;
+	color: var(--ink);
+	font-size: calc(var(--px) * 68);
+	font-variant-numeric: tabular-nums;
+}
+
+.factory-digit {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 8);
+	min-width: calc(var(--px) * 130);
+	min-height: calc(var(--px) * 110);
+	padding: 0 calc(var(--px) * 12);
+	border: calc(var(--px) * 5) solid #3b7dd8;
+	border-radius: calc(var(--px) * 20);
+	background: #fffaf0;
+	color: var(--ink);
+	font-size: calc(var(--px) * 72);
+	font-variant-numeric: tabular-nums;
+}
+
+.factory-digit span {
+	color: #3b7dd8;
+	font-size: calc(var(--px) * 30);
+}
+
+[data-ghost] {
+	color: rgb(58 42 26 / 30%);
+}
+
+/* Crystal flight. */
+.crystal-flight {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 10);
+	width: calc(var(--px) * 1080);
+}
+
+.crystal-instruction {
+	margin: 0;
+	padding: calc(var(--px) * 10) calc(var(--px) * 32);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+	font-size: calc(var(--px) * 40);
+	font-weight: 700;
+}
+
+.crystal-canvas {
+	position: relative;
+	min-width: 0;
+	width: calc(var(--px) * 1080);
+	aspect-ratio: 1200 / 560;
+}
+
+.crystal-controls {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 40);
+	padding: calc(var(--px) * 12) calc(var(--px) * 28);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(34 52 84 / 85%);
+}
+
+.crystal-row {
+	display: flex;
+	gap: calc(var(--px) * 20);
+}
+
+.crystal {
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 110);
+	border: 0;
+	clip-path: polygon(50% 0, 100% 35%, 80% 100%, 20% 100%, 0 35%);
+	background: linear-gradient(#e18cff, #8a3fd1);
+	color: #fff;
+	font-size: calc(var(--px) * 40);
+	font-weight: 700;
+}
+
+.crystal[aria-pressed="true"] {
+	background: linear-gradient(#fff3a6, #ffc93f);
+	color: var(--ink);
+}
+
+.crystal-total {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 16);
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.crystal-total:disabled {
+	opacity: 0.5;
+}
+
+.crystal-step {
+	width: calc(var(--px) * 96);
+	height: calc(var(--px) * 96);
+	border: 0;
+	border-radius: 50%;
+	background: #3b7dd8;
+	color: #fff;
+	font-size: calc(var(--px) * 52);
+}
+
+.sky-adventure legend {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+}
+
+/* A correct answer clears the lock so the open gate is seen. */
+.sky-mission[data-outcome="correct"] .sky-lock-panel {
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.6s ease 0.3s;
+}
+
+/* The training check button sits beside the board. */
+.sky-training-stage > .sky-action {
+	min-width: calc(var(--px) * 220);
+	padding: 0 calc(var(--px) * 28);
+}

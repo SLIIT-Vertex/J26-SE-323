@@ -1812,14 +1812,12 @@ p {
 	font-weight: 900;
 	text-align: center;
 }
-.number-world-canvas,
-.addition-adventure-canvas {
+.number-world-canvas {
 	min-height: 180px;
 	overflow: hidden;
 	border-radius: 18px;
 }
-.number-world-canvas canvas,
-.addition-adventure-canvas canvas {
+.number-world-canvas canvas {
 	display: block;
 	width: 100%;
 	height: auto;
@@ -1837,15 +1835,13 @@ p {
 	min-width: 44px;
 	min-height: 44px;
 }
-.cargo-source,
-.handcart {
+.cargo-source {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 0.75rem;
 }
 .cargo-source img,
-.handcart img,
 .exchange-control img,
 .combine-zone img {
 	width: 76px;
@@ -1855,8 +1851,7 @@ p {
 .digit-crate,
 .digit-patches button,
 .river-bank button,
-.river-route button,
-.parcel-shelf button {
+.river-route button {
 	border: 2px solid #57558f;
 	border-radius: 14px;
 	background: #fff;
@@ -2401,9 +2396,7 @@ p {
 }
 .digit-patches,
 .river-bank,
-.river-route,
-.parcel-shelf,
-.quantity-groups {
+.river-route {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.55rem;
@@ -2531,12 +2524,6 @@ p {
 	outline: 4px solid #fed136;
 	outline-offset: 2px;
 }
-.numeric-builder {
-	display: grid;
-	gap: 0.4rem;
-	font-weight: 850;
-}
-.numeric-builder input,
 .route-stop input {
 	width: 100%;
 	min-height: 48px;
@@ -2594,7 +2581,6 @@ p {
 	background: #dcf8ed;
 	box-shadow: inset 0 0 0 1px #22a979;
 }
-.quantity-groups button,
 .combine-zone,
 .exchange-control {
 	display: flex;
@@ -2606,18 +2592,8 @@ p {
 	border-radius: 16px;
 	background: #f0fff9;
 }
-.quantity-groups img,
-.parcel-shelf img {
-	width: 52px;
-	height: 52px;
-	object-fit: contain;
-}
 .combine-zone.is-filled {
 	background: #dcf8ed;
-}
-.tuk-route > img {
-	width: 110px;
-	margin: auto;
 }
 .route-stop {
 	display: grid;
@@ -2642,152 +2618,6 @@ p {
 	border-radius: 10px;
 	background: #fff0bf;
 }
-.parcel-shelf button {
-	display: grid;
-	place-items: center;
-}
-.parcel-shelf button[aria-pressed="true"],
-.festival-data button[aria-pressed="true"] {
-	color: #fff;
-	border-color: #315278;
-	background: #466bb0;
-}
-.festival-data {
-	overflow-x: auto;
-}
-.festival-data table {
-	width: 100%;
-	border-collapse: separate;
-	border-spacing: 0.3rem;
-}
-.festival-data th {
-	font-size: 0.75rem;
-}
-.festival-data td button {
-	width: 100%;
-	min-width: 48px;
-	min-height: 48px;
-	border: 2px solid #9a8ec0;
-	border-radius: 10px;
-	background: #fff;
-}
-.addition-adventure .manipulation-board {
-	box-sizing: border-box;
-	width: 100%;
-	max-width: 100%;
-	overflow: hidden;
-}
-/* biome-ignore lint/style/noDescendingSpecificity: activity targets intentionally override shared table controls. */
-.quantity-groups button {
-	min-width: 48px;
-	min-height: 64px;
-	touch-action: manipulation;
-}
-/* biome-ignore lint/style/noDescendingSpecificity: cargo targets intentionally override shared table controls. */
-.parcel-shelf button {
-	min-width: 48px;
-	min-height: 64px;
-	touch-action: manipulation;
-}
-.route-hero {
-	position: relative;
-	display: grid;
-	min-height: 96px;
-	place-items: center;
-	overflow: hidden;
-	border-radius: 18px;
-	background: #e8f7ff;
-}
-.route-hero img:first-child {
-	position: relative;
-	z-index: 1;
-	width: 82px;
-}
-.route-hero img:last-child {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	opacity: 0.45;
-}
-.addition-route {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 0.5rem;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-.addition-route li {
-	display: grid;
-	min-width: 0;
-	min-height: 72px;
-	place-items: center;
-	gap: 0.25rem;
-	padding: 0.45rem;
-	border: 2px solid #32a9e6;
-	border-radius: 16px;
-	background: #f2fbff;
-}
-.addition-route .route-start {
-	border-color: #22a979;
-	background: #e7fff6;
-}
-.route-addend {
-	font-weight: 950;
-}
-.addition-route label,
-.addition-route input {
-	box-sizing: border-box;
-	width: 100%;
-}
-.addition-route input {
-	min-height: 48px;
-	padding: 0.35rem;
-	border: 2px solid #57558f;
-	border-radius: 12px;
-	background: #fff;
-	font-size: 1rem;
-	font-weight: 900;
-	text-align: center;
-}
-.carry-crane {
-	position: relative;
-}
-.carry-tray {
-	width: 100%;
-	max-height: 94px;
-	object-fit: contain;
-}
-.column-addition-wrap {
-	width: 100%;
-	overflow: hidden;
-	border: 3px solid #bd7135;
-	border-radius: 18px;
-	background: #fff9e9;
-}
-.column-addition-table {
-	width: 100%;
-	table-layout: fixed;
-	border-collapse: collapse;
-}
-.column-addition-table caption {
-	padding: 0.5rem;
-	font-weight: 900;
-}
-.column-addition-table th,
-.column-addition-table td {
-	min-width: 0;
-	padding: 0.25rem 0.08rem;
-	border: 1px solid #9a8ec0;
-	font-size: clamp(0.62rem, 3vw, 0.9rem);
-	text-align: center;
-}
-.column-addition-table th {
-	font-size: clamp(0.5rem, 2.4vw, 0.72rem);
-}
-/* biome-ignore lint/style/noDescendingSpecificity: carrying controls intentionally override shared table controls. */
 .carry-row button {
 	display: grid;
 	width: 48px;
@@ -2822,97 +2652,6 @@ p {
 	font-weight: 950;
 	text-align: center;
 }
-.expanded-addends {
-	display: grid;
-	gap: 0.35rem;
-}
-.expanded-addends p {
-	display: grid;
-	gap: 0.15rem;
-	margin: 0;
-	padding: 0.45rem;
-	border-radius: 12px;
-	background: #fff;
-}
-.expanded-addends span {
-	font-size: 0.75rem;
-	overflow-wrap: anywhere;
-}
-.handcart {
-	display: flex;
-	min-height: 92px;
-	align-items: center;
-	justify-content: center;
-	gap: 0.6rem;
-	border-radius: 18px;
-	background: #fff7d6;
-	font-weight: 900;
-}
-.handcart img {
-	width: 96px;
-	height: 76px;
-	object-fit: contain;
-}
-.story-addition-zones {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0.35rem;
-}
-.story-addition-zones span {
-	display: grid;
-	min-width: 0;
-	min-height: 48px;
-	place-items: center;
-	border: 2px dashed #9a8ec0;
-	border-radius: 12px;
-	background: #fff;
-	font-weight: 900;
-}
-.story-addition-zones span.is-loaded {
-	border-style: solid;
-	border-color: #22a979;
-	background: #e2fff8;
-}
-.festival-data table {
-	min-width: 0;
-	table-layout: fixed;
-}
-.festival-data th:first-child {
-	width: 31%;
-}
-.festival-data th img {
-	display: block;
-	width: 34px;
-	height: 34px;
-	margin: auto;
-	object-fit: contain;
-}
-.table-calculation-tray {
-	display: flex;
-	min-height: 76px;
-	align-items: center;
-	justify-content: center;
-	gap: 0.6rem;
-	padding: 0.5rem;
-	border: 2px solid #54cbab;
-	border-radius: 16px;
-	background: #effff9;
-}
-/* biome-ignore lint/style/noDescendingSpecificity: tray artwork intentionally follows table artwork sizing. */
-.table-calculation-tray img {
-	width: 58px;
-	height: 58px;
-	object-fit: contain;
-}
-/* biome-ignore lint/style/noDescendingSpecificity: tray layout intentionally follows shared summary layout. */
-.table-calculation-tray div {
-	display: grid;
-	min-width: 0;
-	gap: 0.2rem;
-}
-.table-calculation-tray strong {
-	overflow-wrap: anywhere;
-}
 .scaffold-practice {
 	margin: 0.8rem 0;
 	padding: 0.8rem;
@@ -2920,7 +2659,6 @@ p {
 	border-radius: 18px;
 	background: #edfff9;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: scaffold controls intentionally follow all board controls. */
 .scaffold-practice button {
 	min-height: 52px;
 	padding: 0.75rem 1rem;
@@ -3122,9 +2860,7 @@ p {
 	transform: scale(1.08);
 }
 .worked-combine,
-.worked-column-addition,
-.worked-cargo,
-.worked-data-table {
+.worked-column-addition {
 	display: grid;
 	gap: 0.55rem;
 	padding: 0.65rem;
@@ -3132,15 +2868,13 @@ p {
 	border-radius: 16px;
 	background: rgb(255 255 255 / 78%);
 }
-.worked-combine > div:first-child,
-.worked-cargo > div:first-child {
+.worked-combine > div:first-child {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
 	gap: 0.45rem;
 }
-.worked-combine strong,
-.worked-cargo strong {
+.worked-combine strong {
 	min-width: 54px;
 	padding: 0.5rem;
 	border: 2px solid #8874c7;
@@ -3149,7 +2883,6 @@ p {
 	text-align: center;
 }
 .worked-combine .is-active,
-.worked-cargo .is-loaded,
 .worked-basket.is-active {
 	border-color: #16a58e;
 	background: #dffff6;
@@ -3163,95 +2896,6 @@ p {
 	border-radius: 14px;
 	font-size: 2rem;
 	text-align: center;
-}
-.worked-addition-route {
-	display: grid;
-	grid-template-columns: 1fr;
-	gap: 0.55rem;
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-.worked-route-demonstration {
-	display: grid;
-	gap: 0.55rem;
-}
-.worked-route-start {
-	display: grid;
-	width: min(150px, 60%);
-	min-height: 64px;
-	margin: auto;
-	place-items: center;
-	padding: 0.4rem;
-	border: 3px solid #7254b4;
-	border-radius: 16px;
-	background: #fff;
-}
-.worked-route-start strong {
-	font-size: 1.35rem;
-}
-.worked-addition-route li {
-	position: relative;
-	display: grid;
-	min-width: 0;
-	min-height: 82px;
-	place-items: center;
-	gap: 0.3rem;
-	padding: 0.6rem;
-	border: 2px dashed #9a8ec0;
-	border-radius: 16px;
-	background: #fff;
-}
-.worked-addition-route li.is-current {
-	border-style: solid;
-	border-color: #32a9e6;
-	background: #e8f7ff;
-}
-.worked-addition-route li.is-complete {
-	border-style: solid;
-	border-color: #16a58e;
-	background: #e5fff7;
-}
-.worked-route-arrow {
-	position: absolute;
-	top: -0.72rem;
-	left: 50%;
-	color: #7254b4;
-	font-size: 1.25rem;
-	font-weight: 950;
-	transform: translateX(-50%);
-}
-.worked-route-equation {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
-	align-items: center;
-	gap: 0.25rem;
-	width: 100%;
-	font-size: clamp(1rem, 4.8vw, 1.3rem);
-	text-align: center;
-}
-.worked-route-equation strong {
-	padding: 0.35rem 0.15rem;
-	border-radius: 10px;
-	background: #f2eeff;
-}
-.worked-route-equation .worked-route-total {
-	color: #176e60;
-	background: #ccfaec;
-}
-.worked-addition-route li p,
-.worked-route-explanation {
-	margin: 0;
-	font-size: 0.82rem;
-	font-weight: 800;
-	text-align: center;
-}
-.worked-route-explanation {
-	padding: 0.65rem;
-	border: 2px solid #16a58e;
-	border-radius: 12px;
-	background: #dffff6;
-	line-height: 1.55;
 }
 .worked-column-addition {
 	grid-template-columns: 1fr;
@@ -3313,26 +2957,6 @@ p {
 	background: #dffff6;
 	font-weight: 850;
 	line-height: 1.55;
-}
-.worked-data-table {
-	overflow: hidden;
-}
-.worked-data-table table {
-	width: 100%;
-	table-layout: fixed;
-	border-collapse: collapse;
-}
-/* biome-ignore lint/style/noDescendingSpecificity: data example is a separate table component. */
-.worked-data-table th,
-.worked-data-table td {
-	padding: 0.35rem 0.1rem;
-	border: 1px solid #8874c7;
-	font-size: clamp(0.58rem, 2.7vw, 0.82rem);
-	text-align: center;
-}
-.worked-data-table td.is-selected {
-	background: #fff0b8;
-	box-shadow: inset 0 0 0 2px #ff9f1c;
 }
 .worked-carry {
 	padding: 0.45rem 0.7rem;
@@ -3452,7 +3076,6 @@ p {
 		transition: none;
 	}
 	.worked-combine .is-active,
-	.worked-cargo .is-loaded,
 	.worked-basket.is-active {
 		transform: none;
 	}
@@ -3505,7 +3128,6 @@ p {
 	background: #fff;
 	box-shadow: 0 3px 0 rgb(44 69 92 / 16%);
 }
-/* biome-ignore lint/style/noDescendingSpecificity: legacy support copy follows richer route copy. */
 .support-digit-row p {
 	flex-basis: 100%;
 }
@@ -3521,12 +3143,10 @@ p {
 	overflow-x: clip;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards > button {
 	min-height: 9.5rem;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-chapter-cards img {
 	width: clamp(5rem, 30vw, 8rem);
 	height: clamp(5rem, 30vw, 8rem);
@@ -3587,7 +3207,6 @@ p {
 	gap: 0.5rem;
 }
 
-/* biome-ignore lint/style/noDescendingSpecificity: feature scope follows shared adventure rules. */
 .pattern-operation-buttons button,
 .pattern-fixed-operation,
 .pattern-rule-builder input,
@@ -3961,7 +3580,6 @@ p {
 	background: rgba(255, 252, 241, 0.96);
 	color: #35275a;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .multiplication-table-board > p {
 	justify-self: center;
 	margin: 0;
@@ -4075,7 +3693,6 @@ p {
 	max-height: clamp(6rem, 28vw, 9rem);
 	object-fit: contain;
 }
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
 .multiplication-story > p {
 	margin: 0;
 	font-weight: 900;
