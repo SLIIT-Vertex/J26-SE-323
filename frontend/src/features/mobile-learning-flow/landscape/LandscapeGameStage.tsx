@@ -2,6 +2,7 @@ import { type ReactNode, useEffect } from "react";
 import { setGameSoundMuted, useGameSoundMuted } from "./gameAudio";
 import { lockOrientation } from "./orientation";
 import "./landscape-game-stage.css";
+import "./game-kit.css";
 
 /**
  * A full-screen 16:9 game stage. While it is mounted the phone is turned to landscape and the app

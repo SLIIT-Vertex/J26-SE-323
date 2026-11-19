@@ -14,7 +14,7 @@ import {
 	solveFactory,
 } from "./factoryRules";
 import { skySounds } from "./skySounds";
-import type { useMoveEvidence } from "./useMoveEvidence";
+import type { useMoveEvidence } from "../../../mobile-learning-flow/landscape/useMoveEvidence";
 
 type Evidence = ReturnType<typeof useMoveEvidence>;
 

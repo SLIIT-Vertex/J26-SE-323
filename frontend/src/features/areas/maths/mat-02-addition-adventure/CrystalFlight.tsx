@@ -3,7 +3,7 @@ import type { ConstructedResponse } from "../../../mobile-learning-flow/api/gene
 import { type CrystalFlightHandle, mountCrystalFlight } from "./crystalScene";
 import { collect, crystalResponse, stepEnergy } from "./crystalRules";
 import { skySounds } from "./skySounds";
-import type { useMoveEvidence } from "./useMoveEvidence";
+import type { useMoveEvidence } from "../../../mobile-learning-flow/landscape/useMoveEvidence";
 
 type Evidence = ReturnType<typeof useMoveEvidence>;
 

@@ -3,14 +3,16 @@
  * then the scenes draw a placeholder shape in its place, so missing art never breaks a game.
  */
 
+import { NIMO } from "../../../mobile-learning-flow/landscape/nimo";
+
 export const SKY_ART_ROOT = "/curriculum/game/G5-AREA-MAT-02";
 
 export const SKY_ART = {
 	bgSkyCity: { file: "bg-sky-city.webp", ready: true },
-	nimoIdle: { file: "nimo-idle.webp", ready: true },
-	nimoCheer: { file: "nimo-cheer.webp", ready: true },
-	nimoThink: { file: "nimo-think.webp", ready: true },
-	nimoPlane: { file: "nimo-plane.webp", ready: true },
+	nimoIdle: { file: NIMO.idle, ready: true },
+	nimoCheer: { file: NIMO.cheer, ready: true },
+	nimoThink: { file: NIMO.think, ready: true },
+	nimoPlane: { file: NIMO.plane, ready: true },
 	bgNumberFactory: { file: "bg-number-factory.webp", ready: true },
 	bgCrystalSky: { file: "bg-crystal-sky.webp", ready: true },
 	airshipRed: { file: "airship-red.webp", ready: true },
@@ -27,7 +29,9 @@ export type SkyArtKey = keyof typeof SKY_ART;
 
 /** Public URL of an art file, for HTML and CSS outside the Phaser scenes. */
 export function artUrl(key: SkyArtKey): string {
-	return `${SKY_ART_ROOT}/${SKY_ART[key].file}`;
+	const file: string = SKY_ART[key].file;
+	// Shared art (Nimo) is listed by its full path.
+	return file.startsWith("/") ? file : `${SKY_ART_ROOT}/${file}`;
 }
 
 /** The art the city scene draws. */
@@ -53,5 +57,5 @@ export function readyArt(
 		>
 	)
 		.filter(([key, art]) => art.ready && keys.includes(key))
-		.map(([key, art]) => [key, `${SKY_ART_ROOT}/${art.file}`]);
+		.map(([key]) => [key, artUrl(key)]);
 }

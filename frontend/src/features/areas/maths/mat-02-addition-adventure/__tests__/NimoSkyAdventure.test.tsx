@@ -260,7 +260,7 @@ describe("Nimo's Sky Adventure", () => {
 		// The Number Factory: feed both numbers, bundle the full places, read the bins.
 		const byLabel = (label: string) =>
 			host.querySelector<HTMLButtonElement>(
-				`.sky-training [aria-label="${label}"]`,
+				`.game-training [aria-label="${label}"]`,
 			);
 		expect(byLabel("458 යන්ත්‍රයට දාන්න")).not.toBeNull();
 		expect(buttonByText(host, "බලමු!").disabled).toBe(true);
@@ -299,7 +299,7 @@ describe("Nimo's Sky Adventure", () => {
 		);
 
 		// Training ends: the help is removed before the fresh city mission.
-		expect(host.querySelector(".sky-training")).toBeNull();
+		expect(host.querySelector(".game-training")).toBeNull();
 		await act(async () => click(buttonByText(host, "නගරයට යමු")));
 		expect(api.withdrawSupport).toHaveBeenCalledWith(
 			"episode-1",

@@ -10,9 +10,10 @@ import {
 	lockResponse,
 } from "./skyRules";
 import { skySounds } from "./skySounds";
-import type { useMoveEvidence } from "./useMoveEvidence";
+import type { useMoveEvidence } from "../../../mobile-learning-flow/landscape/useMoveEvidence";
 
-export type MissionOutcome = "playing" | "correct" | "wrong";
+export type { MissionOutcome } from "../../../mobile-learning-flow/landscape/useHardFirstEpisode";
+import type { MissionOutcome } from "../../../mobile-learning-flow/landscape/useHardFirstEpisode";
 
 /**
  * The city mission: load the three airship crates into the warehouse, then set the warehouse lock
@@ -164,7 +165,7 @@ export function SkyCityMission({
 					/>
 					<button
 						type="button"
-						className="sky-action"
+						className="game-action"
 						disabled={busy || !response || outcome !== "playing"}
 						onClick={() => {
 							if (!response) return;

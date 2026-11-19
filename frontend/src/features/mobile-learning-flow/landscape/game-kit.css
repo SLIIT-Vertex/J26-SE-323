@@ -1,0 +1,184 @@
+/* Shared look of every landscape game: tokens, the big button, story cards and the training room.
+   Sizes are design pixels of the 1920×1080 stage: calc(var(--px) * N). */
+.landscape-game-stage {
+	--wood: #f7e3b5;
+	--wood-edge: #8a5a2b;
+	--ink: #3a2a1a;
+	--go: #3cb54a;
+	--go-edge: #23812f;
+	--gold: #ffd23f;
+	color: var(--ink);
+}
+
+.landscape-game-stage button {
+	font-family: inherit;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.landscape-game-stage button:disabled {
+	cursor: default;
+}
+
+.landscape-game-stage button:focus-visible {
+	outline: calc(var(--px) * 6) solid var(--gold);
+	outline-offset: calc(var(--px) * 3);
+}
+
+.game-action {
+	min-width: calc(var(--px) * 420);
+	min-height: calc(var(--px) * 110);
+	padding: 0 calc(var(--px) * 48);
+	border: 0;
+	border-radius: calc(var(--px) * 55);
+	background: var(--go);
+	box-shadow: 0 calc(var(--px) * 10) 0 var(--go-edge);
+	color: #fff;
+	font-size: calc(var(--px) * 50);
+	font-weight: 700;
+}
+
+.game-action:disabled {
+	filter: grayscale(0.7);
+	opacity: 0.6;
+}
+
+.game-action:not(:disabled):active {
+	transform: translateY(calc(var(--px) * 6));
+	box-shadow: 0 calc(var(--px) * 4) 0 var(--go-edge);
+}
+
+/* Story cards between scenes. */
+.game-story {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	display: grid;
+	place-items: center;
+	background: rgb(15 42 74 / 35%);
+}
+
+.game-story-image {
+	position: absolute;
+	bottom: calc(var(--px) * 40);
+	left: calc(var(--px) * 60);
+	width: auto;
+	height: calc(var(--px) * 460);
+}
+
+.game-story-card {
+	margin-left: calc(var(--px) * 320);
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 16);
+	width: calc(var(--px) * 1100);
+	padding: calc(var(--px) * 48);
+	border: calc(var(--px) * 10) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 40);
+	background: var(--wood);
+	text-align: center;
+}
+
+.game-story-card h2 {
+	margin: 0;
+	font-size: calc(var(--px) * 72);
+}
+
+.game-story-card p {
+	margin: 0;
+	font-size: calc(var(--px) * 46);
+	line-height: 1.4;
+}
+
+/* Training room: help words on the left, the training game on the right. */
+.game-training {
+	position: absolute;
+	inset: 0;
+}
+
+.game-training-backdrop {
+	position: absolute;
+	inset: 0;
+	background-color: #8e9bb3;
+	background-position: center;
+	background-size: cover;
+	background-repeat: no-repeat;
+}
+
+.game-training-title {
+	position: absolute;
+	top: calc(var(--px) * 28);
+	left: 50%;
+	margin: 0;
+	padding: calc(var(--px) * 12) calc(var(--px) * 40);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 24);
+	background: var(--wood);
+	font-size: calc(var(--px) * 46);
+	transform: translateX(-50%);
+}
+
+.game-training-help {
+	position: absolute;
+	top: calc(var(--px) * 140);
+	bottom: calc(var(--px) * 30);
+	left: calc(var(--px) * 30);
+	width: calc(var(--px) * 510);
+	overflow-y: auto;
+	padding: calc(var(--px) * 22);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(255 250 240 / 95%);
+	font-size: calc(var(--px) * 34);
+	-webkit-overflow-scrolling: touch;
+}
+
+.game-training-help .support-round-frame {
+	font-size: inherit;
+}
+
+.game-training-stage {
+	overflow: hidden;
+	position: absolute;
+	top: calc(var(--px) * 120);
+	right: calc(var(--px) * 20);
+	bottom: calc(var(--px) * 16);
+	left: calc(var(--px) * 560);
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: end;
+	gap: calc(var(--px) * 16);
+}
+
+.game-training-board {
+	display: grid;
+	justify-items: center;
+	align-self: start;
+	min-width: 0;
+}
+
+/* The training check button sits beside the board. */
+.game-training-stage > .game-action {
+	min-width: calc(var(--px) * 220);
+	padding: 0 calc(var(--px) * 28);
+}
+
+/* Phaser measures its parent on boot, so every canvas host has a definite size. */
+.canvas-host {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+}
+
+/* Visually hidden legends and labels. */
+.landscape-game-stage legend {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+}
+
+/* A faint answer hint in help stages. */
+.landscape-game-stage [data-ghost] {
+	color: rgb(58 42 26 / 30%);
+}

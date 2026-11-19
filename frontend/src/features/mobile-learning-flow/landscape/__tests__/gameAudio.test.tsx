@@ -14,7 +14,9 @@ function installFakeAudio() {
 		currentTime = 10;
 		destination = {};
 		resume = vi.fn(async () => undefined);
-		decodeAudioData = vi.fn(async (data: ArrayBuffer) => ({ url: new TextDecoder().decode(data) }));
+		decodeAudioData = vi.fn(async (data: ArrayBuffer) => ({
+			url: new TextDecoder().decode(data),
+		}));
 		createGain() {
 			return { gain: { value: 1 }, connect: (target: unknown) => target };
 		}
@@ -95,7 +97,9 @@ describe("game audio", () => {
 	it("does nothing without Web Audio", async () => {
 		vi.stubGlobal("AudioContext", undefined);
 		const { createGameAudio } = await freshModule();
-		expect(() => createGameAudio("/sounds", { tap: 1 }).play("tap")).not.toThrow();
+		expect(() =>
+			createGameAudio("/sounds", { tap: 1 }).play("tap"),
+		).not.toThrow();
 	});
 
 	it("lets the child switch the sound off and on from the game stage", async () => {
@@ -113,7 +117,9 @@ describe("game audio", () => {
 				</LandscapeGameStage>,
 			),
 		);
-		const button = host.querySelector<HTMLButtonElement>(".landscape-sound-button");
+		const button = host.querySelector<HTMLButtonElement>(
+			".landscape-sound-button",
+		);
 		expect(button?.getAttribute("aria-label")).toBe("ශබ්දය නවත්වන්න");
 		await act(async () => button?.click());
 		expect(audio.isGameSoundMuted()).toBe(true);

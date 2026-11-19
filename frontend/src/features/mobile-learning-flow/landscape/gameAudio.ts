@@ -73,6 +73,51 @@ export function useGameSoundMuted(): boolean {
 	);
 }
 
+/**
+ * A short, soft musical note made in the browser (a toy xylophone). `frequency` is in hertz;
+ * `noteFrequency(n)` gives the n-th note of a happy major scale starting at middle C.
+ */
+export function playTone(
+	frequency: number,
+	options: { duration?: number; delay?: number; volume?: number } = {},
+): void {
+	if (muted) return;
+	const ready = audioContext();
+	if (!ready) return;
+	if (ready.state === "suspended") void ready.resume();
+	const start = ready.currentTime + (options.delay ?? 0);
+	const duration = options.duration ?? 0.35;
+	const peak = 0.25 * (options.volume ?? 1);
+	const gain = ready.createGain();
+	gain.gain.setValueAtTime(0.0001, start);
+	gain.gain.exponentialRampToValueAtTime(peak, start + 0.01);
+	gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+	gain.connect(ready.destination);
+	// A sine plus a quiet octave above gives a wooden, bell-like toy sound.
+	for (const [multiple, level] of [
+		[1, 1],
+		[2, 0.3],
+	] as const) {
+		const oscillator = ready.createOscillator();
+		oscillator.type = "sine";
+		oscillator.frequency.value = frequency * multiple;
+		const partial = ready.createGain();
+		partial.gain.value = level;
+		oscillator.connect(partial).connect(gain);
+		oscillator.start(start);
+		oscillator.stop(start + duration + 0.05);
+	}
+}
+
+const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11];
+
+/** The n-th note (0, 1, 2 …) of the C major scale from middle C, in hertz. */
+export function noteFrequency(step: number): number {
+	const octave = Math.floor(step / MAJOR_SCALE.length);
+	const semitone = 12 * octave + (MAJOR_SCALE[((step % 7) + 7) % 7] ?? 0);
+	return 261.63 * 2 ** (semitone / 12);
+}
+
 export type PlayOptions = {
 	/** 0–1, default 1. */
 	volume?: number;
