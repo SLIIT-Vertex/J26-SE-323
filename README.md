@@ -112,7 +112,9 @@ npm run typecheck
 ### Reproducible native projects
 
 Generated Capacitor projects remain ignored, but their inputs are versioned: the locked Capacitor
-packages, `capacitor.config.json`, the production bundle, and the deterministic portrait patcher.
+packages, `capacitor.config.json`, the production bundle, and the deterministic orientation patcher.
+The app runs in portrait; full-screen games such as Addition turn the phone to landscape while
+they are open (`@capacitor/screen-orientation`).
 Regenerate and synchronize both targets from `frontend/` with:
 
 ```bash

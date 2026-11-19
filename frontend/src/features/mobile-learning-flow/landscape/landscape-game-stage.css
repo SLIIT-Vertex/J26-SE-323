@@ -1,0 +1,115 @@
+/* Full-screen landscape game layer. Sits under the camera prompt (40) and research button (60). */
+.landscape-game-layer {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	display: grid;
+	place-items: center;
+	background: #0f2a4a;
+	overflow: hidden;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.landscape-game-stage {
+	--px: calc(100cqw / 1920);
+	position: relative;
+	width: min(100vw, calc(100dvh * 16 / 9));
+	aspect-ratio: 16 / 9;
+	container-type: size;
+	overflow: hidden;
+	font-family: "Noto Sans Sinhala", "Fredoka Variable", sans-serif;
+}
+
+.landscape-back-button {
+	position: absolute;
+	top: calc(var(--px) * 24);
+	left: calc(var(--px) * 24);
+	z-index: 5;
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 96);
+	height: calc(var(--px) * 96);
+	padding: 0;
+	border: calc(var(--px) * 5) solid #fff;
+	border-radius: 50%;
+	background: #3b7dd8;
+	box-shadow: 0 calc(var(--px) * 6) 0 #1f4f96;
+	cursor: pointer;
+}
+
+.landscape-back-button svg {
+	width: 60%;
+	height: 60%;
+	fill: none;
+	stroke: #fff;
+	stroke-width: 3;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.landscape-back-button:active {
+	transform: translateY(calc(var(--px) * 4));
+	box-shadow: 0 calc(var(--px) * 2) 0 #1f4f96;
+}
+
+.landscape-back-button:focus-visible {
+	outline: 4px solid #ffd23f;
+	outline-offset: 2px;
+}
+
+.landscape-rotate-prompt {
+	display: none;
+}
+
+/* A browser that could not lock the orientation: ask the child to turn the phone. */
+@media (orientation: portrait) {
+	.landscape-game-stage {
+		display: none;
+	}
+
+	.landscape-rotate-prompt {
+		display: grid;
+		justify-items: center;
+		gap: 16px;
+		color: #fff;
+		font-family: "Noto Sans Sinhala", sans-serif;
+		font-size: 1.4rem;
+		text-align: center;
+	}
+
+	.landscape-rotate-prompt > svg {
+		width: 96px;
+		height: 96px;
+		fill: none;
+		stroke: #fff;
+		stroke-width: 2.5;
+		stroke-linecap: round;
+		animation: landscape-rotate-hint 1.8s ease-in-out infinite;
+	}
+
+	.landscape-back-button.is-inline {
+		position: static;
+		width: 64px;
+		height: 64px;
+		border-width: 4px;
+	}
+}
+
+@keyframes landscape-rotate-hint {
+	0%,
+	30% {
+		transform: rotate(0deg);
+	}
+	60%,
+	100% {
+		transform: rotate(-90deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.landscape-rotate-prompt > svg {
+		animation: none;
+	}
+}

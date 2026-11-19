@@ -30,12 +30,18 @@ if (!android.includes('android:screenOrientation="portrait"')) {
 
 const iosPath = resolve(frontend, "ios/App/App/Info.plist");
 let ios = readFileSync(iosPath, "utf8");
+// The app starts in portrait and the shell keeps it there at runtime; landscape is listed so that
+// full-screen games (Addition) can lock the phone to landscape while they are open.
 ios = replacePlistArray(ios, "UISupportedInterfaceOrientations", [
   "UIInterfaceOrientationPortrait",
+  "UIInterfaceOrientationLandscapeLeft",
+  "UIInterfaceOrientationLandscapeRight",
 ]);
 ios = replacePlistArray(ios, "UISupportedInterfaceOrientations~ipad", [
   "UIInterfaceOrientationPortrait",
   "UIInterfaceOrientationPortraitUpsideDown",
+  "UIInterfaceOrientationLandscapeLeft",
+  "UIInterfaceOrientationLandscapeRight",
 ]);
 ios = ensurePlistEntry(
   ios,
@@ -76,9 +82,9 @@ if (
 
 if (check) {
   if (readFileSync(androidPath, "utf8") !== android)
-    throw new Error("Android portrait configuration drifted");
+    throw new Error("Android orientation configuration drifted");
   if (readFileSync(iosPath, "utf8") !== ios)
-    throw new Error("iOS portrait configuration drifted");
+    throw new Error("iOS orientation configuration drifted");
 } else {
   writeFileSync(androidPath, android);
   writeFileSync(iosPath, ios);

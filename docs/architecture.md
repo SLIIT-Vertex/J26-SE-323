@@ -74,8 +74,9 @@ the encrypted event queue, accessibility, and semantic scaffold content. One reu
 half-set scene owns direct manipulation and animation only, communicating through the versioned
 `mobile-learning-react-phaser-bridge-v1` command/event boundary. The production entry mounts `MobileLearningApp`;
 legacy browser routes and the research inspector are not reachable from the child composition.
-Android and iOS projects are reproducibly generated from locked inputs and verified for portrait
-orientation. The adapter is
+Android and iOS projects are reproducibly generated from locked inputs and verified for their
+orientation settings: portrait for the app, with landscape allowed for full-screen games such as
+Addition, which lock the phone to landscape only while they are open. The adapter is
 fail-closed unless `VITE_ENABLE_MOBILE_LEARNING_DRAFT=true`; that flag is only for development and test
 composition and does not authorize child delivery.
 
