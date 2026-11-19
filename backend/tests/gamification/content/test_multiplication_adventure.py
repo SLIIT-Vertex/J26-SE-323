@@ -13,10 +13,20 @@ def test_five_activities_cover_the_textbook_ranges():
         "G5-MAT-MUL-BY-7-10-01",
         "G5-MAT-MUL-STORY-01",
     ]
-    chapters = [skill.chapter for skill in ATOMIC_SKILLS]
-    assert chapters.count("table_explorer") == 1
-    assert chapters.count("column_workshop") == 3
-    assert chapters.count("story_mission") == 1
+    assert [skill.chapter for skill in ATOMIC_SKILLS] == [
+        "bowling_buddies",
+        "turbo_race",
+        "turbo_race",
+        "turbo_race",
+        "turbo_race",
+    ]
+
+
+def test_stories_are_carnival_equal_groups():
+    for seed in range(30):
+        game = generate_item("G5-MAT-MUL-STORY-01", role="unsupported_before", seed=seed).game_data
+        assert game["asset"] in {"lap", "balloon", "medal", "flag"}
+        assert game["product"] == game["group_size"] * game["group_count"]
 
 
 def test_written_products_keep_left_to_right_digits_and_times_ten_shift():

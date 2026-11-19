@@ -130,7 +130,7 @@ export interface AdditionAdventureGameData { schema_version: "addition-adventure
 export interface NumberPatternGameData { schema_version: "number-pattern-item-v1"; chapter: "bubble_rush"; [key: string]: unknown; }
 export interface SubtractionAdventureGameData { schema_version: "subtraction-adventure-item-v1"; chapter: "monster_orders" | "fluffball_feast"; [key: string]: unknown; }
 export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "color_splash_comic" | "sticker_party" | "fold_and_pop"; [key: string]: unknown; }
-export interface MultiplicationAdventureGameData { schema_version: "multiplication-adventure-item-v1"; chapter: "table_explorer" | "column_workshop" | "story_mission"; [key: string]: unknown; }
+export interface MultiplicationAdventureGameData { schema_version: "multiplication-adventure-item-v1"; chapter: "turbo_race" | "bowling_buddies"; [key: string]: unknown; }
 export interface TimeAdventureGameData { schema_version: "time-adventure-item-v1"; chapter: "time_tools" | "twenty_four_hour_mission" | "time_journey"; [key: string]: unknown; }
 export interface DivisionAdventureGameData { schema_version: "division-adventure-item-v1"; chapter: "equal_share" | "paper_division" | "division_story"; [key: string]: unknown; }
 export interface DistanceAdventureGameData { schema_version: "distance-adventure-item-v1"; chapter: "unit_path" | "distance_calculation" | "distance_problems"; [key: string]: unknown; }

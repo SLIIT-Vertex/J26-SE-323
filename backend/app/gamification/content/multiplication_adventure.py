@@ -1,4 +1,4 @@
-"""Draft multiplication activities for G5-AREA-MAT-06.
+"""Draft multiplication activities for G5-AREA-MAT-06 (Nimo's Wacky Sports Carnival).
 
 Digit order for written products is left to right, highest place first.
 """
@@ -23,7 +23,8 @@ POLICY_VERSION = "g5-mat-multiplication-raw-ig-shadow-v1"
 SCORING_VERSION = "g5-mat-multiplication-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-multiplication-parallel-v1"
 
-Chapter = Literal["table_explorer", "column_workshop", "story_mission"]
+# Races are the missions; times-table facts are played at the bowling alley (help).
+Chapter = Literal["turbo_race", "bowling_buddies"]
 ScaffoldType = Literal["visual_guidance", "worked_parallel_example", "step_by_step_guidance"]
 PLACES = ("ten_thousands", "thousands", "hundreds", "tens", "ones")
 PLACE_LABELS = {
@@ -45,11 +46,12 @@ MISCONCEPTIONS = (
     "incomplete",
     "unknown_or_other",
 )
+# Carnival equal groups. `asset` names the picture the game draws for one group.
 STORY_CONTEXTS = (
-    {"context_id": "parcel_boxes", "label_si": "පාර්සල්", "asset": "/curriculum/game/G5-AREA-MAT-02/cargo-parcel.png"},
-    {"context_id": "bus_seats", "label_si": "බස් රථ", "asset": "/curriculum/game/G5-AREA-MAT-07/time-journey-bus.png"},
-    {"context_id": "fruit_rows", "label_si": "පේළි", "asset": "/curriculum/game/G5-AREA-MAT-02/fruit-tokens.png"},
-    {"context_id": "crate_stacks", "label_si": "පෙට්ටි", "asset": "/curriculum/game/G5-AREA-MAT-01/harbour-crate.png"},
+    {"context_id": "race_laps", "label_si": "වට", "asset": "lap"},
+    {"context_id": "balloon_bunches", "label_si": "බැලූන් පොකුරු", "asset": "balloon"},
+    {"context_id": "medal_rows", "label_si": "පදක්කම් පේළි", "asset": "medal"},
+    {"context_id": "flag_strings", "label_si": "කොඩි වැල්", "asset": "flag"},
 )
 
 
@@ -63,11 +65,11 @@ class AtomicSkill:
 
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-MUL-TABLE-01", "table_explorer", "ගුණන වගුව 1–12", "multiplication_fact", "easy"),
-    AtomicSkill("G5-MAT-MUL-BY-2-3-01", "column_workshop", "තුන් ඉලක්කම් ×2 හෝ ×3", "written_multiplication", "easy_medium"),
-    AtomicSkill("G5-MAT-MUL-BY-4-6-01", "column_workshop", "තුන් ඉලක්කම් ×4 සිට ×6", "written_multiplication", "medium"),
-    AtomicSkill("G5-MAT-MUL-BY-7-10-01", "column_workshop", "තුන් ඉලක්කම් ×7 සිට ×10", "written_multiplication", "medium_hard"),
-    AtomicSkill("G5-MAT-MUL-STORY-01", "story_mission", "එක් පියවරක ගුණන කතාව", "multiplication_story", "hard"),
+    AtomicSkill("G5-MAT-MUL-TABLE-01", "bowling_buddies", "ගුණන වගුව 1–12", "multiplication_fact", "easy"),
+    AtomicSkill("G5-MAT-MUL-BY-2-3-01", "turbo_race", "තුන් ඉලක්කම් ×2 හෝ ×3", "written_multiplication", "easy_medium"),
+    AtomicSkill("G5-MAT-MUL-BY-4-6-01", "turbo_race", "තුන් ඉලක්කම් ×4 සිට ×6", "written_multiplication", "medium"),
+    AtomicSkill("G5-MAT-MUL-BY-7-10-01", "turbo_race", "තුන් ඉලක්කම් ×7 සිට ×10", "written_multiplication", "medium_hard"),
+    AtomicSkill("G5-MAT-MUL-STORY-01", "turbo_race", "එක් පියවරක ගුණන කතාව", "multiplication_story", "hard"),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
 
@@ -163,7 +165,7 @@ def generate_item(
             "place_shift": multiplier == 10,
             "difficulty": skill.difficulty,
         }
-        prompt = "තීරු ගැලපී ගුණ කර පිළිතුර ගොඩනඟන්න."
+        prompt = f"වට {multiplier}ක මුළු ලකුණු ගණන හොයමු!"
     else:
         group_size, group_count, context = _story(rng, simpler=simpler)
         product = group_size * group_count
@@ -174,7 +176,7 @@ def generate_item(
             "product": product,
             **context,
         }
-        prompt = f"{context['label_si']} සමාන කණ්ඩායම් ලෙස ගුණ කරන්න."
+        prompt = f"{context['label_si']} {group_count}ක මුළු ගණන හොයමු!"
     revision = hashlib.sha256(
         json.dumps(
             {"skill": skill_id, "role": role, "seed": seed, "game": game}

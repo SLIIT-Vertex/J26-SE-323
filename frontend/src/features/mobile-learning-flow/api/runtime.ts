@@ -202,11 +202,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 														? ["monster_orders", "fluffball_feast"]
 														: game.schema_version ===
 																"multiplication-adventure-item-v1"
-															? [
-																	"table_explorer",
-																	"column_workshop",
-																	"story_mission",
-																]
+															? ["turbo_race", "bowling_buddies"]
 															: game.schema_version === "time-adventure-item-v1"
 																? [
 																		"time_tools",

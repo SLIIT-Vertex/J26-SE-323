@@ -1,0 +1,601 @@
+/* Nimo's Wacky Sports Carnival. Design space 1920×1080; --px is one design pixel. */
+.sports-carnival {
+	--carnival-ink: #2e2450;
+	--carnival-cream: #fff8e6;
+	--carnival-gold: #ffc93c;
+	--carnival-track: #5b5f73;
+	position: absolute;
+	inset: 0;
+	background:
+		#7ccf6b url("/curriculum/game/G5-AREA-MAT-06/bg-carnival.webp") center / cover no-repeat;
+	color: var(--carnival-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholder shapes (until the art is ready) ---- */
+
+.carnival-shape {
+	display: inline-block;
+	border-radius: 30%;
+	background: #e6e0ff;
+}
+
+.carnival-shape[data-art="nimoKart"] {
+	border-radius: 40% 40% 20% 20%;
+	background:
+		radial-gradient(circle at 45% 25%, #3f8fe0 0 18%, transparent 19%),
+		radial-gradient(circle at 25% 85%, #333 0 11%, transparent 12%),
+		radial-gradient(circle at 75% 85%, #333 0 11%, transparent 12%),
+		linear-gradient(transparent 40%, #e8443a 40% 78%, transparent 78%);
+}
+
+.carnival-shape[data-art="rivalBanana"] {
+	border-radius: 50%;
+	background: linear-gradient(
+		transparent 45%,
+		#ffd84d 45% 80%,
+		transparent 80%
+	);
+}
+
+.carnival-shape[data-art="rivalTurtle"] {
+	border-radius: 50% 50% 20% 20%;
+	background: linear-gradient(
+		transparent 35%,
+		#4caf50 35% 80%,
+		transparent 80%
+	);
+}
+
+.carnival-shape[data-art="pinUp"],
+.carnival-shape[data-art="pinDown"] {
+	border-radius: 45% 45% 35% 35%;
+	background:
+		linear-gradient(transparent 22%, #e53935 22% 30%, transparent 30%), #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 3) #c9c3d9;
+}
+
+.carnival-shape[data-art="pinDown"] {
+	opacity: 0.45;
+	transform: rotate(80deg);
+}
+
+.carnival-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.carnival-scroll,
+.carnival-message {
+	margin: 0;
+	padding: calc(var(--px) * 14) calc(var(--px) * 34);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 26);
+	background: var(--wood);
+	font-weight: 700;
+	text-align: center;
+}
+
+.carnival-scroll {
+	position: absolute;
+	top: calc(var(--px) * 24);
+	left: 50%;
+	max-width: calc(var(--px) * 1240);
+	font-size: calc(var(--px) * 40);
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.carnival-message {
+	font-size: calc(var(--px) * 34);
+}
+
+/* ---- Score wheels ---- */
+
+.score-wheels {
+	display: flex;
+	justify-content: center;
+	gap: calc(var(--px) * 14);
+}
+
+.score-wheel {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	width: calc(var(--px) * 128);
+	border-radius: calc(var(--px) * 28);
+	background: #2e2450;
+	box-shadow: 0 calc(var(--px) * 8) 0 #1b1533;
+}
+
+.score-wheel button {
+	width: 100%;
+	min-height: calc(var(--px) * 76);
+	border: 0;
+	background: transparent;
+	color: var(--carnival-gold);
+	font: inherit;
+	font-size: calc(var(--px) * 38);
+}
+
+.score-wheel strong {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 104);
+	height: calc(var(--px) * 110);
+	border-radius: calc(var(--px) * 18);
+	background: var(--carnival-cream);
+	font-size: calc(var(--px) * 78);
+	font-weight: 800;
+}
+
+.score-ghost {
+	position: absolute;
+	top: calc(var(--px) * 76);
+	right: calc(var(--px) * 8);
+	color: #b7a6e8;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.score-wheel:not([data-ghost]) .score-ghost {
+	display: none;
+}
+
+/* ---- Turbo Race (the mission) ---- */
+
+.turbo-race {
+	position: absolute;
+	inset: 0;
+}
+
+/* The karts drive on the painted road (about 42–70% of the height). */
+.race-track {
+	position: absolute;
+	top: calc(var(--px) * 440);
+	right: 0;
+	left: 0;
+	height: calc(var(--px) * 330);
+	overflow: hidden;
+}
+
+.race-kart {
+	position: absolute;
+	bottom: calc(var(--px) * 8);
+	left: calc(var(--px) * -320);
+	width: calc(var(--px) * 280);
+	height: calc(var(--px) * 245);
+	animation: race-lap var(--lap-ms) linear forwards;
+}
+
+.turbo-race:not([data-racing]) .race-kart {
+	left: calc(var(--px) * 1500);
+	animation: none;
+}
+
+.race-kart-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.race-dust {
+	position: absolute;
+	bottom: 0;
+	left: calc(var(--px) * -110);
+	width: calc(var(--px) * 160);
+	height: calc(var(--px) * 120);
+	opacity: 0.7;
+}
+
+.race-kart[data-boost] .race-dust {
+	transform: scale(1.4);
+}
+
+.race-rival {
+	position: absolute;
+	top: calc(var(--px) * 4);
+	width: calc(var(--px) * 200);
+	height: calc(var(--px) * 160);
+	object-fit: contain;
+	animation: race-rival 5s linear infinite;
+}
+
+.race-rival-2 {
+	animation-duration: 7s;
+	animation-delay: -3s;
+}
+
+/* Lap stamps hang in the sky, under the instruction. */
+.race-stamps {
+	position: absolute;
+	top: calc(var(--px) * 140);
+	left: 50%;
+	display: flex;
+	gap: calc(var(--px) * 10);
+	margin: 0;
+	padding: 0;
+	transform: translateX(-50%);
+	list-style: none;
+}
+
+.race-stamps li {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 96);
+	height: calc(var(--px) * 96);
+	padding: 0 calc(var(--px) * 8);
+	border: calc(var(--px) * 5) dashed #fff;
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 255 255 / 35%);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	line-height: 1.1;
+}
+
+.race-stamps li[data-done] {
+	border-style: solid;
+	border-color: var(--carnival-gold);
+	background: var(--carnival-cream);
+	animation: race-stamp 300ms ease-out;
+}
+
+.race-turbo {
+	position: absolute;
+	right: calc(var(--px) * 40);
+	bottom: calc(var(--px) * 60);
+}
+
+.race-booth {
+	position: absolute;
+	right: calc(var(--px) * 40);
+	bottom: calc(var(--px) * 24);
+	left: calc(var(--px) * 40);
+	display: grid;
+	grid-template-columns: auto auto auto;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 30);
+}
+
+.race-board {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 14);
+	padding: calc(var(--px) * 16) calc(var(--px) * 24);
+	border: calc(var(--px) * 8) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 28);
+	background: var(--carnival-cream);
+}
+
+.race-board > span:not(.race-times) {
+	display: grid;
+	justify-items: center;
+}
+
+.race-board strong {
+	font-size: calc(var(--px) * 64);
+}
+
+.race-board small {
+	font-size: calc(var(--px) * 24);
+	font-weight: 700;
+}
+
+.race-times {
+	font-size: calc(var(--px) * 56);
+	font-weight: 800;
+}
+
+.race-total strong {
+	color: #b8932a;
+}
+
+.turbo-race[data-outcome="correct"] .race-board {
+	box-shadow: 0 0 calc(var(--px) * 50) var(--carnival-gold);
+}
+
+.turbo-race[data-outcome="correct"] .race-kart {
+	animation: race-victory 1.4s ease-in-out infinite alternate;
+}
+
+.turbo-race[data-outcome="wrong"] .race-kart {
+	animation: race-sputter 200ms ease-in-out 4;
+}
+
+.race-send {
+	min-width: calc(var(--px) * 300);
+}
+
+/* ---- The Dancing Stadium ---- */
+
+.stadium,
+.bowling {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+	max-width: calc(var(--px) * 1080);
+}
+
+.stadium-blocks {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 16);
+}
+
+.stadium-split {
+	padding: calc(var(--px) * 6) calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 20);
+	background: var(--carnival-cream);
+	font-size: calc(var(--px) * 40);
+	font-weight: 800;
+}
+
+.stadium-block,
+.bowling-lane,
+.bowling-roll {
+	min-height: 0;
+	color: inherit;
+	font: inherit;
+}
+
+.stadium-block {
+	min-width: calc(var(--px) * 150);
+	min-height: calc(var(--px) * 90);
+	border: calc(var(--px) * 6) solid #fff;
+	border-radius: calc(var(--px) * 22);
+	font-size: calc(var(--px) * 44);
+	font-weight: 800;
+}
+
+.stadium-block[data-place="hundreds"],
+.stadium-seats[data-place="hundreds"],
+.stadium-sum[data-place="hundreds"] {
+	background: #ffb3c8;
+}
+
+.stadium-block[data-place="tens"],
+.stadium-seats[data-place="tens"],
+.stadium-sum[data-place="tens"] {
+	background: #9fd4ff;
+}
+
+.stadium-block[data-place="ones"],
+.stadium-seats[data-place="ones"],
+.stadium-sum[data-place="ones"] {
+	background: #ffe08a;
+}
+
+.stadium-block[aria-pressed="true"] {
+	opacity: 0.5;
+}
+
+.stadium-block[data-ghost] {
+	outline: calc(var(--px) * 6) dashed var(--carnival-gold);
+}
+
+.stadium-stands {
+	display: grid;
+	gap: calc(var(--px) * 4);
+	width: 100%;
+}
+
+/* Up to ten stands (×10) still leave room for the score wheels. */
+.stadium-stand {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 10);
+	min-height: calc(var(--px) * 38);
+	padding: calc(var(--px) * 2) calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 18);
+	background: rgb(255 255 255 / 75%);
+}
+
+.stadium[data-wave] .stadium-stand {
+	animation: stadium-wave 700ms ease-in-out infinite alternate;
+}
+
+.stadium-stand-name {
+	min-width: calc(var(--px) * 130);
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+}
+
+.stadium-seats {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 6);
+	padding: 0 calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 14);
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.stadium-sums {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: calc(var(--px) * 14);
+}
+
+.stadium-sum {
+	padding: calc(var(--px) * 6) calc(var(--px) * 18);
+	border-radius: calc(var(--px) * 18);
+	font-size: calc(var(--px) * 34);
+	font-weight: 800;
+}
+
+.stadium-total {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 20);
+	font-size: calc(var(--px) * 34);
+	font-weight: 800;
+}
+
+.stadium-total .score-wheel button {
+	min-height: calc(var(--px) * 60);
+}
+
+.stadium-total .score-wheel strong {
+	height: calc(var(--px) * 90);
+	font-size: calc(var(--px) * 64);
+}
+
+/* ---- Bowling Buddies ---- */
+
+.bowling-lanes {
+	display: grid;
+	grid-template-columns: repeat(var(--lanes), minmax(0, 1fr));
+	gap: calc(var(--px) * 12);
+	width: 100%;
+}
+
+.bowling-lane {
+	display: grid;
+	justify-items: center;
+	align-content: start;
+	gap: calc(var(--px) * 6);
+	min-height: calc(var(--px) * 230);
+	padding: calc(var(--px) * 10);
+	border: calc(var(--px) * 5) solid #d8b27a;
+	border-radius: calc(var(--px) * 22);
+	background: linear-gradient(#ffe7b8, #f1c37a);
+}
+
+/* A lane that is set up stays bright: it is done, not unavailable. */
+.bowling-lane:disabled {
+	opacity: 1;
+	color: inherit;
+}
+
+.bowling-lane[data-ghost] {
+	outline: calc(var(--px) * 6) dashed var(--carnival-gold);
+}
+
+.bowling-lane-name {
+	font-size: calc(var(--px) * 24);
+	font-weight: 700;
+}
+
+.bowling-pins {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: calc(var(--px) * 2);
+	min-height: calc(var(--px) * 110);
+}
+
+.bowling-pin {
+	width: calc(var(--px) * 30);
+	height: calc(var(--px) * 56);
+	object-fit: contain;
+}
+
+/* A knocked-down pin lies on its side: a wide box. */
+.bowling-lane[data-knocked] .bowling-pin {
+	width: calc(var(--px) * 58);
+	height: calc(var(--px) * 40);
+}
+
+.bowling-lane[data-knocked] .bowling-pins {
+	animation: bowling-tumble 400ms ease-out;
+}
+
+.bowling-lane-count {
+	font-size: calc(var(--px) * 44);
+}
+
+.bowling-score {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 6);
+	padding: calc(var(--px) * 10) calc(var(--px) * 26);
+	border-radius: calc(var(--px) * 24);
+	background: var(--carnival-cream);
+}
+
+.bowling-sum {
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+}
+
+.bowling-times {
+	font-size: calc(var(--px) * 52);
+}
+
+.bowling-roll {
+	min-height: calc(var(--px) * 100);
+	padding: 0 calc(var(--px) * 40);
+	border: 0;
+	border-radius: calc(var(--px) * 50);
+	background: #8e5cf0;
+	box-shadow: 0 calc(var(--px) * 8) 0 #6338c2;
+	color: #fff;
+	font-size: calc(var(--px) * 40);
+	font-weight: 800;
+}
+
+@keyframes race-lap {
+	to {
+		left: 100%;
+	}
+}
+
+@keyframes race-rival {
+	from {
+		left: calc(var(--px) * -240);
+	}
+	to {
+		left: 100%;
+	}
+}
+
+@keyframes race-stamp {
+	from {
+		transform: scale(1.4);
+	}
+}
+
+@keyframes race-victory {
+	to {
+		transform: translateY(calc(var(--px) * -20)) rotate(-4deg);
+	}
+}
+
+@keyframes race-sputter {
+	50% {
+		transform: translateX(calc(var(--px) * -10)) rotate(3deg);
+	}
+}
+
+@keyframes stadium-wave {
+	to {
+		transform: translateY(calc(var(--px) * -8));
+	}
+}
+
+@keyframes bowling-tumble {
+	50% {
+		transform: rotate(-12deg) translateY(calc(var(--px) * 10));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.race-kart,
+	.race-rival,
+	.race-stamps li,
+	.stadium-stand,
+	.bowling-pins {
+		animation: none;
+	}
+}
