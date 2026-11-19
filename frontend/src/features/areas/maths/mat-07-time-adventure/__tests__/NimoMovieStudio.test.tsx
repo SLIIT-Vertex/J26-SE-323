@@ -1,6 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MovieMayhem } from "../MovieMayhem";
 import { NimoMovieStudio } from "../NimoMovieStudio";
 import { PuppetShow } from "../PuppetShow";
 import { readTask } from "../studioRules";
@@ -114,6 +115,7 @@ describe("Nimo's Silly Movie Studio", () => {
 
 	beforeEach(() => {
 		vi.useFakeTimers({ shouldAdvanceTime: true });
+		localStorage.clear();
 		host = document.createElement("div");
 		document.body.append(host);
 		root = createRoot(host);
@@ -179,6 +181,10 @@ describe("Nimo's Silly Movie Studio", () => {
 			);
 		});
 		await tap(byText(host, "රූගත කරමු!"));
+		// The first time, Nimo shows how to play (finished at once with reduced motion).
+		expect(host.querySelector(".studio-demo")).not.toBeNull();
+		expect(api.open).not.toHaveBeenCalled();
+		await tap(byText(host, "දැන් ඔබේ වාරය!"));
 		expect(api.open).toHaveBeenCalledWith(
 			expect.objectContaining({
 				area_id: "G5-AREA-MAT-07",
@@ -187,8 +193,12 @@ describe("Nimo's Silly Movie Studio", () => {
 			expect.any(String),
 		);
 		// 06:20 → 07:10 built as 1 hour (a base-100 slip), not 50 minutes.
-		await tap(byText(host, "+ පැය 1 රීලය"));
-		expect(host.querySelector(".filmstrip-total")?.textContent).toBe("පැය 1");
+		expect(host.querySelectorAll(".scene-clock .studio-clock")).toHaveLength(2);
+		await tap(byLabel(host, "පැය 1 ෆිල්ම් එක දාන්න"));
+		expect(host.querySelector(".film-readout strong")?.textContent).toBe(
+			"පැය 1",
+		);
+		expect(host.querySelector(".movie-nimo")).not.toBeNull();
 		await tap(byText(host, "🎬 රූගත කරමු!"));
 		const [, body] = api.answerBefore.mock.calls[0] as unknown as [
 			string,
@@ -310,6 +320,111 @@ describe("Tick-Tock Puppet Show", () => {
 		expect(onResponse).toHaveBeenLastCalledWith({
 			kind: "time_unit_match",
 			matches: [1, 0],
+		});
+	});
+});
+
+describe("Movie Time Mayhem film actions", () => {
+	let host: HTMLDivElement;
+	let root: Root;
+
+	beforeEach(() => {
+		host = document.createElement("div");
+		document.body.append(host);
+		root = createRoot(host);
+	});
+
+	afterEach(async () => {
+		await act(async () => root.unmount());
+		host.remove();
+		vi.clearAllMocks();
+	});
+
+	const render = async (
+		game: Record<string, unknown>,
+		onSubmit: (response: unknown) => void,
+	) =>
+		act(async () =>
+			root.render(
+				<MovieMayhem
+					task={readTask(game)}
+					prompt="scene"
+					scene="🦖"
+					returning={false}
+					outcome="playing"
+					busy={false}
+					evidence={evidence}
+					onShowHow={() => undefined}
+					onSubmit={onSubmit}
+				/>,
+			),
+		);
+
+	it("snaps 10-minute strips into an hour reel when adding two scenes", async () => {
+		const onSubmit = vi.fn();
+		await render(
+			{
+				response_kind: "time_arithmetic",
+				operation: "add",
+				left_hours: 1,
+				left_minutes: 40,
+				right_hours: 1,
+				right_minutes: 30,
+			},
+			onSubmit,
+		);
+		await tap(byLabel(host, "පැය 1 ෆිල්ම් එක දාන්න"));
+		await tap(byLabel(host, "පැය 1 ෆිල්ම් එක දාන්න"));
+		for (let strip = 0; strip < 7; strip++)
+			await tap(byLabel(host, "මිනිත්තු 10 ෆිල්ම් එක දාන්න"));
+		expect(host.querySelector(".film-flash")).toBeNull();
+		expect(
+			host.querySelectorAll(".film-track .film-piece[data-minutes='60']"),
+		).toHaveLength(3);
+		expect(host.querySelector(".film-readout strong")?.textContent).toBe(
+			"පැය 3 මිනිත්තු 10",
+		);
+		await tap(byText(host, "🎬 රූගත කරමු!"));
+		expect(onSubmit).toHaveBeenCalledWith({
+			kind: "time_arithmetic",
+			hours: 3,
+			minutes: 10,
+			regrouped: true,
+		});
+	});
+
+	it("cuts the short scene off the long one, snipping an hour into minutes", async () => {
+		const onSubmit = vi.fn();
+		await render(
+			{
+				response_kind: "time_arithmetic",
+				operation: "subtract",
+				left_hours: 2,
+				left_minutes: 20,
+				right_hours: 1,
+				right_minutes: 50,
+			},
+			onSubmit,
+		);
+		expect(host.querySelector(".film-readout strong")?.textContent).toBe(
+			"පැය 2 මිනිත්තු 20",
+		);
+		await tap(byLabel(host, "පැය 1 කපා ඉවත් කරන්න"));
+		await tap(byText(host, "✂️ පැය 1 → මිනිත්තු 10 × 6"));
+		for (let strip = 0; strip < 5; strip++)
+			await tap(byLabel(host, "මිනිත්තු 10 කපා ඉවත් කරන්න"));
+		expect(host.querySelector(".film-cut-pile strong")?.textContent).toBe(
+			"පැය 1 මිනිත්තු 50",
+		);
+		expect(host.querySelector(".film-readout strong")?.textContent).toBe(
+			"මිනිත්තු 30",
+		);
+		await tap(byText(host, "🎬 රූගත කරමු!"));
+		expect(onSubmit).toHaveBeenCalledWith({
+			kind: "time_arithmetic",
+			hours: 0,
+			minutes: 30,
+			regrouped: true,
 		});
 	});
 });

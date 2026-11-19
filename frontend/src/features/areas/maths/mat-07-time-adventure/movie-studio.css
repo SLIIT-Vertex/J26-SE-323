@@ -7,7 +7,8 @@
 	position: absolute;
 	inset: 0;
 	background:
-		#e8c88f url("/curriculum/game/G5-AREA-MAT-07/bg-studio.webp") center / cover no-repeat;
+		#e8c88f url("/curriculum/game/G5-AREA-MAT-07/bg-studio.webp") center / cover
+		no-repeat;
 	color: var(--studio-ink);
 	font-size: calc(var(--px) * 40);
 }
@@ -18,24 +19,6 @@
 	display: inline-block;
 	border-radius: 30%;
 	background: #e7defb;
-}
-
-.studio-shape[data-art="owl"] {
-	border-radius: 50% 50% 40% 40%;
-	background:
-		radial-gradient(
-			circle at 35% 35%,
-			#fff 0 10%,
-			#2d2350 11% 15%,
-			transparent 16%
-		),
-		radial-gradient(
-			circle at 65% 35%,
-			#fff 0 10%,
-			#2d2350 11% 15%,
-			transparent 16%
-		),
-		#a8743f;
 }
 
 .studio-icon {
@@ -76,24 +59,6 @@
 
 .studio-message {
 	font-size: calc(var(--px) * 32);
-}
-
-/* Toon actors: a strip of nine frames; the move picks the frames. */
-.studio-actor {
-	display: block;
-	width: calc(var(--px) * 150);
-	height: calc(var(--px) * 200);
-	background-repeat: no-repeat;
-	background-size: 900% 100%;
-	background-position-x: calc(var(--frame) * 12.5%);
-}
-
-.studio-actor[data-move="cheer"] {
-	animation: actor-cheer 500ms steps(1) infinite;
-}
-
-.studio-actor[data-move="walk"] {
-	animation: actor-walk 600ms steps(1) infinite;
 }
 
 /* ---- The analogue clock ---- */
@@ -168,34 +133,6 @@
 	inset: 0;
 }
 
-/* The set's shop fronts show above the scene card, which stands in front of their base. */
-.movie-set {
-	position: absolute;
-	top: calc(var(--px) * 120);
-	left: 50%;
-	width: calc(var(--px) * 1040);
-	height: calc(var(--px) * 430);
-	object-fit: contain;
-	object-position: bottom;
-	transform: translateX(-50%);
-}
-
-/* The actor waits in the open space under the owl, clear of the scene card. */
-.movie-actor {
-	position: absolute;
-	top: calc(var(--px) * 420);
-	right: calc(var(--px) * 70);
-	z-index: 1;
-	width: calc(var(--px) * 190);
-	height: calc(var(--px) * 254);
-}
-
-.movie-mayhem[data-outcome="correct"] .movie-actor {
-	animation:
-		actor-cheer 500ms steps(1) infinite,
-		actor-hop 500ms ease-in-out infinite alternate;
-}
-
 .movie-nimo {
 	position: absolute;
 	bottom: calc(var(--px) * 10);
@@ -207,18 +144,10 @@
 	object-position: bottom;
 }
 
-.movie-owl {
-	position: absolute;
-	top: calc(var(--px) * 130);
-	right: calc(var(--px) * 40);
-	width: calc(var(--px) * 240);
-	height: calc(var(--px) * 260);
-	object-fit: contain;
-}
-
+/* The scene card fills the middle, under the instruction. */
 .scene-card {
 	position: absolute;
-	top: calc(var(--px) * 470);
+	top: calc(var(--px) * 175);
 	left: calc(var(--px) * 380);
 	z-index: 1;
 	display: grid;
@@ -255,46 +184,17 @@
 	transform: translateX(-50%);
 }
 
-.scene-times {
-	display: flex;
-	align-items: center;
-	gap: calc(var(--px) * 18);
-}
-
-.scene-time {
-	display: grid;
-	justify-items: center;
-	gap: calc(var(--px) * 4);
-	padding: calc(var(--px) * 8) calc(var(--px) * 22);
-	border: calc(var(--px) * 5) solid #c9b3f0;
-	border-radius: calc(var(--px) * 22);
-	background: #f3edff;
-}
-
-.scene-time small {
-	font-size: calc(var(--px) * 26);
-	font-weight: 700;
-	color: var(--studio-purple);
-}
-
-.scene-time strong {
-	font-size: calc(var(--px) * 52);
-}
-
-.scene-ask {
-	border-color: var(--studio-gold);
-	background: #fff6d6;
-}
-
 .scene-arrow {
 	font-size: calc(var(--px) * 46);
 	font-weight: 800;
 	color: var(--studio-purple);
 }
 
-.scene-exchange,
 .film-add,
 .film-remove,
+.film-snip,
+.movie-how,
+.demo-skip,
 .ff-step,
 .ff-again,
 .puppet-period,
@@ -307,100 +207,12 @@
 	font: inherit;
 }
 
-.scene-exchange {
-	padding: calc(var(--px) * 10) calc(var(--px) * 24);
-	border: calc(var(--px) * 5) dashed #c9b3f0;
-	border-radius: calc(var(--px) * 30);
-	background: #fff;
-	font-size: calc(var(--px) * 28);
-	font-weight: 700;
-}
-
-.scene-exchange[aria-pressed="true"] {
-	border-style: solid;
-	border-color: var(--studio-gold);
-	background: #fff1c2;
-}
-
 .scene-send {
 	position: absolute;
 	right: calc(var(--px) * 30);
 	bottom: calc(var(--px) * 40);
 	z-index: 1;
 	min-width: calc(var(--px) * 320);
-}
-
-/* The filmstrip builder. */
-.filmstrip-builder {
-	display: grid;
-	justify-items: center;
-	gap: calc(var(--px) * 10);
-}
-
-.filmstrip {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	justify-content: center;
-	gap: calc(var(--px) * 4);
-	min-width: calc(var(--px) * 600);
-	min-height: calc(var(--px) * 86);
-	padding: calc(var(--px) * 8) calc(var(--px) * 16);
-	border-block: calc(var(--px) * 12) dotted #fff;
-	background: #3b2f5c;
-}
-
-.filmstrip-empty {
-	color: #c9bde8;
-	font-size: calc(var(--px) * 26);
-}
-
-.film-piece {
-	display: grid;
-	place-items: center;
-	height: calc(var(--px) * 60);
-	border-radius: calc(var(--px) * 8);
-	background: #8fd3ff;
-	font-size: calc(var(--px) * 24);
-	font-weight: 800;
-}
-
-.film-piece[data-minutes="60"] {
-	width: calc(var(--px) * 74);
-	border-radius: 50%;
-	background: var(--studio-gold);
-}
-
-.film-piece[data-minutes="10"] {
-	width: calc(var(--px) * 46);
-}
-
-.film-piece[data-minutes="5"] {
-	width: calc(var(--px) * 30);
-	background: #c8ecff;
-}
-
-.filmstrip-total {
-	font-size: calc(var(--px) * 40);
-}
-
-.filmstrip-buttons {
-	display: flex;
-	gap: calc(var(--px) * 12);
-}
-
-.film-add {
-	min-height: calc(var(--px) * 84);
-	padding: 0 calc(var(--px) * 22);
-	border-radius: calc(var(--px) * 24);
-	background: var(--studio-purple);
-	color: #fff;
-	font-size: calc(var(--px) * 28);
-	font-weight: 800;
-}
-
-.film-add[data-minutes="60"] {
-	background: #e0a21c;
 }
 
 .film-remove {
@@ -733,43 +545,335 @@
 	background: #e6f7dd;
 }
 
-.unit-puppet {
-	grid-row: span 2;
-	width: calc(var(--px) * 64);
-	height: calc(var(--px) * 64);
-	object-fit: contain;
-}
-
-@keyframes actor-cheer {
-	0% {
-		background-position-x: calc(5 * 12.5%);
-	}
-	50% {
-		background-position-x: calc(6 * 12.5%);
-	}
-}
-
-@keyframes actor-walk {
-	0% {
-		background-position-x: calc(1 * 12.5%);
-	}
-	25% {
-		background-position-x: calc(2 * 12.5%);
-	}
-	50% {
-		background-position-x: calc(3 * 12.5%);
-	}
-	75% {
-		background-position-x: calc(4 * 12.5%);
-	}
-}
-
 @keyframes actor-hop {
 	to {
 		transform: translateY(calc(var(--px) * -24));
 	}
 }
 
+/* The scene card: what is filmed, then the clocks or lengths. */
+.scene-top {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 22);
+}
+
+.scene-frame {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 150);
+	border-block: calc(var(--px) * 14) dotted #fff;
+	border-radius: calc(var(--px) * 12);
+	background: #3b2f5c;
+	font-size: calc(var(--px) * 90);
+}
+
+.scene-clock,
+.scene-length {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 4);
+	padding: calc(var(--px) * 8) calc(var(--px) * 18);
+	border: calc(var(--px) * 5) solid #c9b3f0;
+	border-radius: calc(var(--px) * 22);
+	background: #f3edff;
+}
+
+.scene-clock small,
+.scene-length small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+	color: var(--studio-purple);
+}
+
+.scene-clock .studio-clock {
+	width: calc(var(--px) * 170);
+}
+
+.scene-reading {
+	font-size: calc(var(--px) * 44);
+}
+
+/* The film track: the scene's length as pieces laid in a row. */
+.film-track {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 12);
+	width: 100%;
+	min-height: calc(var(--px) * 110);
+	padding: calc(var(--px) * 6) calc(var(--px) * 14);
+	box-sizing: border-box;
+	border-block: calc(var(--px) * 14) dotted #fff;
+	border-radius: calc(var(--px) * 10);
+	background: #3b2f5c;
+}
+
+.film-start {
+	flex: none;
+	padding: calc(var(--px) * 6) calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 14);
+	background: var(--studio-gold);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.film-pieces {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: calc(var(--px) * 6);
+}
+
+.film-empty {
+	color: #c9bde8;
+	font-size: calc(var(--px) * 28);
+}
+
+.film-piece {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	min-height: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--studio-ink);
+	font: inherit;
+}
+
+.film-piece-art {
+	display: block;
+	height: calc(var(--px) * var(--piece-h, 64));
+	border-radius: calc(var(--px) * 8);
+	background:
+		repeating-linear-gradient(
+			90deg,
+			transparent 0 calc(var(--px) * 6),
+			rgb(0 0 0 / 18%) calc(var(--px) * 6) calc(var(--px) * 8)
+		),
+		#8fd3ff;
+}
+
+.film-piece[data-minutes="10"] .film-piece-art {
+	width: calc(var(--px) * 56);
+}
+
+.film-piece[data-minutes="5"] .film-piece-art {
+	width: calc(var(--px) * 30);
+	background: #c8ecff;
+}
+
+.film-piece[data-minutes="60"] .film-piece-art {
+	width: calc(var(--px) * var(--reel, 86));
+	height: calc(var(--px) * var(--reel, 86));
+	border: calc(var(--px) * 8) solid #b9831c;
+	border-radius: 50%;
+	box-sizing: border-box;
+	background: radial-gradient(
+		circle,
+		#3b2f5c 0 14%,
+		var(--studio-gold) 15% 26%,
+		#3b2f5c 27% 34%,
+		var(--studio-gold) 35%
+	);
+}
+
+.film-piece-text {
+	position: absolute;
+	font-size: calc(var(--px) * 22);
+	font-weight: 800;
+}
+
+.film-piece[data-minutes="60"] .film-piece-text {
+	bottom: calc(var(--px) * -26);
+	color: #fff;
+}
+
+.film-track .film-piece[data-minutes="60"] {
+	margin-bottom: calc(var(--px) * 20);
+}
+
+.film-flash {
+	position: absolute;
+	top: calc(var(--px) * -44);
+	right: calc(var(--px) * 20);
+	padding: calc(var(--px) * 4) calc(var(--px) * 18);
+	border-radius: calc(var(--px) * 18);
+	background: var(--studio-gold);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	animation: ff-flash 600ms ease-out;
+}
+
+.film-controls,
+.film-add-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 12);
+}
+
+.film-add {
+	--piece-h: 44;
+	--reel: 56;
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 10);
+	min-height: calc(var(--px) * 96);
+	padding: 0 calc(var(--px) * 22);
+	border-radius: calc(var(--px) * 26);
+	background: var(--studio-purple);
+	color: #fff;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.film-add:disabled {
+	opacity: 1;
+}
+
+.film-cut-pile {
+	--piece-h: 36;
+	--reel: 44;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 4);
+	min-width: calc(var(--px) * 300);
+	padding: calc(var(--px) * 8) calc(var(--px) * 14);
+	border: calc(var(--px) * 5) dashed #e58a8a;
+	border-radius: calc(var(--px) * 20);
+	background: #fff4f4;
+}
+
+.film-cut-pile small {
+	font-size: calc(var(--px) * 24);
+	font-weight: 700;
+}
+
+.film-cut-pile > span {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--px) * 4);
+	min-height: calc(var(--px) * 40);
+}
+
+.film-snip {
+	min-height: calc(var(--px) * 84);
+	padding: 0 calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 24);
+	background: #e0a21c;
+	font-size: calc(var(--px) * 26);
+	font-weight: 800;
+}
+
+.film-snip:disabled {
+	opacity: 0.45;
+}
+
+.film-readout {
+	margin: 0;
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+}
+
+/* The ? button replays how to play. */
+.movie-how {
+	position: absolute;
+	top: calc(var(--px) * 24);
+	right: calc(var(--px) * 30);
+	z-index: 2;
+	width: calc(var(--px) * 96);
+	height: calc(var(--px) * 96);
+	border-radius: 50%;
+	background: var(--studio-gold);
+	box-shadow: 0 calc(var(--px) * 6) 0 #b9831c;
+	font-size: calc(var(--px) * 52);
+	font-weight: 800;
+}
+
+/* ---- How to play (the demo) ---- */
+
+.studio-demo {
+	position: absolute;
+	inset: 0;
+	z-index: 4;
+	background:
+		url("/curriculum/game/G5-AREA-MAT-07/bg-studio.webp") center / cover
+		no-repeat,
+		#e8c88f;
+}
+
+/* The pointing hand on whatever the demo is doing now. */
+[data-cue] {
+	position: relative;
+	box-shadow: 0 0 0 calc(var(--px) * 6) var(--studio-gold);
+}
+
+[data-cue]::after {
+	content: "👆";
+	position: absolute;
+	bottom: calc(var(--px) * -70);
+	left: 50%;
+	font-size: calc(var(--px) * 64);
+	transform: translateX(-50%);
+	animation: demo-tap 700ms ease-in-out infinite alternate;
+	pointer-events: none;
+}
+
+.demo-film {
+	position: absolute;
+	right: calc(var(--px) * 30);
+	bottom: calc(var(--px) * 160);
+	padding: calc(var(--px) * 18) calc(var(--px) * 30);
+	border-radius: calc(var(--px) * 50);
+	background: var(--go);
+	color: #fff;
+	font-size: calc(var(--px) * 40);
+	font-weight: 800;
+}
+
+.demo-actions {
+	position: absolute;
+	right: calc(var(--px) * 30);
+	bottom: calc(var(--px) * 36);
+}
+
+.demo-skip {
+	min-height: calc(var(--px) * 96);
+	padding: 0 calc(var(--px) * 30);
+	border-radius: calc(var(--px) * 48);
+	background: var(--wood);
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+}
+
+.movie-mayhem[data-outcome="correct"] .movie-nimo {
+	animation: actor-hop 400ms ease-in-out infinite alternate;
+}
+
+.movie-mayhem[data-outcome="wrong"] .movie-nimo {
+	animation: demo-wobble 250ms ease-in-out 3;
+}
+
+@keyframes demo-tap {
+	to {
+		transform: translate(-50%, calc(var(--px) * -16));
+	}
+}
+
+@keyframes demo-wobble {
+	25% {
+		transform: rotate(-5deg);
+	}
+	75% {
+		transform: rotate(5deg);
+	}
+}
 @keyframes puppet-bob {
 	to {
 		transform: translateY(calc(var(--px) * -12)) rotate(6deg);
@@ -784,8 +888,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.studio-actor,
-	.movie-mayhem[data-outcome="correct"] .movie-actor,
+	.movie-nimo,
+	.film-flash,
+	[data-cue]::after,
 	.puppet-sky,
 	.fast-forward[data-flash] .ff-digital strong {
 		animation: none;

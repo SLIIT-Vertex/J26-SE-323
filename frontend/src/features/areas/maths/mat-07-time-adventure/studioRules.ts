@@ -204,3 +204,80 @@ export function studioTrainingPlace(task: StudioTask): StudioPlace {
 		? "fast-forward"
 		: "puppet-show";
 }
+
+// ---- The film: a scene's length as pieces (an hour reel, 10- and 5-minute strips) ----
+
+export type Piece = 60 | 10 | 5;
+
+export const filmMinutes = (pieces: readonly Piece[]) =>
+	pieces.reduce((sum, piece) => sum + piece, 0);
+
+/** Hour reels first, then 10s, then 5s: the tidy way a length is laid out. */
+export function sortFilm(pieces: readonly Piece[]): Piece[] {
+	return [...pieces].sort((a, b) => b - a);
+}
+
+/** A length laid out as pieces (2 h 25 → 60, 60, 10, 10, 5). */
+export function layFilm(minutes: number): Piece[] {
+	const pieces: Piece[] = [];
+	let rest = Math.max(0, minutes);
+	while (rest >= 60) {
+		pieces.push(60);
+		rest -= 60;
+	}
+	while (rest >= 10) {
+		pieces.push(10);
+		rest -= 10;
+	}
+	while (rest >= 5) {
+		pieces.push(5);
+		rest -= 5;
+	}
+	return pieces;
+}
+
+/**
+ * Add a piece. When the minute strips reach 60 minutes they snap together into one hour reel
+ * (60 minutes = 1 hour); `merged` says whether that happened.
+ */
+export function addPiece(
+	pieces: readonly Piece[],
+	piece: Piece,
+): { pieces: Piece[]; merged: boolean } {
+	const next = [...pieces, piece];
+	const minuteStrips = next.filter((part) => part !== 60);
+	if (filmMinutes(minuteStrips) < 60) return { pieces: next, merged: false };
+	let taken = 0;
+	const left: Piece[] = [];
+	for (const part of sortFilm(minuteStrips)) {
+		if (taken + part <= 60 && taken < 60) taken += part;
+		else left.push(part);
+	}
+	return {
+		pieces: sortFilm([...next.filter((part) => part === 60), 60, ...left]),
+		merged: true,
+	};
+}
+
+/** Snip one hour reel into six 10-minute strips (1 hour = 60 minutes). */
+export function snipHour(pieces: readonly Piece[]): Piece[] {
+	const at = pieces.indexOf(60);
+	if (at === -1) return [...pieces];
+	return sortFilm([
+		...pieces.slice(0, at),
+		...pieces.slice(at + 1),
+		10,
+		10,
+		10,
+		10,
+		10,
+		10,
+	]);
+}
+
+/** Snip one 10-minute strip into two 5-minute strips. */
+export function snipTen(pieces: readonly Piece[]): Piece[] {
+	const at = pieces.indexOf(10);
+	if (at === -1) return [...pieces];
+	return sortFilm([...pieces.slice(0, at), ...pieces.slice(at + 1), 5, 5]);
+}

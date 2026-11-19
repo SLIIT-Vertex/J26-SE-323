@@ -294,7 +294,6 @@ function UnitPuppets({
 							disabled={demo}
 							onClick={() => pickLeft(row)}
 						>
-							<Art art="sunPuppet" className="unit-puppet" />
 							{unitText(pair)}
 							{matches[row] !== null && (
 								<small>
@@ -318,7 +317,6 @@ function UnitPuppets({
 							disabled={demo || picked === null}
 							onClick={() => pickRight(column)}
 						>
-							<Art art="moonPuppet" className="unit-puppet" />
 							{unitText(pair)}
 						</button>
 					))}

@@ -1,8 +1,8 @@
 /**
  * Art for Nimo's Silly Movie Studio. A file is used only when `ready` is true; until then the games
  * draw a placeholder shape in its place. Paths starting with "/" are shared art (Nimo); `kit/` holds
- * the open-licence (CC0) pieces: the movie-set street, the actors, icons, pawns, the scene-card
- * panel and ribbon, the sun and moon puppets, clouds, the growing tree and sparkles.
+ * the open-licence (CC0) pieces: icons, pawns, the scene-card panel and ribbon, the sun and moon
+ * puppets, clouds, the growing tree and sparkles.
  */
 
 import { NIMO } from "../../../mobile-learning-flow/landscape/nimo";
@@ -14,10 +14,8 @@ export const STUDIO_ART = {
 	nimoCheer: { file: NIMO.cheer, ready: true },
 	nimoThink: { file: NIMO.think, ready: true },
 	nimoDirector: { file: NIMO.director, ready: true },
-	/** The studio lot: optional painted sky and ground behind the set. */
+	/** The studio lot: the scene card, and the backdrop of both help games. */
 	bgStudio: { file: "bg-studio.webp", ready: true },
-	owl: { file: "owl-director.webp", ready: true },
-	street: { file: "kit/set-street.webp", ready: true },
 	sunPuppet: { file: "kit/sun-puppet.png", ready: true },
 	moonPuppet: { file: "kit/moon-puppet.png", ready: true },
 	cloud1: { file: "kit/cloud1.png", ready: true },
@@ -50,21 +48,7 @@ export const ICONS = {
 	trophy: `${STUDIO_ART_ROOT}/kit/icon-trophy.png`,
 } as const;
 
-/** The actor sprite strips: nine frames each, in this order. */
-export const ACTORS = ["zombie", "robot", "adventurer", "person"] as const;
-export type Actor = (typeof ACTORS)[number];
-export const ACTOR_FRAMES = [
-	"idle",
-	"walk0",
-	"walk2",
-	"walk4",
-	"walk6",
-	"cheer0",
-	"cheer1",
-	"jump",
-	"fallDown",
-] as const;
-export const actorStrip = (actor: Actor) =>
-	`${STUDIO_ART_ROOT}/kit/actor-${actor}.webp`;
+/** What each scene films: a small picture on the scene's film frame (the same scene, the same one). */
+export const SCENES = ["🦖", "🐔", "🐘", "🌙", "🎈", "🚀"] as const;
 export const PANEL = `${STUDIO_ART_ROOT}/kit/panel.png`;
 export const RIBBON = `${STUDIO_ART_ROOT}/kit/ribbon.png`;

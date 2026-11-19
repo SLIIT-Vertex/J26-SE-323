@@ -1,14 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { partnerUnit } from "../PuppetShow";
 import {
+	addPiece,
 	durationAnswer,
 	durationResponse,
 	durationText,
 	fromMinutes,
+	layFilm,
 	MISSION_SKILLS,
 	missionOrder,
 	periodText,
 	readTask,
+	snipHour,
+	snipTen,
 	studioTrainingPlace,
 	to24,
 } from "../studioRules";
@@ -94,5 +98,18 @@ describe("Movie studio rules", () => {
 		const order = missionOrder(MISSION_SKILLS[0], () => 0);
 		expect(order[0]).not.toBe(MISSION_SKILLS[0]);
 		expect(new Set(order)).toEqual(new Set(MISSION_SKILLS));
+	});
+
+	it("lays, merges and snips film pieces in groups of 60 minutes", () => {
+		expect(layFilm(145)).toEqual([60, 60, 10, 10, 5]);
+		const six = [10, 10, 10, 10, 10] as const;
+		expect(addPiece([...six], 10)).toEqual({ pieces: [60], merged: true });
+		expect(addPiece([60, 10, 10, 10, 10, 10, 5], 10)).toEqual({
+			pieces: [60, 60, 5],
+			merged: true,
+		});
+		expect(addPiece([10], 5)).toEqual({ pieces: [10, 5], merged: false });
+		expect(snipHour([60, 10])).toEqual([10, 10, 10, 10, 10, 10, 10]);
+		expect(snipTen([60, 10])).toEqual([60, 5, 5]);
 	});
 });

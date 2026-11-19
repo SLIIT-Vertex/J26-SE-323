@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { GameStoryCard } from "../../../mobile-learning-flow/landscape/GameStoryCard";
 import { LandscapeGameStage } from "../../../mobile-learning-flow/landscape/LandscapeGameStage";
 import {
@@ -11,7 +11,8 @@ import type { AreaGameProps } from "../../registry";
 import { FastForward } from "./FastForward";
 import { MovieMayhem } from "./MovieMayhem";
 import { PuppetShow } from "./PuppetShow";
-import { ACTORS, studioArtReady, studioArtUrl } from "./studioArt";
+import { demoSeen, StudioDemo } from "./StudioDemo";
+import { SCENES, studioArtReady, studioArtUrl } from "./studioArt";
 import {
 	ELAPSED_SKILL_ID,
 	missionOrder,
@@ -42,15 +43,15 @@ const PLACES: Record<
 	"puppet-show": { title: "ටික් ටොක් රූකඩ සෙල්ලම!", backdrop: LOT },
 };
 
-/** The same scene always gets the same actor; different scenes get different ones. */
-function actorFor(revision: string) {
+/** The same scene always films the same thing; different scenes film different things. */
+function sceneFor(revision: string) {
 	let hash = 0;
 	for (const char of revision) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-	return ACTORS[hash % ACTORS.length] ?? "zombie";
+	return SCENES[hash % SCENES.length] ?? "🦖";
 }
 
 /**
- * Nimo's Silly Movie Studio (Time). Bakā the owl director hands Nimo the clapperboard: each scene
+ * Nimo's Silly Movie Studio (Time). Nimo directs a silly cartoon movie: each scene
  * needs its length, its start on the 24-hour clock, or two scenes' lengths together or apart. A
  * muddled scene sends Nimo to the editing room or the puppet theatre, where the server picks each
  * help round; then a fresh scene of the same kind. Each new scene picks its kind at random.
@@ -59,6 +60,7 @@ export function NimoMovieStudio({
 	api,
 	learnerId,
 	condition,
+	reducedMotion,
 	onBack,
 	onFailure,
 }: AreaGameProps) {
@@ -105,6 +107,8 @@ export function NimoMovieStudio({
 	}, [phase]);
 
 	const tap = () => studioSounds.play("tap");
+	/** How to play: shown by itself before the first scene on this phone, and from the ? button. */
+	const [demo, setDemo] = useState<"first" | "again" | null>(null);
 	const newScene = () => {
 		const skills = missionOrder(lastScene.current);
 		lastScene.current = skills[0] ?? null;
@@ -126,17 +130,28 @@ export function NimoMovieStudio({
 				data-studio-phase={phase}
 				data-episode-id={episode.episodeId ?? undefined}
 			>
-				{phase === "mission" && manifest && (
+				{phase === "mission" && manifest && !demo && (
 					<MovieMayhem
 						key={manifest.revision_id}
 						task={task}
 						prompt={manifest.prompt_si}
-						actor={actorFor(manifest.revision_id)}
+						scene={sceneFor(manifest.revision_id)}
+						onShowHow={() => setDemo("again")}
 						returning={manifest.measurement_role === "unsupported_after"}
 						outcome={episode.outcome}
 						busy={busy}
 						evidence={evidence}
 						onSubmit={(response) => void episode.submitMission(response)}
+					/>
+				)}
+				{demo && (
+					<StudioDemo
+						reducedMotion={reducedMotion}
+						onDone={() => {
+							const first = demo === "first";
+							setDemo(null);
+							if (first) newScene();
+						}}
 					/>
 				)}
 				{phase === "training" && support && (
@@ -163,13 +178,13 @@ export function NimoMovieStudio({
 						title="නිමෝගේ හිනා සිනමා ලෝකය"
 						image={studioArtUrl("nimoDirector")}
 						lines={[
-							"බකා බකමූණා අධ්‍යක්ෂක නිමෝට ක්ලැපර් පුවරුව දුන්නා: අද නිමෝ තමයි අලුත් අධ්‍යක්ෂක!",
+							"නිමෝට හිනායන කාටූන් චිත්‍රපටයක් හදන්න ස්ටූඩියෝ එකක් ලැබුණා: අද නිමෝ තමයි අධ්‍යක්ෂක!",
 							"හැම දර්ශනයක්ම පටන් ගන්න, ඉවර වෙන, ගත වෙන වෙලාව හොයලා හිනායන චිත්‍රපටයක් හදමු!",
 						]}
 						action="රූගත කරමු!"
 						busy={busy}
 						onPress={tap}
-						onAction={newScene}
+						onAction={() => (demoSeen() ? newScene() : setDemo("first"))}
 					/>
 				)}
 				{phase === "to-training" && (

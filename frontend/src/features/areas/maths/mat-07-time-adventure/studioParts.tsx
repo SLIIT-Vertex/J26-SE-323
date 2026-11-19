@@ -1,12 +1,5 @@
-import type { CSSProperties, PointerEvent } from "react";
-import {
-	ACTOR_FRAMES,
-	type Actor,
-	actorStrip,
-	type StudioArtKey,
-	studioArtReady,
-	studioArtUrl,
-} from "./studioArt";
+import type { PointerEvent } from "react";
+import { type StudioArtKey, studioArtReady, studioArtUrl } from "./studioArt";
 
 /** A picture from the art manifest, or a placeholder shape until the art is ready. */
 export function Art({
@@ -30,39 +23,6 @@ export function Icon({ src, className }: { src: string; className?: string }) {
 			className={`studio-icon ${className ?? ""}`}
 			aria-hidden="true"
 			style={{ maskImage: `url("${src}")`, WebkitMaskImage: `url("${src}")` }}
-		/>
-	);
-}
-
-export type ActorMove = "idle" | "walk" | "cheer" | "jump" | "slip";
-
-/** One movie actor (a sprite strip of nine frames); the move picks which frames play. */
-export function ActorSprite({
-	actor,
-	move,
-	className,
-}: {
-	actor: Actor;
-	move: ActorMove;
-	className?: string;
-}) {
-	const frame =
-		move === "jump"
-			? ACTOR_FRAMES.indexOf("jump")
-			: move === "slip"
-				? ACTOR_FRAMES.indexOf("fallDown")
-				: 0;
-	return (
-		<span
-			className={`studio-actor ${className ?? ""}`}
-			data-move={move}
-			aria-hidden="true"
-			style={
-				{
-					backgroundImage: `url("${actorStrip(actor)}")`,
-					"--frame": frame,
-				} as CSSProperties
-			}
 		/>
 	);
 }
