@@ -56,3 +56,16 @@ def test_instrument_conversion_arithmetic_and_market_payloads_are_server_scored(
     invalid = correct_response(arithmetic.game_data)
     invalid["working_steps"] = list(reversed(invalid["working_steps"]))
     assert validate_constructed_response(arithmetic, invalid)[:2] == (False, "correct_result_invalid_working")
+
+
+def test_parcel_cart_missions_and_help_places():
+    from app.gamification.content.mass_adventure import SKILLS, generate_item, spoken_mass
+
+    chapters = {skill_id: skill.chapter for skill_id, skill in SKILLS.items()}
+    assert chapters["G5-MAT-MASS-ARITHMETIC-01"] == chapters["G5-MAT-MASS-PROBLEM-01"] == "parcel_cart"
+    assert chapters["G5-MAT-MASS-BALANCE-01"] == chapters["G5-MAT-MASS-CONVERT-01"] == "balance_scale"
+    assert chapters["G5-MAT-MASS-INSTRUMENT-01"] == "weighing_room"
+    assert spoken_mass(8250) == "8 kg 250 g"
+    assert spoken_mass(16000) == "16 kg"
+    assert spoken_mass(750) == "750 g"
+    assert "කරත්තේ" in generate_item("G5-MAT-MASS-PROBLEM-01", role="unsupported_after", seed=4).prompt_si

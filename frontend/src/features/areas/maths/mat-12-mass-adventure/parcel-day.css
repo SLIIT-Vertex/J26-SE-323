@@ -1,0 +1,905 @@
+/* Nimo's Parcel Day. Design space 1920×1080; --px is one design pixel. */
+.parcel-day {
+	--parcel-ink: #1d3b5a;
+	--parcel-cream: #fff8e8;
+	--parcel-gold: #ffd166;
+	--parcel-red: #c0392b;
+	--parcel-blue: #3fa9f5;
+	--wood-panel: url("/curriculum/game/G5-AREA-MAT-12/kit/panel-wood.png");
+	--wood-key: url("/curriculum/game/G5-AREA-MAT-12/kit/key-wood.png");
+	--box-panel: url("/curriculum/game/G5-AREA-MAT-12/kit/panel-box.png");
+	position: absolute;
+	inset: 0;
+	background:
+		var(--parcel-bg, linear-gradient(#bfe8ff, #f3dfb5 55%, #d9b27c)) center /
+		cover no-repeat,
+		#d9b27c;
+	color: var(--parcel-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholders and shared pieces ---- */
+
+.weigh-shape {
+	display: inline-grid;
+	place-items: center;
+	border: calc(var(--px) * 4) dashed rgb(29 59 90 / 45%);
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 255 255 / 45%);
+}
+
+.weigh-shape::after {
+	content: attr(data-art);
+	color: rgb(29 59 90 / 60%);
+	font-size: calc(var(--px) * 22);
+}
+
+.parcel-cart button,
+.balance-game button,
+.weigh-room button {
+	min-height: 0;
+	border-style: none;
+	color: inherit;
+	font: inherit;
+}
+
+/* Nimo with his speech bubble. */
+.nimo-says {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 10);
+}
+
+.nimo-says-art {
+	flex: none;
+	width: var(--nimo-w, calc(var(--px) * 150));
+	height: var(--nimo-h, calc(var(--px) * 200));
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.nimo-says-bubble {
+	position: relative;
+	margin: 0;
+	padding: calc(var(--px) * 14) calc(var(--px) * 28);
+	border: calc(var(--px) * 5) solid var(--parcel-ink);
+	border-radius: calc(var(--px) * 34);
+	background: #fff;
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+	line-height: 1.35;
+	box-shadow: 0 calc(var(--px) * 6) 0 rgb(0 0 0 / 18%);
+}
+
+.nimo-says-bubble::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: calc(var(--px) * -24);
+	border-width: calc(var(--px) * 14) calc(var(--px) * 24) calc(var(--px) * 14) 0;
+	border-style: solid;
+	border-color: transparent var(--parcel-ink) transparent transparent;
+	transform: translateY(-50%);
+}
+
+.nimo-says[data-mood="cheer"] .nimo-says-art {
+	animation: nimo-hop 450ms ease-in-out infinite alternate;
+}
+
+/* The cash-register keypad and the bill's cells. */
+.keypad {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: calc(var(--px) * 10);
+	align-content: start;
+	box-sizing: border-box;
+	width: calc(var(--px) * 390);
+	padding: calc(var(--px) * 30);
+	border-image: var(--wood-panel) 64 fill / calc(var(--px) * 40) stretch;
+}
+
+.keypad-key {
+	min-width: 0;
+	min-height: calc(var(--px) * 96);
+	border-image: var(--wood-key) 40 fill / calc(var(--px) * 22) stretch;
+	background: transparent;
+	font-size: calc(var(--px) * 50);
+	font-weight: 900;
+}
+
+.keypad-rub {
+	grid-column: span 2;
+}
+
+.keypad[data-locked] {
+	opacity: 0.5;
+}
+
+.amount-cell {
+	display: inline-flex;
+	align-items: baseline;
+	justify-content: flex-end;
+	gap: calc(var(--px) * 8);
+	min-width: calc(var(--px) * 190);
+	min-height: calc(var(--px) * 84);
+	padding: 0 calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 16);
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #d8b98a;
+}
+
+.amount-cell small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+}
+
+.amount-cell strong {
+	font-size: calc(var(--px) * 50);
+}
+
+.amount-cell[data-selected] {
+	box-shadow:
+		inset 0 0 0 calc(var(--px) * 6) #2e86de,
+		0 0 0 calc(var(--px) * 6) rgb(46 134 222 / 30%);
+}
+
+/* The kilograms-and-grams sum. */
+.mass-sum {
+	display: grid;
+	grid-template-columns: calc(var(--px) * 44) 1fr calc(var(--px) * 150);
+	padding-right: calc(var(--px) * 8);
+	justify-items: end;
+	align-items: center;
+	gap: calc(var(--px) * 4) calc(var(--px) * 14);
+}
+
+.sum-head {
+	color: #8a5a2b;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.sum-sign {
+	justify-self: center;
+	font-size: calc(var(--px) * 46);
+	font-weight: 800;
+}
+
+.sum-cell {
+	font-size: calc(var(--px) * 48);
+	font-weight: 800;
+}
+
+.sum-cell s {
+	color: var(--parcel-red);
+	font-size: calc(var(--px) * 30);
+}
+
+.sum-carry {
+	min-height: calc(var(--px) * 30);
+}
+
+.sum-carry-chip {
+	min-width: calc(var(--px) * 70);
+	min-height: calc(var(--px) * 44);
+	border-radius: calc(var(--px) * 22);
+	background: #2f8f3a;
+	color: #fff;
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.sum-line {
+	grid-column: 1 / -1;
+	justify-self: stretch;
+	height: calc(var(--px) * 6);
+	background: var(--parcel-ink);
+}
+
+.sum-answer .amount-cell {
+	min-width: calc(var(--px) * 150);
+}
+
+.sum-g-left {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 150);
+	min-height: calc(var(--px) * 84);
+	border-radius: calc(var(--px) * 16);
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 50);
+}
+
+.mass-exchange {
+	min-height: calc(var(--px) * 80);
+	border-radius: calc(var(--px) * 40);
+	background: var(--parcel-gold);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.mass-exchange:disabled {
+	opacity: 0.45;
+}
+
+.mass-undo {
+	position: absolute;
+	top: calc(var(--px) * -20);
+	right: calc(var(--px) * -20);
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	border-radius: 50%;
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 32);
+	box-shadow: 0 calc(var(--px) * 4) 0 rgb(0 0 0 / 20%);
+}
+
+.mass-board {
+	position: relative;
+	display: grid;
+	gap: calc(var(--px) * 12);
+	width: calc(var(--px) * 440);
+	padding: calc(var(--px) * 30);
+	border-image: var(--wood-panel) 64 fill / calc(var(--px) * 40) stretch;
+}
+
+.mass-board-title {
+	font-size: calc(var(--px) * 36);
+	text-align: center;
+}
+
+/* Weight pieces and mystery boxes. */
+.weight {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	width: calc(var(--px) * var(--size));
+	height: calc(var(--px) * var(--size) * 0.82);
+	margin-top: calc(var(--px) * var(--size) * 0.18);
+	border-radius: calc(var(--px) * 14) calc(var(--px) * 14) calc(var(--px) * 18)
+		calc(var(--px) * 18);
+	background: var(--weight);
+	box-shadow:
+		inset 0 calc(var(--px) * -8) 0 rgb(0 0 0 / 22%),
+		0 calc(var(--px) * 4) 0 rgb(0 0 0 / 18%);
+}
+
+.weight-knob {
+	position: absolute;
+	top: calc(var(--px) * var(--size) * -0.18);
+	width: 38%;
+	height: calc(var(--px) * var(--size) * 0.22);
+	border-radius: calc(var(--px) * 10) calc(var(--px) * 10) 0 0;
+	background: var(--weight);
+	filter: brightness(1.12);
+}
+
+.weight-label {
+	padding: 0 calc(var(--px) * 6);
+	border-radius: calc(var(--px) * 8);
+	background: rgb(255 255 255 / 90%);
+	color: var(--parcel-ink);
+	font-size: calc(var(--px) * 26);
+	font-weight: 900;
+	white-space: nowrap;
+}
+
+.box {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	width: calc(var(--px) * 190);
+	height: calc(var(--px) * 160);
+}
+
+.box-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.box-tag {
+	position: relative;
+	margin-top: calc(var(--px) * 30);
+	padding: calc(var(--px) * 2) calc(var(--px) * 12);
+	border-radius: calc(var(--px) * 12);
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 30);
+	font-weight: 900;
+	white-space: nowrap;
+}
+
+/* ---- කරත්තේ පෙට්ටි පටවමු! (the mission) ---- */
+
+.parcel-cart {
+	position: absolute;
+	inset: 0;
+}
+
+.cart-nimo {
+	position: absolute;
+	top: calc(var(--px) * 10);
+	left: calc(var(--px) * 280);
+	z-index: 3;
+	width: calc(var(--px) * 740);
+}
+
+.cart-yard {
+	position: absolute;
+	bottom: calc(var(--px) * 20);
+	left: calc(var(--px) * 20);
+	display: grid;
+	grid-template-columns: calc(var(--px) * 230) calc(var(--px) * 340) calc(
+			var(--px) *
+			420
+		);
+	align-items: end;
+	gap: calc(var(--px) * 10);
+	height: calc(var(--px) * 760);
+}
+
+.cart-ground {
+	display: grid;
+	gap: calc(var(--px) * 10);
+	justify-items: center;
+	align-content: end;
+}
+
+.cart-box {
+	padding: 0;
+	background: transparent;
+}
+
+.cart-hint {
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	animation: nimo-hop 600ms ease-in-out infinite alternate;
+}
+
+.cart-scale {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	align-content: end;
+}
+
+.cart-scale-screen {
+	min-width: calc(var(--px) * 220);
+	margin-bottom: calc(var(--px) * 10);
+	padding: calc(var(--px) * 6) calc(var(--px) * 16);
+	border: calc(var(--px) * 6) solid #9aa5b1;
+	border-radius: calc(var(--px) * 16);
+	background: #c9f2b8;
+	color: #145a32;
+	font-family: ui-monospace, monospace;
+	font-size: calc(var(--px) * 40);
+	font-weight: 900;
+	text-align: center;
+}
+
+.cart-box-on-scale {
+	position: relative;
+	z-index: 1;
+	margin-bottom: calc(var(--px) * -260);
+	margin-left: calc(var(--px) * 30);
+}
+
+.cart-scale-art {
+	width: calc(var(--px) * 340);
+	height: calc(var(--px) * 400);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.the-cart {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	align-content: end;
+	transform: translateY(calc(var(--px) * var(--sink) * 8));
+	transition: transform 400ms ease-out;
+}
+
+.the-cart[data-rolling] {
+	animation: cart-roll 2.4s ease-in 0.4s forwards;
+}
+
+.the-cart[data-wobble] {
+	animation: cart-wobble 300ms ease-in-out 4;
+}
+
+.cart-load {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	gap: calc(var(--px) * 4);
+	margin-bottom: calc(var(--px) * -90);
+}
+
+.cart-load .box {
+	width: calc(var(--px) * 170);
+	height: calc(var(--px) * 145);
+}
+
+.cart-art {
+	width: calc(var(--px) * 420);
+	height: calc(var(--px) * 290);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.cart-total {
+	position: absolute;
+	right: 0;
+	bottom: calc(var(--px) * -10);
+	z-index: 2;
+	padding: calc(var(--px) * 2) calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 14);
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 28);
+}
+
+.cart-surprise {
+	position: absolute;
+	right: calc(var(--px) * 60);
+	bottom: calc(var(--px) * 300);
+	display: grid;
+	place-items: center;
+	animation: surprise-pop 900ms ease-out forwards;
+}
+
+.cart-burst {
+	position: absolute;
+	width: calc(var(--px) * 280);
+	height: calc(var(--px) * 280);
+}
+
+.cart-surprise i {
+	position: relative;
+	font-size: calc(var(--px) * 150);
+	font-style: normal;
+}
+
+.cart-register {
+	position: absolute;
+	top: calc(var(--px) * 16);
+	right: calc(var(--px) * 16);
+	display: flex;
+	align-items: flex-start;
+	gap: calc(var(--px) * 14);
+}
+
+.cart-register[data-locked] > :not(.keypad) {
+	opacity: 0.85;
+	filter: grayscale(0.4);
+}
+
+.cart-boards {
+	display: grid;
+	gap: calc(var(--px) * 10);
+}
+
+.room-left {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 8);
+	width: calc(var(--px) * 440);
+	padding: calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 26);
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.room-left .amount-cell {
+	min-width: calc(var(--px) * 170);
+}
+
+.cart-send {
+	position: absolute;
+	right: calc(var(--px) * 30);
+	bottom: calc(var(--px) * 30);
+	min-width: calc(var(--px) * 380);
+}
+
+/* ---- The help places ---- */
+
+.balance-game,
+.weigh-room {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 12);
+	width: 100%;
+	max-width: calc(var(--px) * 1180);
+}
+
+.help-nimo {
+	justify-self: start;
+	--nimo-w: calc(var(--px) * 110);
+	--nimo-h: calc(var(--px) * 140);
+}
+
+.help-nimo .nimo-says-bubble {
+	font-size: calc(var(--px) * 30);
+}
+
+/* The two-pan balance: the beam turns, the pans hang straight below its ends. */
+.balance {
+	position: relative;
+	width: calc(var(--px) * 800);
+	height: calc(var(--px) * 440);
+}
+
+.balance-stand {
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: calc(var(--px) * 200);
+	height: calc(var(--px) * 400);
+	object-fit: contain;
+	object-position: bottom;
+	transform: translateX(-50%);
+}
+
+.balance-beam {
+	position: absolute;
+	top: calc(var(--px) * 20);
+	left: 50%;
+	width: calc(var(--px) * 560);
+	height: calc(var(--px) * 126);
+	object-fit: contain;
+	transform: translateX(-50%) rotate(var(--tilt));
+	transition: transform 500ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.balance-pan {
+	position: absolute;
+	top: calc(var(--px) * 100);
+	display: grid;
+	justify-items: center;
+	align-content: end;
+	width: calc(var(--px) * 260);
+	height: calc(var(--px) * 280);
+	transition: transform 500ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.balance-pan[data-side="left"] {
+	left: calc(var(--px) * 8);
+	transform: translateY(calc(var(--px) * var(--lift) * -1));
+}
+
+.balance-pan[data-side="right"] {
+	right: calc(var(--px) * 8);
+	transform: translateY(calc(var(--px) * var(--lift)));
+}
+
+.balance-pan-art {
+	width: 100%;
+	height: calc(var(--px) * 270);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.balance-pan-load {
+	position: absolute;
+	bottom: calc(var(--px) * 46);
+	left: 50%;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap-reverse;
+	align-items: flex-end;
+	justify-content: center;
+	width: 92%;
+	transform: translateX(-50%);
+}
+
+.pan-box {
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 125);
+}
+
+.pan-boxes .pan-box {
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 95);
+}
+
+.balance[data-level] .balance-beam {
+	filter: drop-shadow(0 0 calc(var(--px) * 12) #ffe066);
+}
+
+.weight-stack {
+	display: flex;
+	flex-wrap: wrap-reverse;
+	align-items: flex-end;
+	justify-content: center;
+	gap: calc(var(--px) * 2);
+}
+
+.weight-stack .weight {
+	--size: 70;
+}
+
+.weight-stack .weight-label {
+	font-size: calc(var(--px) * 20);
+}
+
+.weight-on-pan,
+.weight-pick {
+	padding: 0;
+	background: transparent;
+}
+
+.balance-total {
+	margin: 0;
+	padding: calc(var(--px) * 4) calc(var(--px) * 22);
+	border-radius: calc(var(--px) * 20);
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+}
+
+.weight-shelf {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: center;
+	gap: calc(var(--px) * 10);
+	padding: calc(var(--px) * 12) calc(var(--px) * 18);
+	border-radius: calc(var(--px) * 26);
+	background: rgb(255 248 232 / 92%);
+}
+
+.weight-pick:disabled {
+	opacity: 0.4;
+}
+
+.swap-pools {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+}
+
+.swap-pool {
+	display: grid;
+	justify-items: center;
+	align-content: start;
+	gap: calc(var(--px) * 6);
+	min-height: calc(var(--px) * 260);
+	padding: calc(var(--px) * 26);
+	border-image: var(--box-panel) 64 fill / calc(var(--px) * 40) stretch;
+}
+
+.swap-pool small {
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.swap-pool > strong {
+	padding: 0 calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 14);
+	background: #fff;
+	font-size: calc(var(--px) * 40);
+}
+
+.swap-pool[data-full] {
+	animation: cart-wobble 600ms ease-in-out infinite;
+}
+
+.balance-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: calc(var(--px) * 14);
+}
+
+.balance-put,
+.balance-swap,
+.balance-finish,
+.weigh-spot {
+	min-height: calc(var(--px) * 92);
+	padding: 0 calc(var(--px) * 28);
+	border-radius: calc(var(--px) * 46);
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+}
+
+.balance-put,
+.weigh-spot {
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #e0c9a6;
+}
+
+.balance-swap {
+	background: var(--parcel-gold);
+}
+
+.balance-finish {
+	background: #3fb34f;
+	color: #fff;
+}
+
+.balance-put:disabled,
+.balance-swap:disabled {
+	opacity: 0.4;
+}
+
+.balance-back {
+	width: calc(var(--px) * 70);
+	height: calc(var(--px) * 70);
+	border-radius: 50%;
+	background: var(--parcel-cream);
+	font-size: calc(var(--px) * 34);
+}
+
+[data-ghost].balance-put,
+[data-ghost].balance-swap,
+[data-ghost].balance-finish,
+[data-ghost].weight-pick,
+[data-ghost].weigh-scale,
+[data-ghost].weigh-spot {
+	outline: calc(var(--px) * 6) dashed #fff;
+	outline-offset: calc(var(--px) * 4);
+}
+
+/* The weighing room: five scales in a row. */
+.weigh-thing {
+	position: absolute;
+	top: calc(var(--px) * 10);
+	right: calc(var(--px) * 20);
+	font-size: calc(var(--px) * 130);
+	animation: nimo-hop 800ms ease-in-out infinite alternate;
+}
+
+.weigh-room[data-done] .weigh-thing {
+	visibility: hidden;
+}
+
+.weigh-scales {
+	display: grid;
+	grid-template-columns: repeat(var(--scales), minmax(0, 1fr));
+	gap: calc(var(--px) * 12);
+	width: 100%;
+}
+
+.weigh-scale {
+	display: grid;
+	justify-items: center;
+	align-content: end;
+	gap: calc(var(--px) * 6);
+	padding: calc(var(--px) * 10) calc(var(--px) * 4);
+	border-radius: calc(var(--px) * 26);
+	background: rgb(255 248 232 / 75%);
+}
+
+.weigh-scale[data-chosen] {
+	background: #fff3c4;
+	box-shadow: inset 0 0 0 calc(var(--px) * 6) var(--parcel-gold);
+}
+
+.weigh-scale small {
+	font-size: calc(var(--px) * 24);
+	font-weight: 800;
+	text-align: center;
+}
+
+.weigh-scale-body {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 100%;
+	height: calc(var(--px) * 260);
+}
+
+.weigh-scale[data-wobble] .weigh-scale-body {
+	animation: cart-wobble 300ms ease-in-out 3;
+}
+
+.weigh-scale-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.weigh-on {
+	position: absolute;
+	top: 18%;
+	z-index: 1;
+	font-size: calc(var(--px) * 80);
+}
+
+.weigh-on[data-spot="hook"] {
+	top: auto;
+	bottom: 6%;
+	animation: weigh-swing 900ms ease-in-out infinite alternate;
+}
+
+.weigh-reading {
+	position: absolute;
+	bottom: 4%;
+	z-index: 2;
+	padding: calc(var(--px) * 2) calc(var(--px) * 12);
+	border-radius: calc(var(--px) * 12);
+	background: #c9f2b8;
+	color: #145a32;
+	font-size: calc(var(--px) * 34);
+	white-space: nowrap;
+	animation: surprise-pop 500ms ease-out;
+}
+
+.weigh-spots {
+	display: grid;
+	grid-template-columns: repeat(4, auto);
+	gap: calc(var(--px) * 12);
+}
+
+@keyframes cart-roll {
+	15% {
+		transform: translateY(calc(var(--px) * -10)) rotate(-2deg);
+	}
+	to {
+		transform: translateX(calc(var(--px) * 900));
+	}
+}
+
+@keyframes cart-wobble {
+	25% {
+		transform: rotate(-3deg);
+	}
+	75% {
+		transform: rotate(3deg);
+	}
+}
+
+@keyframes surprise-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.2);
+	}
+	60% {
+		transform: scale(1.15);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes weigh-swing {
+	from {
+		transform: rotate(-6deg);
+	}
+	to {
+		transform: rotate(6deg);
+	}
+}
+
+@keyframes nimo-hop {
+	to {
+		transform: translateY(calc(var(--px) * -14));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nimo-says[data-mood="cheer"] .nimo-says-art,
+	.cart-hint,
+	.the-cart[data-rolling],
+	.the-cart[data-wobble],
+	.cart-surprise,
+	.swap-pool[data-full],
+	.weigh-thing,
+	.weigh-scale[data-wobble] .weigh-scale-body,
+	.weigh-on[data-spot="hook"],
+	.weigh-reading {
+		animation: none;
+	}
+}

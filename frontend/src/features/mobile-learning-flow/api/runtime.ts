@@ -266,9 +266,9 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																									: game.schema_version ===
 																											"mass-adventure-item-v1"
 																										? [
-																												"weighing_station",
-																												"kilogram_machine",
-																												"market_delivery",
+																												"parcel_cart",
+																												"balance_scale",
+																												"weighing_room",
 																											]
 																										: game.schema_version ===
 																												"sri-lanka-discovery-item-v1"
