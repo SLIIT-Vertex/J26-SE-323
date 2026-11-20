@@ -211,9 +211,8 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																	: game.schema_version ===
 																			"distance-adventure-item-v1"
 																		? [
-																				"unit_path",
-																				"distance_calculation",
-																				"distance_problems",
+																				"market_road",
+																				"tikki_garden",
 																			]
 																		: game.schema_version ===
 																				"money-adventure-item-v1"

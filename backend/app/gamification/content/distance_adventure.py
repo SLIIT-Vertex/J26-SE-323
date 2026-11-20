@@ -18,18 +18,19 @@ MODEL_VERSION = "g5-mat-distance-authored-probabilistic-v1"
 POLICY_VERSION = "g5-mat-distance-deterministic-support-v1"
 SCORING_VERSION = "g5-mat-distance-trace-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-distance-parallel-v1"
-Chapter = Literal["unit_path", "distance_calculation", "distance_problems"]
+# Where each skill is played: the village roads to the market, or measuring in the garden.
+Chapter = Literal["market_road", "tikki_garden"]
 
 @dataclass(frozen=True, slots=True)
 class AtomicSkill:
     skill_id: str; chapter: Chapter; name_si: str; difficulty: str; response_kind: str
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-LENGTH-RELATION-01", "unit_path", "ඒකක සම්බන්ධය", "easy", "unit_relationship"),
-    AtomicSkill("G5-MAT-LENGTH-CONVERT-01", "unit_path", "දුර මාරු කරමු", "easy_medium", "distance_conversion"),
-    AtomicSkill("G5-MAT-LENGTH-ADD-01", "distance_calculation", "දුර එකතු කරමු", "medium", "distance_arithmetic"),
-    AtomicSkill("G5-MAT-LENGTH-SUBTRACT-01", "distance_calculation", "දුර අඩු කරමු", "medium_hard", "distance_arithmetic"),
-    AtomicSkill("G5-MAT-LENGTH-PROBLEM-01", "distance_problems", "දුර කතාව විසඳමු", "hard", "distance_story"),
+    AtomicSkill("G5-MAT-LENGTH-RELATION-01", "tikki_garden", "ඒකක සම්බන්ධය", "easy", "unit_relationship"),
+    AtomicSkill("G5-MAT-LENGTH-CONVERT-01", "tikki_garden", "දුර මාරු කරමු", "easy_medium", "distance_conversion"),
+    AtomicSkill("G5-MAT-LENGTH-ADD-01", "market_road", "දුර එකතු කරමු", "medium", "distance_arithmetic"),
+    AtomicSkill("G5-MAT-LENGTH-SUBTRACT-01", "market_road", "දුර අඩු කරමු", "medium_hard", "distance_arithmetic"),
+    AtomicSkill("G5-MAT-LENGTH-PROBLEM-01", "market_road", "දුර කතාව විසඳමු", "hard", "distance_story"),
 )
 SKILLS = {s.skill_id: s for s in ATOMIC_SKILLS}
 MISCONCEPTIONS = (
@@ -102,23 +103,28 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
     if skill_id not in SKILLS or role not in {"unsupported_before", "unsupported_after"}: raise ValueError("DISTANCE_ITEM_REQUEST_INVALID")
     skill, rng = SKILLS[skill_id], _rng(skill_id, role, seed)
     if skill.response_kind == "unit_relationship":
-        prompt = "මීටර්, සෙන්ටිමීටර් සහ කිලෝමීටර් සම්බන්ධය ගොඩනගන්න."
+        prompt = "ටික්කි එක්ක දුර මනිමු! පටිය ඇදලා දිග මනිමු!"
         game = {"relation_id": "metric_bridge", "left_unit": "km", "right_unit": "m", "conversion_factor": 1000}
     elif skill.response_kind == "distance_conversion":
-        total = rng.choice((1000, 2000, 3000) if simpler else (2021, 4075, 6308, 8040)); prompt = f"{total} m, km සහ m ලෙස ලියන්න."
+        total = rng.choice((1000, 2000, 3000) if simpler else (2021, 2200, 3400, 4075, 6308, 8040)); prompt = f"මීටර් {total}ක් හදමු!"
         game = {"source_value": total, "source_unit": "m"}
     else:
         operation = "add" if skill.skill_id == "G5-MAT-LENGTH-ADD-01" else "subtract"
         if skill.response_kind == "distance_story": operation = rng.choice(("add", "subtract"))
-        if operation == "add": left_km, left_m, right_km, right_m = rng.choice(((3, 650, 2, 475), (4, 725, 1, 390)))
-        else: left_km, left_m, right_km, right_m = rng.choice(((8, 125, 3, 460), (7, 210, 2, 545)))
+        # Every pair needs an exchange between metres and kilometres.
+        if operation == "add": left_km, left_m, right_km, right_m = rng.choice(((3, 650, 2, 475), (4, 725, 1, 390), (2, 580, 1, 640)))
+        else: left_km, left_m, right_km, right_m = rng.choice(((8, 125, 3, 460), (7, 210, 2, 545), (21, 410, 8, 500)))
         # The simpler version needs no exchange between metres and kilometres.
         if simpler: left_km, left_m, right_km, right_m = (2, 300, 1, 400) if operation == "add" else (5, 600, 2, 200)
-        prompt = (f"{left_km} km {left_m:03d} m සහ {right_km} km {right_m:03d} m " + ("එකතු කරන්න." if operation == "add" else "අඩු කරන්න."))
+        left, right = f"{left_km} km {left_m} m", f"{right_km} km {right_m} m"
+        prompt = (f"ගෙදර සිට කඩේට {left}, කඩේ සිට පොළට {right}. පොළට යන්න මුළු දුර කීයද?" if operation == "add"
+                  else f"ගෙදර සිට පොළට {left}. නිමෝ දැනටමත් {right} ඇවිද්දා. පොළට තව කීයද?")
         game = {"operation": operation, "left_kilometres": left_km, "left_metres": left_m, "right_kilometres": right_km, "right_metres": right_m}
         if skill.response_kind == "distance_story":
             game.update(problem_id="route_distance", context_mode="journey_total" if operation == "add" else "distance_remaining")
-            prompt = "සලකුණු කළ දුර දෙක බලන්න. කතාවට ගැළපෙන ක්‍රියාව තෝරා වගුවෙන් විසඳන්න."
+            prompt = (f"නිමෝ ගෙදර සිට කඩේට {left} ඇවිද්දා. ඊට පස්සේ කඩේ සිට පොළට {right} ගියා. නිමෝ ඇවිද්දේ මුළු දුර කීයද?"
+                      if operation == "add" else
+                      f"ගෙදර සිට පොළට {left}. බයිසිකලයෙන් {right} ආවා. පොළට තව යන්න තියෙන්නේ කීයද?")
     game.update(response_kind=skill.response_kind)
     revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return DistanceItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)

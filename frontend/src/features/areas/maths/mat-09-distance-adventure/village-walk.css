@@ -1,0 +1,1061 @@
+/* Nimo's Village Walk. Design space 1920×1080; --px is one design pixel. */
+.village-walk {
+	--village-ink: #3b2a17;
+	--village-cream: #fff7e6;
+	--village-green: #2f8f3a;
+	--village-road: #f2c46b;
+	--village-road-edge: #c98a2e;
+	position: absolute;
+	inset: 0;
+	background:
+		var(--village-bg, linear-gradient(#bfe8ff, #9fdc7c 45%, #6fbf4e)) center /
+		cover no-repeat,
+		#7cc35a;
+	color: var(--village-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholders and shared pieces ---- */
+
+.village-shape {
+	display: inline-grid;
+	place-items: center;
+	border: calc(var(--px) * 4) dashed rgb(59 42 23 / 45%);
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 255 255 / 45%);
+}
+
+.village-shape::after {
+	content: attr(data-art);
+	color: rgb(59 42 23 / 60%);
+	font-size: calc(var(--px) * 22);
+}
+
+.village-scroll,
+.village-message {
+	margin: 0;
+	padding: calc(var(--px) * 12) calc(var(--px) * 32);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 26);
+	background: var(--wood);
+	font-weight: 700;
+	text-align: center;
+}
+
+.village-scroll {
+	position: absolute;
+	top: calc(var(--px) * 20);
+	left: 50%;
+	z-index: 3;
+	width: max-content;
+	max-width: calc(var(--px) * 1400);
+	font-size: calc(var(--px) * 34);
+	transform: translateX(-50%);
+}
+
+.village-message {
+	font-size: calc(var(--px) * 32);
+}
+
+.distance-tag {
+	display: inline-block;
+	padding: calc(var(--px) * 4) calc(var(--px) * 18);
+	border: calc(var(--px) * 4) solid var(--village-road-edge);
+	border-radius: calc(var(--px) * 18);
+	background: var(--village-cream);
+	color: var(--village-ink);
+	font-size: calc(var(--px) * 36);
+	font-weight: 800;
+	white-space: nowrap;
+}
+
+/* The digit dials. */
+.digit-dial {
+	display: grid;
+	justify-items: center;
+	border-radius: calc(var(--px) * 18);
+	background: #6b4423;
+}
+
+.digit-dial button,
+.road-piece,
+.story-op,
+.board-exchange,
+.board-undo,
+.board-carry-chip,
+.toy-box-pile,
+.toy-exchange,
+.garden-step,
+.garden-done,
+.garden-piece,
+.garden-piece-back {
+	min-height: 0;
+	border: 0;
+	color: inherit;
+	font: inherit;
+}
+
+.digit-dial button {
+	width: calc(var(--px) * 96);
+	min-height: calc(var(--px) * 40);
+	background: transparent;
+	color: #ffd166;
+	font-size: calc(var(--px) * 28);
+}
+
+.digit-dial-value {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 74);
+	height: calc(var(--px) * 74);
+	border-radius: calc(var(--px) * 14);
+	background: var(--village-cream);
+	color: var(--village-ink);
+	font-size: calc(var(--px) * 58);
+}
+
+/* ---- අපේ පොළට යමු! (the mission) ---- */
+
+.market-road {
+	position: absolute;
+	inset: 0;
+}
+
+.map-place {
+	position: absolute;
+	z-index: 1;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 4);
+}
+
+.map-place[data-place="home"] {
+	top: calc(var(--px) * 320);
+	left: calc(var(--px) * 120);
+}
+
+.map-place[data-place="shop"] {
+	top: calc(var(--px) * 320);
+	left: calc(var(--px) * 740);
+}
+
+.map-place[data-place="market"] {
+	top: calc(var(--px) * 330);
+	left: calc(var(--px) * 1560);
+}
+
+.map-node {
+	order: 2;
+	width: calc(var(--px) * 84);
+	height: calc(var(--px) * 84);
+}
+
+.map-pin {
+	padding: calc(var(--px) * 4) calc(var(--px) * 18);
+	border-radius: calc(var(--px) * 20);
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 34);
+	font-weight: 800;
+	box-shadow: 0 calc(var(--px) * 4) 0 rgb(0 0 0 / 18%);
+}
+
+.route-sign {
+	position: absolute;
+	top: calc(var(--px) * 150);
+	right: calc(var(--px) * 40);
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 12);
+	padding: calc(var(--px) * 8) calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 22);
+	background: rgb(255 247 230 / 92%);
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+}
+
+.road-slot {
+	position: absolute;
+	display: grid;
+	place-items: center;
+	border: calc(var(--px) * 6) dashed rgb(255 255 255 / 90%);
+	border-radius: calc(var(--px) * 40);
+	background: rgb(255 255 255 / 30%);
+}
+
+.road-slot[data-slot="a"] {
+	top: calc(var(--px) * 460);
+	left: calc(var(--px) * 250);
+	width: calc(var(--px) * 540);
+	height: calc(var(--px) * 120);
+}
+
+.road-slot[data-slot="b"] {
+	top: calc(var(--px) * 400);
+	left: calc(var(--px) * 870);
+	width: calc(var(--px) * 640);
+	height: calc(var(--px) * 130);
+	border-radius: calc(var(--px) * 40) calc(var(--px) * 90) calc(var(--px) * 40)
+		calc(var(--px) * 40);
+}
+
+.road-slot[data-filled] {
+	border-color: transparent;
+	background: transparent;
+}
+
+.road-slot[data-missed] {
+	animation: village-shake 300ms ease-in-out 2;
+}
+
+.road-slot .road-art,
+.road-piece .road-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.road-slot .village-shape,
+.road-piece .village-shape {
+	border-style: solid;
+	border-color: var(--village-road-edge);
+	background:
+		repeating-linear-gradient(
+			90deg,
+			transparent 0 calc(var(--px) * 30),
+			#fff calc(var(--px) * 30) calc(var(--px) * 60)
+		)
+		center / 100% calc(var(--px) * 8) no-repeat,
+		var(--village-road);
+}
+
+.road-slot .village-shape::after,
+.road-piece .village-shape::after {
+	content: none;
+}
+
+.road-slot .distance-tag,
+.road-piece .distance-tag {
+	position: relative;
+}
+
+.road-unknown {
+	font-size: calc(var(--px) * 80);
+	font-weight: 800;
+	color: #fff;
+	text-shadow: 0 calc(var(--px) * 3) 0 rgb(0 0 0 / 30%);
+}
+
+.map-nimo {
+	position: absolute;
+	top: calc(var(--px) * 380);
+	left: calc(var(--px) * 10);
+	z-index: 2;
+	width: calc(var(--px) * 180);
+	height: calc(var(--px) * 240);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.market-road[data-outcome="correct"] .map-nimo {
+	animation: nimo-walk-market 2.4s ease-in-out forwards;
+}
+
+.market-road[data-outcome="wrong"] .map-nimo {
+	animation: nimo-walk-stuck 1.4s ease-in-out forwards;
+}
+
+.piece-tray {
+	position: absolute;
+	bottom: calc(var(--px) * 30);
+	left: calc(var(--px) * 30);
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	align-content: center;
+	gap: calc(var(--px) * 24);
+	width: calc(var(--px) * 820);
+	height: calc(var(--px) * 400);
+	padding: calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 36);
+	background: rgb(255 247 230 / 88%);
+}
+
+.piece-tray > small {
+	width: 100%;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	text-align: center;
+}
+
+.road-piece {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 470);
+	height: calc(var(--px) * 120);
+	padding: 0;
+	background: transparent;
+	touch-action: none;
+}
+
+.road-piece[data-slot="b"] .village-shape {
+	border-radius: calc(var(--px) * 30) calc(var(--px) * 80) calc(var(--px) * 30)
+		calc(var(--px) * 30);
+}
+
+.road-piece[data-dragging] {
+	z-index: 5;
+	filter: drop-shadow(
+		0 calc(var(--px) * 12) calc(var(--px) * 8) rgb(0 0 0 / 30%)
+	);
+}
+
+.road-hand {
+	position: absolute;
+	right: calc(var(--px) * -10);
+	bottom: calc(var(--px) * -40);
+	font-size: calc(var(--px) * 70);
+	animation: village-hop 700ms ease-in-out infinite alternate;
+}
+
+.story-choice {
+	display: grid;
+	margin-bottom: calc(var(--px) * 130);
+	grid-template-columns: 1fr 1fr;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+	text-align: center;
+}
+
+.story-choice > span {
+	grid-column: 1 / -1;
+}
+
+.story-op {
+	min-height: calc(var(--px) * 100);
+	border-radius: calc(var(--px) * 28);
+	background: #fff;
+	font-size: calc(var(--px) * 34);
+	font-weight: 800;
+	box-shadow: inset 0 0 0 calc(var(--px) * 5) var(--village-road-edge);
+}
+
+.story-op[data-chosen] {
+	background: #ffd166;
+}
+
+.market-walk {
+	position: absolute;
+	bottom: calc(var(--px) * 50);
+	left: calc(var(--px) * 250);
+	min-width: calc(var(--px) * 360);
+}
+
+/* The wooden distance board. */
+.distance-board {
+	position: absolute;
+	right: calc(var(--px) * 16);
+	bottom: calc(var(--px) * 24);
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: calc(var(--px) * 6) calc(var(--px) * 20);
+	width: calc(var(--px) * 1030);
+	padding: calc(var(--px) * 16) calc(var(--px) * 22);
+	border: calc(var(--px) * 10) solid #8a5a2b;
+	border-radius: calc(var(--px) * 30);
+	background-size: cover;
+	box-shadow: 0 calc(var(--px) * 8) 0 rgb(0 0 0 / 22%);
+}
+
+.board-head {
+	grid-row: 1;
+	grid-column: 1;
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 14);
+	font-size: calc(var(--px) * 38);
+}
+
+.board-compass {
+	width: calc(var(--px) * 120);
+	height: calc(var(--px) * 84);
+	object-fit: contain;
+}
+
+.board-sum {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: calc(var(--px) * 60) auto auto;
+	justify-items: end;
+	align-items: center;
+	gap: calc(var(--px) * 4) calc(var(--px) * 26);
+}
+
+.distance-board[data-locked] .board-sum {
+	opacity: 0.55;
+}
+
+.board-col-head {
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	color: #8a5a2b;
+}
+
+.board-sign {
+	justify-self: center;
+	font-size: calc(var(--px) * 50);
+	font-weight: 800;
+}
+
+.board-cell {
+	font-size: calc(var(--px) * 46);
+	font-weight: 800;
+}
+
+.board-cell s {
+	color: #c0392b;
+	font-size: calc(var(--px) * 34);
+}
+
+.board-carry {
+	min-height: calc(var(--px) * 30);
+}
+
+.board-carry-chip {
+	min-width: calc(var(--px) * 70);
+	min-height: calc(var(--px) * 44);
+	border-radius: calc(var(--px) * 22);
+	background: #2f8f3a;
+	color: #fff;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.board-line {
+	grid-column: 1 / -1;
+	justify-self: stretch;
+	height: calc(var(--px) * 6);
+	border-radius: calc(var(--px) * 3);
+	background: var(--village-ink);
+}
+
+.board-dials {
+	display: flex;
+	gap: calc(var(--px) * 8);
+}
+
+.board-metres-left {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 200);
+	height: calc(var(--px) * 172);
+	border-radius: calc(var(--px) * 18);
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 64);
+}
+
+.board-exchange {
+	grid-row: 1;
+	grid-column: 2;
+	min-height: calc(var(--px) * 76);
+	padding: 0 calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 28);
+	background: #ffd166;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	line-height: 1.3;
+}
+
+.board-exchange:disabled {
+	opacity: 0.45;
+}
+
+.board-undo {
+	position: absolute;
+	top: calc(var(--px) * -34);
+	right: calc(var(--px) * -24);
+	box-shadow: 0 calc(var(--px) * 4) 0 rgb(0 0 0 / 20%);
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	border-radius: 50%;
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 32);
+}
+
+/* ---- The help places ---- */
+
+.toy-road,
+.tikki-garden {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 18);
+	width: 100%;
+	max-width: calc(var(--px) * 1180);
+}
+
+/* Toy road blocks: a long 1 km brick and shorter metre bricks, with studs on top. */
+.toy-block {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	height: calc(var(--px) * 64);
+	border-radius: calc(var(--px) * 10);
+	background:
+		radial-gradient(
+			circle,
+			rgb(255 255 255 / 45%) 0 calc(var(--px) * 7),
+			transparent calc(var(--px) * 8)
+		)
+		0 calc(var(--px) * -26) / calc(var(--px) * 30) 100% repeat-x,
+		var(--block);
+	box-shadow: inset 0 calc(var(--px) * -8) 0 rgb(0 0 0 / 18%);
+}
+
+.toy-block[data-size="km"] {
+	--block: #8e5bd8;
+	width: calc(var(--px) * 150);
+}
+
+.toy-block[data-size="100"] {
+	--block: #f08a24;
+	width: calc(var(--px) * 74);
+}
+
+.toy-block[data-size="10"] {
+	--block: #f5c518;
+	width: calc(var(--px) * 44);
+	height: calc(var(--px) * 54);
+}
+
+.toy-block[data-size="1"] {
+	--block: #4caf50;
+	width: calc(var(--px) * 26);
+	height: calc(var(--px) * 44);
+}
+
+.toy-block-label {
+	color: #fff;
+	font-size: calc(var(--px) * 24);
+	font-weight: 800;
+	white-space: nowrap;
+	text-shadow: 0 calc(var(--px) * 2) 0 rgb(0 0 0 / 35%);
+}
+
+.toy-block[data-size="10"] .toy-block-label,
+.toy-block[data-size="1"] .toy-block-label {
+	display: none;
+}
+
+.block-pile {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: calc(var(--px) * 4);
+}
+
+.block-count {
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.toy-track {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 6);
+	width: 100%;
+	min-height: calc(var(--px) * 240);
+	padding-top: calc(var(--px) * 170);
+}
+
+.toy-ground {
+	flex: none;
+	width: calc(var(--px) * 160);
+	height: calc(var(--px) * 160);
+}
+
+.toy-car {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 1;
+	width: calc(var(--px) * 230);
+	height: calc(var(--px) * 170);
+	object-fit: contain;
+}
+
+.toy-road[data-done]:not([data-demo]) .toy-car {
+	animation: toy-car-drive 2.2s ease-in-out 0.3s forwards;
+}
+
+.toy-sparkle {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: calc(var(--px) * 260);
+	height: calc(var(--px) * 260);
+	pointer-events: none;
+	animation: toy-sparkle 700ms ease-out forwards;
+}
+
+.toy-flag {
+	position: absolute;
+	top: calc(var(--px) * 10);
+	right: calc(var(--px) * 10);
+	width: calc(var(--px) * 140);
+	height: calc(var(--px) * 160);
+	object-fit: contain;
+}
+
+.toy-blocks {
+	display: flex;
+	flex: 1;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 10);
+	padding: calc(var(--px) * 10);
+	border-radius: calc(var(--px) * 18);
+	background: rgb(255 255 255 / 55%);
+}
+
+.toy-total {
+	position: absolute;
+	bottom: calc(var(--px) * -54);
+	left: 50%;
+	padding: calc(var(--px) * 2) calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 18);
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 38);
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.toy-box {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 14);
+	margin-top: calc(var(--px) * 40);
+	padding: calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(255 247 230 / 92%);
+}
+
+.toy-box > small {
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.toy-box-pile {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 8);
+	min-height: calc(var(--px) * 96);
+	padding: 0 calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 22);
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #e0c9a6;
+}
+
+.toy-box-pile:disabled {
+	opacity: 0.35;
+}
+
+.toy-box-verb {
+	font-size: calc(var(--px) * 36);
+}
+
+.toy-exchange {
+	min-height: calc(var(--px) * 96);
+	padding: 0 calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 48);
+	background: #ffd166;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.toy-exchange:disabled {
+	opacity: 0.4;
+}
+
+[data-ghost].toy-box-pile,
+[data-ghost].toy-exchange,
+[data-ghost].garden-step,
+[data-ghost].garden-done,
+[data-ghost].garden-piece {
+	outline: calc(var(--px) * 6) dashed #fff;
+	outline-offset: calc(var(--px) * 4);
+}
+
+/* Tikki's garden: the tape, the fence and the joining strip. */
+.garden-tape {
+	position: relative;
+	width: calc(var(--px) * 1000);
+	height: calc(var(--px) * 230);
+}
+
+.garden-fence {
+	position: absolute;
+	top: 0;
+	left: calc(var(--px) * 130);
+	width: calc(var(--px) * 700);
+	height: calc(var(--px) * 140);
+	object-fit: fill;
+}
+
+.tape-case {
+	position: absolute;
+	bottom: calc(var(--px) * 10);
+	left: 0;
+	width: calc(var(--px) * 120);
+	height: calc(var(--px) * 110);
+	border-radius: calc(var(--px) * 30);
+	background:
+		radial-gradient(
+			circle,
+			#3b6fd8 0 calc(var(--px) * 22),
+			transparent calc(var(--px) * 23)
+		),
+		#ffc72c;
+	box-shadow: inset 0 calc(var(--px) * -8) 0 rgb(0 0 0 / 18%);
+}
+
+.tape-strip {
+	position: absolute;
+	bottom: calc(var(--px) * 30);
+	left: calc(var(--px) * 130);
+	width: calc(var(--px) * 7 * var(--cm));
+	height: calc(var(--px) * 50);
+	border-radius: 0 calc(var(--px) * 8) calc(var(--px) * 8) 0;
+	background: #ffe066;
+	box-shadow: inset 0 0 0 calc(var(--px) * 3) #d9a400;
+	transition: width 160ms ease-out;
+}
+
+.tape-strip i {
+	position: absolute;
+	top: 0;
+	left: calc(var(--px) * 70 * var(--at));
+	width: calc(var(--px) * 3);
+	height: 60%;
+	background: var(--village-ink);
+}
+
+.tape-reading {
+	position: absolute;
+	right: 0;
+	bottom: calc(var(--px) * 26);
+	padding: calc(var(--px) * 2) calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 16);
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 44);
+}
+
+.garden-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: calc(var(--px) * 14);
+}
+
+.garden-step,
+.garden-done,
+.garden-piece {
+	min-height: calc(var(--px) * 92);
+	padding: 0 calc(var(--px) * 26);
+	border-radius: calc(var(--px) * 46);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.garden-step,
+.garden-piece {
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #e0c9a6;
+}
+
+.garden-done {
+	background: #3fb34f;
+	color: #fff;
+}
+
+.garden-done:disabled,
+.garden-piece-back:disabled {
+	opacity: 0.4;
+}
+
+.garden-piece-pair {
+	display: inline-flex;
+	align-items: center;
+	gap: calc(var(--px) * 4);
+}
+
+.garden-piece-back {
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	border-radius: 50%;
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 30);
+}
+
+.garden-fact {
+	margin: 0;
+	padding: calc(var(--px) * 6) calc(var(--px) * 26);
+	border-radius: calc(var(--px) * 20);
+	background: var(--village-cream);
+	font-size: calc(var(--px) * 40);
+	font-weight: 700;
+}
+
+.garden-strip {
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	gap: calc(var(--px) * 4);
+	width: 100%;
+	max-width: calc(var(--px) * 1100);
+	min-height: calc(var(--px) * 220);
+	padding: calc(var(--px) * 280) calc(var(--px) * 150) calc(var(--px) * 10)
+		calc(var(--px) * 10);
+	border-bottom: calc(var(--px) * 10) solid #ffe066;
+}
+
+.strip-piece {
+	display: grid;
+	flex: 0 1 auto;
+	min-width: calc(var(--px) * 16);
+	overflow: hidden;
+	place-items: center;
+	height: calc(var(--px) * 70);
+	border-radius: calc(var(--px) * 14);
+	background: var(--piece, #c08bf0);
+	color: var(--village-ink);
+	font-size: calc(var(--px) * 22);
+	font-weight: 800;
+	white-space: nowrap;
+}
+
+.strip-piece[data-size="km"] {
+	--piece: #6ec6ff;
+	width: calc(var(--px) * 150);
+	font-size: calc(var(--px) * 30);
+}
+
+.strip-piece[data-size="100"] {
+	--piece: #c08bf0;
+	width: calc(var(--px) * 90);
+}
+
+.strip-piece[data-size="10"] {
+	--piece: #ffd166;
+	width: calc(var(--px) * 40);
+	font-size: 0;
+}
+
+.strip-piece[data-size="1"] {
+	--piece: #8bd17c;
+	width: calc(var(--px) * 18);
+	font-size: 0;
+}
+
+.strip-flag {
+	position: absolute;
+	right: 0;
+	bottom: calc(var(--px) * 10);
+	width: calc(var(--px) * 140);
+	height: calc(var(--px) * 170);
+	object-fit: contain;
+}
+
+.tikki {
+	position: absolute;
+	bottom: calc(var(--px) * 80);
+	left: calc((100% - var(--px) * 370) * var(--crawl));
+	display: grid;
+	justify-items: center;
+	width: calc(var(--px) * 230);
+	transition: left 600ms ease-in-out;
+}
+
+.garden-tape ~ .tikki {
+	position: relative;
+	bottom: auto;
+	left: auto;
+	transition: none;
+}
+
+.leaf-burst {
+	position: absolute;
+	top: 30%;
+	left: 50%;
+	pointer-events: none;
+}
+
+.leaf {
+	position: absolute;
+	width: calc(var(--px) * 80);
+	height: calc(var(--px) * 80);
+	object-fit: contain;
+	animation: leaf-fly 1.2s ease-out forwards;
+}
+
+.leaf:nth-child(1) {
+	--fly-x: -160;
+	--fly-y: -120;
+}
+
+.leaf:nth-child(2) {
+	--fly-x: 150;
+	--fly-y: -140;
+}
+
+.leaf:nth-child(3) {
+	--fly-x: -90;
+	--fly-y: -200;
+}
+
+.leaf:nth-child(4) {
+	--fly-x: 80;
+	--fly-y: -210;
+}
+
+.leaf:nth-child(5) {
+	--fly-x: -200;
+	--fly-y: -40;
+}
+
+.leaf:nth-child(6) {
+	--fly-x: 190;
+	--fly-y: -50;
+}
+
+.tikki-art {
+	width: calc(var(--px) * 220);
+	height: calc(var(--px) * 200);
+	object-fit: contain;
+}
+
+.tikki[data-mood="happy"] .tikki-art {
+	animation: tikki-spin 900ms ease-in-out 2;
+}
+
+.tikki-says {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	width: max-content;
+	max-width: calc(var(--px) * 500);
+	padding: calc(var(--px) * 8) calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 24);
+	background: #fff;
+	font-size: calc(var(--px) * 28);
+	font-weight: 700;
+	text-align: center;
+	box-shadow: 0 calc(var(--px) * 4) 0 rgb(0 0 0 / 15%);
+}
+
+.tikki[data-side="right"] .tikki-says {
+	right: 0;
+	left: auto;
+}
+
+.garden-tape ~ .tikki {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 14);
+	width: auto;
+}
+
+.garden-tape ~ .tikki .tikki-says {
+	position: static;
+	order: 2;
+}
+
+@keyframes nimo-walk-market {
+	35% {
+		transform: translate(calc(var(--px) * 700), calc(var(--px) * -10));
+	}
+	to {
+		transform: translate(calc(var(--px) * 1580), calc(var(--px) * -30));
+	}
+}
+
+@keyframes nimo-walk-stuck {
+	to {
+		transform: translate(calc(var(--px) * 760), calc(var(--px) * -40));
+	}
+}
+
+@keyframes toy-car-drive {
+	20% {
+		transform: translate(calc(var(--px) * 120), calc(var(--px) * -24))
+			rotate(-6deg);
+	}
+	to {
+		transform: translateX(calc(var(--px) * 980));
+	}
+}
+
+@keyframes toy-sparkle {
+	from {
+		opacity: 1;
+		transform: translate(-50%, -50%) scale(0.3);
+	}
+	to {
+		opacity: 0;
+		transform: translate(-50%, -50%) scale(1.3) rotate(45deg);
+	}
+}
+
+@keyframes leaf-fly {
+	to {
+		opacity: 0;
+		transform: translate(
+				calc(var(--px) * var(--fly-x)),
+				calc(var(--px) * var(--fly-y))
+			)
+			rotate(200deg);
+	}
+}
+
+@keyframes tikki-spin {
+	50% {
+		transform: rotate(-12deg) scale(1.08);
+	}
+}
+
+@keyframes village-hop {
+	to {
+		transform: translateY(calc(var(--px) * -16));
+	}
+}
+
+@keyframes village-shake {
+	25% {
+		transform: translateX(calc(var(--px) * -12));
+	}
+	75% {
+		transform: translateX(calc(var(--px) * 12));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.market-road[data-outcome] .map-nimo,
+	.toy-road[data-done] .toy-car,
+	.tikki[data-mood="happy"] .tikki-art,
+	.road-hand,
+	.leaf,
+	.toy-sparkle,
+	.road-slot[data-missed] {
+		animation: none;
+	}
+}
