@@ -217,9 +217,8 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																		: game.schema_version ===
 																				"money-adventure-item-v1"
 																			? [
-																					"money_recognition",
-																					"money_calculation",
-																					"little_shop",
+																					"grocery_shop",
+																					"coin_box",
 																				]
 																			: game.schema_version ===
 																					"capacity-adventure-item-v1"

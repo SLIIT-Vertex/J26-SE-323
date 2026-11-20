@@ -18,7 +18,8 @@ MODEL_VERSION = "g5-mat-money-authored-probabilistic-v1"
 POLICY_VERSION = "g5-mat-money-deterministic-support-v1"
 SCORING_VERSION = "g5-mat-money-trace-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-money-parallel-v1"
-Chapter = Literal["money_recognition", "money_calculation", "little_shop"]
+# Where each skill is played: shopping at the grocery shop, or the coin box at the play shop.
+Chapter = Literal["grocery_shop", "coin_box"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,11 +32,11 @@ class AtomicSkill:
 
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-MONEY-DENOMINATION-01", "money_recognition", "කාසි හා නෝට්ටු හඳුනා ගනිමු", "easy", "currency_recognition"),
-    AtomicSkill("G5-MAT-MONEY-COMPOSE-01", "money_recognition", "මුදලක් සාදමු", "easy_medium", "amount_construction"),
-    AtomicSkill("G5-MAT-MONEY-ADD-01", "money_calculation", "මුදල් එකතු කරමු", "medium", "money_arithmetic"),
-    AtomicSkill("G5-MAT-MONEY-SUBTRACT-01", "money_calculation", "මුදල් අඩු කරමු", "medium_hard", "money_arithmetic"),
-    AtomicSkill("G5-MAT-MONEY-SHOP-01", "little_shop", "වෙළඳසැලේ ගණනය", "hard", "shopping_calculation"),
+    AtomicSkill("G5-MAT-MONEY-DENOMINATION-01", "coin_box", "කාසි හා නෝට්ටු හඳුනා ගනිමු", "easy", "currency_recognition"),
+    AtomicSkill("G5-MAT-MONEY-COMPOSE-01", "coin_box", "මුදලක් සාදමු", "easy_medium", "amount_construction"),
+    AtomicSkill("G5-MAT-MONEY-ADD-01", "grocery_shop", "මුදල් එකතු කරමු", "medium", "money_arithmetic"),
+    AtomicSkill("G5-MAT-MONEY-SUBTRACT-01", "grocery_shop", "මුදල් අඩු කරමු", "medium_hard", "money_arithmetic"),
+    AtomicSkill("G5-MAT-MONEY-SHOP-01", "grocery_shop", "වෙළඳසැලේ ගණනය", "hard", "shopping_calculation"),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
 DENOMINATIONS = (
@@ -47,8 +48,8 @@ DENOMINATIONS = (
 )
 DENOMINATION_BY_ID = {row[0]: row for row in DENOMINATIONS}
 PRODUCTS = (
-    ("lime-1kg", "දෙහි 1 kg", 16500),
-    ("papaya-1kg", "පැපොල් 1 kg", 26000),
+    ("rice-1kg", "හාල් 1 kg", 16500),
+    ("dhal-1kg", "පරිප්පු 1 kg", 26000),
     ("sugar-1kg", "සීනි 1 kg", 24200),
 )
 MISCONCEPTIONS = (
@@ -206,11 +207,11 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
             rows = tuple(sorted(rng.sample(DENOMINATIONS, SIMPLER_DENOMINATION_COUNT), key=lambda row: row[2]))
         tokens = [{"denomination_id": row[0], "currency_type": row[1], "value_in_cents": row[2]} for row in rows]
         rng.shuffle(tokens)
-        prompt = "කාසි සහ නෝට්ටු නිවැරදි තැන්වල තබා කුඩා අගයෙන් විශාල අගයට පෙළගස්වන්න."
+        prompt = "කාසි කාසි පැත්තට, නෝට්ටු නෝට්ටු පැත්තට දාමු! පොඩිම ගාණ මුලින්ම."
         game: dict[str, object] = {"tokens": tokens}
     elif skill.response_kind == "amount_construction":
         target = rng.choice((1500, 2500, 3000) if simpler else (7600, 8700, 12500, 18500))
-        prompt = f"රුපියල් {format_money(target)} මුදල පසුම්බියට සාදන්න."
+        prompt = f"රුපියල් {target // 100}ක් හදමු!"
         game = {"target_in_cents": target, "denominations": [row[0] for row in DENOMINATIONS[:7]]}
     elif skill.response_kind == "money_arithmetic":
         operation = "add" if skill_id.endswith("ADD-01") else "subtract"
@@ -219,18 +220,28 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
             # Whole rupees with no carrying or exchanging between places.
             pairs = ((12000, 24000), (31000, 15000)) if operation == "add" else ((50000, 20000), (75000, 32000))
         left, right = rng.choice(pairs)
-        prompt = f"රුපියල් {format_money(left)} {('සහ' if operation == 'add' else 'න්')} රුපියල් {format_money(right)} {('එකතු කරන්න.' if operation == 'add' else 'අඩු කරන්න.')}"
+        prompt = (
+            f"බඩු දෙකක් ගමු! එකක් රු. {format_money(left)}යි, අනික රු. {format_money(right)}යි. දෙකටම කීයද?"
+            if operation == "add"
+            else f"නිමෝ ළඟ රු. {format_money(left)} තියෙනවා. රු. {format_money(right)}ක බඩුවක් ගත්තා. ඉතිරි කීයද?"
+        )
         game = {"operation": operation, "left_amount_in_cents": left, "right_amount_in_cents": right}
     else:
         scenario = rng.choice(("total", "change"))
-        selected = ["lime-1kg", "papaya-1kg"] if scenario == "total" else ["lime-1kg", "papaya-1kg", "sugar-1kg"]
+        selected = ["rice-1kg", "dhal-1kg"] if scenario == "total" else ["rice-1kg", "dhal-1kg", "sugar-1kg"]
         quantities = [2, 1] if scenario == "total" else [1, 1, 1]
         if simpler:
             # One of each of two products, and no change to work out.
-            scenario, selected, quantities = "total", ["lime-1kg", "papaya-1kg"], [1, 1]
+            scenario, selected, quantities = "total", ["rice-1kg", "dhal-1kg"], [1, 1]
         line_totals, total = shopping_totals(selected, quantities)
         paid = total if scenario == "total" else 100000
-        prompt = "මිල වගුව බලන්න. ඉල්ලූ ප්‍රමාණවල මුළු මිල සහ ඉතිරි මුදල සොයන්න."
+        names = {row[0]: row[1].split()[0] for row in PRODUCTS}
+        wanted = ", ".join(f"{names[product]} {quantity} kgක්" for product, quantity in zip(selected, quantities, strict=True))
+        prompt = (
+            f"{wanted} ගමු! නිමෝ රු. {paid // 100}ක් දෙනවා. ඉතිරි කීයද?"
+            if paid > total
+            else f"{wanted} ගමු! මුළු ගණන කීයද?"
+        )
         game = {
             "problem_id": f"shop-{scenario}",
             "products": [{"product_id": row[0], "name_si": row[1], "unit_price_in_cents": row[2]} for row in PRODUCTS],

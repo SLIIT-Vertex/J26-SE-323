@@ -41,7 +41,7 @@ rename them.
 | `G5-AREA-MAT-07` | කාලය | [`maths/mat-07-time-adventure/`](maths/mat-07-time-adventure/) | `NimoMovieStudio.tsx` | `time_adventure_flow.py` | `content/time_adventure.py` | — (content in Python) |
 | `G5-AREA-MAT-08` | බෙදීම | [`maths/mat-08-division-adventure/`](maths/mat-08-division-adventure/) | `NimoSpaceSleepover.tsx` | `division_adventure_flow.py` | `content/division_adventure.py` | — (content in Python) |
 | `G5-AREA-MAT-09` | දිග හා දුර | [`maths/mat-09-distance-adventure/`](maths/mat-09-distance-adventure/) | `NimoVillageWalk.tsx` | `distance_adventure_flow.py` | `content/distance_adventure.py` | — (content in Python) |
-| `G5-AREA-MAT-10` | මුදල් | [`maths/mat-10-money-adventure/`](maths/mat-10-money-adventure/) | `MoneyAdventureJourney.tsx` | `money_adventure_flow.py` | `content/money_adventure.py` | `grade5-money-adventure/` |
+| `G5-AREA-MAT-10` | මුදල් | [`maths/mat-10-money-adventure/`](maths/mat-10-money-adventure/) | `NimoShopDay.tsx` | `money_adventure_flow.py` | `content/money_adventure.py` | `grade5-money-adventure/` |
 | `G5-AREA-MAT-11` | පරිමාව හා ධාරිතාව | [`maths/mat-11-capacity-adventure/`](maths/mat-11-capacity-adventure/) | `CapacityAdventureJourney.tsx` | `capacity_adventure_flow.py` | `content/capacity_adventure.py` | `grade5-capacity-adventure/` |
 | `G5-AREA-MAT-12` | බර මැනීම | [`maths/mat-12-mass-adventure/`](maths/mat-12-mass-adventure/) | `MassAdventureJourney.tsx` | `mass_adventure_flow.py` | `content/mass_adventure.py` | — (content in Python) |
 | `G5-AREA-MAT-13` | හැඩතල හා ඝන වස්තු | [`maths/mat-13-shape-adventure/`](maths/mat-13-shape-adventure/) | `ShapeAdventureJourney.tsx` | `shape_adventure_flow.py` | `content/shape_adventure.py` | — (content in Python) |

@@ -64,7 +64,7 @@ def test_recognition_requires_classification_and_ordering():
 
 
 def test_price_quantity_total_change_and_working_trace():
-    lines, total = shopping_totals(["lime-1kg", "papaya-1kg"], [2, 1])
+    lines, total = shopping_totals(["rice-1kg", "dhal-1kg"], [2, 1])
     assert lines == [33000, 26000]
     assert total == 59000
     item = generate_item("G5-MAT-MONEY-SHOP-01", role="unsupported_before", seed=4)
@@ -77,3 +77,20 @@ def test_price_quantity_total_change_and_working_trace():
 def test_negative_money_is_rejected():
     with pytest.raises(ValueError, match="NEGATIVE_MONEY"):
         canonical_arithmetic("subtract", 100, 200)
+
+
+def test_grocery_shop_missions_and_coin_box_help():
+    from app.gamification.content.money_adventure import SKILLS, correct_response, generate_item
+
+    chapters = {skill_id: skill.chapter for skill_id, skill in SKILLS.items()}
+    assert chapters["G5-MAT-MONEY-DENOMINATION-01"] == "coin_box"
+    assert chapters["G5-MAT-MONEY-COMPOSE-01"] == "coin_box"
+    for skill_id in ("G5-MAT-MONEY-ADD-01", "G5-MAT-MONEY-SUBTRACT-01", "G5-MAT-MONEY-SHOP-01"):
+        assert chapters[skill_id] == "grocery_shop"
+    totals = {
+        correct_response(generate_item("G5-MAT-MONEY-SHOP-01", role="unsupported_before", seed=seed).game_data)["total_in_cents"]
+        for seed in range(20)
+    }
+    # The textbook's baskets: 2 kg rice + 1 kg dhal = Rs. 590, one kilo of all three = Rs. 667.
+    assert totals == {59000, 66700}
+    assert "හාල්" in generate_item("G5-MAT-MONEY-SHOP-01", role="unsupported_after", seed=3).prompt_si

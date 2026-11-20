@@ -102,7 +102,7 @@ describe("child contract", () => {
 						prompt_si: "රු. 165.75 + රු. 242.50 සොයන්න.",
 						game: {
 							schema_version: "money-adventure-item-v1",
-							chapter: "money_calculation",
+							chapter: "grocery_shop",
 							response_kind: "money_arithmetic",
 							operation: "add",
 							left_amount_in_cents: 16575,
