@@ -1,0 +1,930 @@
+/* Nimo's Water-Play Day. Design space 1920×1080; --px is one design pixel. */
+.water-day {
+	--water-ink: #1d3b5a;
+	--water-cream: #fff8e8;
+	--water-gold: #ffd166;
+	--water-red: #c0392b;
+	--water-blue: #3fa9f5;
+	--wood-panel: url("/curriculum/game/G5-AREA-MAT-11/kit/panel-wood.png");
+	--wood-key: url("/curriculum/game/G5-AREA-MAT-11/kit/key-wood.png");
+	--box-panel: url("/curriculum/game/G5-AREA-MAT-11/kit/panel-box.png");
+	position: absolute;
+	inset: 0;
+	background:
+		var(--water-bg, linear-gradient(#bfe8ff, #9fdc7c 50%, #6fbf4e)) center /
+		cover no-repeat,
+		#7cc35a;
+	color: var(--water-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholders and shared pieces ---- */
+
+.water-shape {
+	display: inline-grid;
+	place-items: center;
+	border: calc(var(--px) * 4) dashed rgb(29 59 90 / 45%);
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 255 255 / 45%);
+}
+
+.water-shape::after {
+	content: attr(data-art);
+	color: rgb(29 59 90 / 60%);
+	font-size: calc(var(--px) * 22);
+}
+
+.boat-race button,
+.fountain button,
+.balloons button {
+	min-height: 0;
+	border-style: none;
+	color: inherit;
+	font: inherit;
+}
+
+/* Nimo with his speech bubble. */
+.nimo-says {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 10);
+}
+
+.nimo-says-art {
+	flex: none;
+	width: var(--nimo-w, calc(var(--px) * 150));
+	height: var(--nimo-h, calc(var(--px) * 200));
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.nimo-says-bubble {
+	position: relative;
+	margin: 0;
+	padding: calc(var(--px) * 14) calc(var(--px) * 28);
+	border: calc(var(--px) * 5) solid var(--water-ink);
+	border-radius: calc(var(--px) * 34);
+	background: #fff;
+	font-size: calc(var(--px) * 34);
+	font-weight: 700;
+	line-height: 1.35;
+	box-shadow: 0 calc(var(--px) * 6) 0 rgb(0 0 0 / 18%);
+}
+
+.nimo-says-bubble::before {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: calc(var(--px) * -24);
+	border-width: calc(var(--px) * 14) calc(var(--px) * 24) calc(var(--px) * 14) 0;
+	border-style: solid;
+	border-color: transparent var(--water-ink) transparent transparent;
+	transform: translateY(-50%);
+}
+
+.nimo-says[data-mood="cheer"] .nimo-says-art {
+	animation: nimo-hop 450ms ease-in-out infinite alternate;
+}
+
+/* The cash-register keypad and the bill's cells. */
+.keypad {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: calc(var(--px) * 10);
+	align-content: start;
+	box-sizing: border-box;
+	width: calc(var(--px) * 390);
+	padding: calc(var(--px) * 30);
+	border-image: var(--wood-panel) 64 fill / calc(var(--px) * 40) stretch;
+}
+
+.keypad-key {
+	min-width: 0;
+	min-height: calc(var(--px) * 96);
+	border-image: var(--wood-key) 40 fill / calc(var(--px) * 22) stretch;
+	background: transparent;
+	font-size: calc(var(--px) * 50);
+	font-weight: 900;
+}
+
+.keypad-rub {
+	grid-column: span 2;
+}
+
+.keypad[data-locked] {
+	opacity: 0.5;
+}
+
+.amount-cell {
+	display: inline-flex;
+	align-items: baseline;
+	justify-content: flex-end;
+	gap: calc(var(--px) * 8);
+	min-width: calc(var(--px) * 190);
+	min-height: calc(var(--px) * 84);
+	padding: 0 calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 16);
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #d8b98a;
+}
+
+.amount-cell small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+}
+
+.amount-cell strong {
+	font-size: calc(var(--px) * 50);
+}
+
+.amount-cell[data-selected] {
+	box-shadow:
+		inset 0 0 0 calc(var(--px) * 6) #2e86de,
+		0 0 0 calc(var(--px) * 6) rgb(46 134 222 / 30%);
+}
+
+/* A measuring jug: the water behind the glass, its size on a label. */
+.jug {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 170);
+}
+
+.jug-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.jug-water {
+	position: absolute;
+	right: 22%;
+	bottom: 10%;
+	left: 14%;
+	border-radius: 0 0 calc(var(--px) * 14) calc(var(--px) * 14);
+	background: linear-gradient(#7fd3ff, var(--water-blue));
+	opacity: 0.85;
+}
+
+.jug-label {
+	position: relative;
+	padding: 0 calc(var(--px) * 10);
+	border-radius: calc(var(--px) * 12);
+	background: var(--water-cream);
+	font-size: calc(var(--px) * 30);
+	font-weight: 900;
+	white-space: nowrap;
+}
+
+/* The litres-and-millilitres sum. */
+.capacity-sum {
+	display: grid;
+	grid-template-columns: calc(var(--px) * 44) 1fr calc(var(--px) * 150);
+	padding-right: calc(var(--px) * 8);
+	justify-items: end;
+	align-items: center;
+	gap: calc(var(--px) * 4) calc(var(--px) * 14);
+}
+
+.sum-head {
+	color: #8a5a2b;
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.sum-sign {
+	justify-self: center;
+	font-size: calc(var(--px) * 46);
+	font-weight: 800;
+}
+
+.sum-cell {
+	font-size: calc(var(--px) * 48);
+	font-weight: 800;
+}
+
+.sum-cell s {
+	color: var(--water-red);
+	font-size: calc(var(--px) * 30);
+}
+
+.sum-carry {
+	min-height: calc(var(--px) * 30);
+}
+
+.sum-carry-chip {
+	min-width: calc(var(--px) * 70);
+	min-height: calc(var(--px) * 44);
+	border-radius: calc(var(--px) * 22);
+	background: #2f8f3a;
+	color: #fff;
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.sum-line {
+	grid-column: 1 / -1;
+	justify-self: stretch;
+	height: calc(var(--px) * 6);
+	background: var(--water-ink);
+}
+
+.sum-answer .amount-cell {
+	min-width: calc(var(--px) * 150);
+}
+
+.sum-ml-left {
+	display: grid;
+	place-items: center;
+	min-width: calc(var(--px) * 150);
+	min-height: calc(var(--px) * 84);
+	border-radius: calc(var(--px) * 16);
+	background: var(--water-cream);
+	font-size: calc(var(--px) * 50);
+}
+
+.capacity-exchange {
+	min-height: calc(var(--px) * 80);
+	border-radius: calc(var(--px) * 40);
+	background: var(--water-gold);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.capacity-exchange:disabled {
+	opacity: 0.45;
+}
+
+.capacity-undo {
+	position: absolute;
+	top: calc(var(--px) * -20);
+	right: calc(var(--px) * -20);
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	border-radius: 50%;
+	background: var(--water-cream);
+	font-size: calc(var(--px) * 32);
+	box-shadow: 0 calc(var(--px) * 4) 0 rgb(0 0 0 / 20%);
+}
+
+.capacity-board {
+	position: relative;
+	display: grid;
+	gap: calc(var(--px) * 12);
+	width: calc(var(--px) * 440);
+	padding: calc(var(--px) * 30);
+	border-image: var(--wood-panel) 64 fill / calc(var(--px) * 40) stretch;
+}
+
+.capacity-board-title {
+	font-size: calc(var(--px) * 36);
+	text-align: center;
+}
+
+/* ---- බෝට්ටු තරගය (the mission) ---- */
+
+.boat-race {
+	position: absolute;
+	inset: 0;
+}
+
+.race-nimo {
+	position: absolute;
+	top: calc(var(--px) * 10);
+	left: calc(var(--px) * 280);
+	z-index: 3;
+	width: calc(var(--px) * 740);
+}
+
+.race-tanks {
+	position: absolute;
+	top: calc(var(--px) * 220);
+	left: calc(var(--px) * 60);
+	display: flex;
+	justify-content: center;
+	gap: calc(var(--px) * 60);
+	width: calc(var(--px) * 960);
+}
+
+.race-tank {
+	display: grid;
+	justify-items: center;
+}
+
+.race-tank-body {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 300);
+	height: calc(var(--px) * 280);
+}
+
+.race-tank-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.race-tank-water {
+	position: absolute;
+	right: 14%;
+	bottom: 12%;
+	left: 14%;
+	border-radius: calc(var(--px) * 16);
+	background: linear-gradient(#8fdcff, var(--water-blue));
+	opacity: 0.8;
+	transition: height 1.4s ease-in-out;
+}
+
+.race-tank-label {
+	position: relative;
+	padding: calc(var(--px) * 4) calc(var(--px) * 18);
+	border: calc(var(--px) * 4) solid #c79a52;
+	border-radius: calc(var(--px) * 18);
+	background: var(--water-cream);
+	font-size: calc(var(--px) * 40);
+	font-weight: 900;
+	white-space: nowrap;
+}
+
+.race-tap {
+	display: grid;
+	justify-items: center;
+	padding: 0;
+	background: transparent;
+}
+
+.race-pipe {
+	width: calc(var(--px) * 60);
+	height: calc(var(--px) * 100);
+	object-fit: contain;
+}
+
+.race-tap-name {
+	padding: calc(var(--px) * 8) calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 40);
+	background: var(--water-gold);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+	box-shadow: 0 calc(var(--px) * 5) 0 rgb(0 0 0 / 18%);
+}
+
+.race-tank[data-open] .race-tap-name {
+	background: #bfe9ff;
+}
+
+.race-jugs {
+	position: absolute;
+	top: calc(var(--px) * 220);
+	right: calc(var(--px) * 30);
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 14);
+	width: calc(var(--px) * 820);
+	padding: calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 30);
+	background: rgb(255 248 232 / 90%);
+}
+
+.race-jugs > small {
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.race-jug-row {
+	display: flex;
+	gap: calc(var(--px) * 16);
+}
+
+.race-jug,
+.fountain-jug-button,
+.balloon-jug-button {
+	padding: calc(var(--px) * 6);
+	border-radius: calc(var(--px) * 22);
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #cde6f7;
+}
+
+.race-poured {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 8);
+	min-height: calc(var(--px) * 70);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.race-poured-chip {
+	padding: calc(var(--px) * 2) calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 16);
+	background: #bfe9ff;
+}
+
+.race-pour-back,
+.fountain-back,
+.balloon-back {
+	width: calc(var(--px) * 70);
+	height: calc(var(--px) * 70);
+	border-radius: 50%;
+	background: var(--water-cream);
+	font-size: calc(var(--px) * 34);
+	box-shadow: 0 calc(var(--px) * 4) 0 rgb(0 0 0 / 18%);
+}
+
+.race-channel {
+	position: absolute;
+	bottom: calc(var(--px) * 20);
+	left: calc(var(--px) * 30);
+	width: calc(var(--px) * 1000);
+	height: calc(var(--px) * 300);
+	overflow: hidden;
+}
+
+.boat-race[data-kind="fill"] .race-channel {
+	width: calc(var(--px) * 1060);
+}
+
+.race-channel-art {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 62%;
+	object-fit: fill;
+}
+
+.race-channel-water {
+	position: absolute;
+	right: 5%;
+	bottom: calc(62% * 0.22);
+	left: 5%;
+	height: calc(62% * 0.56 * var(--level));
+	border-radius: calc(var(--px) * 10);
+	background: linear-gradient(rgb(143 220 255 / 90%), rgb(63 169 245 / 90%));
+	transition: height 1.2s ease-in-out;
+}
+
+.race-fish {
+	position: absolute;
+	right: 24%;
+	bottom: calc(62% * 0.3);
+	width: calc(var(--px) * 90);
+	height: calc(var(--px) * 56);
+	object-fit: contain;
+	opacity: calc(var(--level) * 1.3);
+}
+
+.race-splash {
+	position: absolute;
+	top: 0;
+	left: 40%;
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 140);
+	object-fit: contain;
+	opacity: 0;
+}
+
+.boat-race[data-outcome="correct"] .race-splash {
+	animation: race-splash 900ms ease-out 2;
+}
+
+.race-flag {
+	position: absolute;
+	right: calc(var(--px) * 20);
+	bottom: calc(62% * 0.5);
+	font-size: calc(var(--px) * 90);
+}
+
+.race-boat {
+	position: absolute;
+	bottom: calc(62% * 0.3 + 62% * 0.42 * var(--level));
+	left: calc(var(--px) * (50 + var(--lane) * 130));
+	z-index: 1;
+	transition: bottom 1.2s ease-in-out;
+}
+
+.race-boat-art {
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 130);
+	object-fit: contain;
+}
+
+.boat-race[data-outcome="correct"] .race-boat {
+	animation: boat-race 2.6s ease-in forwards;
+	animation-delay: calc(var(--lane) * 150ms);
+}
+
+.boat-race[data-outcome="wrong"] .race-boat {
+	animation: boat-bob 500ms ease-in-out 3;
+}
+
+.race-register {
+	position: absolute;
+	top: calc(var(--px) * 16);
+	right: calc(var(--px) * 16);
+	display: flex;
+	align-items: flex-start;
+	gap: calc(var(--px) * 14);
+}
+
+.race-register[data-locked] > :not(.keypad) {
+	opacity: 0.6;
+}
+
+.race-send {
+	position: absolute;
+	right: calc(var(--px) * 30);
+	bottom: calc(var(--px) * 30);
+	min-width: calc(var(--px) * 380);
+}
+
+/* ---- The help places ---- */
+
+.fountain,
+.balloons {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 14);
+	width: 100%;
+	max-width: calc(var(--px) * 1180);
+}
+
+.help-nimo {
+	justify-self: start;
+	--nimo-w: calc(var(--px) * 110);
+	--nimo-h: calc(var(--px) * 140);
+}
+
+.help-nimo .nimo-says-bubble {
+	font-size: calc(var(--px) * 30);
+}
+
+.the-fountain {
+	position: relative;
+	display: grid;
+	place-items: center;
+}
+
+.fountain-art {
+	width: calc(var(--px) * 380);
+	height: calc(var(--px) * 260);
+	object-fit: contain;
+}
+
+.the-fountain[data-dancing] .fountain-art {
+	animation: fountain-dance 700ms ease-in-out infinite alternate;
+}
+
+.fountain-sparkle {
+	position: absolute;
+	width: calc(var(--px) * 240);
+	height: calc(var(--px) * 240);
+	pointer-events: none;
+	animation: water-sparkle 900ms ease-out forwards;
+}
+
+.fountain-pools {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+}
+
+.fountain-pool {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 6);
+	min-height: calc(var(--px) * 230);
+	padding: calc(var(--px) * 26);
+	border-image: var(--box-panel) 64 fill / calc(var(--px) * 40) stretch;
+}
+
+.fountain-pool small {
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+.fountain-pool > strong {
+	padding: 0 calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 14);
+	background: #fff;
+	font-size: calc(var(--px) * 40);
+}
+
+.fountain-pool[data-full] {
+	animation: pool-wobble 600ms ease-in-out infinite;
+}
+
+.fountain-bottles {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: calc(var(--px) * 6);
+	min-height: calc(var(--px) * 120);
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+}
+
+.fountain-bottle {
+	position: relative;
+	display: inline-block;
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 150);
+}
+
+.fountain-bottle-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.fountain-bottle-water {
+	position: absolute;
+	right: 14%;
+	bottom: 4%;
+	left: 14%;
+	height: 66%;
+	border-radius: calc(var(--px) * 10);
+	background: linear-gradient(#8fdcff, var(--water-blue));
+	opacity: 0.85;
+}
+
+.fountain-buttons,
+.balloon-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: calc(var(--px) * 14);
+}
+
+.fountain-pour,
+.fountain-exchange,
+.fountain-finish,
+.balloon-pour {
+	min-height: calc(var(--px) * 92);
+	padding: 0 calc(var(--px) * 28);
+	border-radius: calc(var(--px) * 46);
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+}
+
+.fountain-pour,
+.balloon-pour {
+	background: #fff;
+	box-shadow: inset 0 0 0 calc(var(--px) * 4) #cde6f7;
+}
+
+.fountain-exchange {
+	background: var(--water-gold);
+}
+
+.fountain-finish {
+	background: #3fb34f;
+	color: #fff;
+}
+
+.fountain-pour:disabled,
+.fountain-exchange:disabled,
+.balloon-pour:disabled,
+.fountain-jug-button:disabled,
+.balloon-jug-button:disabled {
+	opacity: 0.4;
+}
+
+[data-ghost].fountain-pour,
+[data-ghost].fountain-exchange,
+[data-ghost].fountain-finish,
+[data-ghost].fountain-jug-button,
+[data-ghost].balloon-pour,
+[data-ghost].balloon-jug-button,
+[data-ghost].read-mark {
+	outline: calc(var(--px) * 6) dashed #fff;
+	outline-offset: calc(var(--px) * 4);
+}
+
+.fountain-total,
+.balloon-total {
+	margin: 0;
+	padding: calc(var(--px) * 6) calc(var(--px) * 26);
+	border-radius: calc(var(--px) * 22);
+	background: var(--water-cream);
+	font-size: calc(var(--px) * 36);
+	font-weight: 700;
+}
+
+/* The balloons. */
+.balloon {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 300);
+	height: calc(var(--px) * 300);
+}
+
+.balloon-art {
+	width: calc(var(--px) * (120 + 160 * var(--fill)));
+	height: calc(var(--px) * (130 + 170 * var(--fill)));
+	object-fit: contain;
+	transition:
+		width 400ms ease-out,
+		height 400ms ease-out;
+}
+
+.balloon[data-over] .balloon-art {
+	animation: pool-wobble 300ms ease-in-out infinite;
+}
+
+.balloon[data-launched] .balloon-art {
+	animation: balloon-launch 1.4s ease-in forwards;
+}
+
+.balloon-splash {
+	position: absolute;
+	top: 0;
+	right: calc(var(--px) * -60);
+	width: calc(var(--px) * 180);
+	height: calc(var(--px) * 160);
+	object-fit: contain;
+	opacity: 0;
+	animation: race-splash 700ms ease-out 1.2s forwards;
+}
+
+.read-stage,
+.fill-stage {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 30);
+}
+
+.fill-stage {
+	flex-direction: column;
+	gap: calc(var(--px) * 6);
+}
+
+.read-jug {
+	position: relative;
+	display: block;
+	width: calc(var(--px) * 300);
+	height: calc(var(--px) * 440);
+}
+
+.read-jug-art {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: fill;
+}
+
+.read-water {
+	position: absolute;
+	right: 22%;
+	bottom: 8%;
+	left: 12%;
+	max-height: 80%;
+	border-radius: 0 0 calc(var(--px) * 24) calc(var(--px) * 24);
+	background: linear-gradient(#8fdcff, var(--water-blue));
+	opacity: 0.85;
+	transition: height 300ms ease-out;
+}
+
+.read-marks {
+	display: grid;
+	gap: calc(var(--px) * 2);
+}
+
+.read-mark {
+	min-width: calc(var(--px) * 190);
+	padding: 0 calc(var(--px) * 12);
+	border-radius: calc(var(--px) * 12);
+	background: rgb(255 255 255 / 80%);
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+	text-align: left;
+	line-height: 1.45;
+}
+
+.read-mark[data-chosen] {
+	background: #2e86de;
+	color: #fff;
+}
+
+@keyframes race-splash {
+	0% {
+		opacity: 0;
+		transform: scale(0.4);
+	}
+	40% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+		transform: scale(1.3);
+	}
+}
+
+@keyframes boat-race {
+	15% {
+		transform: translateY(calc(var(--px) * -10)) rotate(-4deg);
+	}
+	to {
+		transform: translateX(calc(var(--px) * 760));
+	}
+}
+
+@keyframes boat-bob {
+	50% {
+		transform: translateY(calc(var(--px) * 8)) rotate(5deg);
+	}
+}
+
+@keyframes fountain-dance {
+	to {
+		transform: scale(1.05) translateY(calc(var(--px) * -8));
+	}
+}
+
+@keyframes water-sparkle {
+	from {
+		opacity: 1;
+		transform: scale(0.3);
+	}
+	to {
+		opacity: 0;
+		transform: scale(1.3) rotate(45deg);
+	}
+}
+
+@keyframes pool-wobble {
+	25% {
+		transform: rotate(-3deg);
+	}
+	75% {
+		transform: rotate(3deg);
+	}
+}
+
+@keyframes balloon-launch {
+	30% {
+		transform: translateY(calc(var(--px) * 20)) scale(1.05, 0.95);
+	}
+	to {
+		opacity: 0;
+		transform: translate(calc(var(--px) * 500), calc(var(--px) * -260))
+			rotate(30deg) scale(0.6);
+	}
+}
+
+@keyframes nimo-hop {
+	to {
+		transform: translateY(calc(var(--px) * -14));
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.nimo-says[data-mood="cheer"] .nimo-says-art,
+	.boat-race[data-outcome] .race-boat,
+	.boat-race[data-outcome="correct"] .race-splash,
+	.the-fountain[data-dancing] .fountain-art,
+	.fountain-sparkle,
+	.fountain-pool[data-full],
+	.balloon[data-over] .balloon-art,
+	.balloon[data-launched] .balloon-art,
+	.balloon-splash {
+		animation: none;
+	}
+}
+
+/* The drawn water sits in front of the see-through art, the labels in front of the water. */
+.race-tank-water,
+.race-channel-water,
+.fountain-bottle-water,
+.jug-water,
+.read-water {
+	z-index: 1;
+	mix-blend-mode: multiply;
+}
+
+.race-tank-label,
+.jug-label {
+	z-index: 2;
+}
+
+.race-fish {
+	z-index: 2;
+}

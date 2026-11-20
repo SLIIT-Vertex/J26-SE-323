@@ -170,7 +170,7 @@ describe("child contract", () => {
 					worked_example: {
 						mode: "exact_failed_activity",
 						prompt_si: "8 l 250 ml සහ 4 l 750 ml එකතු කරන්න.",
-						game: { schema_version: "capacity-adventure-item-v1", chapter: "litre_machine", response_kind: "capacity_arithmetic", operation: "add", left_litres: 8, left_millilitres: 250, right_litres: 4, right_millilitres: 750 },
+						game: { schema_version: "capacity-adventure-item-v1", chapter: "boat_race", response_kind: "capacity_arithmetic", operation: "add", left_litres: 8, left_millilitres: 250, right_litres: 4, right_millilitres: 750 },
 						correct_response: { kind: "capacity_arithmetic", operation: "add", left_litres: 8, left_millilitres: 250, right_litres: 4, right_millilitres: 750, millilitre_subtotal_or_adjustment: 1000, carried_or_borrowed_litres: 1, exchange_used: true, working_steps: ["ml:250+750=1000", "carry:1", "ml-result:0", "litres:8+4+1=13"], result_litres: 13, result_millilitres: 0 },
 						steps_si: ["ml එකතු කරන්න.", "1000 ml මාරු කරන්න."],
 					},

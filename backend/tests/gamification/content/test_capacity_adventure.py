@@ -46,3 +46,16 @@ def test_ordered_working_and_delivery_are_server_validated():
     assert validate_constructed_response(arithmetic, response)[:2] == (False, "correct_result_invalid_working")
     delivery = generate_item("G5-MAT-CAPACITY-PROBLEM-01", role="unsupported_before", seed=23)
     assert validate_constructed_response(delivery, correct_response(delivery.game_data))[0] is True
+
+
+def test_boat_race_missions_and_garden_help():
+    from app.gamification.content.capacity_adventure import SKILLS, generate_item, spoken_capacity
+
+    chapters = {skill_id: skill.chapter for skill_id, skill in SKILLS.items()}
+    assert chapters["G5-MAT-CAPACITY-ARITHMETIC-01"] == chapters["G5-MAT-CAPACITY-PROBLEM-01"] == "boat_race"
+    assert chapters["G5-MAT-CAPACITY-CONVERT-01"] == "dancing_fountain"
+    assert chapters["G5-MAT-CAPACITY-READ-01"] == chapters["G5-MAT-CAPACITY-COMPOSE-01"] == "water_balloons"
+    assert spoken_capacity(2250) == "2 l 250 ml"
+    assert spoken_capacity(3000) == "3 l"
+    assert spoken_capacity(600) == "600 ml"
+    assert "බෝට්ටු" in generate_item("G5-MAT-CAPACITY-PROBLEM-01", role="unsupported_after", seed=4).prompt_si

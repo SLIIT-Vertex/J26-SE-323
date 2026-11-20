@@ -223,9 +223,9 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																			: game.schema_version ===
 																					"capacity-adventure-item-v1"
 																				? [
-																						"water_laboratory",
-																						"litre_machine",
-																						"water_delivery",
+																						"boat_race",
+																						"dancing_fountain",
+																						"water_balloons",
 																					]
 																				: game.schema_version ===
 																						"roman-adventure-item-v1"

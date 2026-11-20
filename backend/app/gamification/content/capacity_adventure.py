@@ -18,7 +18,8 @@ MODEL_VERSION = "g5-mat-capacity-authored-probabilistic-v1"
 POLICY_VERSION = "g5-mat-capacity-deterministic-support-v1"
 SCORING_VERSION = "g5-mat-capacity-trace-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-capacity-parallel-v1"
-Chapter = Literal["water_laboratory", "litre_machine", "water_delivery"]
+# Where each skill is played in the water-play garden: the boat race, the fountain or the balloons.
+Chapter = Literal["boat_race", "dancing_fountain", "water_balloons"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,11 +32,11 @@ class AtomicSkill:
 
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-CAPACITY-READ-01", "water_laboratory", "දියර මට්ටම කියවමු", "easy", "vessel_reading"),
-    AtomicSkill("G5-MAT-CAPACITY-COMPOSE-01", "water_laboratory", "ලීටර් එකක් සාදමු", "easy_medium", "capacity_composition"),
-    AtomicSkill("G5-MAT-CAPACITY-CONVERT-01", "litre_machine", "ලීටර්–මිලිලීටර් මාරු කරමු", "medium", "capacity_conversion"),
-    AtomicSkill("G5-MAT-CAPACITY-ARITHMETIC-01", "litre_machine", "ධාරිතාව ගණනය කරමු", "medium_hard", "capacity_arithmetic"),
-    AtomicSkill("G5-MAT-CAPACITY-PROBLEM-01", "water_delivery", "ජල බෙදාහැරීමේ මෙහෙයුම", "hard", "capacity_delivery"),
+    AtomicSkill("G5-MAT-CAPACITY-READ-01", "water_balloons", "දියර මට්ටම කියවමු", "easy", "vessel_reading"),
+    AtomicSkill("G5-MAT-CAPACITY-COMPOSE-01", "water_balloons", "ලීටර් එකක් සාදමු", "easy_medium", "capacity_composition"),
+    AtomicSkill("G5-MAT-CAPACITY-CONVERT-01", "dancing_fountain", "ලීටර්–මිලිලීටර් මාරු කරමු", "medium", "capacity_conversion"),
+    AtomicSkill("G5-MAT-CAPACITY-ARITHMETIC-01", "boat_race", "ධාරිතාව ගණනය කරමු", "medium_hard", "capacity_arithmetic"),
+    AtomicSkill("G5-MAT-CAPACITY-PROBLEM-01", "boat_race", "ජල බෙදාහැරීමේ මෙහෙයුම", "hard", "capacity_delivery"),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
 PORTIONS = (100, 200, 250, 500, 1000)
@@ -89,6 +90,13 @@ def normalize_capacity(litres: int, millilitres: int) -> tuple[int, int]:
 def format_capacity(total_ml: int) -> str:
     litres, millilitres = split_capacity(total_ml)
     return f"{litres} l {millilitres:03d} ml"
+
+
+def spoken_capacity(total_ml: int) -> str:
+    """"2 l 250 ml", or "2 l" for whole litres, as a child reads it."""
+    litres, millilitres = split_capacity(total_ml)
+    if not litres: return f"{millilitres} ml"
+    return f"{litres} l" + (f" {millilitres} ml" if millilitres else "")
 
 
 def valid_graduation(value: int) -> bool:
@@ -170,14 +178,14 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
         target = rng.choice((200, 500) if simpler else (300, 600, 800, 900))
         start = rng.choice(tuple(value for value in range(100, 1001, 100) if value != target))
         game: dict[str, object] = {"capacity_ml": target, "start_level_ml": start, "tick_interval_ml": 100}
-        prompt = f"දියර මට්ටම {target} ml සලකුණට සකස් කර අගය තහවුරු කරන්න."
+        prompt = f"ජෝගුවේ වතුර {target} ml ඉරට එනකම් වත් කරමු!"
     elif skill.response_kind == "capacity_composition":
         game = {"target_ml": 1000, "available_portions_ml": list(PORTIONS)}
-        prompt = "විවිධ කොටස් භාවිතයෙන් ලීටර් එකක් සාදන්න."
+        prompt = "බැලුමට වතුර ලීටර් 1ක් පුරවමු!"
         if simpler:
             # Half a litre from three portion sizes.
             game = {"target_ml": 500, "available_portions_ml": [100, 250, 500]}
-            prompt = "විවිධ කොටස් භාවිතයෙන් 500 ml සාදන්න."
+            prompt = "බැලුමට වතුර මිලිලීටර් 500ක් පුරවමු!"
     elif skill.response_kind == "capacity_conversion":
         # Always millilitres only, to be changed into whole litres and the millilitres left over
         # (2 750 ml → 2 l 750 ml); a given already in litres would be its own answer.
@@ -187,7 +195,7 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
             source = rng.randint(1, 9) * 1000 + rng.choice((50, 100, 250, 300, 350, 400, 500, 600, 750, 900))
         source_l, source_ml = 0, source
         game = {"source_litres": source_l, "source_millilitres": source_ml, "source_total_ml": source}
-        prompt = f"{source:,} ml ලීටර් සහ ඉතිරි මිලිලීටර් ලෙස මාරු කරන්න.".replace(",", " ")
+        prompt = f"මිලිලීටර් {source}ක වතුර ලීටර් බෝතල්වලට දාමු! ලීටර් කීයද, මිලිලීටර් කීයද?"
     elif skill.response_kind == "capacity_arithmetic":
         operation = rng.choice(("add", "subtract"))
         if operation == "add": pairs = ((8, 250, 4, 750), (3, 650, 2, 700))
@@ -195,11 +203,16 @@ def generate_item(skill_id: str, *, role: str, seed: int, simpler: bool = False)
         if simpler: pairs = ((2, 200, 1, 300),) if operation == "add" else ((5, 500, 2, 200),)
         left_l, left_ml, right_l, right_ml = rng.choice(pairs)
         game = {"operation": operation, "left_litres": left_l, "left_millilitres": left_ml, "right_litres": right_l, "right_millilitres": right_ml}
-        prompt = f"{left_l} l {left_ml:03d} ml {('සහ' if operation == 'add' else 'න්')} {right_l} l {right_ml:03d} ml {('එකතු කරන්න.' if operation == 'add' else 'අඩු කරන්න.')}"
+        left, right = spoken_capacity(total_millilitres(left_l, left_ml)), spoken_capacity(total_millilitres(right_l, right_ml))
+        prompt = (
+            f"ටැංකි දෙකේ වතුර {left}යි, {right}යි. වතුර පාරට මුළු වතුර කීයද?"
+            if operation == "add"
+            else f"ටැංකියේ වතුර {left} තියෙනවා. {right} වතුර පාරට දැම්මා. ටැංකියේ ඉතිරි කීයද?"
+        )
     else:
         request = rng.choice((1000, 1500) if simpler else (2250, 2750, 3500))
         game = {"mission_id": f"delivery-{request}", "requested_total_ml": request, "available_containers_ml": [100, 250, 500, 1000], "source_total_ml": 5000}
-        prompt = f"ගමනාන්තයට {format_capacity(request)} නිවැරදිව බෙදාහරින්න."
+        prompt = f"බෝට්ටු යන්න වතුර පාරට වතුර {spoken_capacity(request)} පුරවමු!"
     game["response_kind"] = skill.response_kind
     revision = f"{skill_id}:{role}{':simpler' if simpler else ''}:{seed % 100000}@v1"
     return CapacityItem(f"{skill_id}:{role}", revision, f"{skill_id}:parallel-v1", skill_id, skill.chapter, role, prompt, (), "constructed-response", {}, game)

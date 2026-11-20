@@ -190,7 +190,7 @@ const output =
 	`export interface DivisionAdventureGameData { schema_version: "division-adventure-item-v1"; chapter: "ufo_boarding" | "star_splitter" | "alien_bedtime"; [key: string]: unknown; }\n` +
 	`export interface DistanceAdventureGameData { schema_version: "distance-adventure-item-v1"; chapter: "market_road" | "tikki_garden"; [key: string]: unknown; }\n` +
 	`export interface MoneyAdventureGameData { schema_version: "money-adventure-item-v1"; chapter: "grocery_shop" | "coin_box"; [key: string]: unknown; }\n` +
-	`export interface CapacityAdventureGameData { schema_version: "capacity-adventure-item-v1"; chapter: "water_laboratory" | "litre_machine" | "water_delivery"; [key: string]: unknown; }\n` +
+	`export interface CapacityAdventureGameData { schema_version: "capacity-adventure-item-v1"; chapter: "boat_race" | "dancing_fountain" | "water_balloons"; [key: string]: unknown; }\n` +
 	`export interface MassAdventureGameData { schema_version: "mass-adventure-item-v1"; chapter: "weighing_station" | "kilogram_machine" | "market_delivery"; [key: string]: unknown; }\n` +
 	`export interface ShapeAdventureGameData { schema_version: "shape-adventure-item-v1"; chapter: "shape_table" | "orientation_lab" | "solid_net_match"; [key: string]: unknown; }\n` +
 	`export interface DirectionAdventureGameData { schema_version: "direction-adventure-item-v1"; chapter: "main_direction_compass" | "secondary_direction_compass" | "place_direction_scene"; [key: string]: unknown; }\n` +
