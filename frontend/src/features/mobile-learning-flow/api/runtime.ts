@@ -207,11 +207,7 @@ function parseManifest(value: unknown): PresentationManifest | null {
 																? ["movie_mayhem", "puppet_show"]
 																: game.schema_version ===
 																		"division-adventure-item-v1"
-																	? [
-																			"equal_share",
-																			"paper_division",
-																			"division_story",
-																		]
+																	? ["ufo_boarding", "star_splitter", "alien_bedtime"]
 																	: game.schema_version ===
 																			"distance-adventure-item-v1"
 																		? [

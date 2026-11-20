@@ -2506,42 +2506,6 @@ p {
 	min-height: 48px;
 }
 
-.story-expression input {
-	width: 100%;
-	min-width: 48px;
-	min-height: 52px;
-	border: 3px solid #6556a0;
-	border-radius: 1rem;
-	background: #fff;
-	color: #35275a;
-	font: inherit;
-	font-size: 1.4rem;
-	font-weight: 900;
-	text-align: center;
-}
-
-.story-expression {
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.3fr);
-	gap: 0.4rem;
-	align-items: center;
-	border: 0;
-	margin: 0;
-	padding: 0;
-}
-.story-expression legend {
-	margin-bottom: 0.5rem;
-	font-weight: 900;
-}
-/* biome-ignore lint/style/noDescendingSpecificity: These selectors target separate component classes; their relative specificity does not affect the cascade. */
-.story-expression > span {
-	font-size: 1.5rem;
-	font-weight: 900;
-}
-.story-expression input {
-	min-width: 0;
-}
-
 /* Adaptive Tutor (Mindy): full-height chat; only the thread scrolls */
 .tutor-shell {
 	display: flex;

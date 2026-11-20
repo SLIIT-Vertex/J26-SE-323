@@ -179,6 +179,7 @@
 }
 
 /* A faint answer hint in help stages. */
-.landscape-game-stage [data-ghost] {
+/* A faint answer hint (digits, beads). A hinted button only gets its outline, never faded text. */
+.landscape-game-stage [data-ghost]:not(button) {
 	color: rgb(58 42 26 / 30%);
 }

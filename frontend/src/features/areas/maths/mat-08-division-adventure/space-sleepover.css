@@ -1,0 +1,631 @@
+/* Nimo's Galactic Sleepover. Design space 1920×1080; --px is one design pixel. */
+.space-sleepover {
+	--space-ink: #2a2158;
+	--space-cream: #fff8ec;
+	--space-gold: #ffc93c;
+	--space-lilac: #b9a3ff;
+	position: absolute;
+	inset: 0;
+	background: #2c2468 url("/curriculum/game/G5-AREA-MAT-08/bg-space.webp")
+		center / cover no-repeat;
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 40);
+}
+
+/* ---- Placeholders and shared pieces ---- */
+
+.space-shape {
+	display: inline-block;
+	border-radius: 30%;
+	background: #e6dcff;
+}
+
+.space-scroll,
+.space-message {
+	margin: 0;
+	padding: calc(var(--px) * 12) calc(var(--px) * 32);
+	border: calc(var(--px) * 6) solid var(--wood-edge);
+	border-radius: calc(var(--px) * 26);
+	background: var(--wood);
+	font-weight: 700;
+	text-align: center;
+}
+
+.space-scroll {
+	position: absolute;
+	top: calc(var(--px) * 22);
+	left: 50%;
+	z-index: 2;
+	max-width: calc(var(--px) * 1300);
+	font-size: calc(var(--px) * 38);
+	transform: translateX(-50%);
+	white-space: nowrap;
+}
+
+.space-message {
+	font-size: calc(var(--px) * 32);
+}
+
+.space-alien {
+	width: calc(var(--px) * 96);
+	height: calc(var(--px) * 80);
+	object-fit: contain;
+}
+
+.space-ufo {
+	width: calc(var(--px) * 300);
+	max-width: 100%;
+	height: calc(var(--px) * 170);
+	object-fit: contain;
+}
+
+/* Bundles: a shuttle of 10 or a station of 100 (aliens), or a big star; the size sits on it. */
+.bundle {
+	position: relative;
+	display: inline-grid;
+	place-items: center;
+	width: calc(var(--px) * 110);
+	height: calc(var(--px) * 110);
+}
+
+.bundle[data-size="100"] {
+	width: calc(var(--px) * 150);
+	height: calc(var(--px) * 150);
+}
+
+.bundle-ship {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.bundle-size {
+	position: relative;
+	padding: 0 calc(var(--px) * 8);
+	border-radius: calc(var(--px) * 12);
+	background: var(--space-cream);
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 32);
+	font-weight: 800;
+	line-height: 1.2;
+}
+
+.bundle-star {
+	font-size: calc(var(--px) * 64);
+}
+
+.bundle-one {
+	width: calc(var(--px) * 84);
+	height: calc(var(--px) * 70);
+}
+
+.bundle-pile {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: calc(var(--px) * 4);
+}
+
+.bundle-more,
+.bundle-count {
+	color: inherit;
+	font-size: calc(var(--px) * 28);
+	font-weight: 800;
+}
+
+/* The digit dials. */
+.digit-dial {
+	display: grid;
+	justify-items: center;
+	border-radius: calc(var(--px) * 22);
+	background: var(--space-ink);
+	color: var(--space-gold);
+}
+
+.digit-dial small {
+	padding-top: calc(var(--px) * 6);
+	font-size: calc(var(--px) * 24);
+	font-weight: 700;
+}
+
+.digit-dial button,
+.splitter-deal,
+.splitter-split,
+.bedtime-pod-button,
+.bedtime-round,
+.bedtime-nimo,
+.bedtime-back {
+	min-height: 0;
+	border: 0;
+	color: inherit;
+	font: inherit;
+}
+
+.digit-dial button {
+	width: calc(var(--px) * 116);
+	min-height: calc(var(--px) * 52);
+	background: transparent;
+	color: var(--space-gold);
+	font-size: calc(var(--px) * 32);
+}
+
+.digit-dial-value {
+	display: grid;
+	place-items: center;
+	width: calc(var(--px) * 90);
+	height: calc(var(--px) * 90);
+	border-radius: calc(var(--px) * 16);
+	background: var(--space-cream);
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 66);
+}
+
+/* A row of UFOs with their cargo above them. */
+.ufo-row {
+	display: grid;
+	grid-template-columns: repeat(var(--ufos), minmax(0, 1fr));
+	gap: calc(var(--px) * 10);
+	width: 100%;
+}
+
+.ufo-slot {
+	display: grid;
+	justify-items: center;
+	align-content: end;
+	gap: calc(var(--px) * 4);
+}
+
+.ufo-cargo {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	min-height: calc(var(--px) * 50);
+}
+
+.ufo-label {
+	min-width: calc(var(--px) * 90);
+	padding: calc(var(--px) * 2) calc(var(--px) * 14);
+	border-radius: calc(var(--px) * 16);
+	background: var(--space-cream);
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 40);
+	font-weight: 800;
+	text-align: center;
+}
+
+.ufo-row[data-launched] .ufo-slot {
+	animation: ufo-launch 1.2s ease-in forwards;
+	animation-delay: calc(var(--at) * 90ms);
+}
+
+.ufo-row[data-wobble] .ufo-slot {
+	animation: ufo-wobble 240ms ease-in-out 4;
+}
+
+/* ---- UFO Boarding Chaos (the mission) ---- */
+
+.ufo-boarding {
+	position: absolute;
+	inset: 0;
+}
+
+.boarding-deck {
+	position: absolute;
+	top: calc(var(--px) * 120);
+	right: calc(var(--px) * 40);
+	left: calc(var(--px) * 40);
+	display: grid;
+	grid-template-columns: 1fr calc(var(--px) * 300);
+	grid-template-rows: auto auto auto;
+	gap: calc(var(--px) * 18);
+}
+
+.boarding-guests {
+	grid-column: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 20);
+	padding: calc(var(--px) * 12) calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(255 255 255 / 88%);
+}
+
+.boarding-guests > small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+	color: #6f55c9;
+}
+
+.guest-piles {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 24);
+}
+
+.guest-piles .bundle {
+	width: calc(var(--px) * 96);
+	height: calc(var(--px) * 96);
+}
+
+.guest-piles .bundle[data-size="100"] {
+	width: calc(var(--px) * 124);
+	height: calc(var(--px) * 124);
+}
+
+.guest-piles .bundle-pile {
+	flex-wrap: nowrap;
+}
+
+.guest-total {
+	font-size: calc(var(--px) * 48);
+}
+
+.boarding-deck > .ufo-row {
+	grid-column: 1;
+	color: #fff;
+}
+
+.ufo-riders {
+	display: flex;
+}
+
+.boarding-controls {
+	grid-column: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--px) * 24);
+	padding: calc(var(--px) * 12) calc(var(--px) * 24);
+	border-radius: calc(var(--px) * 28);
+	background: rgb(255 255 255 / 88%);
+}
+
+.boarding-question {
+	font-size: calc(var(--px) * 36);
+	font-weight: 800;
+}
+
+.boarding-dials {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--px) * 12);
+}
+
+.boarding-each {
+	font-size: calc(var(--px) * 60);
+}
+
+.nimo-pod {
+	grid-column: 2;
+	grid-row: 1 / span 3;
+	display: grid;
+	justify-items: center;
+	align-content: end;
+	gap: calc(var(--px) * 8);
+	padding: calc(var(--px) * 14);
+	border: calc(var(--px) * 6) dashed var(--space-lilac);
+	border-radius: calc(var(--px) * 40);
+	background: rgb(255 255 255 / 12%);
+	color: #fff;
+}
+
+.nimo-pod[data-filled] {
+	border-style: solid;
+	border-color: var(--space-gold);
+}
+
+.nimo-pod-nimo {
+	width: calc(var(--px) * 260);
+	height: calc(var(--px) * 420);
+	object-fit: contain;
+	object-position: bottom;
+}
+
+.ufo-boarding[data-outcome="correct"] .nimo-pod-nimo {
+	animation: space-hop 400ms ease-in-out infinite alternate;
+}
+
+.nimo-pod-label {
+	padding: calc(var(--px) * 2) calc(var(--px) * 16);
+	border-radius: calc(var(--px) * 16);
+	background: var(--space-cream);
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.nimo-pod-count {
+	font-size: calc(var(--px) * 44);
+}
+
+.boarding-launch {
+	position: absolute;
+	right: calc(var(--px) * 30);
+	bottom: calc(var(--px) * 30);
+	min-width: calc(var(--px) * 360);
+}
+
+/* ---- Star Splitter ---- */
+
+.star-splitter,
+.alien-bedtime {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 14);
+	width: 100%;
+	max-width: calc(var(--px) * 1080);
+	color: #fff;
+}
+
+.star-splitter .space-message,
+.alien-bedtime .space-message {
+	color: var(--space-ink);
+}
+
+.splitter-pile {
+	display: flex;
+	gap: calc(var(--px) * 18);
+}
+
+.splitter-place {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 6);
+	min-width: calc(var(--px) * 200);
+	padding: calc(var(--px) * 10) calc(var(--px) * 16);
+	border: calc(var(--px) * 5) solid transparent;
+	border-radius: calc(var(--px) * 24);
+	background: rgb(255 255 255 / 14%);
+}
+
+.splitter-place[data-here] {
+	border-color: var(--space-gold);
+	background: rgb(255 201 60 / 18%);
+}
+
+.splitter-place small {
+	font-size: calc(var(--px) * 26);
+	font-weight: 700;
+}
+
+.splitter-buttons,
+.bedtime-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: calc(var(--px) * 14);
+}
+
+.splitter-deal,
+.splitter-split,
+.bedtime-round,
+.bedtime-nimo {
+	min-height: calc(var(--px) * 92);
+	padding: 0 calc(var(--px) * 28);
+	border-radius: calc(var(--px) * 46);
+	font-size: calc(var(--px) * 30);
+	font-weight: 800;
+}
+
+.splitter-deal,
+.bedtime-round {
+	background: #3fb34f;
+	color: #fff;
+}
+
+.splitter-split,
+.bedtime-nimo {
+	background: var(--space-gold);
+	color: var(--space-ink);
+}
+
+.bedtime-round:disabled,
+.bedtime-nimo:disabled {
+	opacity: 0.45;
+}
+
+[data-ghost].splitter-deal,
+[data-ghost].splitter-split,
+[data-ghost].bedtime-nimo,
+[data-ghost].bedtime-pod-button {
+	outline: calc(var(--px) * 6) dashed #fff;
+	outline-offset: calc(var(--px) * 4);
+}
+
+.splitter-cargo {
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 2);
+}
+
+.splitter-cargo .bundle {
+	width: calc(var(--px) * 70);
+	height: calc(var(--px) * 70);
+}
+
+.splitter-cargo .bundle[data-kind] .bundle-size {
+	font-size: calc(var(--px) * 22);
+}
+
+.splitter-cargo .bundle-star {
+	font-size: calc(var(--px) * 40);
+}
+
+.splitter-left {
+	margin: 0;
+	font-size: calc(var(--px) * 32);
+	font-weight: 700;
+}
+
+/* ---- Bouncy Alien Bedtime ---- */
+
+.bedtime-pad {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: calc(var(--px) * 6);
+	max-width: calc(var(--px) * 900);
+	min-height: calc(var(--px) * 70);
+	padding: calc(var(--px) * 10) calc(var(--px) * 70) calc(var(--px) * 10)
+		calc(var(--px) * 20);
+	border-radius: calc(var(--px) * 30);
+	background: rgb(255 255 255 / 14%);
+}
+
+.bedtime-baby .space-alien {
+	width: calc(var(--px) * 66);
+	height: calc(var(--px) * 56);
+}
+
+.bedtime-baby {
+	animation: bedtime-bounce 900ms ease-in-out infinite alternate;
+	animation-delay: calc(var(--at) * 60ms);
+}
+
+.bedtime-count {
+	position: absolute;
+	top: 50%;
+	right: calc(var(--px) * 18);
+	font-size: calc(var(--px) * 46);
+	transform: translateY(-50%);
+}
+
+.bedtime-pods {
+	display: grid;
+	grid-template-columns: repeat(var(--pods), minmax(0, calc(var(--px) * 320)));
+	justify-content: center;
+	gap: calc(var(--px) * 16);
+	width: 100%;
+}
+
+.bedtime-pod {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	gap: calc(var(--px) * 6);
+}
+
+.bedtime-pod-button {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	width: 100%;
+	max-width: calc(var(--px) * 280);
+	padding: 0;
+	background: transparent;
+}
+
+.bedtime-pod[data-jump] .bedtime-pod-button {
+	animation: bedtime-jump 300ms ease-out;
+}
+
+.bedtime-dome {
+	position: absolute;
+	top: 0;
+	left: 12%;
+	width: 76%;
+	height: calc(var(--px) * 180);
+	object-fit: fill;
+}
+
+.bedtime-sleepers {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-content: end;
+	min-height: calc(var(--px) * 150);
+	max-width: 70%;
+	padding-top: calc(var(--px) * 24);
+}
+
+.bedtime-sleepers .space-alien {
+	width: calc(var(--px) * 58);
+	height: calc(var(--px) * 48);
+}
+
+.alien-bedtime[data-sleeping] .bedtime-sleepers {
+	filter: brightness(0.8);
+}
+
+.alien-bedtime[data-sleeping] .bedtime-pod::after {
+	content: "💤";
+	position: absolute;
+	top: 0;
+	right: calc(var(--px) * 30);
+	font-size: calc(var(--px) * 50);
+	animation: space-hop 1s ease-in-out infinite alternate;
+}
+
+.bedtime-pod-label {
+	padding: calc(var(--px) * 2) calc(var(--px) * 18);
+	border-radius: calc(var(--px) * 16);
+	background: var(--space-cream);
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 30);
+	font-weight: 700;
+}
+
+.bedtime-back {
+	position: absolute;
+	bottom: calc(var(--px) * 60);
+	left: 0;
+	width: calc(var(--px) * 64);
+	height: calc(var(--px) * 64);
+	border-radius: 50%;
+	background: var(--space-cream);
+	color: var(--space-ink);
+	font-size: calc(var(--px) * 32);
+}
+
+@keyframes ufo-launch {
+	30% {
+		transform: translateY(calc(var(--px) * 20));
+	}
+	to {
+		opacity: 0;
+		transform: translateY(calc(var(--px) * -600)) rotate(-8deg);
+	}
+}
+
+@keyframes ufo-wobble {
+	25% {
+		transform: rotate(-6deg);
+	}
+	75% {
+		transform: rotate(6deg);
+	}
+}
+
+@keyframes space-hop {
+	to {
+		transform: translateY(calc(var(--px) * -20));
+	}
+}
+
+@keyframes bedtime-bounce {
+	to {
+		transform: translateY(calc(var(--px) * -14));
+	}
+}
+
+@keyframes bedtime-jump {
+	40% {
+		transform: translateY(calc(var(--px) * -24)) scale(1.04);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ufo-row[data-launched] .ufo-slot,
+	.ufo-row[data-wobble] .ufo-slot,
+	.bedtime-baby,
+	.bedtime-pod[data-jump] .bedtime-pod-button,
+	.alien-bedtime[data-sleeping] .bedtime-pod::after,
+	.ufo-boarding[data-outcome="correct"] .nimo-pod-nimo {
+		animation: none;
+	}
+}

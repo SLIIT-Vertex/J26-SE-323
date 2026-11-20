@@ -132,7 +132,7 @@ export interface SubtractionAdventureGameData { schema_version: "subtraction-adv
 export interface FractionAdventureGameData { schema_version: "fraction-adventure-item-v1"; chapter: "color_splash_comic" | "sticker_party" | "fold_and_pop"; [key: string]: unknown; }
 export interface MultiplicationAdventureGameData { schema_version: "multiplication-adventure-item-v1"; chapter: "turbo_race" | "bowling_buddies"; [key: string]: unknown; }
 export interface TimeAdventureGameData { schema_version: "time-adventure-item-v1"; chapter: "movie_mayhem" | "puppet_show"; [key: string]: unknown; }
-export interface DivisionAdventureGameData { schema_version: "division-adventure-item-v1"; chapter: "equal_share" | "paper_division" | "division_story"; [key: string]: unknown; }
+export interface DivisionAdventureGameData { schema_version: "division-adventure-item-v1"; chapter: "ufo_boarding" | "star_splitter" | "alien_bedtime"; [key: string]: unknown; }
 export interface DistanceAdventureGameData { schema_version: "distance-adventure-item-v1"; chapter: "unit_path" | "distance_calculation" | "distance_problems"; [key: string]: unknown; }
 export interface MoneyAdventureGameData { schema_version: "money-adventure-item-v1"; chapter: "money_recognition" | "money_calculation" | "little_shop"; [key: string]: unknown; }
 export interface CapacityAdventureGameData { schema_version: "capacity-adventure-item-v1"; chapter: "water_laboratory" | "litre_machine" | "water_delivery"; [key: string]: unknown; }

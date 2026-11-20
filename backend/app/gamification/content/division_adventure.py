@@ -20,7 +20,8 @@ POLICY_VERSION = "g5-mat-division-deterministic-support-v1"
 SCORING_VERSION = "g5-mat-division-trace-scoring-v1"
 EQUIVALENCE_VERSION = "g5-mat-division-parallel-v1"
 
-Chapter = Literal["equal_share", "paper_division", "division_story"]
+# UFO boarding is the mission; the star splitter and alien bedtime are the help games.
+Chapter = Literal["ufo_boarding", "star_splitter", "alien_bedtime"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,11 +34,11 @@ class AtomicSkill:
 
 
 ATOMIC_SKILLS = (
-    AtomicSkill("G5-MAT-DIV-SHARE-01", "equal_share", "දෙකට බෙදමු", "easy", "equal_sharing"),
-    AtomicSkill("G5-MAT-DIV-PLAN-01", "equal_share", "බෙදීමේ සැලැස්ම", "easy_medium", "written_division"),
-    AtomicSkill("G5-MAT-DIV-WRITTEN-01", "paper_division", "දිගු බෙදීම පුරවමු", "medium", "written_division"),
-    AtomicSkill("G5-MAT-DIV-REMAINDER-01", "paper_division", "ඉතිරිය සොයමු", "medium_hard", "written_division"),
-    AtomicSkill("G5-MAT-DIV-STORY-01", "division_story", "බෙදීමේ කතාව විසඳමු", "hard", "division_story"),
+    AtomicSkill("G5-MAT-DIV-SHARE-01", "alien_bedtime", "දෙකට බෙදමු", "easy", "equal_sharing"),
+    AtomicSkill("G5-MAT-DIV-PLAN-01", "star_splitter", "බෙදීමේ සැලැස්ම", "easy_medium", "written_division"),
+    AtomicSkill("G5-MAT-DIV-WRITTEN-01", "ufo_boarding", "දිගු බෙදීම පුරවමු", "medium", "written_division"),
+    AtomicSkill("G5-MAT-DIV-REMAINDER-01", "ufo_boarding", "ඉතිරිය සොයමු", "medium_hard", "written_division"),
+    AtomicSkill("G5-MAT-DIV-STORY-01", "ufo_boarding", "බෙදීමේ කතාව විසඳමු", "hard", "division_story"),
 )
 SKILLS = {skill.skill_id: skill for skill in ATOMIC_SKILLS}
 MISCONCEPTIONS = (
@@ -155,29 +156,29 @@ def generate_item(
         divisor = 2 if simpler else rng.choice((2, 3, 4, 5))
         quotient = rng.choice((12, 21) if simpler else (12, 21, 102, 111))
         dividend = divisor * quotient
-        prompt = f"{dividend} ÷ {divisor} කඩදාසි ක්‍රමයෙන් විසඳන්න."
+        prompt = f"පුංචි යානා {divisor}ට අමුත්තන් {dividend}ක් සමානව බෙදමු!"
         game = {"dividend": dividend, "divisor": divisor}
     elif skill_id == "G5-MAT-DIV-REMAINDER-01":
         divisor = 3 if simpler else rng.choice((3, 4, 5, 6))
         quotient = 12 if simpler else rng.choice((12, 21, 31))
         remainder = rng.randint(1, divisor - 1)
         dividend = divisor * quotient + remainder
-        prompt = f"{dividend} ÷ {divisor} විසඳා ඉතිරිය සොයන්න."
+        prompt = f"යානා {divisor}ට අමුත්තන් {dividend}ක් සමානව බෙදමු! ඉතිරි අය නිමෝ එක්ක."
         game = {"dividend": dividend, "divisor": divisor}
     else:
         divisor = 3 if simpler else rng.choice((3, 4, 5))
         quotient = rng.choice((3, 4)) if simpler else rng.choice((12, 14, 21))
         remainder = rng.randint(1, divisor - 1)
         dividend = divisor * quotient + remainder
-        story_id = "basket_groups"
-        prompt = f"පලතුරු {dividend}ක් බැගින් {divisor}ක් දමන කූඩවලට දමමු."
+        story_id = "ufo_groups"
+        prompt = f"අමුත්තන් {dividend} දෙනා යානා {divisor}ට සමානව නංවමු! ඉතිරි අය නිමෝ එක්ක."
         game = {
             "dividend": dividend,
             "divisor": divisor,
             "story_id": story_id,
             "context_mode": "complete_groups_and_leftover",
-            "object_label_si": "පලතුරු",
-            "group_label_si": "කූඩ",
+            "object_label_si": "අමුත්තන්",
+            "group_label_si": "යානා",
         }
     quotient, remainder = quotient_and_remainder(dividend, divisor)
     game.update(
@@ -210,6 +211,12 @@ def _integer_list(value: object, *, maximum: int = 999) -> list[int]:
     return [_integer(entry, maximum=maximum) for entry in value]
 
 
+def _signed_list(value: object) -> list[int]:
+    if not isinstance(value, list):
+        raise TypeError("DIVISION_LIST_REQUIRED")
+    return [_integer(entry, -999, 999) for entry in value]
+
+
 def _normalize_steps(value: object) -> list[dict[str, int | None]]:
     if not isinstance(value, list) or len(value) > 3:
         raise ValueError("INVALID_WORKING_TRACE")
@@ -229,7 +236,8 @@ def _normalize_steps(value: object) -> list[dict[str, int | None]]:
                 "quotient_digit": _integer(raw["quotient_digit"], maximum=9),
                 "quotient_column": _integer(raw["quotient_column"], maximum=2),
                 "partial_product": _integer(raw["partial_product"]),
-                "subtraction_result": _integer(raw["subtraction_result"], maximum=9),
+                # A wrong quotient digit leaves a negative or too-big leftover: scored, not rejected.
+                "subtraction_result": _integer(raw["subtraction_result"], -999, 999),
                 "brought_down_digit": None if brought is None else _integer(brought, maximum=9),
             }
         )
@@ -271,10 +279,10 @@ def _validate_written(game: Mapping[str, object], response: Mapping[str, object]
     quotient_digits = _integer_list(response["quotient_digits"], maximum=9)
     partial_dividends = _integer_list(response["partial_dividends"])
     partial_products = _integer_list(response["partial_products"])
-    subtraction_results = _integer_list(response["subtraction_results"], maximum=9)
+    subtraction_results = _signed_list(response["subtraction_results"])
     brought_down_digits = _integer_list(response["brought_down_digits"], maximum=9)
     final_quotient = _integer(response["final_quotient"])
-    final_remainder = _integer(response["final_remainder"], maximum=9)
+    final_remainder = _integer(response["final_remainder"], -999, 999)
     expected_q, expected_r = quotient_and_remainder(int(game["dividend"]), int(game["divisor"]))
     trace_error = _trace_error(steps, expected)
     arrays_match = (
@@ -292,7 +300,7 @@ def _validate_written(game: Mapping[str, object], response: Mapping[str, object]
             and final_quotient == expected_q and final_remainder == expected_r)
     )
     correct = dividend == game["dividend"] and divisor == game["divisor"] and trace_error == "correct" and arrays_match and result_match
-    if final_remainder >= divisor:
+    if final_remainder >= divisor or final_remainder < 0:
         error = "invalid_remainder"
     elif dividend != game["dividend"] or divisor != game["divisor"]:
         error = "dividend_divisor_confused"
@@ -339,7 +347,7 @@ def validate_constructed_response(item: Mapping[str, object] | DivisionItem, res
         raise TypeError("INVALID_WORKING_TRACE")
     written_response = {"kind": "written_division", **dict(written)}
     written_correct, written_error, normalized_written = _validate_written(game, written_response)
-    quotient, remainder = _integer(response["quotient"]), _integer(response["remainder"], maximum=9)
+    quotient, remainder = _integer(response["quotient"]), _integer(response["remainder"], -999, 999)
     interpretation = response["contextual_interpretation"]
     if not isinstance(interpretation, str) or len(interpretation) > 64:
         raise ValueError("INVALID_CONTEXTUAL_INTERPRETATION")
